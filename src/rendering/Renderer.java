@@ -71,6 +71,7 @@ public class Renderer {
         renderer.render(entities, textured);
         shader.stop();
 
+         /*
         terrainShader.start();
         terrainShader.loadSkyColor(RED, GREEN, BLUE);
         terrainShader.loadLights(lights);
@@ -82,7 +83,7 @@ public class Renderer {
         skyboxShader.loadViewMatrix(camera);
         skyboxShader.loadSkyColor(RED, GREEN, BLUE);
         skyboxRenderer.render();
-        skyboxShader.stop();
+        skyboxShader.stop();*/
 
         terrains.clear();
         entities.clear();

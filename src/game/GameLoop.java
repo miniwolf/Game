@@ -28,7 +28,7 @@ import texture.TerrainTexturePack;
  */
 public class GameLoop {
     public static void main(String[] args) {
-        System.setProperty("org.lwjgl.librarypath", new File("native/windows").getAbsolutePath());
+        System.setProperty("org.lwjgl.librarypath", new File("lib/native/windows").getAbsolutePath());
         DisplayManager.create();
 
         Loader loader = new Loader();
@@ -68,13 +68,12 @@ public class GameLoop {
         TerrainTexture blendMap = new TerrainTexture(loader.loadTexture("blendMap"));
 
         List<Terrain> terrains = new ArrayList<>();
-        terrains.add(new Terrain(0,-1, loader, texturePack, blendMap, "heightmap"));
-        //for ( int x = -9; x < 10; x++ ) for (int z = -9; z < 10; z++) terrains.add(new Terrain(x, z, loader, texturePack, blendMap, "heightmap"));
+        terrains.add(new Terrain(0, 0, loader, texturePack, blendMap, "heightmap"));
 
         List<Entity> entities = new ArrayList<>();
-        entities.add(new Entity(fern, new Vector3f(185, 0, -293), 0, 0, 0, 0.05f));
-        entities.add(new Entity(fern, new Vector3f(370, 0, -300), 0, 0, 0, 0.05f));
-        entities.add(new Entity(fern, new Vector3f(293, 0, -305), 0, 0, 0, 0.05f));
+        entities.add(new Entity(fern, new Vector3f(100, 40, -80), 0, 0, 0, 0.05f));
+        entities.add(new Entity(fern, new Vector3f(370, 35, -300), 0, 0, 0, 0.05f));
+        entities.add(new Entity(fern, new Vector3f(293, 20, -305), 0, 0, 0, 0.05f));
         Random random = new Random();
         for ( int i = 0; i < 400; i++ ) {
             float x = random.nextFloat() * 800 - 400;
@@ -86,17 +85,14 @@ public class GameLoop {
                 z = random.nextFloat() * -600;
                 y = terrains.get(0).getHeightOfTerrain(x, z);
                 entities.add(new Entity(tree, new Vector3f(x, y, z), 0, random.nextFloat() * 360, 0, 1));
-
             }
-            //entities.add(new Entity(tree, new Vector3f(new Random().nextFloat() * 800, 0, new Random().nextFloat() * -600), 0, 0, 0, 0.2f));
         }
-        //entities.add(sponza);
         Light sun = new Light(new Vector3f(0, 1000, -7000), new Vector3f(1f,1f,1f));
         List<Light> lights = new ArrayList<>();
         lights.add(sun);
-        //lights.add(new Light(new Vector3f(100, -40, -80), new Vector3f(6,0,0), new Vector3f(1, 0.01f, 0.002f)));
-        //lights.add(new Light(new Vector3f(370, 17, -300), new Vector3f(0,4,4), new Vector3f(1, 0.01f, 0.002f)));
-        //lights.add(new Light(new Vector3f(293, 7, -305), new Vector3f(4,4,0), new Vector3f(1, 0.01f, 0.002f)));
+        lights.add(new Light(new Vector3f(100, 40, -80), new Vector3f(1,0,0), new Vector3f(1, 0.01f, 0.002f)));
+        lights.add(new Light(new Vector3f(370, 35, -300), new Vector3f(0,1,0), new Vector3f(1, 0.01f, 0.002f)));
+        lights.add(new Light(new Vector3f(293, 20, -305), new Vector3f(0,0,1), new Vector3f(1, 0.01f, 0.002f)));
 
         Renderer renderer = new Renderer(loader);
         ModelData bunnyData = OBJLoader.loadOBJ("bunny");
@@ -106,7 +102,7 @@ public class GameLoop {
 
         TexturedModel bunny = new TexturedModel(bunnyModel, new ModelTexture(loader.loadTexture("white")));
 
-        Player player = new Player(bunny, new Vector3f(0, 0, 0), 0, 0, 0, 1);
+        Player player = new Player(bunny, new Vector3f(5, 0, 0), 0, 0, 0, 1);
 
         //ModelData hairData = OBJLoader.loadOBJ("hairball");
 

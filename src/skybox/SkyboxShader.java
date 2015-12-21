@@ -28,7 +28,6 @@ public class SkyboxShader extends Shader {
     protected void getAllUniformLocations() {
         location_projectionMatrix = getUniformLocation("projectionMatrix");
         location_viewMatrix = getUniformLocation("viewMatrix");
-        location_fogColor = getUniformLocation("fogColor");
     }
 
     @Override
@@ -43,7 +42,6 @@ public class SkyboxShader extends Shader {
 
     @Override
     public void loadSkyColor(float r, float g, float b) {
-        super.loadVector(location_fogColor, new Vector3f(r, g, b));
     }
 
     @Override

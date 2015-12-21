@@ -14,5 +14,6 @@ void main(void) {
 
     float factor = (texCoord.y - lowerLimit) / (upperLimit - lowerLimit);
     factor = clamp(factor, 0.0, 1.0);
-    color = mix(vec4(fogColor, 1.0), finalColor, factor);
+    //color = mix(vec4(fogColor, 1.0), finalColor, factor);
+    color = finalColor;
 }

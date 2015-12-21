@@ -19,6 +19,8 @@ public class Player extends Entity {
     private float upwardsSpeed = 0.0f;
     private boolean jumping = false;
 
+    private boolean speedToggle = false;
+
     public Player(TexturedModel model, Vector3f position, float rotX, float rotY, float rotZ, float scale) {
         super(model, position, rotX, rotY, rotZ, scale);
     }
@@ -26,7 +28,7 @@ public class Player extends Entity {
     public void translate(float delta, Terrain terrain) {
         checkInput();
         super.rotate(0, currentTurnSpeed * delta, 0);
-        float distance = currentRunSpeed * delta;
+        float distance = currentRunSpeed * delta * (speedToggle ? 2.0f : 1.0f);
         double v = Math.toRadians(super.getRotY());
         float dx = (float) (distance * Math.sin(v));
         float dz = (float) (distance * Math.cos(v));
@@ -51,7 +53,8 @@ public class Player extends Entity {
             jumping = true;
             upwardsSpeed = JUMP_POWER;
         }
-        if ( Keyboard.isKeyDown(Keyboard.KEY_P) ) {
+        speedToggle = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT);
+        if ( Keyboard.isKeyDown(Keyboard.KEY_0) ) {
             System.out.println(getPosition());
         }
     }

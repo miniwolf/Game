@@ -18,7 +18,6 @@ uniform vec3 lightColor[4];
 uniform vec3 attenuation[4];
 uniform float shineDamper;
 uniform float reflectivity;
-uniform vec3 skyColor;
 
 void main(void) {
     vec4 blendColor = texture(blendMap, pass_texCoords);
@@ -62,5 +61,5 @@ void main(void) {
     totalDiffuse = max(totalDiffuse, 0.2);
 
     out_color = vec4(totalDiffuse, 1.0) * totalColor + vec4(totalSpecular, 1.0);
-    out_color = mix(vec4(skyColor, 1.0), out_color, visibility);
+    out_color.rgb *= visibility;
 }

@@ -60,7 +60,13 @@ public class Camera {
     private void calculate() {
         if ( Mouse.isButtonDown(0) ) {
             pitch = Math.max(Math.min(pitch - Mouse.getDY() * rotationSpeedY, 180), 0);
-            angleAroundPlayer = Math.max(Math.min(angleAroundPlayer - Mouse.getDX() * rotationSpeedX, 360), 0);
+
+            angleAroundPlayer -= Mouse.getDX() * rotationSpeedX;
+            if ( angleAroundPlayer < 0 ) {
+                angleAroundPlayer = 360 + angleAroundPlayer;
+            } else if ( angleAroundPlayer > 360 ) {
+                angleAroundPlayer = 360 - angleAroundPlayer;
+            }
         }
     }
 }

@@ -54,7 +54,7 @@ public class Loader {
         }
 
         int textureID = -1;
-        if (texture != null) {
+        if ( texture != null ) {
             textureID = texture.getTextureID();
             textures.add(textureID);
         }
@@ -75,7 +75,8 @@ public class Loader {
         for ( int i = 0; i < textureFiles.length; i++ ) {
             TextureData data = decodeTextureFile("resources/texture/" + textureFiles[i] + ".png");
             GL11.glTexImage2D(GL13.GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL11.GL_RGBA, data.getWidth(), data.getHeight(),
-                              0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, data.getBuffer());
+                              0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, data.getBuffer()
+            );
         }
         GL11.glTexParameteri(GL13.GL_TEXTURE_CUBE_MAP, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
         GL11.glTexParameteri(GL13.GL_TEXTURE_CUBE_MAP, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
