@@ -2,6 +2,7 @@ package obj;
 
 import entities.Face;
 import model.RawModel;
+import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Vector2f;
 import org.lwjgl.util.vector.Vector3f;
 import rendering.Loader;
@@ -62,16 +63,12 @@ public class OBJLoader {
                     break;
                 }
             }
-            while (line != null && line.startsWith("f ")) {
+            while ( (line = reader.readLine()) != null && line.startsWith("f ") ) {
                 String[] currentLine = line.split(" ");
-                String[] vertex1 = currentLine[1].split("/");
-                String[] vertex2 = currentLine[2].split("/");
-                String[] vertex3 = currentLine[3].split("/");
-                processVertex(vertex1, vertices, indices);
-                if ( vertex2.length != 0 )
-                    processVertex(vertex2, vertices, indices);
-                processVertex(vertex3, vertices, indices);
-                line = reader.readLine();
+                for ( int i = 1; i < currentLine.length; i++ ) {
+                    String[] vertex = currentLine[i].split("/");
+                    processVertex(vertex, vertices, indices);
+                }
             }
             reader.close();
         } catch (IOException e) {

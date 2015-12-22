@@ -39,7 +39,9 @@ public class EntityRenderer {
         shader.loadShineVariables(texture.getShineDamper(), texture.getReflectivity());
 
         GL13.glActiveTexture(GL13.GL_TEXTURE0); // TextureBank
-        if ( textured ) GL11.glBindTexture(GL11.GL_TEXTURE_2D, texturedModel.getTexture().getTextureID());
+        if ( textured ) {
+            GL11.glBindTexture(GL11.GL_TEXTURE_2D, texturedModel.getTexture().getTextureID());
+        }
     }
 
     private void unbindTexturedModel() {
@@ -63,7 +65,7 @@ public class EntityRenderer {
             List<Entity> batch = entities.get(model);
             for ( Entity entity : batch ) {
                 prepareInstance(entity);
-                GL11.glDrawElements(GL11.GL_TRIANGLES, model.getRawModel().getVertexCount(), GL11.GL_UNSIGNED_INT, 0);
+                GL11.glDrawElements(entity.getMode(), model.getRawModel().getVertexCount(), GL11.GL_UNSIGNED_INT, 0);
             }
             unbindTexturedModel();
         }
