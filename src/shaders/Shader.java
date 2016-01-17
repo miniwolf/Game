@@ -117,7 +117,7 @@ public abstract class Shader {
 
     public abstract void loadFakeLightingVariable(boolean useFake);
 
-    public abstract void loadTransformationMatrix(Matrix4f matrix);
+    public abstract void loadModelMatrix(Matrix4f matrix);
 
     public abstract void loadProjectionMatrix(Matrix4f matrix);
 

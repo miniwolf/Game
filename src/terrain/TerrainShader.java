@@ -16,7 +16,7 @@ public class TerrainShader extends Shader {
     private static String VERTEX_FILE = "resources/shaders/TerrainVS.glsl";
     private static String FRAGMENT_FILE = "resources/shaders/TerrainFS.glsl";
 
-    private int location_transformationMatrix;
+    private int location_modelMatrix;
     private int location_projectionMatrix;
     private int location_viewMatrix;
     private int location_lightPosition[];
@@ -44,7 +44,7 @@ public class TerrainShader extends Shader {
 
     @Override
     protected void getAllUniformLocations() {
-        location_transformationMatrix = super.getUniformLocation("transformationMatrix");
+        location_modelMatrix = super.getUniformLocation("modelMatrix");
         location_projectionMatrix = super.getUniformLocation("projectionMatrix");
         location_viewMatrix = super.getUniformLocation("viewMatrix");
         location_shineDamper = super.getUniformLocation("shineDamper");
@@ -84,8 +84,8 @@ public class TerrainShader extends Shader {
     public void loadFakeLightingVariable(boolean useFake) {}
 
     @Override
-    public void loadTransformationMatrix(Matrix4f matrix) {
-        super.loadMatrix(location_transformationMatrix, matrix);
+    public void loadModelMatrix(Matrix4f matrix) {
+        super.loadMatrix(location_modelMatrix, matrix);
     }
 
     @Override

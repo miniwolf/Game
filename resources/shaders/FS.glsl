@@ -1,6 +1,6 @@
 #version 400 core
 
-in vec2 pass_texCoords;
+in vec2 pass_texCoord;
 in vec3 surfaceNormal;
 in vec3 toLightVector[4];
 in vec3 toCameraVector;
@@ -34,7 +34,6 @@ void main(void) {
         float attFactor = att.x + (att.y * distance) + (att.z * distance * distance);
 
         vec3 color = lightColor[i];
-        //float brightness = 100 / distance;
         totalDiffuse += (brightness * color) / attFactor;
         float dampedFactor = pow(specularFactor, shineDamper);
         totalSpecular += (dampedFactor * reflectivity * color) / attFactor;
@@ -42,10 +41,10 @@ void main(void) {
 
     totalDiffuse = max(totalDiffuse, 0.2);
 
-    vec4 textureColor = texture(textureSampler, pass_texCoords);
+    vec4 textureColor = texture(textureSampler, pass_texCoord);
 
     if ( textureColor.a < 0.5 ) discard;
 
     out_color = vec4(totalDiffuse, 1.0) * textureColor + vec4(totalSpecular, 1.0);
-    out_color.rgb *= visibility;
+    out_color = mix(vec4(skyColor, 1.0), out_color, visibility);
 }

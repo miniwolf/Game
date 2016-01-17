@@ -23,7 +23,7 @@ import java.util.Map;
  * @author miniwolf
  */
 public class Renderer {
-    private static final float FOV = 70;
+    private static final float FOV = 90;
     private static final float NEAR_PLANE = 0.1f;
     private static final float FAR_PLANE = 100;
 
@@ -50,7 +50,7 @@ public class Renderer {
         createProjectionMatrix();
         renderer = new EntityRenderer(shader, projectionMatrix);
         terrainRenderer = new TerrainRenderer(terrainShader, projectionMatrix);
-        skyboxRenderer = new SkyboxRenderer(loader, projectionMatrix);
+        skyboxRenderer = new SkyboxRenderer(loader, skyboxShader, projectionMatrix);
     }
 
     public static void enableCulling() {
@@ -70,7 +70,6 @@ public class Renderer {
         shader.loadViewMatrix(camera);
         renderer.render(entities, textured);
         shader.stop();
-
 
         terrainShader.start();
         terrainShader.loadSkyColor(RED, GREEN, BLUE);

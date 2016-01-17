@@ -33,4 +33,8 @@ public class Light {
     public Vector3f getAttenuation() {
         return attenuation;
     }
+
+    public void setPosition(Vector3f position) {
+        this.position = position;
+    }
 }

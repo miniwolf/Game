@@ -16,6 +16,7 @@ uniform sampler2D blendMap;
 
 uniform vec3 lightColor[4];
 uniform vec3 attenuation[4];
+uniform vec3 skyColor;
 uniform float shineDamper;
 uniform float reflectivity;
 
@@ -52,7 +53,6 @@ void main(void) {
             float attFactor = att.x + (att.y * distance) + (att.z * distance * distance);
 
             vec3 color = lightColor[i];
-            //float brightness = 100 / distance;
             totalDiffuse += (brightness * color) / attFactor;
             float dampedFactor = pow(specularFactor, shineDamper);
             totalSpecular += (dampedFactor * reflectivity * color) / attFactor;
@@ -61,5 +61,5 @@ void main(void) {
     totalDiffuse = max(totalDiffuse, 0.2);
 
     out_color = vec4(totalDiffuse, 1.0) * totalColor + vec4(totalSpecular, 1.0);
-    out_color.rgb *= visibility;
+    out_color = mix(vec4(skyColor, 1.0), out_color, visibility);
 }

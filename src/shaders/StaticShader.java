@@ -15,7 +15,7 @@ public class StaticShader extends Shader {
     private static String VERTEX_FILE = "resources/shaders/VS.glsl";
     private static String FRAGMENT_FILE = "resources/shaders/FS.glsl";
 
-    private int location_transformationMatrix;
+    private int location_ModelMatrix;
     private int location_projectionMatrix;
     private int location_viewMatrix;
     private int location_lightPosition[];
@@ -45,7 +45,7 @@ public class StaticShader extends Shader {
 
     @Override
     protected void getAllUniformLocations() {
-        location_transformationMatrix = super.getUniformLocation("transformationMatrix");
+        location_ModelMatrix = super.getUniformLocation("modelMatrix");
         location_projectionMatrix = super.getUniformLocation("projectionMatrix");
         location_viewMatrix = super.getUniformLocation("viewMatrix");
         location_shineDamper = super.getUniformLocation("shineDamper");
@@ -75,8 +75,8 @@ public class StaticShader extends Shader {
     }
 
     @Override
-    public void loadTransformationMatrix(Matrix4f matrix) {
-        super.loadMatrix(location_transformationMatrix, matrix);
+    public void loadModelMatrix(Matrix4f matrix) {
+        super.loadMatrix(location_ModelMatrix, matrix);
     }
 
     @Override

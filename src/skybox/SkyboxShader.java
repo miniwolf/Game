@@ -13,7 +13,7 @@ import java.util.List;
  * @author miniwolf
  */
 public class SkyboxShader extends Shader {
-    private static final String VERTEX_FILE = "resources/shaders/skyboxVS.glsl";
+    private static final String VERTEX_FILE = "resources/shaders/skyboxVS.glsl"; // ignores capital letters
     private static final String FRAGMENT_FILE = "resources/shaders/skyboxFS.glsl";
 
     private int location_projectionMatrix;
@@ -28,6 +28,7 @@ public class SkyboxShader extends Shader {
     protected void getAllUniformLocations() {
         location_projectionMatrix = getUniformLocation("projectionMatrix");
         location_viewMatrix = getUniformLocation("viewMatrix");
+        location_fogColor = getUniformLocation("fogColor");
     }
 
     @Override
@@ -37,11 +38,11 @@ public class SkyboxShader extends Shader {
 
     @Override
     public void connectTextureUnits() {
-
     }
 
     @Override
     public void loadSkyColor(float r, float g, float b) {
+        loadVector(location_fogColor, new Vector3f(r, g, b));
     }
 
     @Override
@@ -50,7 +51,7 @@ public class SkyboxShader extends Shader {
     }
 
     @Override
-    public void loadTransformationMatrix(Matrix4f matrix) {
+    public void loadModelMatrix(Matrix4f matrix) {
 
     }
 

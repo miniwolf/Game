@@ -53,13 +53,13 @@ public class EntityRenderer {
     }
 
     private void prepareInstance(Entity entity) {
-        Matrix4f transformationMatrix = Maths.createTransformationMatrix(entity.getPosition(),
-                entity.getRotX(), entity.getRotY(), entity.getRotZ(),
-                entity.getScale());
-        shader.loadTransformationMatrix(transformationMatrix);
+        Matrix4f modelMatrix = Maths.createModelMatrix(entity.getPosition(),
+                                                       entity.getRotX(), entity.getRotY(), entity.getRotZ(),
+                                                       entity.getScale());
+        shader.loadModelMatrix(modelMatrix);
     }
 
-    public void render(Map<TexturedModel, List<Entity>> entities, boolean textured) {
+    void render(Map<TexturedModel, List<Entity>> entities, boolean textured) {
         for ( TexturedModel model : entities.keySet() ) {
             prepareTextureModel(model, textured);
             List<Entity> batch = entities.get(model);
