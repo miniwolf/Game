@@ -8,9 +8,9 @@ import org.lwjgl.opengl.*;
  * @author miniwolf
  */
 public class DisplayManager {
-    public static int WIDTH = 1280;
-    public static int HEIGHT = 760;
-    public static int FPS = 120;
+    private static int WIDTH = 1280;
+    private static int HEIGHT = 760;
+    private static int FPS = 120;
 
     private static long lastFrame;
     private static float delta;
@@ -22,7 +22,7 @@ public class DisplayManager {
         try {
             Display.setDisplayMode(new DisplayMode(WIDTH, HEIGHT));
             Display.create(new PixelFormat(), attribs);
-            Display.setTitle("MiniGame v0.5");
+            Display.setTitle("MiniGame v0.7");
         } catch (LWJGLException e) {
             e.printStackTrace();
         }

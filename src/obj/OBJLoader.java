@@ -23,7 +23,7 @@ public class OBJLoader {
 
     private static final String RES_LOC = "resources/obj/";
 
-    public static ModelData loadOBJ(String objFileName) {
+    public static List<ModelData> loadOBJ(String objFileName) {
         FileReader isr = null;
         File objFile = new File(RES_LOC + objFileName + ".obj");
         try {
@@ -32,15 +32,17 @@ public class OBJLoader {
             System.err.println("File not found in res; don't use any extention");
         }
         assert isr != null;
+        List<ModelData> modelDatas = new ArrayList<>();
         BufferedReader reader = new BufferedReader(isr);
         String line;
         List<Vertex> vertices = new ArrayList<>();
         List<Vector2f> textures = new ArrayList<>();
         List<Vector3f> normals = new ArrayList<>();
         List<Integer> indices = new ArrayList<>();
+        String name = "default";
         try {
-            while (true) {
-                line = reader.readLine().replace("  ", " ");
+            while ((line = reader.readLine()) != null) {
+                line = line.replace("  ", " ");
                 if (line.startsWith("v ")) {
                     String[] currentLine = line.split(" ");
                     Vector3f vertex = new Vector3f(Float.valueOf(currentLine[1]),
@@ -60,14 +62,32 @@ public class OBJLoader {
                                                    Float.valueOf(currentLine[3]));
                     normals.add(normal);
                 } else if (line.startsWith("f ")) {
-                    break;
-                }
-            }
-            while ( (line = reader.readLine()) != null && line.startsWith("f ") ) {
-                String[] currentLine = line.split(" ");
-                for ( int i = 1; i < currentLine.length; i++ ) {
-                    String[] vertex = currentLine[i].split("/");
-                    processVertex(vertex, vertices, indices);
+                    while ( (line = reader.readLine()) != null && line.startsWith("f ") ) {
+                        String[] currentLine = line.split(" ");
+                        for ( int i = 1; i < currentLine.length; i++ ) {
+                            String[] vertex = currentLine[i].split("/");
+                            processVertex(vertex, vertices, indices);
+                        }
+                    }
+                } else if ( line.startsWith("g ")) {
+                    removeUnusedVertices(vertices);
+                    float[] verticesArray = new float[vertices.size() * 3];
+                    float[] texturesArray = new float[textures.size() * 2];
+                    float[] normalsArray = new float[normals.size() * 3];
+                    float furthest = convertDataToArrays(vertices, textures, normals, verticesArray,
+                                                         texturesArray, normalsArray);
+                    int[] indicesArray = convertIndicesListToArray(indices);
+                    modelDatas.add(new ModelData(name, verticesArray, texturesArray, normalsArray, indicesArray,
+                                                 furthest));
+                    vertices = new ArrayList<>();
+                    textures = new ArrayList<>();
+                    normals = new ArrayList<>();
+                    indices = new ArrayList<>();
+                    if ( line.split(" ").length == 2 ) {
+                        name = line.split(" ")[1];
+                    } else {
+                        name = "default";
+                    }
                 }
             }
             reader.close();
@@ -76,13 +96,14 @@ public class OBJLoader {
         }
         removeUnusedVertices(vertices);
         float[] verticesArray = new float[vertices.size() * 3];
-        float[] texturesArray = new float[vertices.size() * 2];
-        float[] normalsArray = new float[vertices.size() * 3];
+        float[] texturesArray = new float[textures.size() * 2];
+        float[] normalsArray = new float[normals.size() * 3];
         float furthest = convertDataToArrays(vertices, textures, normals, verticesArray,
-                texturesArray, normalsArray);
+                                             texturesArray, normalsArray);
         int[] indicesArray = convertIndicesListToArray(indices);
-        return new ModelData(verticesArray, texturesArray, normalsArray, indicesArray,
-                furthest);
+        modelDatas.add(new ModelData(name, verticesArray, texturesArray, normalsArray, indicesArray,
+                                     furthest));
+        return modelDatas;
     }
 
     public static RawModel loadModel2(String file, Loader loader) {

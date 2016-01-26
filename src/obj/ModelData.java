@@ -9,8 +9,10 @@ public class ModelData {
     private float[] normals;
     private int[] indices;
     private float furthestPoint;
+    private String name;
 
-    public ModelData(float[] vertices, float[] texCoords, float[] normals, int[] indices, float furthestPoint) {
+    public ModelData(String name, float[] vertices, float[] texCoords, float[] normals, int[] indices, float furthestPoint) {
+        this.name = name;
         this.vertices = vertices;
         this.texCoords = texCoords;
         this.normals = normals;
@@ -38,4 +40,7 @@ public class ModelData {
         return furthestPoint;
     }
 
+    public String getName() {
+        return name;
+    }
 }
