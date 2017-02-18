@@ -24,13 +24,12 @@ const vec3 waterColour = vec3(0.0, 0.3, 0.5);
 const vec2 center = vec2(-2.53, 3.42);
 
 //I want to use the glsl smoothstep function, but for some unknown reason it doesn't work on my laptop, but only when exported as a jar. Works fine in Eclipse!
-float smoothlyStep(float edge0, float edge1, float x){
+float smoothlyStep(float edge0, float edge1, float x) {
     float t = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
     return t * t * (3.0 - 2.0 * t);
 }
 
 void main(void) {
-
     vec2 ndc = (clipSpace.xy/clipSpace.w)/2.0 + 0.5;
     vec2 refractTexCoords = vec2(ndc.x, ndc.y);
     vec2 reflectTexCoords = vec2(ndc.x, -ndc.y);
@@ -80,5 +79,4 @@ void main(void) {
 
     float disFactor = smoothlyStep(15.0, 16.0, distance(center, pass_pos));
     out_Color.rgb = mix(out_Color.rgb, vec3(1.0), disFactor);
-
 }

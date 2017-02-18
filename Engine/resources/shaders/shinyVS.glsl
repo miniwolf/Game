@@ -12,8 +12,7 @@ out vec3 pass_viewVector;
 uniform mat4 projectionViewMatrix;
 uniform vec3 cameraPosition;
 
-void main(void){
-
+void main(void) {
     vec4 worldPosition = vec4(in_position, 1.0);
     gl_Position = projectionViewMatrix * worldPosition;
 
@@ -24,5 +23,4 @@ void main(void){
     vec3 viewVector = normalize(worldPosition.xyz - cameraPosition);
     pass_reflectVector = reflect(viewVector, unitNormal);
     pass_viewVector = viewVector;
-
 }

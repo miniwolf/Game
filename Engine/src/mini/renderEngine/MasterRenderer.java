@@ -1,6 +1,7 @@
 package mini.renderEngine;
 
 import mini.entityRenderers.EntityRenderer;
+import mini.gui.GuiRenderer;
 import mini.math.Vector4f;
 import mini.scene.Scene;
 import mini.shinyRenderer.ShinyRenderer;
@@ -19,15 +20,17 @@ public class MasterRenderer {
     private SkyboxRenderer skyRenderer;
     private WaterRenderer waterRenderer;
     private WaterFrameBuffers waterFbos;
+    private GuiRenderer guiRenderer;
 
     protected MasterRenderer(EntityRenderer entityRenderer, SkyboxRenderer skyRenderer,
                              WaterRenderer waterRenderer, WaterFrameBuffers waterFbos,
-                             ShinyRenderer shinyRenderer) {
+                             ShinyRenderer shinyRenderer, GuiRenderer guiRenderer) {
         this.entityRenderer = entityRenderer;
         this.skyRenderer = skyRenderer;
         this.waterRenderer = waterRenderer;
         this.waterFbos = waterFbos;
         this.shinyRenderer = shinyRenderer;
+        this.guiRenderer = guiRenderer;
     }
 
     public void renderLowQualityScene(Scene scene, Camera cubeMapCamera) {
@@ -51,6 +54,7 @@ public class MasterRenderer {
         skyRenderer.cleanUp();
         waterRenderer.cleanUp();
         shinyRenderer.cleanUp();
+        guiRenderer.cleanUp();
     }
 
     private void prepare() {
@@ -85,6 +89,7 @@ public class MasterRenderer {
                              scene.getLightDirection());
         skyRenderer.render(scene.getSky(), scene.getCamera());
         waterRenderer.render(scene.getWater(), scene.getCamera(), scene.getLightDirection());
+        guiRenderer.render(scene.getGUI());
     }
 
 }

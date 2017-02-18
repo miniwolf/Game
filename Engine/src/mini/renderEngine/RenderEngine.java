@@ -2,6 +2,7 @@ package mini.renderEngine;
 
 import mini.entityRenderers.EntityRenderer;
 import mini.environmentMapRenderer.EnvironMapRenderer;
+import mini.gui.GuiRenderer;
 import mini.math.Vector3f;
 import mini.scene.Scene;
 import mini.shinyRenderer.ShinyRenderer;
@@ -44,9 +45,10 @@ public class RenderEngine {
         SkyboxRenderer skyRenderer = new SkyboxRenderer();
         WaterRenderer waterRenderer = new WaterRenderer(waterFbos);
         ShinyRenderer shinyRenderer = new ShinyRenderer();
+        GuiRenderer guiRenderer = new GuiRenderer();
         MasterRenderer renderer = new MasterRenderer(basicRenderer, skyRenderer, waterRenderer,
                                                      waterFbos,
-                                                     shinyRenderer);
+                                                     shinyRenderer, guiRenderer);
         return new RenderEngine(display, renderer);
     }
 

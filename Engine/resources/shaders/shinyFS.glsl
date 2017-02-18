@@ -14,7 +14,7 @@ uniform vec3 lightDirection;
 const float specularDamper = 5.0;
 const float reflectivity = 0.3;
 
-void main(void){
+void main(void) {
     vec3 normalizedNormal = normalize(pass_normal);
     vec3 reflectedLight = reflect(lightDirection, normalizedNormal); //
 

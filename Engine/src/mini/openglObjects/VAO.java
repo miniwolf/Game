@@ -9,9 +9,9 @@ public class VAO {
     private static final int BYTES_PER_FLOAT = 4;
 
     private final int id;
+    private int indexCount;
     private VBO dataVbo;
     private VBO indexVbo;
-    private int indexCount;
 
     public static VAO create() {
         int id = GL30.glGenVertexArrays();
@@ -26,7 +26,7 @@ public class VAO {
         return indexCount;
     }
 
-    public void bind() {
+    private void bind() {
         GL30.glBindVertexArray(id);
     }
 
@@ -37,7 +37,7 @@ public class VAO {
         }
     }
 
-    public void unbind() {
+    private void unbind() {
         GL30.glBindVertexArray(0);
     }
 
@@ -52,6 +52,12 @@ public class VAO {
         bind();
         storeData(vertexCount, data);
         createIndexBuffer(indices);
+        unbind();
+    }
+
+    public void storeUnindexedData(int vertexCount, float[]... data) {
+        bind();
+        storeData(vertexCount, data);
         unbind();
     }
 

@@ -13,10 +13,8 @@ float smoothlyStep(float edge0, float edge1, float x){
     return t * t * (3.0 - 2.0 * t);
 }
 
-void main(void){
-
+void main(void) {
     out_colour = texture(cubeMap, pass_textureCoords);
     float fadeFactor = 1.0 - smoothlyStep(0.0, 10.0, pass_height);
     out_colour = mix(out_colour, vec4(1.0), fadeFactor);
-
 }

@@ -18,7 +18,6 @@ const float density = 0.003;
 const float gradient = 5.0;
 
 void main(void) {
-
     vec4 worldPosition = modelMatrix * vec4(position.x, 0.0, position.y, 1.0);
     pass_pos = worldPosition.xz;
     vec4 positionRelativeToCam = viewMatrix * worldPosition;

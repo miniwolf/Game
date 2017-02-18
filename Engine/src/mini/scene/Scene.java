@@ -2,6 +2,7 @@ package mini.scene;
 
 import mini.math.Vector3f;
 import mini.skybox.Skybox;
+import mini.textures.GUITexture;
 import mini.textures.Texture;
 import mini.utils.Camera;
 import mini.water.WaterTile;
@@ -20,6 +21,7 @@ public class Scene {
     private List<Entity> shinyEntities = new ArrayList<>();
 
     private List<WaterTile> waterTiles = new ArrayList<>();
+    private List<GUITexture> guiTextures = new ArrayList<>();
 
     private Camera camera;
     private Vector3f lightDirection = new Vector3f(0, -1, 0);
@@ -118,11 +120,19 @@ public class Scene {
         return standardEntities;
     }
 
+    public List<GUITexture> getGUI() {
+        return guiTextures;
+    }
+
     public void delete() {
         sky.delete();
         for (Entity entity : standardEntities) {
             entity.delete();
         }
         environmentMap.delete();
+    }
+
+    public void addGUITexture(GUITexture texture) {
+        guiTextures.add(texture);
     }
 }
