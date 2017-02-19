@@ -32,9 +32,9 @@ public class Mouse {
 
         MouseButton btn = MouseButton.values()[button];
         for(MouseListener listener : listeners) {
-            if (action == 0) {
+            if (action == 1) {
                 listener.OnClick(btn, lastXPos, lastYPos);
-            } else if (action == 1) {
+            } else if (action == 0) {
                 listener.OnRelease(btn, lastXPos, lastYPos);
             }
         }
@@ -60,6 +60,9 @@ public class Mouse {
      */
     public static void updateScrollWheel(double xOffset, double yOffset) {
         wheelYOffset = yOffset;
+        for(MouseListener listener : listeners) {
+            listener.OnScroll(wheelYOffset);
+        }
     }
 
     /**

@@ -47,6 +47,12 @@ public class MainApp {
                 System.out.println(x);
                 System.out.println(y);
             }
+
+            @Override
+            public void OnScroll(double offset) {
+                System.out.println("Scrolling");
+                System.out.println(offset);
+            }
         });
 
         while (!DisplayManager.isCloseRequested()) {

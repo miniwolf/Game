@@ -6,4 +6,5 @@ package mini.input;
 public interface MouseListener {
     void OnClick(MouseButton btn, double x, double y);
     void OnRelease(MouseButton btn, double x, double y);
+    void OnScroll(double offset);
 }
