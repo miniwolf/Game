@@ -1,6 +1,8 @@
 package mini.input;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.lwjgl.glfw.GLFW.GLFW_PRESS;
@@ -15,6 +17,7 @@ import static org.lwjgl.glfw.GLFW.GLFW_REPEAT;
  */
 public class Mouse {
     private static Map<Integer, Integer> actions = new HashMap<>();
+    private static List<MouseListener> listeners = new ArrayList<>();
 
     private static double lastXPos = 0.0, lastYPos = 0.0;
     private static double deltaXPos = 0.0, deltaYPos = 0.0;
@@ -26,6 +29,16 @@ public class Mouse {
      */
     public static void mouseAction(int button, int action, int mods) {
         actions.put(button, action);
+
+        MouseButton btn = MouseButton.values()[button];
+        for(MouseListener listener : listeners) {
+            if (action == 0) {
+                listener.OnClick(btn, lastXPos, lastYPos);
+            } else if (action == 1) {
+                listener.OnRelease(btn, lastXPos, lastYPos);
+            }
+        }
+
         System.out.println("Button " + button + " action " + action);
     }
 
@@ -71,6 +84,14 @@ public class Mouse {
                (action.equals(GLFW_PRESS) || action.equals(GLFW_REPEAT));
         // TODO: Answer the question: Is the button down if
         // TODO: !.equal(GLFW_PRESS) && .equal(GLFW_REPEAT)
+    }
+
+    public static void addMouseListener(MouseListener listener) {
+        listeners.add(listener);
+    }
+
+    public static void removeMouseListener(MouseListener listener) {
+        listeners.remove(listener);
     }
 
     /**
