@@ -1,24 +1,31 @@
 package mini.input;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import static org.lwjgl.glfw.GLFW.GLFW_PRESS;
-import static org.lwjgl.glfw.GLFW.GLFW_RELEASE;
-import static org.lwjgl.glfw.GLFW.GLFW_REPEAT;
-
 /**
- * Created by miniwolf on 15-02-2017.
+ * @author miniwolf and Zargess
  */
 public class Keyboard {
-    private static Map<Integer, Integer> keys = new HashMap<>();
+    private static Map<KeyboardKey, Action> keys = new HashMap<>();
+    private static List<KeyboardListener> listeners = new ArrayList<>();
 
     /**
      * Should not be used
      * (INTERNAL USE)
      */
-    public static void updateKey(int key, int action, int mods) {
+    public static void updateKey(KeyboardKey key, Action action, int mods) {
         keys.put(key, action);
+        boolean isPressed = action == Action.PRESS;
+        for (KeyboardListener listener : listeners) {
+            if (isPressed) {
+                listener.onClick(key, mods);
+            } else {
+                listener.onRelease(key, mods);
+            }
+        }
     }
 
     /**
@@ -30,16 +37,34 @@ public class Keyboard {
     }
 
     /**
-     * @param key
-     * @return
+     * Register as listener to keyboard
+     *
+     * @param listener
      */
-    public static boolean isKeyDown(int key) {
-        Integer action = keys.get(key);
-        return action != null && (action.equals(GLFW_PRESS) || action.equals(GLFW_REPEAT));
+    public static void addListener(KeyboardListener listener) {
+        listeners.add(listener);
     }
 
-    public static boolean isKeyUp(int key) {
-        Integer action = keys.get(key);
-        return action != null && (action.equals(GLFW_RELEASE));
+    /**
+     * Unregister as listener to keyboard
+     *
+     * @param listener
+     */
+    public static void removeListener(KeyboardListener listener) {
+        listeners.remove(listener);
+    }
+
+    /**
+     * @param key
+     * @return whether key is pressed down.
+     */
+    public static boolean isKeyDown(KeyboardKey key) {
+        Action action = keys.get(key);
+        return action != null && (action.equals(Action.PRESS) || action.equals(Action.REPEAT));
+    }
+
+    public static boolean isKeyUp(KeyboardKey key) {
+        Action action = keys.get(key);
+        return action != null && (action.equals(Action.RELEASE));
     }
 }
