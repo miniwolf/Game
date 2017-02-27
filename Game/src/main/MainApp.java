@@ -4,18 +4,14 @@ import loaders.LoaderSettings;
 import loaders.SceneLoader;
 import loaders.SceneLoaderFactory;
 import mini.input.Keyboard;
+import mini.input.KeyboardKey;
+import mini.input.KeyboardListener;
 import mini.input.Mouse;
 import mini.input.MouseButton;
 import mini.input.MouseListener;
-import mini.input.KeyboardListener;
-import mini.input.KeyboardKey;
-import mini.math.Vector2f;
 import mini.math.Vector3f;
 import mini.renderEngine.RenderEngine;
 import mini.scene.Scene;
-import mini.textures.GUITexture;
-import mini.textures.Texture;
-import mini.textures.TextureBuilder;
 import mini.utils.DisplayManager;
 import mini.utils.MyFile;
 
@@ -36,7 +32,7 @@ public class MainApp {
 
         Mouse.addMouseListener(new MouseListener() {
             @Override
-            public void OnClick(MouseButton btn, double x, double y) {
+            public void onClick(MouseButton btn, double x, double y) {
                 System.out.println("Mouse clicked");
                 System.out.println(btn);
                 System.out.println(x);
@@ -44,7 +40,7 @@ public class MainApp {
             }
 
             @Override
-            public void OnRelease(MouseButton btn, double x, double y) {
+            public void onRelease(MouseButton btn, double x, double y) {
                 System.out.println("Mouse released");
                 System.out.println(btn);
                 System.out.println(x);
@@ -52,7 +48,7 @@ public class MainApp {
             }
 
             @Override
-            public void OnScroll(double offset) {
+            public void onScroll(double offset) {
                 System.out.println("Scrolling");
                 System.out.println(offset);
             }

@@ -1,8 +1,14 @@
 package mini.input;
 
 /**
- * Created by costa on 27-02-2017.
+ * @author miniwolf and Zargess
  */
 public enum Action {
-    RELEASE, PRESS
+    RELEASE, PRESS, REPEAT;
+
+    private static final Action[] actions = Action.values();
+
+    public static Action[] getValues() {
+        return actions;
+    }
 }

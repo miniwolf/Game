@@ -1,6 +1,8 @@
 package mini.utils;
 
+import mini.input.Action;
 import mini.input.Keyboard;
+import mini.input.KeyboardKey;
 import mini.input.Mouse;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL;
@@ -84,7 +86,7 @@ public class DisplayManager {
 
     private static void setupCallbackFunctions() {
         glfwSetMouseButtonCallback(window, (window, button, action, mods) ->
-                Mouse.mouseAction(button, action, mods));
+                Mouse.mouseAction(button, Action.getValues()[action], mods));
 
         glfwSetCursorPosCallback(window, (window, xpos, ypos) -> Mouse.updatePosition(xpos, ypos));
 
@@ -92,7 +94,7 @@ public class DisplayManager {
                 Mouse.updateScrollWheel(xoffset, yoffset));
 
         glfwSetKeyCallback(window, (window, key, scancode, action, mods) ->
-                Keyboard.updateKey(key, action, mods));
+                Keyboard.updateKey(KeyboardKey.getValues().get(key), Action.values()[action], mods));
     }
 
     private DisplayManager() {

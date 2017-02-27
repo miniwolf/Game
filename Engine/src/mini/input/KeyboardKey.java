@@ -1,7 +1,11 @@
 package mini.input;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
- * Created by costa on 19-02-2017.
+ * @author Zargess
  */
 public enum KeyboardKey {
     KEY_UNKNOWN(-1),
@@ -127,8 +131,18 @@ public enum KeyboardKey {
     KEY_MENU(348);
 
     private final int value;
+    private static Map<Integer, KeyboardKey> values = new HashMap<>();
+
+    static {
+        Arrays.stream(KeyboardKey.values()).forEach(key -> values.put(key.getValue(), key));
+    }
+
     KeyboardKey(int value) {
         this.value = value;
+    }
+
+    public static Map<Integer, KeyboardKey> getValues() {
+        return values;
     }
 
     public int getValue() {
