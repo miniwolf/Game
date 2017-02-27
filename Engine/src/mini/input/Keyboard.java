@@ -1,9 +1,6 @@
 package mini.input;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.lwjgl.glfw.GLFW.GLFW_PRESS;
 import static org.lwjgl.glfw.GLFW.GLFW_RELEASE;
@@ -24,12 +21,13 @@ public class Keyboard {
         keys.put(key, action);
 
         KeyboardKey k = getKey(key);
-
-        for (KeyboardListener listener : listeners) {
-            if (action == 0) {
-                listener.OnRelease(k, mods);
-            } else if (action == 1) {
-                listener.OnClick(k, mods);
+        Action a = action == 0 ? Action.RELEASE : Action.PRESS;
+        boolean isPressed = a == Action.PRESS;
+        for ( KeyboardListener listener : listeners ) {
+            if (isPressed) {
+                listener.onClick(k, mods);
+            } else  {
+                listener.onRelease(k, mods);
             }
         }
     }
@@ -73,11 +71,8 @@ public class Keyboard {
     }
 
     private static KeyboardKey getKey(int key) {
-        for(KeyboardKey k : KeyboardKey.values()) {
-            if (k.getValue() == key) {
-                return k;
-            }
-        }
-        return KeyboardKey.KEY_UNKNOWN;
+        Optional<KeyboardKey> opt = Arrays.stream(KeyboardKey.values()).parallel().filter(x -> x.getValue() == key).findFirst();
+
+        return opt.isPresent() ? opt.get() : KeyboardKey.KEY_UNKNOWN;
     }
 }

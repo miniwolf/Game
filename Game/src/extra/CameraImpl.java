@@ -1,7 +1,6 @@
 package extra;
 
-import mini.input.Keyboard;
-import mini.input.Mouse;
+import mini.input.*;
 import mini.math.Matrix3f;
 import mini.math.Matrix4f;
 import mini.math.Vector3f;
@@ -9,12 +8,12 @@ import mini.utils.Camera;
 import mini.utils.DisplayManager;
 import mini.utils.SmoothFloat;
 
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_R;
+//import static org.lwjgl.glfw.GLFW.GLFW_KEY_R;
 
 /**
  * This camera is implementing the techniques of a follow camera.
  */
-public class CameraImpl implements Camera {
+public class CameraImpl implements Camera, MouseListener, KeyboardListener {
     private static final float FOV = 70;
     private static final float NEAR_PLANE = 0.1f;
     private static final float FAR_PLANE = 300;
@@ -159,13 +158,40 @@ public class CameraImpl implements Camera {
     }
 
     private void calculateAngleAroundPlayer() {
-        if (Mouse.isButtonDown(0)) {
+        /*if (Mouse.isButtonDown(0)) {
             float angleChange = (float) (Mouse.getDeltaX() * 0.3f);
             angleAroundPlayer.increaseTarget(-angleChange);
         } else if (Keyboard.isKeyDown(GLFW_KEY_R)) {
             angleAroundPlayer.increaseTarget(0.5f);
-        }
+        }*/
         angleAroundPlayer.update(0.01f);
     }
 
+    @Override
+    public void OnClick(MouseButton btn, double x, double y) {
+        if (btn == MouseButton.MOUSE_BUTTON_1) {
+            float angleChange = (float) (Mouse.getDeltaX() * 0.3f);
+            angleAroundPlayer.increaseTarget(-angleChange);
+        }
+    }
+
+    @Override
+    public void OnRelease(MouseButton btn, double x, double y) {
+
+    }
+
+    @Override
+    public void OnScroll(double offset) {
+
+    }
+
+    @Override
+    public void onClick(KeyboardKey key, int mods) {
+        angleAroundPlayer.increaseTarget(0.5f);
+    }
+
+    @Override
+    public void onRelease(KeyboardKey key, int mods) {
+
+    }
 }

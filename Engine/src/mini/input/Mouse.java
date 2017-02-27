@@ -31,10 +31,13 @@ public class Mouse {
         actions.put(button, action);
 
         MouseButton btn = MouseButton.values()[button];
-        for(MouseListener listener : listeners) {
-            if (action == 1) {
+        Action a = action == 0 ? Action.RELEASE : Action.PRESS;
+        boolean isPressed = a == Action.PRESS;
+
+        for( MouseListener listener : listeners ) {
+            if (isPressed) {
                 listener.OnClick(btn, lastXPos, lastYPos);
-            } else if (action == 0) {
+            } else {
                 listener.OnRelease(btn, lastXPos, lastYPos);
             }
         }

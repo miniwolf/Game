@@ -3,7 +3,12 @@ package main;
 import loaders.LoaderSettings;
 import loaders.SceneLoader;
 import loaders.SceneLoaderFactory;
-import mini.input.*;
+import mini.input.Keyboard;
+import mini.input.Mouse;
+import mini.input.MouseButton;
+import mini.input.MouseListener;
+import mini.input.KeyboardListener;
+import mini.input.KeyboardKey;
 import mini.math.Vector2f;
 import mini.math.Vector3f;
 import mini.renderEngine.RenderEngine;
@@ -55,13 +60,13 @@ public class MainApp {
 
         Keyboard.addListener(new KeyboardListener() {
             @Override
-            public void OnClick(KeyboardKey key, int mods) {
+            public void onClick(KeyboardKey key, int mods) {
                 System.out.println("Keyboard button clicked");
                 System.out.println(key);
             }
 
             @Override
-            public void OnRelease(KeyboardKey key, int mods) {
+            public void onRelease(KeyboardKey key, int mods) {
                 System.out.println("Keyboard button released");
                 System.out.println(key);
             }
