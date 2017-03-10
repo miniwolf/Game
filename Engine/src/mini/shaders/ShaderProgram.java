@@ -5,6 +5,8 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 
 import java.io.BufferedReader;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class ShaderProgram {
     private int programID;
@@ -52,12 +54,8 @@ public class ShaderProgram {
     private int loadShader(MyFile file, int type) {
         StringBuilder shaderSource = new StringBuilder();
         try {
-            BufferedReader reader = file.getReader();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                shaderSource.append(line).append("//\n");
-            }
-            reader.close();
+            List<String> lines = file.getLines();
+            lines.forEach(line -> shaderSource.append(line).append("//\n"));
         } catch (Exception e) {
             System.err.println("Could not read file.");
             e.printStackTrace();

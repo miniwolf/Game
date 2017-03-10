@@ -1,14 +1,12 @@
 package mini.utils;
 
-import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class MyFile {
@@ -24,11 +22,11 @@ public class MyFile {
     }
 
     public MyFile(String... paths) {
-        this.path = "";
+        StringBuilder builder = new StringBuilder();
         for (String part : paths) {
-            this.path += (FILE_SEPARATOR + part);
+            builder.append(FILE_SEPARATOR).append(part);
         }
-        path = path.substring(1);
+        path = builder.toString().substring(1);
         String[] dirs = path.split(FILE_SEPARATOR);
         this.name = dirs[dirs.length - 1];
     }
@@ -39,10 +37,11 @@ public class MyFile {
     }
 
     public MyFile(MyFile file, String... subFiles) {
-        this.path = file.path;
+        StringBuilder newPath = new StringBuilder(file.path);
         for (String part : subFiles) {
-            this.path += (FILE_SEPARATOR + part);
+            newPath.append(FILE_SEPARATOR).append(part);
         }
+        this.path = newPath.toString();
         String[] dirs = path.split(FILE_SEPARATOR);
         this.name = dirs[dirs.length - 1];
     }
@@ -65,15 +64,8 @@ public class MyFile {
         return null;
     }
 
-    public BufferedReader getReader() throws Exception {
-        try {
-            InputStreamReader isr = new InputStreamReader(getInputStream());
-            BufferedReader reader = new BufferedReader(isr);
-            return reader;
-        } catch (Exception e) {
-            System.err.println("Couldn't get reader for " + path);
-            throw e;
-        }
+    public List<String> getLines() throws IOException {
+        return Files.lines(Paths.get("out/production/" + path)).collect(Collectors.toList());
     }
 
     public String getName() {

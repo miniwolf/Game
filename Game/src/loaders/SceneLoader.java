@@ -1,8 +1,5 @@
 package loaders;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-
 import extra.CameraImpl;
 import main.WorldSettings;
 import mini.scene.Entity;
@@ -10,6 +7,8 @@ import mini.scene.Scene;
 import mini.skybox.Skybox;
 import mini.utils.Camera;
 import mini.utils.MyFile;
+
+import java.util.List;
 
 public class SceneLoader {
     private EntityLoader entityLoader;
@@ -22,11 +21,11 @@ public class SceneLoader {
 
     public Scene loadScene(MyFile sceneFile) {
         MyFile sceneList = new MyFile(sceneFile, LoaderSettings.ENTITY_LIST_FILE);
-        BufferedReader reader = getReader(sceneList);
-        MyFile[] terrainFiles = readEntityFiles(reader, sceneFile);
-        MyFile[] shinyFiles = readEntityFiles(reader, sceneFile);
-        MyFile[] entityFiles = readEntityFiles(reader, sceneFile);
-        closeReader(reader);
+        List<String> lines = getLines(sceneList);
+        assert lines != null;
+        MyFile[] terrainFiles = readEntityFiles(lines.get(0), sceneFile);
+        MyFile[] shinyFiles = readEntityFiles(lines.get(1), sceneFile);
+        MyFile[] entityFiles = readEntityFiles(lines.get(2), sceneFile);
         Skybox sky = skyLoader.loadSkyBox(new MyFile(sceneFile, LoaderSettings.SKYBOX_FOLDER));
         return createScene(terrainFiles, entityFiles, shinyFiles, sky);
     }
@@ -63,9 +62,9 @@ public class SceneLoader {
         }
     }
 
-    private BufferedReader getReader(MyFile file) {
+    private List<String> getLines(MyFile file) {
         try {
-            return file.getReader();
+            return file.getLines();
         } catch (Exception e) {
             e.printStackTrace();
             System.err.println("Couldn't find mini.scene file: " + file);
@@ -74,28 +73,12 @@ public class SceneLoader {
         }
     }
 
-    private void closeReader(BufferedReader reader) {
-        try {
-            reader.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+    private MyFile[] readEntityFiles(String line, MyFile sceneFile) {
+        String[] names = line.split(LoaderSettings.SEPARATOR);
+        MyFile[] files = new MyFile[names.length];
+        for (int i = 0; i < files.length; i++) {
+            files[i] = new MyFile(sceneFile, names[i]);
         }
-    }
-
-    private MyFile[] readEntityFiles(BufferedReader reader, MyFile sceneFile) {
-        try {
-            String line = reader.readLine();
-            String[] names = line.split(LoaderSettings.SEPARATOR);
-            MyFile[] files = new MyFile[names.length];
-            for (int i = 0; i < files.length; i++) {
-                files[i] = new MyFile(sceneFile, names[i]);
-            }
-            return files;
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.err.println("Couldn't read mini.scene file: " + sceneFile);
-            System.exit(-1);
-            return null;
-        }
+        return files;
     }
 }
