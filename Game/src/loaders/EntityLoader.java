@@ -28,7 +28,7 @@ public class EntityLoader {
     }
 
     private Skin loadSkin(MyFile entityFile, Configs configs) {
-        Skin skin = null;
+        Skin skin;
         MyFile diffuseFile = new MyFile(entityFile, LoaderSettings.DIFFUSE_FILE);
         if (configs.hasExtraMap()) {
             skin = skinLoader

@@ -1,3 +1,3 @@
 Terrain
 Statue
-Trees;Path Edge;Rocks;Bushes;Bridge;Fences;Windmill;Mushrooms;Herb Stall;Barrels;Cute Trees;Bench;Lanterns;Lilly Pads;Foxes;Turtles
+Fancy Tree;Trees;Path Edge;Rocks;Bushes;Bridge;Fences;Windmill;Mushrooms;Herb Stall;Barrels;Cute Trees;Bench;Lanterns;Lilly Pads;Foxes;Turtles

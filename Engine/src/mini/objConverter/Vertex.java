@@ -1,5 +1,6 @@
 package mini.objConverter;
 
+import mini.math.Vector2f;
 import mini.math.Vector3f;
 
 import java.util.ArrayList;
@@ -13,7 +14,9 @@ public class Vertex {
     private int index;
     private float length;
     private Vertex duplicateVertex = null;
+    private Vector2f texCoord;
     private Vector3f position;
+    private Vector3f normal;
     private Vector3f averagedTangent = new Vector3f(0, 0, 0);
     private List<Vector3f> tangents = new ArrayList<>();
 
@@ -85,4 +88,15 @@ public class Vertex {
         this.duplicateVertex = duplicateVertex;
     }
 
+    public void setTexCoord(Vector2f texCoord) {
+        this.texCoord = texCoord;
+    }
+
+    public Vector2f getTexCoord() {
+        return texCoord;
+    }
+
+    public void setNormal(Vector3f normal) {
+        this.normal = normal;
+    }
 }

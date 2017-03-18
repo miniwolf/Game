@@ -50,6 +50,10 @@ public class MyFile {
         return path;
     }
 
+    public String getDirectory() {
+        return path.substring(0, path.indexOf(name));
+    }
+
     @Override
     public String toString() {
         return getPath();
