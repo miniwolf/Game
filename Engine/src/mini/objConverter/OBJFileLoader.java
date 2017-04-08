@@ -4,15 +4,15 @@ import mini.material.Material;
 import mini.math.Vector2f;
 import mini.math.Vector3f;
 import mini.utils.MyFile;
+import scala.collection.immutable.Map;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 public class OBJFileLoader {
-    private static Map<String, List<Face>> matFaces = new HashMap<>();
+    private static java.util.Map<String, List<Face>> matFaces = new HashMap<>();
     private static final List<Face> faces = new ArrayList<>();
     private static List<Vertex> vertList = new ArrayList<>();
     private static List<Vertex> vertices = new ArrayList<>();
@@ -156,9 +156,8 @@ public class OBJFileLoader {
 
         for (String libname : libnames) {
             matList = MTLFileLoader.load(new MyFile(path, libname));
-            matList.keySet().forEach(matName -> {
-                matFaces.put(matName, new ArrayList<>());
-            });
+            matList.map;
+            matList.keySet().forEach(matName -> matFaces.put(matName, new ArrayList<>()));
         }
     }
 

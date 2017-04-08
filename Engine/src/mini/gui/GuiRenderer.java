@@ -1,8 +1,6 @@
 package mini.gui;
 
-import mini.math.Matrix3f;
 import mini.math.Matrix4f;
-import mini.math.Vector3f;
 import mini.openglObjects.VAO;
 import mini.textures.GUITexture;
 import org.lwjgl.opengl.GL11;
