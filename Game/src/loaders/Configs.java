@@ -1,5 +1,7 @@
 package loaders;
 
+import java.util.List;
+
 public class Configs {
 
     private boolean hasExtraMap = false;
@@ -8,6 +10,7 @@ public class Configs {
     private boolean hasRefraction = false;
     private boolean castsShadow = false;
     private boolean important = false;
+    private List<String> diffuseMap;
 
     protected void setExtraMap(boolean hasExtraMap){
         this.hasExtraMap = hasExtraMap;
@@ -57,4 +60,11 @@ public class Configs {
         return castsShadow;
     }
 
+    public void setDiffuseMaps(List<String> diffuseMap) {
+        this.diffuseMap = diffuseMap;
+    }
+
+    public List<String> getDiffuseMaps() {
+        return diffuseMap;
+    }
 }

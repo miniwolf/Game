@@ -6,7 +6,9 @@ package mini.shaders;
 public enum VarType {
     Float("float"),
     Vector3("vec3"),
-    Vector4("vec4");
+    Vector4("vec4"),
+    Texture2D(false,true,"sampler2D|sampler2DShadow"),
+    Int("int"), Matrix4f("mat4");
 
     private boolean multiData = false;
     private boolean textureType = false;
@@ -20,5 +22,9 @@ public enum VarType {
         this.multiData = multiData;
         this.textureType = textureType;
         this.glslType = glslType;
+    }
+
+    public boolean isTextureType() {
+        return textureType;
     }
 }

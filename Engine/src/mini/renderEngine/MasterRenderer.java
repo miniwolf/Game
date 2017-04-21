@@ -3,6 +3,7 @@ package mini.renderEngine;
 import mini.entityRenderers.EntityRenderer;
 import mini.gui.GuiRenderer;
 import mini.math.Vector4f;
+import mini.renderEngine.opengl.GLRenderer;
 import mini.scene.Scene;
 import mini.shinyRenderer.ShinyRenderer;
 import mini.skybox.SkyboxRenderer;
@@ -21,22 +22,25 @@ public class MasterRenderer {
     private WaterRenderer waterRenderer;
     private WaterFrameBuffers waterFbos;
     private GuiRenderer guiRenderer;
+    private GLRenderer glRenderer;
 
     protected MasterRenderer(EntityRenderer entityRenderer, SkyboxRenderer skyRenderer,
                              WaterRenderer waterRenderer, WaterFrameBuffers waterFbos,
-                             ShinyRenderer shinyRenderer, GuiRenderer guiRenderer) {
+                             ShinyRenderer shinyRenderer, GuiRenderer guiRenderer,
+                             GLRenderer glRenderer) {
         this.entityRenderer = entityRenderer;
         this.skyRenderer = skyRenderer;
         this.waterRenderer = waterRenderer;
         this.waterFbos = waterFbos;
         this.shinyRenderer = shinyRenderer;
         this.guiRenderer = guiRenderer;
+        this.glRenderer = glRenderer;
     }
 
     public void renderLowQualityScene(Scene scene, Camera cubeMapCamera) {
         prepare();
         entityRenderer.render(scene.getImportantEntities(), cubeMapCamera,
-                              scene.getLightDirection(), NO_CLIP);
+                              scene.getLightDirection(), NO_CLIP, glRenderer);
         skyRenderer.render(scene.getSky(), cubeMapCamera);
     }
 
@@ -67,7 +71,7 @@ public class MasterRenderer {
         prepare();
         scene.getCamera().reflect(scene.getWaterHeight());
         entityRenderer.render(scene.getReflectedEntities(), scene.getCamera(),
-                              scene.getLightDirection(), new Vector4f(0, 1, 0, 0.1f));
+                              scene.getLightDirection(), new Vector4f(0, 1, 0, 0.1f), glRenderer);
         skyRenderer.render(scene.getSky(), scene.getCamera());
         waterFbos.unbindCurrentFrameBuffer();
         scene.getCamera().reflect(scene.getWaterHeight());
@@ -77,16 +81,16 @@ public class MasterRenderer {
         waterFbos.bindRefractionFrameBuffer();
         prepare();
         entityRenderer.render(scene.getUnderwaterEntities(), scene.getCamera(),
-                              scene.getLightDirection(), new Vector4f(0, -1, 0, 0));
+                              scene.getLightDirection(), new Vector4f(0, -1, 0, 0), glRenderer);
         waterFbos.unbindCurrentFrameBuffer();
     }
 
     private void renderMainPass(Scene scene) {
         prepare();
         entityRenderer.render(scene.getAllEntities(), scene.getCamera(), scene.getLightDirection(),
-                              NO_CLIP);
+                              NO_CLIP, glRenderer);
         shinyRenderer.render(scene.getShinyEntities(), scene.getEnvironmentMap(), scene.getCamera(),
-                             scene.getLightDirection());
+                             scene.getLightDirection(), glRenderer);
         skyRenderer.render(scene.getSky(), scene.getCamera());
         waterRenderer.render(scene.getWater(), scene.getCamera(), scene.getLightDirection());
         guiRenderer.render(scene.getGUI());

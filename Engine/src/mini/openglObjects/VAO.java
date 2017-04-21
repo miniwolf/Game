@@ -135,4 +135,7 @@ public class VAO {
         return interleavedBuffer;
     }
 
+    public int getId() {
+        return id;
+    }
 }

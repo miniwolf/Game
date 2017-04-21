@@ -1,15 +1,27 @@
 package mini.shaders;
 
+import mini.scene.VertexBuffer;
 import mini.utils.MyFile;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 
 import java.io.BufferedReader;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class ShaderProgram {
     private int programID;
+    /**
+     * Maps attribute name to the location of the attribute in the shader.
+     */
+    private final Map<Integer, Attribute> attribs = new HashMap<>();
+
+    /**
+     * Maps uniform name to the uniform variable.
+     */
+    private final Map<String, Uniform> uniforms = new HashMap<>();
 
     public ShaderProgram(MyFile vertexFile, MyFile fragmentFile, String... inVariables) {
         int vertexShaderID = loadShader(vertexFile, GL20.GL_VERTEX_SHADER);
@@ -70,5 +82,31 @@ public class ShaderProgram {
             System.exit(-1);
         }
         return shaderID;
+    }
+
+    public Attribute getAttribute(VertexBuffer.Type attribType) {
+        int ordinal = attribType.ordinal();
+        Attribute attrib = attribs.get(ordinal);
+        if (attrib == null) {
+            attrib = new Attribute();
+            attrib.name = attribType.name();
+            attribs.put(ordinal, attrib);
+        }
+        return attrib;
+    }
+
+    public Uniform getUniform(String name){
+        //assert name.startsWith("m_") || name.startsWith("g_");
+        Uniform uniform = uniforms.get(name);
+        if (uniform == null){
+            uniform = new Uniform();
+            uniform.name = name;
+            uniforms.put(name, uniform);
+        }
+        return uniform;
+    }
+
+    public int getId() {
+        return programID;
     }
 }

@@ -1,7 +1,4 @@
-package mini.objConverter;
-
-import mini.math.Vector2f;
-import mini.math.Vector3f;
+package mini.math;
 
 import java.util.ArrayList;
 import java.util.List;

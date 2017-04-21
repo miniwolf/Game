@@ -1,9 +1,15 @@
 package loaders;
 
+import mini.material.Material;
 import mini.scene.Entity;
-import mini.scene.Model;
-import mini.scene.Skin;
+import mini.scene.Geometry;
+import mini.scene.Spatial;
+import mini.shaders.VarType;
+import mini.textures.Texture;
+import mini.textures.TextureBuilder;
 import mini.utils.MyFile;
+
+import java.util.List;
 
 public class EntityLoader {
     private ModelLoader modelLoader;
@@ -18,32 +24,41 @@ public class EntityLoader {
     }
 
     protected Entity loadEntity(MyFile entityFile) {
-        Model model = modelLoader.loadModel(new MyFile(entityFile, LoaderSettings.MODEL_FILE));
+        Entity entity = modelLoader.loadModel(new MyFile(entityFile, LoaderSettings.MODEL_FILE));
         Configs configs = configsLoader
                 .loadConfigs(new MyFile(entityFile, LoaderSettings.CONFIGS_FILE));
-        Skin skin = loadSkin(entityFile, configs);
-        Entity entity = new Entity(model, skin);
-        setEntityConfigs(entity, configs);
+        setEntityConfigs(entity, configs, entityFile);
         return entity;
+
     }
 
-    private Skin loadSkin(MyFile entityFile, Configs configs) {
-        Skin skin;
-        MyFile diffuseFile = new MyFile(entityFile, LoaderSettings.DIFFUSE_FILE);
-        if (configs.hasExtraMap()) {
-            skin = skinLoader
-                    .loadSkin(diffuseFile, new MyFile(entityFile, LoaderSettings.EXTRA_MAP_FILE));
-        } else {
-            skin = skinLoader.loadSkin(diffuseFile);
-        }
-        skin.setTransparent(configs.hasTransparency());
-        return skin;
-    }
+//    private Material loadSkin(MyFile entityFile, Configs configs) {
+//        Material material;
+//        MyFile diffuseFile = new MyFile(entityFile, LoaderSettings.DIFFUSE_FILE);
+//        if (configs.hasExtraMap()) {
+//            material = skinLoader
+//                    .loadSkin(diffuseFile, new MyFile(entityFile, LoaderSettings.EXTRA_MAP_FILE));
+//        } else {
+//            material = skinLoader.loadSkin(diffuseFile);
+//        }
+//        material.setTransparent(configs.hasTransparency());
+//        return material;
+//    }
 
-    private void setEntityConfigs(Entity entity, Configs configs) {
+    private void setEntityConfigs(Entity entity, Configs configs, MyFile entityFile) {
         entity.setCastsShadow(configs.castsShadow());
         entity.setHasReflection(configs.hasReflection());
         entity.setSeenUnderWater(configs.hasRefraction());
         entity.setImportant(configs.isImportant());
+        if (configs.getDiffuseMaps() != null) {
+            for (int i = 0; i < configs.getDiffuseMaps().size(); i++) {
+                String diffuseMap = configs.getDiffuseMaps().get(i);
+                MyFile myFile = new MyFile(entityFile, diffuseMap);
+                Texture texture = new TextureBuilder(myFile).create();
+                Spatial spatial = entity.getChildren().get(i);
+                ((Geometry) spatial).getMaterial()
+                                    .setTextureParam("diffuseMap", VarType.Texture2D, texture);
+            }
+        }
     }
 }

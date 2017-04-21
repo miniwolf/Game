@@ -3,6 +3,8 @@ package mini.objConverter
 import mini.material.Material
 import mini.math.ColorRGBA
 import mini.utils.MyFile
+import mini.shaders.VarType
+import mini.textures.{Texture, TextureBuilder}
 
 import collection.JavaConverters._
 
@@ -29,6 +31,7 @@ object MTLFileLoader {
               material.setColor("Diffuse", createColorParam(x))
             case x: String if x startsWith "Ks" =>
               material.setColor("Specular", createColorParam(x))
+            case x: String if x.isEmpty =>
             case x: String if x startsWith "#" =>
             case s =>
               println(s"Unsupported value $s")

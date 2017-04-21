@@ -3,5 +3,5 @@ hasTransparency;FALSE
 hasReflection;TRUE
 hasRefraction;FALSE
 castsShadow;TRUE
-important;FALSE
-diffuse;[diffuse.png]
+important;TRUE
+diffuseMap;[Tex_0323_2.png,Tex_0322_2.png,Tex_0321_3.png]

@@ -10,7 +10,7 @@ public class TextureBuilder {
 
     private MyFile file;
 
-    protected TextureBuilder(MyFile textureFile) {
+    public TextureBuilder(MyFile textureFile) {
         this.file = textureFile;
     }
 

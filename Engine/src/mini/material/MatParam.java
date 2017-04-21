@@ -11,7 +11,8 @@ import mini.shaders.VarType;
 public class MatParam {
     private final VarType type;
     private final String name;
-    private final Object value;
+    protected Object value;
+    private String prefixedName;
 
     public MatParam(VarType type, String name, Object value) {
         this.type = type;
@@ -20,9 +21,11 @@ public class MatParam {
     }
 
     /**
+     * Returns the material parameter type.
+     *
      * @return the material parameter type.
      */
-    public VarType getType() {
+    public VarType getVarType() {
         return type;
     }
 
@@ -44,5 +47,21 @@ public class MatParam {
      */
     public Object getValue() {
         return value;
+    }
+
+    /**
+     * Sets the value of this material parameter.
+     * <p>
+     * It is assumed the value is of the same {@link MatParam#getVarType() type}
+     * as this material parameter.
+     *
+     * @param value the value of this material parameter.
+     */
+    public void setValue(Object value) {
+        this.value = value;
+    }
+
+    public String getPrefixedName() {
+        return prefixedName;
     }
 }
