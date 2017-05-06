@@ -1,0 +1,73 @@
+package mini.shaders;
+
+import mini.math.Matrix4f;
+import mini.math.Vector3f;
+import mini.math.Vector4f;
+import mini.scene.Geometry;
+import mini.utils.Camera;
+
+import java.util.List;
+
+import static mini.shaders.UniformBinding.WorldMatrix;
+
+/**
+ * Created by miniwolf on 22-04-2017.
+ */
+public class UniformBindingManager {
+    private Matrix4f worldMatrix = new Matrix4f();
+    private Matrix4f viewProjMatrix = new Matrix4f();
+    private Matrix4f viewMatrix = new Matrix4f();
+    private Matrix4f projMatrix = new Matrix4f();
+    private Vector3f camLoc;
+    private Vector3f lightDir;
+
+    /**
+     * Internal use only.
+     * Updates the given list of uniforms with {@link UniformBinding uniform bindings}
+     * based on the current world state.
+     */
+    public void updateUniformBindings(ShaderProgram shader) {
+        List<Uniform> params = shader.getBoundUniforms();
+        for (Uniform u : params) {
+            switch (u.getBinding()) {
+                case WorldMatrix:
+                    u.setValue(VarType.Matrix4f, worldMatrix);
+                    break;
+                case ViewProjectionMatrix:
+                    u.setValue(VarType.Matrix4f, viewProjMatrix);
+                    break;
+                case CameraPosition:
+                    u.setValue(VarType.Vector3, camLoc);
+                    break;
+                case LightDirection:
+                    u.setValue(VarType.Vector3, lightDir);
+            }
+        }
+    }
+
+    /**
+     * Internal use only. Sets the world matrix to use for future
+     * rendering. This has no effect unless objects are rendered manually
+     * using {@link Material#render(Geometry) }.
+     *
+     * @param mat The world matrix to set
+     */
+    public void setWorldMatrix(Matrix4f mat) {
+        worldMatrix.set(mat);
+    }
+
+    public void setViewProjMatrix(Matrix4f viewProjMatrix) {
+        this.viewProjMatrix.set(viewProjMatrix);
+    }
+
+    public void setCamera(Camera camera) {
+        viewProjMatrix.set(camera.getProjectionViewMatrix());
+        viewMatrix.set(camera.getViewMatrix());
+        projMatrix.set(camera.getProjectionMatrix());
+        camLoc = camera.getPosition();
+    }
+
+    public void setLightDir(Vector3f lightDir) {
+        this.lightDir = lightDir;
+    }
+}

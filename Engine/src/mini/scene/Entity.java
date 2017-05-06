@@ -117,8 +117,8 @@ public class Entity extends Spatial {
     }
 
     public void delete() {
-        geometry.delete();
-        material.delete();
+        //geometry.delete();
+        //material.delete();
     }
 
     public boolean isShadowCasting() {

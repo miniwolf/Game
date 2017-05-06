@@ -53,6 +53,19 @@ public class Mesh {
     private Map<Integer, VertexBuffer> buffers = new HashMap<>();
 
     /**
+     * Returns how many triangles or elements are on this Mesh.
+     * This value is only updated when {@link #updateCounts() } is called.
+     * If the mesh mode is not a triangle mode, then this returns the
+     * number of elements/primitives, e.g. how many lines or how many points,
+     * instead of how many triangles.
+     *
+     * @return how many triangles/elements are on this Mesh.
+     */
+    public int getTriangleCount(){
+        return elementCount;
+    }
+
+    /**
      * Returns the number of vertices on this mesh.
      * The value is computed based on the position buffer, which
      * must be set on all meshes.

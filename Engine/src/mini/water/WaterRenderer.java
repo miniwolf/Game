@@ -4,6 +4,8 @@ import java.util.List;
 
 import mini.math.Matrix4f;
 import mini.math.Vector3f;
+import mini.shaders.UniformBindingManager;
+import mini.shaders.VarType;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 
@@ -35,12 +37,15 @@ public class WaterRenderer {
         this.dudvTexture = Texture.newTexture(DUDV_MAP).anisotropic().create();
     }
 
-    public void render(List<WaterTile> water, Camera camera, Vector3f lightDir) {
-        prepareRender(camera, lightDir);
+    public void render(List<WaterTile> water, Camera camera, Vector3f lightDir,
+                       UniformBindingManager manager) {
+        prepareRender(camera, lightDir, manager);
         for (WaterTile tile : water) {
             Matrix4f modelMatrix = createModelMatrix(tile.getX(), tile.getHeight(), tile.getZ(),
                                                      WaterTile.TILE_SIZE);
-            shader.modelMatrix.loadMatrix(modelMatrix);
+            manager.setWorldMatrix(modelMatrix);
+            manager.updateUniformBindings(shader);
+            // TODO: Updating this is unnecessary as it is only the model matrix that is changed.
             GL11.glDrawElements(GL11.GL_TRIANGLES, quad.getIndexCount(), GL11.GL_UNSIGNED_INT, 0);
         }
         finish();
@@ -48,22 +53,20 @@ public class WaterRenderer {
 
     public void cleanUp() {
         quad.delete();
-        dudvTexture.delete();
-        normalMap.delete();
+        //dudvTexture.delete();
+        //normalMap.delete();
         fbos.cleanUp();
         shader.cleanUp();
     }
 
-    private void prepareRender(Camera camera, Vector3f lightDir) {
+    private void prepareRender(Camera camera, Vector3f lightDir, UniformBindingManager manager) {
         shader.start();
-        shader.projectionMatrix.loadMatrix(camera.getProjectionMatrix());
-        shader.viewMatrix.loadMatrix(camera.getViewMatrix());
-        shader.cameraPosition.loadVec3(camera.getPosition());
+        manager.setCamera(camera);
+        manager.setLightDir(lightDir);
 
         moveFactor += 0.0005f;
         moveFactor %= 1;
-        shader.moveFactor.loadFloat(moveFactor);
-        shader.lightDirection.loadVec3(lightDir);
+        shader.getUniform("m_moveFactor").setValue(VarType.Float, moveFactor);
 
         quad.bind(0);
         bindTextures();
@@ -75,8 +78,9 @@ public class WaterRenderer {
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, fbos.getReflectionTexture());
         GL13.glActiveTexture(GL13.GL_TEXTURE1);
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, fbos.getRefractionTexture());
-        dudvTexture.bindToUnit(2);
-        normalMap.bindToUnit(3);
+        // TODO: Do this together with GLRenderer
+        //dudvTexture.bindToUnit(2);
+        //normalMap.bindToUnit(3);
         GL13.glActiveTexture(GL13.GL_TEXTURE4);
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, fbos.getRefractionDepthTexture());
     }

@@ -1,7 +1,10 @@
 package mini.water;
 
+import mini.scene.VertexBuffer;
 import mini.shaders.ShaderProgram;
 import mini.utils.MyFile;
+
+import java.io.IOException;
 
 public class WaterShader extends ShaderProgram {
     private static final MyFile VERTEX_SHADER = new MyFile("Engine/shaders", "waterVS.glsl");
@@ -22,7 +25,13 @@ public class WaterShader extends ShaderProgram {
     //private UniformSampler depthMap = new UniformSampler("depthMap");
 
     public WaterShader() {
-        super(VERTEX_SHADER, FRAGMENT_SHADER, "position");
+        try {
+            addSource(ShaderType.Vertex, "Water Vertex", VERTEX_SHADER.getLines());
+            addSource(ShaderType.Fragment, "Water Fragment", FRAGMENT_SHADER.getLines());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        getAttribute(VertexBuffer.Type.Position).setName("in_position");
 //        super.storeAllUniformLocations(modelMatrix, viewMatrix, projectionMatrix, moveFactor,
 //                                       cameraPosition, lightDirection, reflectionTexture,
 //                                       refractionTexture,

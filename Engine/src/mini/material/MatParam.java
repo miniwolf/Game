@@ -18,6 +18,7 @@ public class MatParam {
         this.type = type;
         this.name = name;
         this.value = value;
+        this.prefixedName = "m_" + name;
     }
 
     /**
@@ -61,6 +62,11 @@ public class MatParam {
         this.value = value;
     }
 
+    /**
+     * Returns the name with "m_" prefixed to it.
+     *
+     * @return the name with "m_" prefixed to it
+     */
     public String getPrefixedName() {
         return prefixedName;
     }

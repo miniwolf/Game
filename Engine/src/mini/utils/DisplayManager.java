@@ -110,6 +110,10 @@ public class DisplayManager {
         return glfwWindowShouldClose(window);
     }
 
+    public static long getDisplay() {
+        return window;
+    }
+
     /**
      * Synchronizes the update to match the fps
      * Swap the color buffers to render.

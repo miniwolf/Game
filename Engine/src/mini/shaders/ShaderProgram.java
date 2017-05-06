@@ -1,18 +1,22 @@
 package mini.shaders;
 
 import mini.scene.VertexBuffer;
-import mini.utils.MyFile;
-import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 
-import java.io.BufferedReader;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class ShaderProgram {
-    private int programID;
+    private int programID = -1;
+    private boolean isUpdateNeeded = true;
+
+    /**
+     * A list of all shader sources currently attached.
+     */
+    private final List<ShaderSource> shaderSourceList = new ArrayList<>();
+
     /**
      * Maps attribute name to the location of the attribute in the shader.
      */
@@ -23,7 +27,54 @@ public class ShaderProgram {
      */
     private final Map<String, Uniform> uniforms = new HashMap<>();
 
-    public ShaderProgram(MyFile vertexFile, MyFile fragmentFile, String... inVariables) {
+    /**
+     * Uniforms bound to {@link UniformBinding}s.
+     *
+     * Managed by the {@link UniformBindingManager}.
+     */
+    private final List<Uniform> boundUniforms = new ArrayList<>();
+
+    /**
+     * Type of shader. The shader will control the pipeline of it's type.
+     */
+    public enum ShaderType {
+
+        /**
+         * Control fragment rasterization. (e.g color of pixel).
+         */
+        Fragment("frag"),
+        /**
+         * Control vertex processing. (e.g transform of model to clip space)
+         */
+        Vertex("vert"),
+        /**
+         * Control geometry assembly. (e.g compile a triangle list from input
+         * data)
+         */
+        Geometry("geom"),
+        /**
+         * Controls tesselation factor (e.g how often a input patch should be
+         * subdivided)
+         */
+        TessellationControl("tsctrl"),
+        /**
+         * Controls tesselation transform (e.g similar to the vertex shader, but
+         * required to mix inputs manual)
+         */
+        TessellationEvaluation("tseval");
+
+        private String extension;
+
+        public String getExtension() {
+            return extension;
+        }
+
+        ShaderType(String extension) {
+            this.extension = extension;
+        }
+    }
+
+    /*public ShaderProgram(MyFile vertexFile, MyFile fragmentFile, String... inVariables) {
         int vertexShaderID = loadShader(vertexFile, GL20.GL_VERTEX_SHADER);
         int fragmentShaderID = loadShader(fragmentFile, GL20.GL_FRAGMENT_SHADER);
         programID = GL20.glCreateProgram();
@@ -35,6 +86,32 @@ public class ShaderProgram {
         GL20.glDetachShader(programID, fragmentShaderID);
         GL20.glDeleteShader(vertexShaderID);
         GL20.glDeleteShader(fragmentShaderID);
+    }*/
+
+    /**
+     * Adds source code to a certain pipeline.
+     *
+     * @param type The pipeline to control
+     * @param lines The shader source code lines (in GLSL).
+     */
+    public void addSource(ShaderType type, String name, List<String> lines){
+        StringBuilder source = new StringBuilder();
+        try {
+            lines.forEach(line -> source.append(line).append("//\n"));
+        } catch (Exception e) {
+            System.err.println("Could not read file.");
+            e.printStackTrace();
+            System.exit(-1);
+        }
+        ShaderSource shaderSource = new ShaderSource(type);
+        shaderSource.setSource(source.toString());
+        shaderSource.setName(name);
+        shaderSourceList.add(shaderSource);
+        setUpdateNeeded();
+    }
+
+    public List<ShaderSource> getSources(){
+        return shaderSourceList;
     }
 
     protected void storeAllUniformLocations(Uniform... uniforms) {
@@ -63,25 +140,27 @@ public class ShaderProgram {
         }
     }
 
-    private int loadShader(MyFile file, int type) {
-        StringBuilder shaderSource = new StringBuilder();
-        try {
-            List<String> lines = file.getLines();
-            lines.forEach(line -> shaderSource.append(line).append("//\n"));
-        } catch (Exception e) {
-            System.err.println("Could not read file.");
-            e.printStackTrace();
-            System.exit(-1);
+    public void addUniformBinding(UniformBinding binding){
+        String uniformName = "g_" + binding.name();
+        Uniform uniform = uniforms.get(uniformName);
+        if (uniform == null) {
+            uniform = new Uniform();
+            uniform.name = uniformName;
+            uniform.binding = binding;
+            uniforms.put(uniformName, uniform);
+            boundUniforms.add(uniform);
         }
-        int shaderID = GL20.glCreateShader(type);
-        GL20.glShaderSource(shaderID, shaderSource);
-        GL20.glCompileShader(shaderID);
-        if (GL20.glGetShaderi(shaderID, GL20.GL_COMPILE_STATUS) == GL11.GL_FALSE) {
-            System.out.println(GL20.glGetShaderInfoLog(shaderID, 500));
-            System.err.println("Could not compile shader " + file);
-            System.exit(-1);
+    }
+
+    public Uniform getUniform(String name){
+        assert name.startsWith("m_") || name.startsWith("g_");
+        Uniform uniform = uniforms.get(name);
+        if (uniform == null){
+            uniform = new Uniform();
+            uniform.name = name;
+            uniforms.put(name, uniform);
         }
-        return shaderID;
+        return uniform;
     }
 
     public Attribute getAttribute(VertexBuffer.Type attribType) {
@@ -95,18 +174,31 @@ public class ShaderProgram {
         return attrib;
     }
 
-    public Uniform getUniform(String name){
-        //assert name.startsWith("m_") || name.startsWith("g_");
-        Uniform uniform = uniforms.get(name);
-        if (uniform == null){
-            uniform = new Uniform();
-            uniform.name = name;
-            uniforms.put(name, uniform);
-        }
-        return uniform;
+    public void setId(int id) {
+        programID = id;
     }
 
     public int getId() {
         return programID;
+    }
+
+    public Map<String, Uniform> getUniformMap(){
+        return uniforms;
+    }
+
+    public List<Uniform> getBoundUniforms() {
+        return boundUniforms;
+    }
+
+    public boolean isUpdateNeeded() {
+        return isUpdateNeeded;
+    }
+
+    public void setUpdateNeeded() {
+        isUpdateNeeded = true;
+    }
+
+    public void clearUpdateNeeded() {
+        isUpdateNeeded = false;
     }
 }

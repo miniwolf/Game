@@ -129,7 +129,7 @@ public class Scene {
         for (Entity entity : standardEntities) {
             entity.delete();
         }
-        environmentMap.delete();
+        //environmentMap.delete();
     }
 
     public void addGUITexture(GUITexture texture) {

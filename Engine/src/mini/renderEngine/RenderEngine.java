@@ -51,6 +51,7 @@ public class RenderEngine {
         MasterRenderer renderer = new MasterRenderer(basicRenderer, skyRenderer, waterRenderer,
                                                      waterFbos, shinyRenderer, guiRenderer,
                                                      glRenderer);
+        glRenderer.initialize();
         return new RenderEngine(display, renderer);
     }
 

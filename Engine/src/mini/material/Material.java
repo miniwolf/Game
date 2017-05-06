@@ -1,7 +1,11 @@
 package mini.material;
 
+import mini.entityRenderers.EntityShader;
+import mini.material.logic.DefaultTechniqueDefLogic;
 import mini.math.ColorRGBA;
+import mini.renderEngine.RenderManager;
 import mini.renderEngine.opengl.GLRenderer;
+import mini.scene.Geometry;
 import mini.shaders.ShaderProgram;
 import mini.shaders.Uniform;
 import mini.shaders.VarType;
@@ -23,17 +27,22 @@ import java.util.Map;
  */
 public class Material {
     private MaterialDef def;
+    private Technique technique = new Technique(this, new TechniqueDef());
     private String name;
+    private RenderState additionalState = null;
+    private RenderState mergedRenderState = new RenderState();
     private final Map<String, MatParam> paramValues = new HashMap<>();
     private Texture diffuseTexture;
     private Texture extraInfoMap;
     private boolean transparent;
 
     public Material(String name) {
+        this();
         this.name = name;
     }
 
     public Material() {
+        technique.getDef().setLogic(new DefaultTechniqueDefLogic(technique.getDef()));
     }
 
     /**
@@ -78,6 +87,19 @@ public class Material {
     }
 
     /**
+     * Clear a parameter from this material. The parameter must exist
+     * @param name the name of the parameter to clear
+     */
+    public void clearParam(String name) {
+        MatParam matParam = getParam(name);
+        if (matParam == null) {
+            return;
+        }
+
+        paramValues.remove(name);
+    }
+
+    /**
      * Set a texture parameter.
      *
      * @param name The name of the parameter
@@ -99,12 +121,47 @@ public class Material {
         }
     }
 
-    public void delete() {
-        diffuseTexture.delete();
-        if (extraInfoMap != null) {
-            extraInfoMap.delete();
+    /**
+     * Pass a texture to the material shader.
+     *
+     * @param name the name of the texture defined in the material definition
+     * (j3md) (for example Texture for Lighting.j3md)
+     * @param value the Texture object previously loaded by the asset manager
+     */
+    public void setTexture(String name, Texture value) {
+        if (value == null) {
+            // clear it
+            clearParam(name);
+            return;
         }
+
+        VarType paramType;
+        switch (value.getType()) {
+            case TwoDimensional:
+                paramType = VarType.Texture2D;
+                break;
+            /*case TwoDimensionalArray:
+                paramType = VarType.TextureArray;
+                break;
+            case ThreeDimensional:
+                paramType = VarType.Texture3D;
+                break;
+            case CubeMap:
+                paramType = VarType.TextureCubeMap;
+                break;*/
+            default:
+                throw new UnsupportedOperationException("Unknown texture type: " + value.getType());
+        }
+
+        setTextureParam(name, paramType, value);
     }
+
+//    public void delete() {
+//        diffuseTexture.delete();
+//        if (extraInfoMap != null) {
+//            extraInfoMap.delete();
+//        }
+//    }
 
     /**
      * Returns the parameter set on this material with the given name,
@@ -152,15 +209,60 @@ public class Material {
         return extraInfoMap;
     }
 
-    public void render(GLRenderer renderer) {
+    public void render(RenderManager renderManager, EntityShader shader, Geometry geometry) {
+        TechniqueDef techniqueDef = technique.getDef();
+        GLRenderer renderer = renderManager.getRenderer();
+
+        // Apply render state
+        updateRenderState(renderer, techniqueDef);
+
+        // Begin tracking which uniforms were changed by material.
+        clearUniformsSetByCurrent(shader);
+
+        // Set uniform bindings
+        renderManager.updateUniformBindings(shader);
+
         // Set material parameters
-        int unit = updateShaderMaterialParameters(renderer);
+        int unit = updateShaderMaterialParameters(renderer, shader);
+
+        // Clear any uniforms not changed by material.
+        resetUniformsNotSetByCurrent(shader);
+
+        // Delegate rendering to the technique
+        technique.render(renderManager, shader, geometry, unit);
     }
 
-    private int updateShaderMaterialParameters(GLRenderer renderer) {
-        int unit = 0;
-        ShaderProgram shader = renderer.getShader();
+    private void updateRenderState(GLRenderer renderer, TechniqueDef techniqueDef) {
+        if (techniqueDef.getRenderState() != null) {
+            renderer.applyRenderState(techniqueDef.getRenderState().copyMergedTo(additionalState, mergedRenderState));
+        } else {
+            renderer.applyRenderState(RenderState.DEFAULT.copyMergedTo(additionalState, mergedRenderState));
+        }
+    }
 
+    private void clearUniformsSetByCurrent(ShaderProgram shader) {
+        Map<String, Uniform> uniforms = shader.getUniformMap();
+        for (Uniform uniform : uniforms.values()) {
+            uniform.clearSetByCurrentMaterial();
+        }
+    }
+
+    private void resetUniformsNotSetByCurrent(ShaderProgram shader) {
+        Map<String, Uniform> uniforms = shader.getUniformMap();
+        for (Uniform u : uniforms.values()) {
+            if (!u.isSetByCurrentMaterial()) {
+                if (u.getName().charAt(0) != 'g') {
+                    // Don't reset world globals!
+                    // The benefits gained from this are very minimal
+                    // and cause lots of matrix -> FloatBuffer conversions.
+                    u.clearValue();
+                }
+            }
+        }
+    }
+
+    private int updateShaderMaterialParameters(GLRenderer renderer, EntityShader shader) {
+        int unit = 0;
         for (MatParam param : paramValues.values()) {
             VarType type = param.getVarType();
             Uniform uniform = shader.getUniform(param.getPrefixedName());
@@ -170,7 +272,7 @@ public class Material {
             }
 
             if (type.isTextureType()) {
-                ((Texture) param.getValue()).bindToUnit(unit);
+                renderer.setTexture(unit, (Texture) param.getValue());
                 uniform.setValue(VarType.Int, unit);
                 unit++;
             } else {

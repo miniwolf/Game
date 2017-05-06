@@ -6,6 +6,7 @@ import mini.math.Vector3f;
 import mini.renderEngine.opengl.GLRenderer;
 import mini.scene.Geometry;
 import mini.scene.Spatial;
+import mini.shaders.UniformBindingManager;
 import org.lwjgl.opengl.GL11;
 
 import mini.openglObjects.VAO;
@@ -22,8 +23,8 @@ public class ShinyRenderer {
     }
 
     public void render(List<Entity> shinyEntities, Texture environMap, Camera camera,
-                       Vector3f lightDir, GLRenderer renderer) {
-        prepare(camera, lightDir, environMap, renderer);
+                       Vector3f lightDir, GLRenderer renderer, UniformBindingManager manager) {
+        prepare(camera, lightDir, environMap, renderer, manager);
         for (Entity entity : shinyEntities) {
             for (Spatial spatial : entity.getChildren()) {
                 if (spatial instanceof Geometry) {
@@ -45,12 +46,12 @@ public class ShinyRenderer {
     }
 
     private void prepare(Camera camera, Vector3f lightDir, Texture enviromap,
-                         GLRenderer renderer) {
+                         GLRenderer renderer, UniformBindingManager manager) {
         shader.start();
-        shader.projectionViewMatrix.loadMatrix(camera.getProjectionViewMatrix());
-        shader.lightDirection.loadVec3(lightDir);
-        shader.cameraPosition.loadVec3(camera.getPosition());
-        enviromap.bindToUnit(1);
+        manager.setCamera(camera);
+        manager.setLightDir(lightDir);
+        manager.updateUniformBindings(shader);
+        renderer.setTexture(1, enviromap);
         OpenGlUtils.antialias(true);
         OpenGlUtils.disableBlending();
         OpenGlUtils.enableDepthTesting(true);

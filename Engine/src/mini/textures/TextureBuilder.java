@@ -1,5 +1,6 @@
 package mini.textures;
 
+import mini.textures.plugins.AWTLoader;
 import mini.utils.MyFile;
 
 public class TextureBuilder {
@@ -15,9 +16,8 @@ public class TextureBuilder {
     }
 
     public Texture create() {
-        TextureData textureData = TextureUtils.decodeTextureFile(file);
-        int textureId = TextureUtils.loadTextureToOpenGL(textureData, this);
-        return new Texture(textureId, textureData.getWidth());
+        Image load = (Image) AWTLoader.load(file);
+        return new Texture2D(load);
     }
 
     public TextureBuilder clampEdges() {

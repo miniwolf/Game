@@ -3,10 +3,13 @@ package mini.entityRenderers;
 import mini.material.Material;
 import mini.math.Vector3f;
 import mini.math.Vector4f;
+import mini.renderEngine.RenderManager;
 import mini.renderEngine.opengl.GLRenderer;
 import mini.scene.Entity;
 import mini.scene.Geometry;
 import mini.scene.Spatial;
+import mini.shaders.UniformBindingManager;
+import mini.shaders.VarType;
 import mini.utils.Camera;
 import mini.utils.OpenGlUtils;
 
@@ -19,15 +22,16 @@ public class EntityRenderer {
         this.shader = new EntityShader();
     }
 
-    public void render(List<Entity> entities, Camera camera, Vector3f lightDir,
-                       Vector4f clipPlane, GLRenderer renderer) {
-        prepare(camera, lightDir, clipPlane, renderer);
+    public void render(List<Entity> entities, Camera camera, Vector3f lightDir, Vector4f clipPlane,
+                       RenderManager rendererManager) {
+        prepare(camera, lightDir, clipPlane, rendererManager);
         for (Entity entity : entities) {
             for (Spatial spatial : entity.getChildren()) {
                 if (spatial instanceof Geometry) {
                     Geometry geom = (Geometry) spatial;
-                    geom.getMaterial().render(renderer);
-                    renderer.renderMeshFromGeometry(geom);
+                    Material material = geom.getMaterial();
+                    //prepareSkin(material);
+                    material.render(rendererManager, shader, geom);
                     /*Geometry geom = (Geometry) spatial;
                     prepareSkin(geom.getMaterial());
                     VAO model = geom.getVao();
@@ -44,15 +48,16 @@ public class EntityRenderer {
         shader.cleanUp();
     }
 
-    private void prepare(Camera camera, Vector3f lightDir, Vector4f clipPlane, GLRenderer renderer) {
+    private void prepare(Camera camera, Vector3f lightDir, Vector4f clipPlane,
+                         RenderManager manager) {
         shader.start();
-        shader.projectionViewMatrix.loadMatrix(camera.getProjectionViewMatrix());
-        shader.lightDirection.loadVec3(lightDir);
-        shader.plane.loadVec4(clipPlane);
-        OpenGlUtils.antialias(true);
-        OpenGlUtils.disableBlending();
-        OpenGlUtils.enableDepthTesting(true);
-        renderer.setShader(shader);
+        manager.setCamera(camera);
+        manager.setLightDir(lightDir);
+        shader.getUniform("plane").setValue(VarType.Vector4, clipPlane);
+        manager.updateUniformBindings(shader);
+        //OpenGlUtils.antialias(true);
+        //OpenGlUtils.disableBlending();
+        //OpenGlUtils.enableDepthTesting(true);
     }
 
     private void finish() {
@@ -60,11 +65,12 @@ public class EntityRenderer {
     }
 
     private void prepareSkin(Material material) {
-        material.getDiffuseTexture().bindToUnit(0);
-        if (material.hasExtraMap()) {
-            material.getExtraInfoMap().bindToUnit(1);
-        }
-        shader.hasExtraMap.loadBoolean(material.hasExtraMap());
+        // TODO: Should be taken care of by material internal rendering
+//        material.getDiffuseTexture().bindToUnit(0);
+//        if (material.hasExtraMap()) {
+//            material.getExtraInfoMap().bindToUnit(1);
+//        }
+        shader.getUniform("hasExtraMap").setValue(VarType.Boolean, material.hasExtraMap());
         OpenGlUtils.cullBackFaces(!material.hasTransparency());
     }
 }

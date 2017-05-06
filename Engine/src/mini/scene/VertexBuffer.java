@@ -106,17 +106,16 @@ public class VertexBuffer {
 
         /**
          * Information about this instance.
-         *
-         * Format should be {@link Format#Float} and number of components
-         * should be 16.
+         * <p>
+         * Format should be {@link Format#Float} and number of components should be 16.
          */
         InstanceData
     }
 
     /**
-     * The usage of the VertexBuffer, specifies how often the buffer
-     * is used. This can determine if a vertex buffer is placed in VRAM
-     * or held in video memory, but no guarantees are made- it's only a hint.
+     * The usage of the VertexBuffer, specifies how often the buffer is used. This can determine if
+     * a vertex buffer is placed in VRAM or held in video memory, but no guarantees are made- it's
+     * only a hint.
      */
     public enum Usage {
 
@@ -139,16 +138,15 @@ public class VertexBuffer {
          * Mesh data is <em>not</em> sent to GPU at all. It is only
          * used by the CPU.
          */
-        CpuOnly;
+        CpuOnly
     }
 
     /**
      * Specifies format of the data stored in the buffer.
-     * This should directly correspond to the buffer's class, for example,
-     * an {@link Format#UnsignedShort} formatted buffer should use the
-     * class {@link ShortBuffer} (e.g. the closest resembling type).
-     * For the {@link Format#Half} type, {@link ByteBuffer}s should
-     * be used.
+     * This should directly correspond to the buffer's class, for example, an
+     * {@link Format#UnsignedShort} formatted buffer should use the class {@link ShortBuffer}
+     * (e.g. the closest resembling type).
+     * For the {@link Format#Half} type, {@link ByteBuffer}s should be used.
      */
     public enum Format {
         /**
@@ -202,7 +200,7 @@ public class VertexBuffer {
 
         private int componentSize = 0;
 
-        Format(int componentSize){
+        Format(int componentSize) {
             this.componentSize = componentSize;
         }
 
@@ -211,13 +209,13 @@ public class VertexBuffer {
          *
          * @return Size in bytes of this data type.
          */
-        public int getComponentSize(){
+        public int getComponentSize() {
             return componentSize;
         }
     }
 
     /**
-     * derived from components * format.getComponentSize()
+     * derived from components format.getComponentSize()
      */
     private transient int componentsLength = 0;
     private transient boolean dataSizeChanged = false;
@@ -234,7 +232,7 @@ public class VertexBuffer {
      * Creates an empty, uninitialized buffer.
      * Must call setupData() to initialize.
      */
-    public VertexBuffer(Type type){
+    public VertexBuffer(Type type) {
         super();
         this.bufType = type;
     }
@@ -243,20 +241,20 @@ public class VertexBuffer {
      * Called to initialize the data in the <code>VertexBuffer</code>. Must only
      * be called once.
      *
-     * @param usage The usage for the data, or how often will the data
-     * be updated per frame. See the {@link Usage} enum.
+     * @param usage      The usage for the data, or how often will the data be updated per frame.
+     *                   See the {@link Usage} enum.
      * @param components The number of components per element.
-     * @param format The {@link Format format}, or data-type of a single
-     * component.
-     * @param data A native buffer, the format of which matches the {@link Format}
-     * argument.
+     * @param format     The {@link Format format}, or data-type of a single component.
+     * @param data       A native buffer, the format of which matches the {@link Format} argument.
      */
     public void setupData(Usage usage, int components, Format format, Buffer data) {
-        if (usage == null || format == null || data == null)
+        if (usage == null || format == null || data == null) {
             throw new IllegalArgumentException("None of the arguments can be null");
+        }
 
-        if (data.isReadOnly())
-            throw new IllegalArgumentException( "VertexBuffer data cannot be read-only." );
+        if (data.isReadOnly()) {
+            throw new IllegalArgumentException("VertexBuffer data cannot be read-only.");
+        }
 
         if (bufType != Type.InstanceData) {
             if (components < 1 || components > 4) {
@@ -291,11 +289,12 @@ public class VertexBuffer {
         // Check if the data buffer is read-only which is a sign
         // of a bug on the part of the caller
         if (data != null && data.isReadOnly()) {
-            throw new IllegalArgumentException( "VertexBuffer data cannot be read-only." );
+            throw new IllegalArgumentException("VertexBuffer data cannot be read-only.");
         }
 
         // will force renderer to call glBufferData again
-        if (data != null && (this.data.getClass() != data.getClass() || data.limit() != lastLimit)) {
+        if (data != null && (this.data.getClass() != data.getClass()
+                             || data.limit() != lastLimit)) {
             dataSizeChanged = true;
             lastLimit = data.limit();
         }
@@ -304,7 +303,7 @@ public class VertexBuffer {
         setUpdateNeeded();
     }
 
-    public void clearUpdateNeeded(){
+    public void clearUpdateNeeded() {
         updateNeeded = false;
         dataSizeChanged = false;
     }
@@ -317,15 +316,15 @@ public class VertexBuffer {
      * @return The usage of this buffer. See {@link Usage} for more
      * information.
      */
-    public Usage getUsage(){
+    public Usage getUsage() {
         return usage;
     }
 
     /**
      * @param usage The usage of this buffer. See {@link Usage} for more
-     * information.
+     *              information.
      */
-    public void setUsage(Usage usage){
+    public void setUsage(Usage usage) {
 //        if (id != -1)
 //            throw new UnsupportedOperationException("Data has already been sent. Cannot set usage.");
 
@@ -336,14 +335,14 @@ public class VertexBuffer {
     /**
      * @return The type of information that this buffer has.
      */
-    public Type getBufferType(){
+    public Type getBufferType() {
         return bufType;
     }
 
     /**
      * @return The {@link Format format}, or data type of the data.
      */
-    public Format getFormat(){
+    public Format getFormat() {
         return format;
     }
 
@@ -357,7 +356,7 @@ public class VertexBuffer {
      *
      * @return A native buffer, in the specified {@link Format format}.
      */
-    public Buffer getData(){
+    public Buffer getData() {
         return data;
     }
 
@@ -365,19 +364,19 @@ public class VertexBuffer {
      * @return The number of components of the given {@link Format format} per
      * element.
      */
-    public int getNumComponents(){
+    public int getNumComponents() {
         return components;
     }
 
     /**
      * @param normalized Set to true if integer components should be converted
-     * from their maximal range into the range 0.0 - 1.0 when converted to
-     * a floating-point value for the shader.
-     * E.g. if the {@link Format} is {@link Format#UnsignedInt}, then
-     * the components will be converted to the range 0.0 - 1.0 by dividing
-     * every integer by 2^32.
+     *                   from their maximal range into the range 0.0 - 1.0 when converted to
+     *                   a floating-point value for the shader.
+     *                   E.g. if the {@link Format} is {@link Format#UnsignedInt}, then
+     *                   the components will be converted to the range 0.0 - 1.0 by dividing
+     *                   every integer by 2^32.
      */
-    public void setNormalized(boolean normalized){
+    public void setNormalized(boolean normalized) {
         this.normalized = normalized;
     }
 
@@ -385,7 +384,7 @@ public class VertexBuffer {
      * @return True if integer components should be converted to the range 0-1.
      * @see VertexBuffer#setNormalized(boolean)
      */
-    public boolean isNormalized(){
+    public boolean isNormalized() {
         return normalized;
     }
 
@@ -395,9 +394,9 @@ public class VertexBuffer {
      * instanceSpan.
      */
     public void setInstanced(boolean instanced) {
-        if( instanced && instanceSpan == 0 ) {
+        if (instanced && instanceSpan == 0) {
             instanceSpan = 1;
-        } else if( !instanced ) {
+        } else if (!instanced) {
             instanceSpan = 0;
         }
     }
@@ -427,7 +426,6 @@ public class VertexBuffer {
 
     /**
      * @return The stride (in bytes) for the data.
-     *
      * @see #setStride(int)
      */
     public int getStride() {
@@ -449,7 +447,6 @@ public class VertexBuffer {
 
     /**
      * @return The offset after which the data is sent to the GPU.
-     *
      * @see #setOffset(int)
      */
     public int getOffset() {
@@ -458,18 +455,18 @@ public class VertexBuffer {
 
     /**
      * @param offset Specify the offset (in bytes) from the start of the buffer
-     * after which the data is sent to the GPU.
+     *               after which the data is sent to the GPU.
      */
     public void setOffset(int offset) {
         this.offset = offset;
     }
 
     /**
-     *  Returns the number of 'instances' in this VertexBuffer.  This
-     *  is dependent on the current instanceSpan.  When instanceSpan
-     *  is 0 then 'instances' is 1. Otherwise, instances is elements *
-     *  instanceSpan.  It is possible to render a mesh with more instances
-     *  but the instance data begins to repeat.
+     * Returns the number of 'instances' in this VertexBuffer.  This
+     * is dependent on the current instanceSpan.  When instanceSpan
+     * is 0 then 'instances' is 1. Otherwise, instances is elements *
+     * instanceSpan.  It is possible to render a mesh with more instances
+     * but the instance data begins to repeat.
      */
     public int getBaseInstanceCount() {
         return 1;

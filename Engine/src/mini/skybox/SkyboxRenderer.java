@@ -1,5 +1,6 @@
 package mini.skybox;
 
+import mini.shaders.UniformBindingManager;
 import org.lwjgl.opengl.GL11;
 
 import mini.openglObjects.VAO;
@@ -13,8 +14,8 @@ public class SkyboxRenderer {
         this.shader = new SkyboxShader();
     }
 
-    public void render(Skybox skybox, Camera camera) {
-        prepare(skybox, camera);
+    public void render(Skybox skybox, Camera camera, UniformBindingManager manager) {
+        prepare(skybox, camera, manager);
         VAO model = skybox.getCubeVao();
         model.bind(0);
         GL11.glDrawElements(GL11.GL_TRIANGLES, model.getIndexCount(), GL11.GL_UNSIGNED_INT, 0);
@@ -26,10 +27,12 @@ public class SkyboxRenderer {
         shader.cleanUp();
     }
 
-    private void prepare(Skybox skybox, Camera camera) {
+    private void prepare(Skybox skybox, Camera camera, UniformBindingManager manager) {
         shader.start();
-        shader.projectionViewMatrix.loadMatrix(camera.getProjectionViewMatrix());
-        skybox.getTexture().bindToUnit(0);
+        manager.setCamera(camera);
+        manager.updateUniformBindings(shader);
+        // TODO: Use GLREnderer for this
+        //skybox.getTexture().bindToUnit(0);
         OpenGlUtils.disableBlending();
         OpenGlUtils.enableDepthTesting(true);
         OpenGlUtils.cullBackFaces(true);
