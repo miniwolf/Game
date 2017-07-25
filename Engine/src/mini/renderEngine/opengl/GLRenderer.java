@@ -973,10 +973,36 @@ public class GLRenderer {
         }
     }
 
+    public void deleteShaderSource(ShaderSource source) {
+        if (source.getId() < 0) {
+            System.err.println("Warning: Shader source is not uploaded to GPU, cannot delete.");
+            return;
+        }
+        source.clearUpdateNeeded();
+        GL20.glDeleteShader(source.getId());
+        source.resetObject();
+    }
+
+    public void deleteShader(ShaderProgram shader) {
+        if (shader.getId() == -1) {
+            System.err.println("Warning: Shader is not uploaded to GPU, cannot delete.");
+            return;
+        }
+
+        for (ShaderSource source : shader.getSources()) {
+            if (source.getId() != -1) {
+                GL20.glDetachShader(shader.getId(), source.getId());
+                deleteShaderSource(source);
+            }
+        }
+
+        GL20.glDeleteProgram(shader.getId());
+        shader.resetObject();
+    }
+
     public void setReadDrawBuffers(FrameBuffer fb) {
         final int NONE = -2;
         final int INITIAL = -1;
-        final int MRT_OFF = 100;
 
         if (fb == null) {
             // Set Read/Draw buffers to initial value.

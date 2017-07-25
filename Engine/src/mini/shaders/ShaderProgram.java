@@ -1,6 +1,8 @@
 package mini.shaders;
 
+import mini.renderEngine.opengl.GLRenderer;
 import mini.scene.VertexBuffer;
+import mini.utils.NativeObject;
 import org.lwjgl.opengl.GL20;
 
 import java.util.ArrayList;
@@ -8,31 +10,31 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ShaderProgram {
+public class ShaderProgram extends NativeObject {
     private int programID = -1;
     private boolean isUpdateNeeded = true;
 
     /**
      * A list of all shader sources currently attached.
      */
-    private final List<ShaderSource> shaderSourceList = new ArrayList<>();
+    private List<ShaderSource> shaderSourceList = new ArrayList<>();
 
     /**
      * Maps attribute name to the location of the attribute in the shader.
      */
-    private final Map<Integer, Attribute> attribs = new HashMap<>();
+    private Map<Integer, Attribute> attribs = new HashMap<>();
 
     /**
      * Maps uniform name to the uniform variable.
      */
-    private final Map<String, Uniform> uniforms = new HashMap<>();
+    private Map<String, Uniform> uniforms = new HashMap<>();
 
     /**
      * Uniforms bound to {@link UniformBinding}s.
-     *
+     * <p>
      * Managed by the {@link UniformBindingManager}.
      */
-    private final List<Uniform> boundUniforms = new ArrayList<>();
+    private List<Uniform> boundUniforms = new ArrayList<>();
 
     /**
      * Type of shader. The shader will control the pipeline of it's type.
@@ -89,12 +91,42 @@ public class ShaderProgram {
     }*/
 
     /**
+     * Creates a new shader, {@link #initialize() } must be called
+     * after this constructor for the shader to be usable.
+     */
+    public ShaderProgram() {
+        super();
+        shaderSourceList = new ArrayList<>();
+        uniforms = new HashMap<>();
+        attribs = new HashMap<>();
+        boundUniforms = new ArrayList<>();
+    }
+
+    /**
+     * Do not use this constructor. Used for destructable clones only.
+     */
+    protected ShaderProgram(ShaderProgram s) {
+        super(s.id);
+
+        // Shader sources cannot be shared, therefore they must
+        // be destroyed together with the parent shader.
+        shaderSourceList = new ArrayList<>();
+        for (ShaderSource source : s.shaderSourceList) {
+            shaderSourceList.add((ShaderSource) source.createDestructableClone());
+        }
+
+        uniforms = null;
+        boundUniforms = null;
+        attribs = null;
+    }
+
+    /**
      * Adds source code to a certain pipeline.
      *
-     * @param type The pipeline to control
+     * @param type  The pipeline to control
      * @param lines The shader source code lines (in GLSL).
      */
-    public void addSource(ShaderType type, String name, List<String> lines){
+    public void addSource(ShaderType type, String name, List<String> lines) {
         StringBuilder source = new StringBuilder();
         try {
             lines.forEach(line -> source.append(line).append("//\n"));
@@ -110,7 +142,7 @@ public class ShaderProgram {
         setUpdateNeeded();
     }
 
-    public List<ShaderSource> getSources(){
+    public List<ShaderSource> getSources() {
         return shaderSourceList;
     }
 
@@ -140,7 +172,7 @@ public class ShaderProgram {
         }
     }
 
-    public void addUniformBinding(UniformBinding binding){
+    public void addUniformBinding(UniformBinding binding) {
         String uniformName = "g_" + binding.name();
         Uniform uniform = uniforms.get(uniformName);
         if (uniform == null) {
@@ -152,10 +184,10 @@ public class ShaderProgram {
         }
     }
 
-    public Uniform getUniform(String name){
+    public Uniform getUniform(String name) {
         assert name.startsWith("m_") || name.startsWith("g_");
         Uniform uniform = uniforms.get(name);
-        if (uniform == null){
+        if (uniform == null) {
             uniform = new Uniform();
             uniform.name = name;
             uniforms.put(name, uniform);
@@ -182,7 +214,7 @@ public class ShaderProgram {
         return programID;
     }
 
-    public Map<String, Uniform> getUniformMap(){
+    public Map<String, Uniform> getUniformMap() {
         return uniforms;
     }
 
@@ -194,11 +226,66 @@ public class ShaderProgram {
         return isUpdateNeeded;
     }
 
-    public void setUpdateNeeded() {
-        isUpdateNeeded = true;
-    }
-
     public void clearUpdateNeeded() {
         isUpdateNeeded = false;
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() +
+               "[numSources=" + shaderSourceList.size() +
+               ", numUniforms=" + uniforms.size() +
+               ", shaderSources=" + getSources() + "]";
+    }
+
+    /**
+     * Usually called when the shader itself changes or during any
+     * time when the variable locations need to be refreshed.
+     */
+    public void resetLocations() {
+        if (uniforms != null) {
+            // NOTE: Shader sources will be reset seperately from the shader itself.
+            for (Uniform uniform : uniforms.values()) {
+                uniform.reset(); // fixes issue with re-initialization
+            }
+        }
+        if (attribs != null) {
+            for (Map.Entry<Integer, Attribute> entry : attribs.entrySet()) {
+                entry.getValue().location = ShaderVariable.LOC_UNKNOWN;
+            }
+        }
+    }
+
+    @Override
+    public void setUpdateNeeded() {
+        super.setUpdateNeeded();
+        resetLocations();
+    }
+
+    /**
+     * Called by the object manager to reset all object IDs. This causes
+     * the shader to be reuploaded to the GPU incase the display was restarted.
+     */
+    @Override
+    public void resetObject() {
+        this.id = -1;
+        for (ShaderSource source : shaderSourceList) {
+            source.resetObject();
+        }
+        setUpdateNeeded();
+    }
+
+    @Override
+    public void deleteObject(Object rendererObject) {
+        ((GLRenderer) rendererObject).deleteShader(this);
+    }
+
+    public NativeObject createDestructableClone() {
+        return new ShaderProgram(this);
+    }
+
+    @Override
+    public long getUniqueId() {
+        return ((long) OBJTYPE_SHADER << 32) | ((long) id);
     }
 }

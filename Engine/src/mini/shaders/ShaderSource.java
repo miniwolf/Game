@@ -4,11 +4,14 @@ package mini.shaders;
  * Created by miniwolf on 28-04-2017.
  */
 
+import mini.renderEngine.opengl.GLRenderer;
+import mini.utils.NativeObject;
+
 /**
  * Shader source describes a shader object in OpenGL. Each shader source
  * is assigned a certain pipeline which it controls (described by it's type).
  */
-public class ShaderSource {
+public class ShaderSource extends NativeObject {
     ShaderProgram.ShaderType sourceType;
     String language;
     String name;
@@ -58,10 +61,6 @@ public class ShaderSource {
         setUpdateNeeded();
     }
 
-    private void setUpdateNeeded() {
-        isUpdateNeeded = true;
-    }
-
     public void setSource(String source) {
         if (source == null) {
             throw new IllegalArgumentException("Shader source cannot be null");
@@ -86,29 +85,6 @@ public class ShaderSource {
         return defines;
     }
 
-    @Override
-    public String toString() {
-        String nameTxt = "";
-        if (name != null) {
-            nameTxt = "name=" + name + ", ";
-        }
-        if (defines != null) {
-            nameTxt += "defines, ";
-        }
-
-        return getClass().getSimpleName() + "[" + nameTxt + "type="
-               + sourceType.name() + ", language=" + language + "]";
-    }
-
-    public void resetObject() {
-        id = -1;
-        setUpdateNeeded();
-    }
-
-    public void deleteObject(Object rendererObject) {
-        //((GLRenderer) rendererObject).deleteShaderSource(ShaderSource.this);
-    }
-
     public int getId() {
         return id;
     }
@@ -123,5 +99,39 @@ public class ShaderSource {
 
     public boolean isUpdateNeeded() {
         return isUpdateNeeded;
+    }
+
+    @Override
+    public String toString() {
+        String nameTxt = "";
+        if (name != null) {
+            nameTxt = "name=" + name + ", ";
+        }
+        if (defines != null) {
+            nameTxt += "defines, ";
+        }
+
+        return getClass().getSimpleName() + "[" + nameTxt + "type="
+               + sourceType.name() + ", language=" + language + "]";
+    }
+
+    @Override
+    public void resetObject() {
+        id = -1;
+        setUpdateNeeded();
+    }
+
+    @Override
+    public void deleteObject(Object rendererObject) {
+        ((GLRenderer) rendererObject).deleteShaderSource(ShaderSource.this);
+    }
+
+    public NativeObject createDestructableClone() {
+        return new ShaderSource(ShaderSource.this);
+    }
+
+    @Override
+    public long getUniqueId() {
+        return ((long)OBJTYPE_SHADER << 32) | ((long)id);
     }
 }
