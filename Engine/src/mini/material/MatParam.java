@@ -9,8 +9,8 @@ import mini.shaders.VarType;
  * @author miniwolf
  */
 public class MatParam {
-    private final VarType type;
-    private final String name;
+    protected final VarType type;
+    protected final String name;
     protected Object value;
     private String prefixedName;
 

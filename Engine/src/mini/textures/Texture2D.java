@@ -10,15 +10,16 @@ public class Texture2D extends Texture {
     /**
      * Creates a new two-dimensional texture with default attributes.
      */
-    public Texture2D(){
+    public Texture2D() {
         super();
     }
 
     /**
      * Creates a new two-dimensional texture using the given image.
+     *
      * @param img The image to use.
      */
-    public Texture2D(Image img){
+    public Texture2D(Image img) {
         super();
         setImage(img);
         if (img.getData(0) == null) {
@@ -28,12 +29,36 @@ public class Texture2D extends Texture {
     }
 
     /**
+     * <code>setWrap</code> sets the wrap mode of this texture for a
+     * particular axis.
+     *
+     * @param axis the texture axis to define a wrapmode on.
+     * @param mode the wrap mode for the given axis of the texture.
+     * @throws IllegalArgumentException if axis or mode are null
+     */
+    public void setWrap(WrapAxis axis, WrapMode mode) {
+        if (mode == null) {
+            throw new IllegalArgumentException("mode can not be null.");
+        } else if (axis == null) {
+            throw new IllegalArgumentException("axis can not be null.");
+        }
+        switch (axis) {
+            case S:
+                this.wrapS = mode;
+                break;
+            case T:
+                this.wrapT = mode;
+                break;
+            default:
+                throw new IllegalArgumentException("Not applicable for 2D textures");
+        }
+    }
+
+    /**
      * <code>setWrap</code> sets the wrap mode of this texture for all axis.
      *
-     * @param mode
-     *            the wrap mode for the given axis of the texture.
-     * @throws IllegalArgumentException
-     *             if mode is null
+     * @param mode the wrap mode for the given axis of the texture.
+     * @throws IllegalArgumentException if mode is null
      */
     @Override
     public void setWrap(WrapMode mode) {
@@ -48,11 +73,9 @@ public class Texture2D extends Texture {
      * <code>getWrap</code> returns the wrap mode for a given coordinate axis
      * on this texture.
      *
-     * @param axis
-     *            the axis to return for
+     * @param axis the axis to return for
      * @return the wrap mode of the texture.
-     * @throws IllegalArgumentException
-     *             if axis is null
+     * @throws IllegalArgumentException if axis is null
      */
     @Override
     public WrapMode getWrap(WrapAxis axis) {

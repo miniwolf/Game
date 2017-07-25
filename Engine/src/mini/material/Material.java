@@ -1,17 +1,23 @@
 package mini.material;
 
+import com.sun.prism.ps.Shader;
+import mini.asset.AssetKey;
 import mini.entityRenderers.EntityShader;
+import mini.light.LightList;
 import mini.material.logic.DefaultTechniqueDefLogic;
 import mini.math.ColorRGBA;
+import mini.post.SceneProcessor;
 import mini.renderEngine.RenderManager;
 import mini.renderEngine.opengl.GLRenderer;
 import mini.scene.Geometry;
 import mini.shaders.ShaderProgram;
 import mini.shaders.Uniform;
 import mini.shaders.VarType;
+import mini.textures.Image;
 import mini.textures.Texture;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -35,14 +41,66 @@ public class Material {
     private Texture diffuseTexture;
     private Texture extraInfoMap;
     private boolean transparent;
+    private int sortingId = -1;
+    private AssetKey key;
 
     public Material(String name) {
         this();
         this.name = name;
     }
 
+    public Material(MaterialDef def) {
+        if (def == null) {
+            throw new NullPointerException("Material definition cannot be null");
+        }
+        this.def = def;
+
+        // Load default values from definition (if any)
+        def.getMaterialParams().parallelStream().filter(param -> param.getValue() != null)
+           .forEach(param -> setParam(param.getName(), param.getVarType(), param.getValue()));
+    }
+
     public Material() {
         technique.getDef().setLogic(new DefaultTechniqueDefLogic(technique.getDef()));
+    }
+
+    /**
+     * Returns the asset key name of the asset from which this material was loaded.
+     *
+     * <p>This value will be <code>null</code> unless this material was loaded
+     * from a .j3m file.
+     *
+     * @return Asset key name of the j3m file
+     */
+    public String getAssetName() {
+        return key != null ? key.getFilename().getName() : null;
+    }
+
+    /**
+     * @return the name of the material (not the same as the asset name), the returned value can be null
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * This method sets the name of the material.
+     * The name is not the same as the asset name.
+     * It can be null and there is no guarantee of its uniqueness.
+     * @param name the name of the material
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
+     * Pass a boolean to the material shader.
+     *
+     * @param name the name of the boolean defined in the material definition (j3md)
+     * @param value the boolean value
+     */
+    public void setBoolean(String name, boolean value) {
+        setParam(name, VarType.Boolean, value);
     }
 
     /**
@@ -115,7 +173,7 @@ public class Material {
 
         MatParamTexture val = getTextureParam(name);
         if (val == null) {
-            paramValues.put(name, new MatParamTexture(type, name, value));
+            paramValues.put(name, new MatParamTexture(type, name, value, null));
         } else {
             val.setTextureValue(value);
         }
@@ -164,6 +222,34 @@ public class Material {
 //    }
 
     /**
+     * Acquire the additional {@link RenderState render state} to apply
+     * for this material.
+     *
+     * <p>The first call to this method will create an additional render
+     * state which can be modified by the user to apply any render
+     * states in addition to the ones used by the renderer. Only render
+     * states which are modified in the additional render state will be applied.
+     *
+     * @return The additional render state.
+     */
+    public RenderState getAdditionalRenderState() {
+        if (additionalState == null) {
+            additionalState = RenderState.ADDITIONAL.clone();
+        }
+        return additionalState;
+    }
+
+    /**
+     * Get the material definition (j3md file info) that <code>this</code>
+     * material is implementing.
+     *
+     * @return the material definition this material implements.
+     */
+    public MaterialDef getMaterialDef() {
+        return def;
+    }
+
+    /**
      * Returns the parameter set on this material with the given name,
      * returns <code>null</code> if the parameter is not set.
      *
@@ -209,12 +295,76 @@ public class Material {
         return extraInfoMap;
     }
 
-    public void render(RenderManager renderManager, EntityShader shader, Geometry geometry) {
+    /**
+     * Called by {@link RenderManager} to render the geometry by
+     * using this material.
+     * <p>
+     * The material is rendered as follows:
+     * <ul>
+     * <li>Determine which technique to use to render the material -
+     * either what the user selected via
+     * {@link #selectTechnique(java.lang.String, RenderManager)
+     * Material.selectTechnique()},
+     * or the first default technique that the renderer supports
+     * (based on the technique's {@link TechniqueDef#getRequiredCaps() requested rendering capabilities})<ul>
+     * <li>If the technique has been changed since the last frame, then it is notified via
+     * {@link Technique#makeCurrent(AssetManager, boolean, java.util.EnumSet)
+     * Technique.makeCurrent()}.
+     * If the technique wants to use a shader to render the model, it should load it at this part -
+     * the shader should have all the proper defines as declared in the technique definition,
+     * including those that are bound to material parameters.
+     * The technique can re-use the shader from the last frame if
+     * no changes to the defines occurred.</li></ul>
+     * <li>Set the {@link RenderState} to use for rendering. The render states are
+     * applied in this order (later RenderStates override earlier RenderStates):<ol>
+     * <li>{@link TechniqueDef#getRenderState() Technique Definition's RenderState}
+     * - i.e. specific renderstate that is required for the shader.</li>
+     * <li>{@link #getAdditionalRenderState() Material Instance Additional RenderState}
+     * - i.e. ad-hoc renderstate set per model</li>
+     * <li>{@link RenderManager#getForcedRenderState() RenderManager's Forced RenderState}
+     * - i.e. renderstate requested by a {@link SceneProcessor} or
+     * post-processing filter.</li></ol>
+     * <li>If the technique {@link TechniqueDef#isUsingShaders() uses a shader}, then the uniforms of the shader must be updated.<ul>
+     * <li>Uniforms bound to material parameters are updated based on the current material parameter values.</li>
+     * <li>Uniforms bound to world parameters are updated from the RenderManager.
+     * Internally {@link UniformBindingManager} is used for this task.</li>
+     * <li>Uniforms bound to textures will cause the texture to be uploaded as necessary.
+     * The uniform is set to the texture unit where the texture is bound.</li></ul>
+     * <li>If the technique uses a shader, the model is then rendered according
+     * to the lighting mode specified on the technique definition.<ul>
+     * <li>{@link LightMode#SinglePass single pass light mode} fills the shader's light uniform arrays
+     * with the first 4 lights and renders the model once.</li>
+     * <li>{@link LightMode#MultiPass multi pass light mode} light mode renders the model multiple times,
+     * for the first light it is rendered opaque, on subsequent lights it is
+     * rendered with {@link BlendMode#AlphaAdditive alpha-additive} blending and depth writing disabled.</li>
+     * </ul>
+     * <li>For techniques that do not use shaders,
+     * fixed function OpenGL is used to render the model (see {@link GLRenderer} interface):<ul>
+     * <li>OpenGL state ({@link FixedFuncBinding}) that is bound to material parameters is updated. </li>
+     * <li>The texture set on the material is uploaded and bound.
+     * Currently only 1 texture is supported for fixed function techniques.</li>
+     * <li>If the technique uses lighting, then OpenGL lighting state is updated
+     * based on the light list on the geometry, otherwise OpenGL lighting is disabled.</li>
+     * <li>The mesh is uploaded and rendered.</li>
+     * </ul>
+     * </ul>
+     *
+     * @param geometry The geometry to render
+     * @param lights Presorted and filtered light list to use for rendering
+     * @param renderManager The render manager requesting the rendering
+     */
+    public void render(Geometry geometry, LightList lights, RenderManager renderManager) {
         TechniqueDef techniqueDef = technique.getDef();
         GLRenderer renderer = renderManager.getRenderer();
 
         // Apply render state
         updateRenderState(renderer, techniqueDef);
+
+        // Get world overrides
+        List<MatParamOverride> overrides = geometry.getWorldMatParamOverrides();
+
+        // Select shader to use
+        ShaderProgram shader = technique.makeCurrent(renderManager, overrides, lights);
 
         // Begin tracking which uniforms were changed by material.
         clearUniformsSetByCurrent(shader);
@@ -229,7 +379,21 @@ public class Material {
         resetUniformsNotSetByCurrent(shader);
 
         // Delegate rendering to the technique
-        technique.render(renderManager, shader, geometry, unit);
+        technique.render(renderManager, shader, geometry, lights, unit);
+    }
+
+    /**
+     * Called by {@link RenderManager} to render the geometry by
+     * using this material.
+     *
+     * Note that this version of the render method
+     * does not perform light filtering.
+     *
+     * @param geom The geometry to render
+     * @param rm The render manager requesting the rendering
+     */
+    public void render(Geometry geom, RenderManager rm) {
+        render(geom, geom.getWorldLightList(), rm);
     }
 
     private void updateRenderState(GLRenderer renderer, TechniqueDef techniqueDef) {
@@ -261,7 +425,7 @@ public class Material {
         }
     }
 
-    private int updateShaderMaterialParameters(GLRenderer renderer, EntityShader shader) {
+    private int updateShaderMaterialParameters(GLRenderer renderer, ShaderProgram shader) {
         int unit = 0;
         for (MatParam param : paramValues.values()) {
             VarType type = param.getVarType();
@@ -282,5 +446,49 @@ public class Material {
 
         //TODO HACKY HACK remove this when texture unit is handled by the uniform.
         return unit;
+    }
+
+    public void setKey(AssetKey key) {
+        this.key = key;
+    }
+
+    public AssetKey getKey() {
+        return key;
+    }
+
+    /**
+     * Returns the sorting ID or sorting index for this material.
+     *
+     * <p>The sorting ID is used internally by the system to sort rendering
+     * of geometries. It sorted to reduce shader switches, if the shaders
+     * are equal, then it is sorted by textures.
+     *
+     * @return The sorting ID used for sorting geometries for rendering.
+     */
+    public int getSortId() {
+        if (sortingId == -1 && technique != null) {
+            sortingId = technique.getSortId() << 16;
+            int texturesSortId = 17;
+            for (MatParam param : paramValues.values()) {
+                if (!param.getVarType().isTextureType()) {
+                    continue;
+                }
+                Texture texture = (Texture) param.getValue();
+                if (texture == null) {
+                    continue;
+                }
+                Image image = texture.getImage();
+                if (image == null) {
+                    continue;
+                }
+                int textureId = image.getId();
+                if (textureId == -1) {
+                    textureId = 0;
+                }
+                texturesSortId = texturesSortId * 23 + textureId;
+            }
+            sortingId |= texturesSortId & 0xFFFF;
+        }
+        return sortingId;
     }
 }

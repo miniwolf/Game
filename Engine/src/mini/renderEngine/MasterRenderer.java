@@ -42,7 +42,7 @@ public class MasterRenderer {
         renderManager = new RenderManager(glRenderer);
     }
 
-    public void renderLowQualityScene(Scene scene, Camera cubeMapCamera) {
+    public void renderLowQualityScene(Scene scene, CameraImpl cubeMapCamera) {
         prepare();
         entityRenderer.render(scene.getImportantEntities(), cubeMapCamera,
                               scene.getLightDirection(), NO_CLIP, renderManager);

@@ -45,7 +45,8 @@ public class EnvironMapRenderer {
             camera.switchToFace(i);
 
             //render mini.scene to fbo, and therefore to the current face of the cubemap
-            renderer.renderLowQualityScene(scene, camera);
+            // TODO render environment mapping
+            //renderer.renderLowQualityScene(scene, camera);
         }
 
         //stop rendering to fbo

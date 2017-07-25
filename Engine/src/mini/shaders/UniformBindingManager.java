@@ -21,6 +21,8 @@ public class UniformBindingManager {
     private Vector3f camLoc;
     private Vector3f lightDir;
 
+    private int viewX, viewY, viewWidth, viewHeight;
+
     /**
      * Internal use only.
      * Updates the given list of uniforms with {@link UniformBinding uniform bindings}
@@ -69,5 +71,12 @@ public class UniformBindingManager {
 
     public void setLightDir(Vector3f lightDir) {
         this.lightDir = lightDir;
+    }
+
+    public void setViewPort(int viewX, int viewY, int viewWidth, int viewHeight) {
+        this.viewX = viewX;
+        this.viewY = viewY;
+        this.viewWidth = viewWidth;
+        this.viewHeight = viewHeight;
     }
 }

@@ -1,8 +1,7 @@
 package loaders;
 
-import extra.CameraImpl;
-import main.WorldSettings;
-import mini.scene.Entity;
+import mini.renderEngine.CameraImpl;
+import mini.scene.Node;
 import mini.scene.Scene;
 import mini.skybox.Skybox;
 import mini.utils.Camera;
@@ -19,7 +18,7 @@ public class SceneLoader {
         this.skyLoader = skyLoader;
     }
 
-    public Scene loadScene(MyFile sceneFile) {
+    public Node loadScene(MyFile sceneFile) {
         MyFile sceneList = new MyFile(sceneFile, LoaderSettings.ENTITY_LIST_FILE);
         List<String> lines = getLines(sceneList);
         assert lines != null;
@@ -30,37 +29,39 @@ public class SceneLoader {
         return createScene(terrainFiles, entityFiles, shinyFiles, sky);
     }
 
-    private Scene createScene(MyFile[] terrainFiles, MyFile[] entityFiles, MyFile[] shinyFiles,
+    private Node createScene(MyFile[] terrainFiles, MyFile[] entityFiles, MyFile[] shinyFiles,
                               Skybox sky) {
         Camera camera = new CameraImpl();
-        Scene scene = new Scene(camera, sky);
-        scene.setLightDirection(WorldSettings.LIGHT_DIR);
-        addEntities(scene, entityFiles);
-        addShinyEntities(scene, shinyFiles);
-        addTerrains(scene, terrainFiles);
+        Node scene = new Node("rootnode");
+        //scene.attachChild(camera);
+        //(camera, sky);
+//        scene.setLightDirection(WorldSettings.LIGHT_DIR);
+//        addEntities(scene, entityFiles);
+//        addShinyEntities(scene, shinyFiles);
+//        addTerrains(scene, terrainFiles);
         return scene;
     }
 
     private void addEntities(Scene scene, MyFile[] entityFiles) {
         for (MyFile file : entityFiles) {
-            Entity entity = entityLoader.loadEntity(file);
-            scene.addEntity(entity);
+            Node entity = entityLoader.loadEntity(file);
+            //scene.(entity);
         }
     }
 
-    private void addShinyEntities(Scene scene, MyFile[] entityFiles) {
-        for (MyFile file : entityFiles) {
-            Entity entity = entityLoader.loadEntity(file);
-            scene.addShiny(entity);
-        }
-    }
-
-    private void addTerrains(Scene scene, MyFile[] terrainFiles) {
-        for (MyFile file : terrainFiles) {
-            Entity entity = entityLoader.loadEntity(file);
-            scene.addTerrain(entity);
-        }
-    }
+//    private void addShinyEntities(Scene scene, MyFile[] entityFiles) {
+//        for (MyFile file : entityFiles) {
+//            Node entity = entityLoader.loadEntity(file);
+//            scene.addShiny(entity);
+//        }
+//    }
+//
+//    private void addTerrains(Scene scene, MyFile[] terrainFiles) {
+//        for (MyFile file : terrainFiles) {
+//            Entity entity = entityLoader.loadEntity(file);
+//            scene.addTerrain(entity);
+//        }
+//    }
 
     private List<String> getLines(MyFile file) {
         try {

@@ -233,6 +233,19 @@ public abstract class Texture {
 //    }
 
     /**
+     * <code>setWrap</code> sets the wrap mode of this texture for a
+     * particular axis.
+     *
+     * @param axis
+     *            the texture axis to define a wrapmode on.
+     * @param mode
+     *            the wrap mode for the given axis of the texture.
+     * @throws IllegalArgumentException
+     *             if axis or mode are null or invalid for this type of texture
+     */
+    public abstract void setWrap(WrapAxis axis, WrapMode mode);
+
+    /**
      * <code>setWrap</code> sets the wrap mode of this texture for all axis.
      *
      * @param mode

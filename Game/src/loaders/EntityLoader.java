@@ -1,15 +1,7 @@
 package loaders;
 
-import mini.material.Material;
-import mini.scene.Entity;
-import mini.scene.Geometry;
-import mini.scene.Spatial;
-import mini.shaders.VarType;
-import mini.textures.Texture;
-import mini.textures.TextureBuilder;
+import mini.scene.Node;
 import mini.utils.MyFile;
-
-import java.util.List;
 
 public class EntityLoader {
     private ModelLoader modelLoader;
@@ -23,11 +15,11 @@ public class EntityLoader {
         this.configsLoader = configsLoader;
     }
 
-    protected Entity loadEntity(MyFile entityFile) {
-        Entity entity = modelLoader.loadModel(new MyFile(entityFile, LoaderSettings.MODEL_FILE));
+    protected Node loadEntity(MyFile entityFile) {
+        Node entity = modelLoader.loadModel(new MyFile(entityFile, LoaderSettings.MODEL_FILE));
         Configs configs = configsLoader
                 .loadConfigs(new MyFile(entityFile, LoaderSettings.CONFIGS_FILE));
-        setEntityConfigs(entity, configs, entityFile);
+        //setEntityConfigs(entity, configs, entityFile);
         return entity;
 
     }
@@ -45,20 +37,20 @@ public class EntityLoader {
 //        return material;
 //    }
 
-    private void setEntityConfigs(Entity entity, Configs configs, MyFile entityFile) {
-        entity.setCastsShadow(configs.castsShadow());
-        entity.setHasReflection(configs.hasReflection());
-        entity.setSeenUnderWater(configs.hasRefraction());
-        entity.setImportant(configs.isImportant());
-        if (configs.getDiffuseMaps() != null) {
-            for (int i = 0; i < configs.getDiffuseMaps().size(); i++) {
-                String diffuseMap = configs.getDiffuseMaps().get(i);
-                MyFile myFile = new MyFile(entityFile, diffuseMap);
-                Texture texture = new TextureBuilder(myFile).create();
-                Spatial spatial = entity.getChildren().get(i);
-                ((Geometry) spatial).getMaterial()
-                                    .setTextureParam("diffuseMap", VarType.Texture2D, texture);
-            }
-        }
-    }
+//    private void setEntityConfigs(Node entity, Configs configs, MyFile entityFile) {
+//        entity.setCastsShadow(configs.castsShadow());
+//        entity.setHasReflection(configs.hasReflection());
+//        entity.setSeenUnderWater(configs.hasRefraction());
+//        entity.setImportant(configs.isImportant());
+//        if (configs.getDiffuseMaps() != null) {
+//            for (int i = 0; i < configs.getDiffuseMaps().size(); i++) {
+//                String diffuseMap = configs.getDiffuseMaps().get(i);
+//                MyFile myFile = new MyFile(entityFile, diffuseMap);
+//                Texture texture = new TextureBuilder(myFile).create();
+//                Spatial spatial = entity.getChildren().get(i);
+//                ((Geometry) spatial).getMaterial()
+//                                    .setTextureParam("diffuseMap", VarType.Texture2D, texture);
+//            }
+//        }
+//    }
 }

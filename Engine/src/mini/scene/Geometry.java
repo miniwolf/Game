@@ -1,12 +1,14 @@
 package mini.scene;
 
 import mini.material.Material;
+import mini.math.Matrix4f;
 import mini.openglObjects.VAO;
 
 public class Geometry extends Spatial {
     private Mesh mesh;
     private VAO vao;
     private Material material;
+    protected transient Matrix4f cachedWorldMat = new Matrix4f();
 
     /**
      * Create a geometry node without any mesh data.
@@ -44,6 +46,52 @@ public class Geometry extends Spatial {
      */
     public void setMaterial(Material material) {
         this.material = material;
+    }
+
+    /**
+     * Updates the bounding volume of the mesh. Should be called when the
+     * mesh has been modified.
+     */
+    @Override
+    public void updateModelBound() {
+        // TODO: Bounding volume
+        //mesh.updateBound();
+        setBoundRefresh();
+    }
+
+    /**
+     * Returns this geometry's mesh vertex count.
+     *
+     * @return this geometry's mesh vertex count.
+     * @see Mesh#getVertexCount()
+     */
+    @Override
+    public int getVertexCount() {
+        return mesh.getVertexCount();
+    }
+
+    /**
+     * Returns this geometry's mesh triangle count.
+     *
+     * @return this geometry's mesh triangle count.
+     * @see Mesh#getTriangleCount()
+     */
+    @Override
+    public int getTriangleCount() {
+        return mesh.getTriangleCount();
+    }
+
+    /**
+     * A {@link Matrix4f matrix} that transforms the {@link Geometry#getMesh() mesh}
+     * from model space to world space. This matrix is computed based on the
+     * {@link Geometry#getWorldTransform() world transform} of this geometry.
+     * In order to receive updated values, you must call {@link Geometry#computeWorldMatrix() }
+     * before using this method.
+     *
+     * @return Matrix to transform from local space to world space
+     */
+    public Matrix4f getWorldMatrix() {
+        return cachedWorldMat;
     }
 
     /**

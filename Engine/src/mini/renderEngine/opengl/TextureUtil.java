@@ -34,7 +34,7 @@ public class TextureUtil {
 
         int[] mipSizes = image.getMipMapSizes();
         int pos = 0;
-        // TODO: Remove unneccessary allocation
+        // TODO: Remove unnecessary allocation
         if (mipSizes == null) {
             if (data != null) {
                 mipSizes = new int[]{data.capacity()};
@@ -98,6 +98,27 @@ public class TextureUtil {
                                   data);
             }
         }
+    }
+
+    public GLImageFormat getImageFormat(Image.Format fmt, boolean isSrgb) {
+        return formats[isSrgb ? 1 : 0][fmt.ordinal()];
+    }
+
+    public GLImageFormat getImageFormatWithError(Image.Format fmt, boolean isSrgb) {
+        //if the passed format is one kind of depth there isno point in getting the srgb format;
+        isSrgb = isSrgb && fmt != Image.Format.Depth && fmt != Image.Format.Depth16
+                 && fmt != Image.Format.Depth24 && fmt != Image.Format.Depth32;
+        GLImageFormat glFmt = getImageFormat(fmt, isSrgb);
+        if (glFmt == null && isSrgb) {
+            glFmt = getImageFormat(fmt, false);
+            System.err.println("Warning: No sRGB format available for ''" + fmt
+                               + "''. Failling back to linear.");
+        }
+        if (glFmt == null) {
+            throw new RuntimeException(
+                    "Image format '" + fmt + "' is unsupported by the video hardware.");
+        }
+        return glFmt;
     }
 
 }

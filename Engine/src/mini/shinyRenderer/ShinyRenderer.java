@@ -5,12 +5,10 @@ import java.util.List;
 import mini.math.Vector3f;
 import mini.renderEngine.opengl.GLRenderer;
 import mini.scene.Geometry;
+import mini.scene.Node;
 import mini.scene.Spatial;
 import mini.shaders.UniformBindingManager;
-import org.lwjgl.opengl.GL11;
 
-import mini.openglObjects.VAO;
-import mini.scene.Entity;
 import mini.textures.Texture;
 import mini.utils.Camera;
 import mini.utils.OpenGlUtils;
@@ -22,10 +20,10 @@ public class ShinyRenderer {
         this.shader = new ShinyShader();
     }
 
-    public void render(List<Entity> shinyEntities, Texture environMap, Camera camera,
+    public void render(List<Node> shinyEntities, Texture environMap, Camera camera,
                        Vector3f lightDir, GLRenderer renderer, UniformBindingManager manager) {
         prepare(camera, lightDir, environMap, renderer, manager);
-        for (Entity entity : shinyEntities) {
+        for (Node entity : shinyEntities) {
             for (Spatial spatial : entity.getChildren()) {
                 if (spatial instanceof Geometry) {
                     renderer.renderMeshFromGeometry((Geometry) spatial);

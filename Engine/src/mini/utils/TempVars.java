@@ -31,12 +31,15 @@
  */
 package mini.utils;
 
+import mini.math.ColorRGBA;
 import mini.math.Matrix3f;
 import mini.math.Matrix4f;
+import mini.math.Plane;
 import mini.math.Quaternion;
 import mini.math.Vector2f;
 import mini.math.Vector3f;
 import mini.math.Vector4f;
+import mini.scene.Spatial;
 
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
@@ -49,6 +52,7 @@ import java.nio.IntBuffer;
  * particular instance is never used elsewhere in the mean time.
  */
 public class TempVars {
+
     /**
      * Allow X instances of TempVars in a single thread.
      */
@@ -62,18 +66,22 @@ public class TempVars {
      * the current instance and  then the index is decremented.
      */
     private static class TempVarsStack {
+
         int index = 0;
         TempVars[] tempVars = new TempVars[STACK_SIZE];
     }
-
     /**
      * ThreadLocal to store a TempVarsStack for each thread.
      * This ensures each thread has a single TempVarsStack that is
      * used only in method calls in that thread.
      */
-    private static final ThreadLocal<TempVarsStack> varsLocal = ThreadLocal
-            .withInitial(TempVarsStack::new);
+    private static final ThreadLocal<TempVarsStack> varsLocal = new ThreadLocal<TempVarsStack>() {
 
+        @Override
+        public TempVarsStack initialValue() {
+            return new TempVarsStack();
+        }
+    };
     /**
      * This instance of TempVars has been retrieved but not released yet.
      */
@@ -93,17 +101,21 @@ public class TempVars {
      */
     public static TempVars get() {
         TempVarsStack stack = varsLocal.get();
+
         TempVars instance = stack.tempVars[stack.index];
+
         if (instance == null) {
             // Create new
             instance = new TempVars();
 
-            // Put it in there, *wink, wink*
+            // Put it in there
             stack.tempVars[stack.index] = instance;
         }
 
         stack.index++;
+
         instance.isUsed = true;
+
         return instance;
     }
 
@@ -120,6 +132,7 @@ public class TempVars {
         }
 
         isUsed = false;
+
         TempVarsStack stack = varsLocal.get();
 
         // Return it to the stack
@@ -127,11 +140,9 @@ public class TempVars {
 
         // Check if it is actually there
         if (stack.tempVars[stack.index] != this) {
-            throw new IllegalStateException(
-                    "An instance of TempVars has not been released in a called method!");
+            throw new IllegalStateException("An instance of TempVars has not been released in a called method!");
         }
     }
-
     /**
      * For interfacing with OpenGL in Renderer.
      */
@@ -145,6 +156,14 @@ public class TempVars {
     public final float[] skinNormals = new float[512 * 3];
     //tangent buffer as 4 components by elements
     public final float[] skinTangents = new float[512 * 4];
+//    /**
+//     * Fetching triangle from mesh
+//     */
+//    public final Triangle triangle = new Triangle();
+    /**
+     * Color
+     */
+    public final ColorRGBA color = new ColorRGBA();
     /**
      * General vectors.
      */
@@ -161,7 +180,9 @@ public class TempVars {
     public final Vector3f vect10 = new Vector3f();
     public final Vector4f vect4f1 = new Vector4f();
     public final Vector4f vect4f2 = new Vector4f();
-    public final Vector3f[] tri = {new Vector3f(), new Vector3f(), new Vector3f()};
+    public final Vector3f[] tri = {new Vector3f(),
+                                   new Vector3f(),
+                                   new Vector3f()};
     /**
      * 2D vector
      */
@@ -179,6 +200,10 @@ public class TempVars {
     public final Quaternion quat1 = new Quaternion();
     public final Quaternion quat2 = new Quaternion();
     /**
+     * Plane
+     */
+    public final Plane plane = new Plane();
+    /**
      * BoundingBox ray collision
      */
     public final float[] fWdU = new float[3];
@@ -186,6 +211,13 @@ public class TempVars {
     public final float[] fDdU = new float[3];
     public final float[] fADdU = new float[3];
     public final float[] fAWxDdU = new float[3];
+    /**
+     * Maximum tree depth .. 32 levels??
+     */
+    public final Spatial[] spatialStack = new Spatial[32];
     public final float[] matrixWrite = new float[16];
+    /**
+     * BIHTree
+     */
     public final float[] bihSwapTmp = new float[9];
 }

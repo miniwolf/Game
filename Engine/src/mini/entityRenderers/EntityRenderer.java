@@ -3,14 +3,12 @@ package mini.entityRenderers;
 import mini.material.Material;
 import mini.math.Vector3f;
 import mini.math.Vector4f;
+import mini.renderEngine.CameraImpl;
 import mini.renderEngine.RenderManager;
-import mini.renderEngine.opengl.GLRenderer;
-import mini.scene.Entity;
 import mini.scene.Geometry;
+import mini.scene.Node;
 import mini.scene.Spatial;
-import mini.shaders.UniformBindingManager;
 import mini.shaders.VarType;
-import mini.utils.Camera;
 import mini.utils.OpenGlUtils;
 
 import java.util.List;
@@ -22,16 +20,16 @@ public class EntityRenderer {
         this.shader = new EntityShader();
     }
 
-    public void render(List<Entity> entities, Camera camera, Vector3f lightDir, Vector4f clipPlane,
+    public void render(List<Node> entities, CameraImpl camera, Vector3f lightDir, Vector4f clipPlane,
                        RenderManager rendererManager) {
         prepare(camera, lightDir, clipPlane, rendererManager);
-        for (Entity entity : entities) {
+        for (Node entity : entities) {
             for (Spatial spatial : entity.getChildren()) {
                 if (spatial instanceof Geometry) {
                     Geometry geom = (Geometry) spatial;
                     Material material = geom.getMaterial();
                     //prepareSkin(material);
-                    material.render(rendererManager, shader, geom);
+                    //material.render(geom, shader, rendererManager);
                     /*Geometry geom = (Geometry) spatial;
                     prepareSkin(geom.getMaterial());
                     VAO model = geom.getVao();
@@ -48,7 +46,7 @@ public class EntityRenderer {
         shader.cleanUp();
     }
 
-    private void prepare(Camera camera, Vector3f lightDir, Vector4f clipPlane,
+    private void prepare(CameraImpl camera, Vector3f lightDir, Vector4f clipPlane,
                          RenderManager manager) {
         shader.start();
         manager.setCamera(camera);

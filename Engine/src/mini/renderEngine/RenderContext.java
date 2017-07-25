@@ -7,6 +7,7 @@ import mini.scene.Geometry;
 import mini.scene.Mesh;
 import mini.scene.VertexBuffer;
 import mini.shaders.ShaderProgram;
+import mini.textures.FrameBuffer;
 import mini.textures.Image;
 import mini.textures.Texture;
 
@@ -96,9 +97,14 @@ public class RenderContext {
     public ShaderProgram boundShader;
 
     /**
-     * @see Renderer#setFrameBuffer(com.jme3.texture.FrameBuffer)
+     * @see GLRenderer#setFrameBuffer(FrameBuffer)
      */
     public int boundFBO = 0;
+
+    /**
+     * @see GLRenderer#setFrameBuffer(FrameBuffer)
+     */
+    public FrameBuffer boundFB;
 
 //    /**
 //     * @see Renderer#setFrameBuffer(com.jme3.texture.FrameBuffer)

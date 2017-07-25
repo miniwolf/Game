@@ -4,7 +4,7 @@ import java.nio.FloatBuffer
 
 import mini.material.Material
 import mini.math.{Vector2f, Vector3f}
-import mini.scene.{Entity, Geometry, Mesh, VertexBuffer}
+import mini.scene._
 import mini.scene.mesh.{IndexBuffer, IndexIntBuffer, IndexShortBuffer}
 import mini.utils.{BufferUtils, MyFile}
 
@@ -26,7 +26,7 @@ object ObjFileLoader {
   private var curIndex = 0
   private var geomIndex = 0
   private var objName = ""
-  private var objNode: Entity = _
+  private var objNode: Node = _
 
   private def processMaterialLib(line: String, path: String): Map[String, List[Face]] = {
     line.substring("mtllib".length).trim.split(".mtl ").flatMap {
@@ -222,7 +222,7 @@ object ObjFileLoader {
     geomIndex = 0
   }
 
-  def loadOBJ(objFile: MyFile): Entity = {
+  def loadOBJ(objFile: MyFile): Spatial = {
     reset()
     @tailrec
     def parseLines(lines: List[String], vertices: List[Vector3f], texCoords: List[Vector2f],
@@ -257,7 +257,7 @@ object ObjFileLoader {
       }
     }
 
-    val objNode = new Entity(objFile.getDirectory + "-objNode")
+    val objNode = new Node(objFile.getDirectory + "-objNode")
 
     val (verts, texs, norms, inds) =
       parseLines(objFile.getLines.asScala.toList, List(), List(), List(), List())
@@ -273,7 +273,12 @@ object ObjFileLoader {
       val geom: Geometry = createGeometry(faces, null)
       objNode.attachChild(geom)
     }
-    objNode
+    if (objNode.getQuantity == 1) {
+      // only 1 geometry, so no need to send node
+      objNode.getChild(0)
+    } else {
+      objNode
+    }
   }
 
   private def getVector3(s: String): Vector3f = {

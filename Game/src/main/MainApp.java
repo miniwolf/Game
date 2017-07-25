@@ -34,7 +34,7 @@ public class MainApp {
         // before context creation
         RenderEngine engine = RenderEngine.init();
         SceneLoader loader = SceneLoaderFactory.createSceneLoader();
-        Scene scene = loader.loadScene(new MyFile(LoaderSettings.RES_FOLDER, "Socuwan Scene"));
+        //Scene scene = loader.loadScene(new MyFile(LoaderSettings.RES_FOLDER, "Socuwan Scene"));
         /*
         MyFile textureFile = new MyFile(LoaderSettings.RES_FOLDER
                                         + "/Socuwan Scene/Gui Texture/LxpnJ.png");
@@ -83,13 +83,13 @@ public class MainApp {
             }
         });
 
-        while (!DisplayManager.isCloseRequested()) {
-            scene.getCamera().update(); // move camera
-            engine.renderScene(scene); // render from new camera point
-            engine.update(); // updates display
-        }
-
-        scene.delete();
+//        while (!DisplayManager.isCloseRequested()) {
+//            scene.getCamera().update(); // move camera
+//            engine.renderScene(scene); // render from new camera point
+//            engine.update(); // updates display
+//        }
+//
+//        scene.delete();
         engine.close();
     }
 }

@@ -1,20 +1,20 @@
 #version 150
 
 in vec2 pass_textureCoords;
-in vec3 pass_normal;
-in vec2 pass_pos;
+//in vec3 pass_normal;
+//in vec2 pass_pos;
 
 out vec4 out_colour;
 
-uniform sampler2D m_diffuseMap;
-uniform sampler2D extraMap;
-uniform bool hasExtraMap;
-uniform vec3 g_LightDirection;
+//uniform sampler2D m_diffuseMap;
+//uniform sampler2D extraMap;
+//uniform bool hasExtraMap;
+//uniform vec3 g_LightDirection;
 
-uniform vec4 m_Ambient;
-uniform vec4 m_Diffuse;
-uniform vec4 m_Specular;
-uniform float m_Shininess;
+//uniform vec4 m_Ambient;
+//uniform vec4 m_Diffuse;
+//uniform vec4 m_Specular;
+//uniform float m_Shininess;
 
 const vec2 center = vec2(-2.53, 3.42);
 

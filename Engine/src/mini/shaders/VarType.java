@@ -15,8 +15,10 @@ public enum VarType {
     Matrix3f(true,false,"mat3"),
     Matrix4f(true,false,"mat4"),
 
-    Texture2D(false,true,"sampler2D|sampler2DShadow");
-
+    Texture2D(false,true,"sampler2D|sampler2DShadow"),
+    Texture3D(false,true,"sampler3D"),
+    TextureArray(false,true,"sampler2DArray|sampler2DArrayShadow"),
+    TextureCubeMap(false,true,"samplerCube");
 
     private boolean multiData = false;
     private boolean textureType = false;

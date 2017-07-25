@@ -18,12 +18,12 @@ public class TextureCubeMap extends Texture {
      */
     private Image image = null;
 
-    public TextureCubeMap(Image img){
+    public TextureCubeMap(Image img) {
         super();
         setImage(img);
     }
 
-    public TextureCubeMap(int width, int height, Image.Format format){
+    public TextureCubeMap(int width, int height, Image.Format format) {
         this(createEmptyLayeredImage(width, height, format));
     }
 
@@ -38,8 +38,7 @@ public class TextureCubeMap extends Texture {
     /**
      * <code>setImage</code> sets the image object that defines the texture.
      *
-     * @param image
-     *            the image that defines the texture.
+     * @param image the image that defines the texture.
      */
     public void setImage(Image image) {
         this.image = image;
@@ -49,12 +48,37 @@ public class TextureCubeMap extends Texture {
     }
 
     /**
+     * <code>setWrap</code> sets the wrap mode of this texture for a
+     * particular axis.
+     *
+     * @param axis the texture axis to define a wrapmode on.
+     * @param mode the wrap mode for the given axis of the texture.
+     * @throws IllegalArgumentException if axis or mode are null
+     */
+    public void setWrap(WrapAxis axis, WrapMode mode) {
+        if (mode == null) {
+            throw new IllegalArgumentException("mode can not be null.");
+        } else if (axis == null) {
+            throw new IllegalArgumentException("axis can not be null.");
+        }
+        switch (axis) {
+            case S:
+                this.wrapS = mode;
+                break;
+            case T:
+                this.wrapT = mode;
+                break;
+            case R:
+                this.wrapR = mode;
+                break;
+        }
+    }
+
+    /**
      * <code>setWrap</code> sets the wrap mode of this texture for all axis.
      *
-     * @param mode
-     *            the wrap mode for the given axis of the texture.
-     * @throws IllegalArgumentException
-     *             if mode is null
+     * @param mode the wrap mode for the given axis of the texture.
+     * @throws IllegalArgumentException if mode is null
      */
     @Override
     public void setWrap(WrapMode mode) {
@@ -70,11 +94,9 @@ public class TextureCubeMap extends Texture {
      * <code>getWrap</code> returns the wrap mode for a given coordinate axis
      * on this texture.
      *
-     * @param axis
-     *            the axis to return for
+     * @param axis the axis to return for
      * @return the wrap mode of the texture.
-     * @throws IllegalArgumentException
-     *             if axis is null
+     * @throws IllegalArgumentException if axis is null
      */
     @Override
     public WrapMode getWrap(WrapAxis axis) {

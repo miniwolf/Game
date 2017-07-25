@@ -241,6 +241,17 @@ public class Mesh {
     }
 
     /**
+     * Indicates to the GPU that this mesh will not be modified (a hint).
+     * Sets the usage mode to {@link VertexBuffer.Usage#Static}
+     * for all {@link VertexBuffer vertex buffers} on this Mesh.
+     */
+    public void setStatic() {
+        for (VertexBuffer vb : buffersList){
+            vb.setUsage(VertexBuffer.Usage.Static);
+        }
+    }
+
+    /**
      * Returns a list of all {@link VertexBuffer vertex buffers} on this Mesh.
      * Using a list instead of an IntMap is better for iteration as there's no need to create
      * an iterator instance. Note that the returned list is a reference to the list used
