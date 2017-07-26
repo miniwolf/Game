@@ -1,5 +1,9 @@
 package mini.light;
 
+import mini.scene.Spatial;
+import mini.utils.Camera;
+import mini.utils.TempVars;
+
 /**
  * Represents a point light.
  * A point light emits light from a given position into all directions in space.
@@ -38,4 +42,33 @@ public class PointLight extends Light {
             this.invRadius = 0;
         }
     }
+
+    @Override
+    public Light.Type getType() {
+        return Light.Type.Point;
+    }
+
+//    @Override
+//    public void computeLastDistance(Spatial owner) {
+//        if (owner.getWorldBound() != null) {
+//            BoundingVolume bv = owner.getWorldBound();
+//            lastDistance = bv.distanceSquaredTo(position);
+//        } else {
+//            lastDistance = owner.getWorldTranslation().distanceSquared(position);
+//        }
+//    }
+//
+//    @Override
+//    public boolean intersectsFrustum(Camera camera, TempVars vars) {
+//        if (this.radius == 0) {
+//            return true;
+//        } else {
+//            for (int i = 5; i >= 0; i--) {
+//                if (camera.getWorldPlane(i).pseudoDistance(position) <= -radius) {
+//                    return false;
+//                }
+//            }
+//            return true;
+//        }
+//    }
 }

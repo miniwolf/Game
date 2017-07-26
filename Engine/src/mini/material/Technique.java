@@ -2,12 +2,16 @@ package mini.material;
 
 import mini.light.LightList;
 import mini.material.logic.TechniqueDefLogic;
+import mini.renderEngine.Caps;
 import mini.renderEngine.RenderManager;
 import mini.scene.Geometry;
 import mini.shaders.DefineList;
 import mini.shaders.ShaderProgram;
+import mini.shaders.VarType;
 
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by miniwolf on 30-04-2017.
@@ -32,6 +36,34 @@ public class Technique {
         this.dynamicDefines = def.createDefineList();
     }
 
+    /**
+     * Called by the material to tell the technique a parameter was modified.
+     * Specify <code>null</code> for value if the param is to be cleared.
+     */
+    final void notifyParamChanged(String paramName, VarType type, Object value) {
+        Integer defineId = def.getShaderParamDefineId(paramName);
+
+        if (defineId == null) {
+            return;
+        }
+
+        paramDefines.set(defineId, type, value);
+    }
+
+    /**
+     * Called by the material to tell the technique that it has been made
+     * current.
+     * The technique updates dynamic defines based on the
+     * currently set material parameters.
+     */
+    final void notifyTechniqueSwitched() {
+        Map<String, MatParam> paramMap = owner.getParamsMap();
+        paramDefines.clear();
+        for (MatParam param : paramMap.values()) {
+            notifyParamChanged(param.getName(), param.getVarType(), param.getValue());
+        }
+    }
+
     private void applyOverrides(DefineList defineList, List<MatParamOverride> overrides) {
         for (MatParamOverride override : overrides) {
             if (!override.isEnabled()) {
@@ -48,16 +80,16 @@ public class Technique {
 
     /**
      * Called by the material to determine which shader to use for rendering.
-     *
+     * <p>
      * The {@link TechniqueDefLogic} is used to determine the shader to use
      * based on the {@link LightMode}.
      *
      * @param renderManager The render manager for which the shader is to be selected.
-     * @param rendererCaps The renderer capabilities which the shader should support.
+     * @param rendererCaps  The renderer capabilities which the shader should support.
      * @return A compatible shader.
      */
     ShaderProgram makeCurrent(RenderManager renderManager, List<MatParamOverride> worldOverrides,
-                       LightList lights) {
+                              LightList lights, EnumSet<Caps> rendererCaps) {
         TechniqueDefLogic logic = def.getLogic();
 
         dynamicDefines.clear();
@@ -67,7 +99,7 @@ public class Technique {
             applyOverrides(dynamicDefines, worldOverrides);
         }
 
-        return logic.makeCurrent(renderManager, lights, dynamicDefines);
+        return logic.makeCurrent(renderManager, rendererCaps, lights, dynamicDefines);
     }
 
     /**

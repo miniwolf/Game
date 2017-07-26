@@ -16,7 +16,7 @@ public class Uniform extends ShaderVariable {
     private static final Integer ZERO_INT = 0;
     private static final Float ZERO_FLT = 0f;
     private static final int NOT_FOUND = -1;
-    private static final FloatBuffer ZERO_BUF = BufferUtils.createFloatBuffer(4*4);
+    private static final FloatBuffer ZERO_BUF = BufferUtils.createFloatBuffer(4 * 4);
 
     /**
      * Currently set value of the uniform.
@@ -54,15 +54,15 @@ public class Uniform extends ShaderVariable {
         }
     }
 
-    public void clearValue(){
+    public void clearValue() {
         updateNeeded = true;
 
-        if (multiData != null){
+        if (multiData != null) {
             multiData.clear();
 
-            while (multiData.remaining() > 0){
+            while (multiData.remaining() > 0) {
                 ZERO_BUF.clear();
-                ZERO_BUF.limit( Math.min(multiData.remaining(), 16) );
+                ZERO_BUF.limit(Math.min(multiData.remaining(), 16));
                 multiData.put(ZERO_BUF);
             }
 
@@ -75,7 +75,7 @@ public class Uniform extends ShaderVariable {
             return;
         }
 
-        switch (varType){
+        switch (varType) {
             case Int:
                 this.value = ZERO_INT;
                 break;
@@ -85,17 +85,17 @@ public class Uniform extends ShaderVariable {
             case Float:
                 this.value = ZERO_FLT;
                 break;
-            case Vector2:
+            case Vector2f:
                 if (this.value != null) {
                     ((Vector2f) this.value).set(Vector2f.ZERO);
                 }
                 break;
-            case Vector3:
+            case Vector3f:
                 if (this.value != null) {
                     ((Vector3f) this.value).set(Vector3f.ZERO);
                 }
                 break;
-            case Vector4:
+            case Vector4f:
                 if (this.value != null) {
                     if (this.value instanceof ColorRGBA) {
                         ((ColorRGBA) this.value).set(ColorRGBA.BlackNoAlpha);
@@ -141,7 +141,7 @@ public class Uniform extends ShaderVariable {
                 if (this.value == null) {
                     this.value = new Matrix3f(m3);
                 } else {
-                    ((Matrix3f)this.value).set(m3);
+                    ((Matrix3f) this.value).set(m3);
                 }
                 break;
             case Matrix4f:
@@ -157,10 +157,10 @@ public class Uniform extends ShaderVariable {
                 if (this.value == null) {
                     this.value = new Matrix4f(m4);
                 } else {
-                    ((Matrix4f)this.value).copy(m4);
+                    ((Matrix4f) this.value).copy(m4);
                 }
                 break;
-            case Vector3:
+            case Vector3f:
                 if (value.equals(this.value)) {
                     return;
                 }
@@ -170,7 +170,7 @@ public class Uniform extends ShaderVariable {
                     ((Vector3f) this.value).set((Vector3f) value);
                 }
                 break;
-            case Vector4:
+            case Vector4f:
                 if (value.equals(this.value)) {
                     return;
                 }
@@ -208,7 +208,35 @@ public class Uniform extends ShaderVariable {
         updateNeeded = true;
     }
 
-    public Object getValue(){
+    public void setVector4fLength(int length) {
+        if (location == -1) {
+            return;
+        }
+
+        multiData = BufferUtils.ensureLargeEnough(multiData, length * 4);
+        value = multiData;
+        varType = VarType.Vector4fArray;
+        updateNeeded = true;
+        setByCurrentMaterial = true;
+    }
+
+    public void setVector4fInArray(float x, float y, float z, float w, int index) {
+        if (location == -1) {
+            return;
+        }
+
+        if (varType != null && varType != VarType.Vector4fArray) {
+            throw new IllegalArgumentException("Expected a " + varType.name() + " value!");
+        }
+
+        multiData.position(index * 4);
+        multiData.put(x).put(y).put(z).put(w);
+        multiData.rewind();
+        updateNeeded = true;
+        setByCurrentMaterial = true;
+    }
+
+    public Object getValue() {
         return value;
     }
 
@@ -224,7 +252,7 @@ public class Uniform extends ShaderVariable {
         return setByCurrentMaterial;
     }
 
-    public void clearSetByCurrentMaterial(){
+    public void clearSetByCurrentMaterial() {
         setByCurrentMaterial = false;
     }
 

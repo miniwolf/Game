@@ -73,6 +73,15 @@ public class MaterialDef {
     }
 
     /**
+     * The debug name of the material definition.
+     *
+     * @return debug name of the material definition.
+     */
+    public String getName(){
+        return name;
+    }
+
+    /**
      * Adds a new material parameter.
      *
      * @param type Type of the parameter

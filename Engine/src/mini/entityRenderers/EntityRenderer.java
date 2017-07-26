@@ -51,7 +51,7 @@ public class EntityRenderer {
         shader.start();
         manager.setCamera(camera);
         manager.setLightDir(lightDir);
-        shader.getUniform("plane").setValue(VarType.Vector4, clipPlane);
+        shader.getUniform("plane").setValue(VarType.Vector4f, clipPlane);
         manager.updateUniformBindings(shader);
         //OpenGlUtils.antialias(true);
         //OpenGlUtils.disableBlending();

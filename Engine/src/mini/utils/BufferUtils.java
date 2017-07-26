@@ -182,10 +182,10 @@ public final class BufferUtils {
     }
 
     /**
-     * Generate a new FloatBuffer using the given array of Vector4 objects. The
+     * Generate a new FloatBuffer using the given array of Vector4f objects. The
      * FloatBuffer will be 4 * data.length long and contain the vector data.
      *
-     * @param data array of Vector4 objects to place into a new FloatBuffer
+     * @param data array of Vector4f objects to place into a new FloatBuffer
      */
     public static FloatBuffer createFloatBuffer(Vector4f... data) {
         if (data == null) {

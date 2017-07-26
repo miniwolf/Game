@@ -1,12 +1,13 @@
 package mini.material;
 
-import com.sun.prism.ps.Shader;
 import mini.asset.AssetKey;
-import mini.entityRenderers.EntityShader;
+import mini.asset.MaterialKey;
 import mini.light.LightList;
 import mini.material.logic.DefaultTechniqueDefLogic;
+import mini.material.plugins.MiniLoader;
 import mini.math.ColorRGBA;
 import mini.post.SceneProcessor;
+import mini.renderEngine.Caps;
 import mini.renderEngine.RenderManager;
 import mini.renderEngine.opengl.GLRenderer;
 import mini.scene.Geometry;
@@ -16,9 +17,12 @@ import mini.shaders.VarType;
 import mini.textures.Image;
 import mini.textures.Texture;
 
+import java.io.IOException;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 
 /**
  * <code>Material</code> describes the rendering style for a given
@@ -33,20 +37,25 @@ import java.util.Map;
  */
 public class Material {
     private MaterialDef def;
-    private Technique technique = new Technique(this, new TechniqueDef());
+    private Technique technique;
     private String name;
     private RenderState additionalState = null;
     private RenderState mergedRenderState = new RenderState();
     private final Map<String, MatParam> paramValues = new HashMap<>();
+    private Map<String, Technique> techniques = new HashMap<>();
     private Texture diffuseTexture;
     private Texture extraInfoMap;
     private boolean transparent;
     private int sortingId = -1;
     private AssetKey key;
 
-    public Material(String name) {
+    public Material(String defName) {
         this();
-        this.name = name;
+        try {
+            def = (MaterialDef) MiniLoader.load(new MaterialKey(defName));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public Material(MaterialDef def) {
@@ -61,12 +70,11 @@ public class Material {
     }
 
     public Material() {
-        technique.getDef().setLogic(new DefaultTechniqueDefLogic(technique.getDef()));
     }
 
     /**
      * Returns the asset key name of the asset from which this material was loaded.
-     *
+     * <p>
      * <p>This value will be <code>null</code> unless this material was loaded
      * from a .j3m file.
      *
@@ -87,6 +95,7 @@ public class Material {
      * This method sets the name of the material.
      * The name is not the same as the asset name.
      * It can be null and there is no guarantee of its uniqueness.
+     *
      * @param name the name of the material
      */
     public void setName(String name) {
@@ -96,7 +105,7 @@ public class Material {
     /**
      * Pass a boolean to the material shader.
      *
-     * @param name the name of the boolean defined in the material definition (j3md)
+     * @param name  the name of the boolean defined in the material definition (j3md)
      * @param value the boolean value
      */
     public void setBoolean(String name, boolean value) {
@@ -107,7 +116,7 @@ public class Material {
      * Pass a float to the material shader.  This version avoids auto-boxing
      * if the value is already a Float.
      *
-     * @param name the name of the float defined in the material definition (j3md)
+     * @param name  the name of the float defined in the material definition (j3md)
      * @param value the float value
      */
     public void setFloat(String name, float value) {
@@ -117,23 +126,23 @@ public class Material {
     /**
      * Pass a Color to the material shader.
      *
-     * @param name the name of the color defined in the material definition (j3md)
+     * @param name  the name of the color defined in the material definition (j3md)
      * @param value the ColorRGBA value
      */
     public void setColor(String name, ColorRGBA value) {
-        setParam(name, VarType.Vector4, value);
+        setParam(name, VarType.Vector4f, value);
     }
 
     /**
      * Pass a parameter to the material shader.
      *
-     * @param name the name of the parameter defined in the material definition (j3md)
-     * @param type the type of the parameter {@link VarType}
+     * @param name  the name of the parameter defined in the material definition (j3md)
+     * @param type  the type of the parameter {@link VarType}
      * @param value the value of the parameter
      */
     public void setParam(String name, VarType type, Object value) {
         if (type.isTextureType()) {
-            setTextureParam(name, type, (Texture)value);
+            setTextureParam(name, type, (Texture) value);
         } else {
             MatParam val = getParam(name);
             if (val == null) {
@@ -146,6 +155,7 @@ public class Material {
 
     /**
      * Clear a parameter from this material. The parameter must exist
+     *
      * @param name the name of the parameter to clear
      */
     public void clearParam(String name) {
@@ -160,10 +170,9 @@ public class Material {
     /**
      * Set a texture parameter.
      *
-     * @param name The name of the parameter
-     * @param type The variable type {@link VarType}
+     * @param name  The name of the parameter
+     * @param type  The variable type {@link VarType}
      * @param value The texture value of the parameter.
-     *
      * @throws IllegalArgumentException is value is null
      */
     public void setTextureParam(String name, VarType type, Texture value) {
@@ -182,8 +191,8 @@ public class Material {
     /**
      * Pass a texture to the material shader.
      *
-     * @param name the name of the texture defined in the material definition
-     * (j3md) (for example Texture for Lighting.j3md)
+     * @param name  the name of the texture defined in the material definition
+     *              (j3md) (for example Texture for Lighting.j3md)
      * @param value the Texture object previously loaded by the asset manager
      */
     public void setTexture(String name, Texture value) {
@@ -214,6 +223,72 @@ public class Material {
         setTextureParam(name, paramType, value);
     }
 
+    /**
+     * Select the technique to use for rendering this material.
+     * <p>
+     * Any candidate technique for selection (either default or named)
+     * must be verified to be compatible with the system, for that, the
+     * <code>renderManager</code> is queried for capabilities.
+     *
+     * @param name          The name of the technique to select, pass
+     *                      {@link TechniqueDef#DEFAULT_TECHNIQUE_NAME} to select one of the default
+     *                      techniques.
+     * @param renderManager The {@link RenderManager render manager}
+     *                      to query for capabilities.
+     * @throws IllegalArgumentException      If no technique exists with the given
+     *                                       name.
+     * @throws UnsupportedOperationException If no candidate technique supports
+     *                                       the system capabilities.
+     */
+    public void selectTechnique(String name, final RenderManager renderManager) {
+        // check if already created
+        Technique tech = techniques.get(name);
+        // When choosing technique, we choose one that
+        // supports all the caps.
+        if (tech == null) {
+            EnumSet<Caps> rendererCaps = renderManager.getRenderer().getCaps();
+            List<TechniqueDef> techDefs = def.getTechniqueDefs(name);
+            if (techDefs == null || techDefs.isEmpty()) {
+                throw new IllegalArgumentException(
+                        String.format("The requested technique %s is not available on material %s",
+                                      name, def.getName()));
+            }
+
+            TechniqueDef lastTech = null;
+            float weight = 0;
+            for (TechniqueDef techDef : techDefs) {
+                if (rendererCaps.containsAll(techDef.getRequiredCaps())) {
+                    float techWeight = techDef.getWeight() + (
+                            techDef.getLightMode() == renderManager.getPreferredLightMode() ? 10f :
+                            0);
+                    if (techWeight > weight) {
+                        tech = new Technique(this, techDef);
+                        techniques.put(name, tech);
+                        weight = techWeight;
+                    }
+                }
+                lastTech = techDef;
+            }
+            if (tech == null) {
+                throw new UnsupportedOperationException(
+                        String.format("No technique '%s' on material "
+                                      + "'%s' is supported by the video hardware. "
+                                      + "The capabilities %s are required.",
+                                      name, def.getName(), lastTech.getRequiredCaps()));
+            }
+        } else if (technique == tech) {
+            // attempting to switch to an already
+            // active technique.
+            return;
+        }
+
+        technique = tech;
+        tech.notifyTechniqueSwitched();
+
+        // shader was changed
+        sortingId = -1;
+    }
+
 //    public void delete() {
 //        diffuseTexture.delete();
 //        if (extraInfoMap != null) {
@@ -224,7 +299,7 @@ public class Material {
     /**
      * Acquire the additional {@link RenderState render state} to apply
      * for this material.
-     *
+     * <p>
      * <p>The first call to this method will create an additional render
      * state which can be modified by the user to apply any render
      * states in addition to the ones used by the renderer. Only render
@@ -273,6 +348,17 @@ public class Material {
             return (MatParamTexture) param;
         }
         return null;
+    }
+
+    /**
+     * Returns the ListMap of all parameters set on this material.
+     *
+     * @return a ListMap of all parameters set on this material.
+     *
+     * @see #setParam(java.lang.String, com.jme3.shader.VarType, java.lang.Object)
+     */
+    public Map<String, MatParam> getParamsMap() {
+        return paramValues;
     }
 
     public void setTransparent(boolean transparent) {
@@ -349,13 +435,18 @@ public class Material {
      * </ul>
      * </ul>
      *
-     * @param geometry The geometry to render
-     * @param lights Presorted and filtered light list to use for rendering
+     * @param geometry      The geometry to render
+     * @param lights        Presorted and filtered light list to use for rendering
      * @param renderManager The render manager requesting the rendering
      */
     public void render(Geometry geometry, LightList lights, RenderManager renderManager) {
+        if (technique == null) {
+            selectTechnique(TechniqueDef.DEFAULT_TECHNIQUE_NAME, renderManager);
+        }
+
         TechniqueDef techniqueDef = technique.getDef();
         GLRenderer renderer = renderManager.getRenderer();
+        EnumSet<Caps> rendererCaps = renderer.getCaps();
 
         // Apply render state
         updateRenderState(renderer, techniqueDef);
@@ -364,7 +455,8 @@ public class Material {
         List<MatParamOverride> overrides = geometry.getWorldMatParamOverrides();
 
         // Select shader to use
-        ShaderProgram shader = technique.makeCurrent(renderManager, overrides, lights);
+        ShaderProgram shader = technique
+                .makeCurrent(renderManager, overrides, lights, rendererCaps);
 
         // Begin tracking which uniforms were changed by material.
         clearUniformsSetByCurrent(shader);
@@ -385,12 +477,12 @@ public class Material {
     /**
      * Called by {@link RenderManager} to render the geometry by
      * using this material.
-     *
+     * <p>
      * Note that this version of the render method
      * does not perform light filtering.
      *
      * @param geom The geometry to render
-     * @param rm The render manager requesting the rendering
+     * @param rm   The render manager requesting the rendering
      */
     public void render(Geometry geom, RenderManager rm) {
         render(geom, geom.getWorldLightList(), rm);
@@ -398,9 +490,11 @@ public class Material {
 
     private void updateRenderState(GLRenderer renderer, TechniqueDef techniqueDef) {
         if (techniqueDef.getRenderState() != null) {
-            renderer.applyRenderState(techniqueDef.getRenderState().copyMergedTo(additionalState, mergedRenderState));
+            renderer.applyRenderState(
+                    techniqueDef.getRenderState().copyMergedTo(additionalState, mergedRenderState));
         } else {
-            renderer.applyRenderState(RenderState.DEFAULT.copyMergedTo(additionalState, mergedRenderState));
+            renderer.applyRenderState(
+                    RenderState.DEFAULT.copyMergedTo(additionalState, mergedRenderState));
         }
     }
 
@@ -458,7 +552,7 @@ public class Material {
 
     /**
      * Returns the sorting ID or sorting index for this material.
-     *
+     * <p>
      * <p>The sorting ID is used internally by the system to sort rendering
      * of geometries. It sorted to reduce shader switches, if the shaders
      * are equal, then it is sorted by textures.

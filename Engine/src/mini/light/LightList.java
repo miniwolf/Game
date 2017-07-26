@@ -44,37 +44,38 @@ public class LightList implements Iterable<Light> {
      * @param local
      * @param parent
      */
-    public void update(LightList local, LightList parent){
+    public void update(LightList local, LightList parent) {
         // clear the list as it will be reconstructed
         // using the arguments
         clear();
 
-        while (list.length <= local.listSize){
+        while (list.length <= local.listSize) {
             doubleSize();
         }
 
         // add the lights from the local list
         System.arraycopy(local.list, 0, list, 0, local.listSize);
-        for (int i = 0; i < local.listSize; i++){
+        for (int i = 0; i < local.listSize; i++) {
 //            list[i] = local.list[i];
             distToOwner[i] = Float.NEGATIVE_INFINITY;
         }
 
         // if the spatial has a parent node, add the lights
         // from the parent list as well
-        if (parent != null){
+        if (parent != null) {
             int sz = local.listSize + parent.listSize;
-            while (list.length <= sz)
+            while (list.length <= sz) {
                 doubleSize();
+            }
 
-            for (int i = 0; i < parent.listSize; i++){
+            for (int i = 0; i < parent.listSize; i++) {
                 int p = i + local.listSize;
                 list[p] = parent.list[i];
                 distToOwner[p] = Float.NEGATIVE_INFINITY;
             }
 
             listSize = local.listSize + parent.listSize;
-        }else{
+        } else {
             listSize = local.listSize;
         }
     }
@@ -108,10 +109,55 @@ public class LightList implements Iterable<Light> {
     }
 
     /**
+     * Remove the light at the given index.
+     *
+     * @param index
+     */
+    public void remove(int index){
+        if (index >= listSize || index < 0)
+            throw new IndexOutOfBoundsException();
+
+        listSize --;
+        if (index == listSize){
+            list[listSize] = null;
+            return;
+        }
+
+        System.arraycopy(list, index + 1, list, index, listSize - index);
+        list[listSize] = null;
+    }
+
+    /**
+     * Removes the given light from the LightList.
+     *
+     * @param l the light to remove
+     */
+    public void remove(Light l){
+        for (int i = 0; i < listSize; i++){
+            if (list[i] == l){
+                remove(i);
+                return;
+            }
+        }
+    }
+
+    /**
      * @return The size of the list.
      */
     public int size() {
         return listSize;
+    }
+
+    /**
+     * @return the light at the given index.
+     * @throws IndexOutOfBoundsException If the given index is outside bounds.
+     */
+    public Light get(int num) {
+        if (num >= listSize || num < 0) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        return list[num];
     }
 
     private void doubleSize() {
@@ -137,37 +183,20 @@ public class LightList implements Iterable<Light> {
     }
 
     /**
-     * Remove the light at the given index.
-     *
-     * @param index to be removed
-     */
-    private void remove(int index) {
-        if (index >= listSize || index < 0) {
-            throw new IndexOutOfBoundsException();
-        }
-
-        listSize--;
-        if (index == listSize) {
-            list[listSize] = null;
-            return;
-        }
-
-        System.arraycopy(list, index + 1, list, index, listSize - index);
-        list[listSize] = null;
-    }
-
-    /**
      * Resets list size to 0.
      */
     public void clear() {
-        if (listSize == 0)
+        if (listSize == 0) {
             return;
+        }
 
-        for (int i = 0; i < listSize; i++)
+        for (int i = 0; i < listSize; i++) {
             list[i] = null;
+        }
 
-        if (tlist != null)
+        if (tlist != null) {
             Arrays.fill(tlist, null);
+        }
 
         listSize = 0;
     }

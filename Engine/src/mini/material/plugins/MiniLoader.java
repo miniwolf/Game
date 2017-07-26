@@ -9,11 +9,10 @@ import mini.material.MaterialDef;
 import mini.material.RenderState;
 import mini.material.TechniqueDef;
 import mini.material.logic.DefaultTechniqueDefLogic;
+import mini.material.logic.SinglePassLightingLogic;
 import mini.math.ColorRGBA;
 import mini.math.Vector2f;
 import mini.math.Vector3f;
-import mini.objConverter.MTLFileLoader;
-import mini.renderEngine.queue.RenderQueue;
 import mini.shaders.DefineList;
 import mini.shaders.ShaderProgram;
 import mini.shaders.VarType;
@@ -298,25 +297,25 @@ public class MiniLoader {
                         throw new IOException("Float value parameter must have 1 entry: " + value);
                     }
                     return Float.parseFloat(split[0]);
-                case Vector2:
+                case Vector2f:
                     if (split.length != 2) {
                         throw new IOException(
-                                "Vector2 value parameter must have 2 entries: " + value);
+                                "Vector2f value parameter must have 2 entries: " + value);
                     }
                     return new Vector2f(Float.parseFloat(split[0]),
                                         Float.parseFloat(split[1]));
-                case Vector3:
+                case Vector3f:
                     if (split.length != 3) {
                         throw new IOException(
-                                "Vector3 value parameter must have 3 entries: " + value);
+                                "Vector3f value parameter must have 3 entries: " + value);
                     }
                     return new Vector3f(Float.parseFloat(split[0]),
                                         Float.parseFloat(split[1]),
                                         Float.parseFloat(split[2]));
-                case Vector4:
+                case Vector4f:
                     if (split.length != 4) {
                         throw new IOException(
-                                "Vector4 value parameter must have 4 entries: " + value);
+                                "Vector4f value parameter must have 4 entries: " + value);
                     }
                     return new ColorRGBA(Float.parseFloat(split[0]),
                                          Float.parseFloat(split[1]),
@@ -379,7 +378,7 @@ public class MiniLoader {
 
         VarType type;
         if (split[0].equals("Color")) {
-            type = VarType.Vector4;
+            type = VarType.Vector4f;
         } else {
             type = VarType.valueOf(split[0]);
         }
@@ -653,9 +652,9 @@ public class MiniLoader {
 //            case MultiPass:
 //                technique.setLogic(new MultiPassLightingLogic(technique));
 //                break;
-//            case SinglePass:
-//                technique.setLogic(new SinglePassLightingLogic(technique));
-//                break;
+            case SinglePass:
+                technique.setLogic(new SinglePassLightingLogic(technique));
+                break;
 //            case StaticPass:
 //                technique.setLogic(new StaticPassLightingLogic(technique));
 //                break;
@@ -811,6 +810,7 @@ public class MiniLoader {
     public static Object load(MaterialKey key) throws IOException {
         InputStream in = key.getFilename().getInputStream();
         MiniLoader miniLoader = new MiniLoader();
+        miniLoader.key = key;
         try {
             miniLoader.loadFromRoot(BlockLanguageParser.parse(in));
         } finally {

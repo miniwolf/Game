@@ -33,6 +33,8 @@ public class RenderManager {
     private Camera prevCam = null;
     private int viewX, viewY, viewWidth, viewHeight;
     private final Matrix4f orthoMatrix = new Matrix4f();
+    private TechniqueDef.LightMode preferredLightMode = TechniqueDef.LightMode.SinglePass;
+    private int singlePassLightBatchSize = 1;
 
     /**
      * Create a high-level rendering interface over the
@@ -117,15 +119,6 @@ public class RenderManager {
             cam.clearViewportChanged();
             prevCam = cam;
 
-//            float translateX = viewWidth == viewX ? 0 : -(viewWidth + viewX) / (viewWidth - viewX);
-//            float translateY = viewHeight == viewY ? 0 : -(viewHeight + viewY) / (viewHeight - viewY);
-//            float scaleX = viewWidth == viewX ? 1f : 2f / (viewWidth - viewX);
-//            float scaleY = viewHeight == viewY ? 1f : 2f / (viewHeight - viewY);
-//
-//            orthoMatrix.loadIdentity();
-//            orthoMatrix.setTranslation(translateX, translateY, 0);
-//            orthoMatrix.setScale(scaleX, scaleY, 0);
-
             orthoMatrix.loadIdentity();
             orthoMatrix.setTranslation(-1f, -1f, 0f);
             orthoMatrix.setScale(2f / cam.getWidth(), 2f / cam.getHeight(), 0f);
@@ -134,6 +127,17 @@ public class RenderManager {
 
     private void setViewProjection(Camera cam) {
         uniformBindingManager.setCamera(cam);
+    }
+
+    /**
+     * Returns the camera currently used for rendering.
+     * <p>
+     * The camera can be set with {@link #setCamera(com.jme3.renderer.Camera, boolean) }.
+     *
+     * @return the camera currently used for rendering.
+     */
+    public Camera getCurrentCamera() {
+        return prevCam;
     }
 
     /**
@@ -305,6 +309,30 @@ public class RenderManager {
     }
 
     /**
+     * Defines what light mode will be selected when a technique offers several light modes.
+     * @param preferredLightMode The light mode to use.
+     */
+    public void setPreferredLightMode(TechniqueDef.LightMode preferredLightMode) {
+        this.preferredLightMode = preferredLightMode;
+    }
+
+    /**
+     * returns the preferred light mode.
+     * @return the light mode.
+     */
+    public TechniqueDef.LightMode getPreferredLightMode() {
+        return preferredLightMode;
+    }
+
+    /**
+     * returns the number of lights used for each pass when the light mode is single pass.
+     * @return the number of lights.
+     */
+    public int getSinglePassLightBatchSize() {
+        return singlePassLightBatchSize;
+    }
+
+    /**
      * Render the given viewport queues.
      * <p>
      * Changes the {@link GLRenderer#setDepthRange(float, float) depth range}
@@ -399,15 +427,7 @@ public class RenderManager {
         // Perform light filtering if we have a light filter.
         LightList lightList = geom.getWorldLightList();
 
-        // TODO: LightFilter
-//        if (lightFilter != null) {
-//            filteredLightList.clear();
-//            lightFilter.filterLights(geom, filteredLightList);
-//            lightList = filteredLightList;
-//        }
-
         Material material = geom.getMaterial();
-
         material.render(geom, lightList, this);
     }
 

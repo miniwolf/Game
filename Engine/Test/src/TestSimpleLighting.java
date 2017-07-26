@@ -1,3 +1,5 @@
+import mini.asset.MaterialKey;
+import mini.material.plugins.MiniLoader;
 import mini.renderEngine.CameraImpl;
 import mini.light.PointLight;
 import mini.material.Material;
@@ -6,6 +8,7 @@ import mini.math.Quaternion;
 import mini.math.Vector3f;
 import mini.math.Vector4f;
 import mini.objConverter.ObjFileLoader;
+import mini.renderEngine.RenderEngine;
 import mini.renderEngine.RenderManager;
 import mini.renderEngine.ViewPort;
 import mini.renderEngine.opengl.GLRenderer;
@@ -15,6 +18,8 @@ import mini.scene.shape.Sphere;
 import mini.shaders.VarType;
 import mini.utils.DisplayManager;
 import mini.utils.MyFile;
+
+import java.io.IOException;
 
 /**
  * Created by miniwolf on 06-05-2017.
@@ -64,6 +69,7 @@ public class TestSimpleLighting {
     private void initDisplay() {
         displayManager = DisplayManager.createDisplay();
         renderer = new GLRenderer();
+        renderer.initialize();
     }
 
     /**
@@ -87,7 +93,7 @@ public class TestSimpleLighting {
     private void userInit() {
         Geometry teapot = (Geometry) ObjFileLoader.loadOBJ(new MyFile("Game/obj", "teapot.obj"));
         teapot.setLocalScale(2f);
-        Material mat = new Material();
+        Material mat = new Material("Engine/MatDefs/Light/Lighting.minid");
         mat.setFloat("Shininess", 25);
         mat.setBoolean("UseMaterialColors", true);
         cam.setPosition(new Vector3f(0.015041917f, 0.4572918f, 5.2874837f));
@@ -101,9 +107,12 @@ public class TestSimpleLighting {
         rootNode.attachChild(teapot);
 
         Geometry lightMdl = new Geometry("Light", new Sphere(10, 10, 0.1f));
-        Material redColor = new Material("RedColor");
-        redColor.setParam("Color", VarType.Vector4, new Vector4f(1, 0, 0, 1));
-        lightMdl.setMaterial(redColor);
+        try {
+            lightMdl.setMaterial(
+                    (Material) MiniLoader.load(new MaterialKey("Engine/Materials/RedColor.mini")));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         lightMdl.getMesh().setStatic();
         rootNode.attachChild(lightMdl);

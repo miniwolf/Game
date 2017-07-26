@@ -2,13 +2,10 @@ package mini.shaders;
 
 import mini.math.Matrix4f;
 import mini.math.Vector3f;
-import mini.math.Vector4f;
 import mini.scene.Geometry;
 import mini.utils.Camera;
 
 import java.util.List;
-
-import static mini.shaders.UniformBinding.WorldMatrix;
 
 /**
  * Created by miniwolf on 22-04-2017.
@@ -39,10 +36,10 @@ public class UniformBindingManager {
                     u.setValue(VarType.Matrix4f, viewProjMatrix);
                     break;
                 case CameraPosition:
-                    u.setValue(VarType.Vector3, camLoc);
+                    u.setValue(VarType.Vector3f, camLoc);
                     break;
                 case LightDirection:
-                    u.setValue(VarType.Vector3, lightDir);
+                    u.setValue(VarType.Vector3f, lightDir);
             }
         }
     }

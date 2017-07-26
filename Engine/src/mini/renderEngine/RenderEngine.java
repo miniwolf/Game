@@ -55,4 +55,7 @@ public class RenderEngine {
         return new RenderEngine(display, renderer);
     }
 
+    public MasterRenderer getRenderer() {
+        return renderer;
+    }
 }

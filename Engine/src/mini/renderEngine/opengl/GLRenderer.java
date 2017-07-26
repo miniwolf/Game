@@ -6,6 +6,7 @@ import mini.math.Quaternion;
 import mini.math.Vector2f;
 import mini.math.Vector3f;
 import mini.math.Vector4f;
+import mini.renderEngine.Caps;
 import mini.renderEngine.IDList;
 import mini.renderEngine.Limits;
 import mini.renderEngine.RenderContext;
@@ -45,22 +46,33 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author miniwolf
  */
 public class GLRenderer {
+    private static final Pattern GLVERSION_PATTERN = Pattern.compile(".*?(\\d+)\\.(\\d+).*");
+
     private final RenderContext context = new RenderContext();
     private final EnumMap<Limits, Integer> limits = new EnumMap<>(Limits.class);
     private final TextureUtil texUtil = new TextureUtil();
+    private final EnumSet<Caps> caps = EnumSet.noneOf(Caps.class);
+
     private boolean linearizeSrgbImages;
     private HashSet<String> extensions = new HashSet<>();
     private FrameBuffer mainFbOverride = null;
     private int vpX, vpY, vpW, vpH;
     private int clipX, clipY, clipW, clipH;
+
+    public EnumSet<Caps> getCaps() {
+        return caps;
+    }
 
     private int convertFormat(VertexBuffer.Format format) {
         switch (format) {
@@ -354,11 +366,129 @@ public class GLRenderer {
         return GL11.glGetInteger(en);
     }
 
+    public static int extractVersion(String version) {
+        Matcher m = GLVERSION_PATTERN.matcher(version);
+        if (m.matches()) {
+            int major = Integer.parseInt(m.group(1));
+            int minor = Integer.parseInt(m.group(2));
+            if (minor >= 10 && minor % 10 == 0) {
+                // some versions can look like "1.30" instead of "1.3".
+                // make sure to correct for this
+                minor /= 10;
+            }
+            return major * 100 + minor * 10;
+        } else {
+            return -1;
+        }
+    }
+
     private boolean hasExtension(String extensionName) {
         return extensions.contains(extensionName);
     }
 
+    private void loadCapabilitiesGL2() {
+        int oglVer = extractVersion(GL11.glGetString(GL11.GL_VERSION));
+
+        if (oglVer >= 200) {
+            caps.add(Caps.OpenGL20);
+            if (oglVer >= 210) {
+                caps.add(Caps.OpenGL21);
+            }
+            if (oglVer >= 300) {
+                caps.add(Caps.OpenGL30);
+            }
+            if (oglVer >= 310) {
+                caps.add(Caps.OpenGL31);
+            }
+            if (oglVer >= 320) {
+                caps.add(Caps.OpenGL32);
+            }
+            if (oglVer >= 330) {
+                caps.add(Caps.OpenGL33);
+                caps.add(Caps.GeometryShader);
+            }
+            if (oglVer >= 400) {
+                caps.add(Caps.OpenGL40);
+                caps.add(Caps.TesselationShader);
+            }
+            if (oglVer >= 410) {
+                caps.add(Caps.OpenGL41);
+            }
+            if (oglVer >= 420) {
+                caps.add(Caps.OpenGL42);
+            }
+            if (oglVer >= 430) {
+                caps.add(Caps.OpenGL43);
+            }
+            if (oglVer >= 440) {
+                caps.add(Caps.OpenGL44);
+            }
+            if (oglVer >= 450) {
+                caps.add(Caps.OpenGL45);
+            }
+        }
+
+        int glslVer = extractVersion(GL11.glGetString(GL20.GL_SHADING_LANGUAGE_VERSION));
+
+        switch (glslVer) {
+            default:
+                if (glslVer < 400) {
+                    break;
+                }
+                // so that future OpenGL revisions wont break jme3
+                // fall through intentional
+            case 450:
+                caps.add(Caps.GLSL450);
+            case 440:
+                caps.add(Caps.GLSL440);
+            case 430:
+                caps.add(Caps.GLSL430);
+            case 420:
+                caps.add(Caps.GLSL420);
+            case 410:
+                caps.add(Caps.GLSL410);
+            case 400:
+                caps.add(Caps.GLSL400);
+            case 330:
+                caps.add(Caps.GLSL330);
+            case 150:
+                caps.add(Caps.GLSL150);
+            case 140:
+                caps.add(Caps.GLSL140);
+            case 130:
+                caps.add(Caps.GLSL130);
+            case 120:
+                caps.add(Caps.GLSL120);
+            case 110:
+                caps.add(Caps.GLSL110);
+            case 100:
+                caps.add(Caps.GLSL100);
+                break;
+        }
+
+        // Workaround, always assume we support GLSL100 & GLSL110
+        // Supporting OpenGL 2.0 means supporting GLSL 1.10.
+        caps.add(Caps.GLSL110);
+        caps.add(Caps.GLSL100);
+
+        // Fix issue in TestRenderToMemory when GL.GL_FRONT is the main
+        // buffer being used.
+        context.initialDrawBuf = getInteger(GL11.GL_DRAW_BUFFER);
+        context.initialReadBuf = getInteger(GL11.GL_READ_BUFFER);
+
+        // XXX: This has to be GL.GL_BACK for canvas on Mac
+        // Since initialDrawBuf is GL.GL_FRONT for pbuffer, gotta
+        // change this value later on ...
+//        initialDrawBuf = GL.GL_BACK;
+//        initialReadBuf = GL.GL_BACK;
+    }
+
     private void loadCapabilities() {
+        loadCapabilitiesGL2();
+        loadCapabilitiesCommon();
+    }
+
+    private void loadCapabilitiesCommon() {
         extensions = loadExtensions();
 
         limits.put(Limits.VertexTextureUnits, getInteger(GL20.GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS));
@@ -773,15 +903,15 @@ public class GLRenderer {
                 Float f = (Float) uniform.getValue();
                 GL20.glUniform1f(loc, f);
                 break;
-            case Vector2:
+            case Vector2f:
                 Vector2f v2 = (Vector2f) uniform.getValue();
                 GL20.glUniform2f(loc, v2.getX(), v2.getY());
                 break;
-            case Vector3:
+            case Vector3f:
                 Vector3f v3 = (Vector3f) uniform.getValue();
                 GL20.glUniform3f(loc, v3.getX(), v3.getY(), v3.getZ());
                 break;
-            case Vector4:
+            case Vector4f:
                 Object val = uniform.getValue();
                 if (val instanceof ColorRGBA) {
                     ColorRGBA c = (ColorRGBA) val;
@@ -933,6 +1063,7 @@ public class GLRenderer {
         String infoLog = null;
 
         if (!linkOK) {
+            System.err.println(GL11.glGetError());
             int length = GL20.glGetProgrami(id, GL20.GL_INFO_LOG_LENGTH);
             if (length > 3) {
                 // get infos

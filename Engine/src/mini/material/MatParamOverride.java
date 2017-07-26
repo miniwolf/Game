@@ -28,7 +28,7 @@ import mini.shaders.VarType;
  * rootNode.attachChild(box);
  *
  * // ... later ...
- * MatParamOverride override = new MatParamOverride(Type.Vector4, "Color", ColorRGBA.Red);
+ * MatParamOverride override = new MatParamOverride(Type.Vector4f, "Color", ColorRGBA.Red);
  * rootNode.addMatParamOverride(override);
  *
  * // After adding the override to the root node, the box becomes red.

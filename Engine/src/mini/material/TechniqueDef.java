@@ -1,6 +1,7 @@
 package mini.material;
 
 import mini.material.logic.TechniqueDefLogic;
+import mini.renderEngine.Caps;
 import mini.shaders.DefineList;
 import mini.shaders.ShaderProgram;
 import mini.shaders.UniformBinding;
@@ -8,15 +9,17 @@ import mini.shaders.VarType;
 import mini.utils.MyFile;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 
 /**
  * Created by miniwolf on 30-04-2017.
  */
-public class TechniqueDef {
+public class TechniqueDef implements Cloneable {
     /**
      * Version #1: Separate shader language for each shader source.
      */
@@ -100,6 +103,8 @@ public class TechniqueDef {
         View,
         Legacy
     }
+
+    private final EnumSet<Caps> requiredCaps = EnumSet.noneOf(Caps.class);
 
     private String name;
     private int sortId;
@@ -281,6 +286,16 @@ public class TechniqueDef {
     }
 
     /**
+     * Gets the {@link Caps renderer capabilities} that are required
+     * by this technique.
+     *
+     * @return the required renderer capabilities
+     */
+    public EnumSet<Caps> getRequiredCaps() {
+        return requiredCaps;
+    }
+
+    /**
      * Sets the shaders that this technique definition will use.
      *
      * @param vertexShader The name of the vertex shader
@@ -293,6 +308,12 @@ public class TechniqueDef {
         this.shaderNames.put(ShaderProgram.ShaderType.Vertex, vertexShader);
         this.shaderLanguages.put(ShaderProgram.ShaderType.Fragment, fragLanguage);
         this.shaderNames.put(ShaderProgram.ShaderType.Fragment, fragmentShader);
+
+        requiredCaps.clear();
+        Caps vertCap = Caps.valueOf(vertLanguage);
+        requiredCaps.add(vertCap);
+        Caps fragCap = Caps.valueOf(fragLanguage);
+        requiredCaps.add(fragCap);
     }
 
     /**
@@ -477,12 +498,25 @@ public class TechniqueDef {
      * @param shaderLanguages EnumMap containing all shader languages for this stage
      */
     public void setShaderFile(EnumMap<ShaderProgram.ShaderType, MyFile> shaderNames, EnumMap<ShaderProgram.ShaderType, String> shaderLanguages) {
+        requiredCaps.clear();
+
+        weight = 0;
         for (ShaderProgram.ShaderType shaderType : shaderNames.keySet()) {
             String language = shaderLanguages.get(shaderType);
             MyFile shaderFile = shaderNames.get(shaderType);
 
             this.shaderLanguages.put(shaderType, language);
             this.shaderNames.put(shaderType, shaderFile);
+
+            Caps cap = Caps.valueOf(language);
+            requiredCaps.add(cap);
+            weight = Math.max(weight, cap.ordinal());
+
+            if (shaderType.equals(ShaderProgram.ShaderType.Geometry)) {
+                requiredCaps.add(Caps.GeometryShader);
+            } else if (shaderType.equals(ShaderProgram.ShaderType.TessellationControl)) {
+                requiredCaps.add(Caps.TesselationShader);
+            }
         }
     }
 
@@ -621,5 +655,49 @@ public class TechniqueDef {
      */
     public void setLightSpace(LightSpace lightSpace) {
         this.lightSpace = lightSpace;
+    }
+
+    @Override
+    public TechniqueDef clone() throws CloneNotSupportedException {
+        //cannot use super.clone because of the final fields instance that would be shared by the clones.
+        TechniqueDef clone = new TechniqueDef(name, sortId);
+
+        clone.noRender = noRender;
+        clone.lightMode = lightMode;
+        clone.shadowMode = shadowMode;
+        clone.lightSpace = lightSpace;
+        clone.usesNodes = usesNodes;
+        clone.shaderPrologue = shaderPrologue;
+
+        clone.setShaderFile(shaderNames, shaderLanguages);
+
+        clone.defineNames = new ArrayList<>(defineNames.size());
+        clone.defineNames.addAll(defineNames);
+
+        clone.defineTypes = new ArrayList<>(defineTypes.size());
+        clone.defineTypes.addAll(defineTypes);
+
+        clone.paramToDefineId = new HashMap<>(paramToDefineId.size());
+        clone.paramToDefineId.putAll(paramToDefineId);
+
+        if (renderState != null) {
+            clone.setRenderState(renderState.clone());
+        }
+        if (forcedRenderState != null) {
+            clone.setForcedRenderState(forcedRenderState.clone());
+        }
+
+        try {
+            clone.logic = logic.getClass().getConstructor(TechniqueDef.class).newInstance(clone);
+        } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
+            e.printStackTrace();
+        }
+
+        if (worldBinds != null) {
+            clone.worldBinds = new ArrayList<>(worldBinds.size());
+            clone.worldBinds.addAll(worldBinds);
+        }
+
+        return clone;
     }
 }

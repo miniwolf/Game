@@ -8,12 +8,19 @@ public enum VarType {
     Boolean("bool"),
     Int("int"),
 
-    Vector2("vec2"),
-    Vector3("vec3"),
-    Vector4("vec4"),
+    Vector2f("vec2"),
+    Vector3f("vec3"),
+    Vector4f("vec4"),
+
+    Vector2fArray(true,false,"vec2"),
+    Vector3fArray(true,false,"vec3"),
+    Vector4fArray(true,false,"vec4"),
 
     Matrix3f(true,false,"mat3"),
     Matrix4f(true,false,"mat4"),
+
+    Matrix3fArray(true,false,"mat3"),
+    Matrix4fArray(true,false,"mat4"),
 
     Texture2D(false,true,"sampler2D|sampler2DShadow"),
     Texture3D(false,true,"sampler3D"),

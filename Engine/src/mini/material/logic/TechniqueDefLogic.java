@@ -3,6 +3,7 @@ package mini.material.logic;
 import mini.light.LightList;
 import mini.material.MatParam;
 import mini.material.RenderState;
+import mini.renderEngine.Caps;
 import mini.renderEngine.RenderManager;
 import mini.scene.Geometry;
 import mini.shaders.DefineList;
@@ -10,6 +11,8 @@ import mini.shaders.ShaderProgram;
 import mini.shaders.Uniform;
 import mini.shaders.UniformBinding;
 import mini.textures.Texture;
+
+import java.util.EnumSet;
 
 /**
  * <code>TechniqueDefLogic</code> is used to customize how
@@ -36,7 +39,7 @@ public interface TechniqueDefLogic {
      *
      * @return The shader to use for rendering.
      */
-    ShaderProgram makeCurrent(RenderManager renderManager, LightList lights, DefineList defines);
+    ShaderProgram makeCurrent(RenderManager renderManager, EnumSet<Caps> rendererCaps, LightList lights, DefineList defines);
 
     /**
      * Requests that the <code>TechniqueDefLogic</code> renders the given geometry.
