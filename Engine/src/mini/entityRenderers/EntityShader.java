@@ -18,12 +18,12 @@ public class EntityShader extends ShaderProgram {
     //private UniformSampler extraMap = new UniformSampler("extraMap");
 
     public EntityShader() {
-        try {
-            addSource(ShaderType.Vertex, "Entity Vertex", VERTEX_SHADER.getLines());
-            addSource(ShaderType.Fragment, "Entity Fragment", FRAGMENT_SHADER.getLines());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            addSource(ShaderType.Vertex, "Entity Vertex", VERTEX_SHADER.getLines());
+//            addSource(ShaderType.Fragment, "Entity Fragment", FRAGMENT_SHADER.getLines());
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
         getAttribute(VertexBuffer.Type.Position).setName("in_position");
         getAttribute(VertexBuffer.Type.TexCoord).setName("in_textureCoords");
         getAttribute(VertexBuffer.Type.Normal).setName("in_normal");
@@ -35,9 +35,9 @@ public class EntityShader extends ShaderProgram {
     }
 
     private void connectTextureUnits() {
-        super.start();
+        //super.start();
         //diffuseMap.loadTexUnit(0);
         //extraMap.loadTexUnit(1);
-        super.stop();
+        //super.stop();
     }
 }

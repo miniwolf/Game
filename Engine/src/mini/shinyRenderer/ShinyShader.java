@@ -17,25 +17,25 @@ public class ShinyShader extends ShaderProgram {
     //private UniformSampler diffuseMap = new UniformSampler("diffuseMap");
     //private UniformSampler enviroMap = new UniformSampler("enviroMap");
 
-    public ShinyShader() {
-        try {
-            addSource(ShaderType.Vertex, "Shiny Vertex", VERTEX_SHADER.getLines());
-            addSource(ShaderType.Fragment, "Shiny Fragment", FRAGMENT_SHADER.getLines());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        getAttribute(VertexBuffer.Type.Position).setName("in_position");
-        getAttribute(VertexBuffer.Type.TexCoord).setName("in_textureCoords");
-        getAttribute(VertexBuffer.Type.Normal).setName("in_normal");
-        //super.storeAllUniformLocations(projectionViewMatrix, diffuseMap, cameraPosition, lightDirection, enviroMap);
-        connectTextureUnits();
-    }
+//    public ShinyShader() {
+//        try {
+//            addSource(ShaderType.Vertex, "Shiny Vertex", VERTEX_SHADER.getLines());
+//            addSource(ShaderType.Fragment, "Shiny Fragment", FRAGMENT_SHADER.getLines());
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//        getAttribute(VertexBuffer.Type.Position).setName("in_position");
+//        getAttribute(VertexBuffer.Type.TexCoord).setName("in_textureCoords");
+//        getAttribute(VertexBuffer.Type.Normal).setName("in_normal");
+//        //super.storeAllUniformLocations(projectionViewMatrix, diffuseMap, cameraPosition, lightDirection, enviroMap);
+//        connectTextureUnits();
+//    }
 
     private void connectTextureUnits() {
-        super.start();
+        //super.start();
         //diffuseMap.loadTexUnit(0);
         //enviroMap.loadTexUnit(1);
-        super.stop();
+        //super.stop();
     }
 
 }

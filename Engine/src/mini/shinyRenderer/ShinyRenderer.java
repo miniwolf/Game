@@ -40,12 +40,12 @@ public class ShinyRenderer {
     }
 
     public void cleanUp() {
-        shader.cleanUp();
+        //shader.cleanUp();
     }
 
     private void prepare(Camera camera, Vector3f lightDir, Texture enviromap,
                          GLRenderer renderer, UniformBindingManager manager) {
-        shader.start();
+        //shader.start();
         manager.setCamera(camera);
         manager.setLightDir(lightDir);
         manager.updateUniformBindings(shader);
@@ -58,6 +58,6 @@ public class ShinyRenderer {
     }
 
     private void finish() {
-        shader.stop();
+        //shader.stop();
     }
 }

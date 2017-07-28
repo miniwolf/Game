@@ -75,4 +75,11 @@ public class MyFile {
     public String getName() {
         return name;
     }
+
+    // TODO: Implement constant time operation instead of this O(m) operation.
+    // Initialise the value in the beginning as this value is immutable
+    public String getExtension() {
+        String[] fileType = path.split("\\.");
+        return fileType[fileType.length - 1];
+    }
 }

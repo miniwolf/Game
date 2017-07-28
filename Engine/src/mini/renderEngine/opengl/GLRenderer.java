@@ -29,6 +29,7 @@ import org.lwjgl.opengl.EXTFramebufferMultisample;
 import org.lwjgl.opengl.EXTFramebufferObject;
 import org.lwjgl.opengl.EXTTextureArray;
 import org.lwjgl.opengl.EXTTextureFilterAnisotropic;
+import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL13;
@@ -45,6 +46,7 @@ import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -354,10 +356,17 @@ public class GLRenderer {
 
     private HashSet<String> loadExtensions() {
         HashSet<String> extensionSet = new HashSet<>(64);
-        int extensionCount = GL30.glGetIntegeri(GL30.GL_NUM_EXTENSIONS, 0);
-        for (int i = 0; i < extensionCount; i++) {
-            String extension = GL30.glGetStringi(GL11.GL_EXTENSIONS, i);
-            extensionSet.add(extension);
+        if (caps.contains(Caps.OpenGL30)) {
+            // If OpenGL3+ is available, use the non-deprecated way
+            // of getting supported extensions.
+
+            int extensionCount = GL11.glGetInteger(GL30.GL_NUM_EXTENSIONS);
+            for (int i = 0; i < extensionCount; i++) {
+                String extension = GL30.glGetStringi(GL11.GL_EXTENSIONS, i);
+                extensionSet.add(extension);
+            }
+        } else {
+            extensionSet.addAll(Arrays.asList(GL11.glGetString(GL11.GL_EXTENSIONS).split(" ")));
         }
         return extensionSet;
     }
@@ -1063,7 +1072,6 @@ public class GLRenderer {
         String infoLog = null;
 
         if (!linkOK) {
-            System.err.println(GL11.glGetError());
             int length = GL20.glGetProgrami(id, GL20.GL_INFO_LOG_LENGTH);
             if (length > 3) {
                 // get infos

@@ -10,6 +10,7 @@ import mini.math.Vector3f;
 import mini.math.Vector4f;
 import mini.renderEngine.Caps;
 import mini.renderEngine.RenderManager;
+import mini.renderEngine.opengl.GLDebug;
 import mini.renderEngine.opengl.GLRenderer;
 import mini.scene.Geometry;
 import mini.shaders.DefineList;

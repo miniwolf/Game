@@ -16,14 +16,14 @@ public class GuiShader extends ShaderProgram {
 
     //protected UniformMatrix transformationMatrix = new UniformMatrix("transformationMatrix");
 
-    public GuiShader() {
-        try {
-            addSource(ShaderType.Vertex, "Gui Vertex", VERTEX_SHADER.getLines());
-            addSource(ShaderType.Fragment, "Gui Fragment", FRAGMENT_SHADER.getLines());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        getAttribute(VertexBuffer.Type.Position).setName("in_position");
-        addUniformBinding(UniformBinding.WorldMatrix);
-    }
+//    public GuiShader() {
+//        try {
+//            addSource(ShaderType.Vertex, "Gui Vertex", VERTEX_SHADER.getLines());
+//            addSource(ShaderType.Fragment, "Gui Fragment", FRAGMENT_SHADER.getLines());
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//        getAttribute(VertexBuffer.Type.Position).setName("in_position");
+//        addUniformBinding(UniformBinding.WorldMatrix);
+//    }
 }

@@ -4,14 +4,18 @@ import mini.input.Action;
 import mini.input.Keyboard;
 import mini.input.KeyboardKey;
 import mini.input.Mouse;
+import mini.renderEngine.opengl.GLDebug;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
+import org.lwjgl.opengl.GLUtil;
+import org.lwjgl.system.Callback;
 
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.GLFW_DEPTH_BITS;
 import static org.lwjgl.glfw.GLFW.GLFW_FALSE;
+import static org.lwjgl.glfw.GLFW.GLFW_OPENGL_DEBUG_CONTEXT;
 import static org.lwjgl.glfw.GLFW.GLFW_RESIZABLE;
 import static org.lwjgl.glfw.GLFW.GLFW_SAMPLES;
 import static org.lwjgl.glfw.GLFW.GLFW_TRUE;
@@ -33,6 +37,8 @@ import static org.lwjgl.glfw.GLFW.glfwSwapInterval;
 import static org.lwjgl.glfw.GLFW.glfwTerminate;
 import static org.lwjgl.glfw.GLFW.glfwWindowHint;
 import static org.lwjgl.glfw.GLFW.glfwWindowShouldClose;
+import static org.lwjgl.opengl.GL11.glEnable;
+import static org.lwjgl.opengl.GL43.GL_DEBUG_OUTPUT;
 
 public class DisplayManager {
     public static final int WIDTH = 1280;
@@ -44,6 +50,7 @@ public class DisplayManager {
     private static float delta;
     private static long lastFrameTime;
     private static long window;
+    private static Callback debugProc;
 
     private long variableYieldTime, lastTime;
 
@@ -61,6 +68,7 @@ public class DisplayManager {
         glfwDefaultWindowHints(); // optional, the current window hints are already the default
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // the window will stay hidden after creation
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE); // the window will be resizable
+        glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
         glfwWindowHint(GLFW_DEPTH_BITS, 24);
         glfwWindowHint(GLFW_SAMPLES, 4);
 
@@ -100,7 +108,9 @@ public class DisplayManager {
     private DisplayManager() {
         GL.createCapabilities();
 
-        GL11.glEnable(GL13.GL_MULTISAMPLE);
+        debugProc = GLUtil.setupDebugMessageCallback();
+        glEnable(GL_DEBUG_OUTPUT);
+        glEnable(GL13.GL_MULTISAMPLE);
         GL11.glViewport(0, 0, WIDTH, HEIGHT);
 
         lastFrameTime = getCurrentTime();
@@ -193,6 +203,7 @@ public class DisplayManager {
         // Terminate GLFW and free the error callback
         glfwTerminate();
         glfwSetErrorCallback(null).free();
+        debugProc.free();
     }
 
     private long getCurrentTime() {

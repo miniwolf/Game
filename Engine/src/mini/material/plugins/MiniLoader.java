@@ -49,7 +49,7 @@ public class MiniLoader {
     private List<String> presetDefines = new ArrayList<>();
 
     private List<EnumMap<ShaderProgram.ShaderType, String>> shaderLanguages;
-    private EnumMap<ShaderProgram.ShaderType, MyFile> shaderNames;
+    private EnumMap<ShaderProgram.ShaderType, String> shaderNames;
 
     private static final String whitespacePattern = "\\p{javaWhitespace}+";
 
@@ -77,7 +77,7 @@ public class MiniLoader {
 
     private void readShaderDefinition(ShaderProgram.ShaderType shaderType, String name,
                                       String... languages) {
-        shaderNames.put(shaderType, new MyFile(name));
+        shaderNames.put(shaderType, name);
 
         if (langSize != 0 && langSize != languages.length) {
             throw new RuntimeException("Technique " + technique.getName()

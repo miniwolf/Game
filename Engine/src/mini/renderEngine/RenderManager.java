@@ -9,6 +9,7 @@ import mini.material.TechniqueDef;
 import mini.math.Matrix4f;
 import mini.math.Vector3f;
 import mini.post.SceneProcessor;
+import mini.renderEngine.opengl.GLDebug;
 import mini.renderEngine.opengl.GLRenderer;
 import mini.renderEngine.queue.RenderQueue;
 import mini.scene.Geometry;

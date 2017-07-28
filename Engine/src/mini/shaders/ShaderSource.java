@@ -17,8 +17,6 @@ public class ShaderSource extends NativeObject {
     String name;
     String source;
     String defines;
-    private int id = -1;
-    private boolean isUpdateNeeded;
 
     public ShaderSource(ShaderProgram.ShaderType type) {
         super();
@@ -83,22 +81,6 @@ public class ShaderSource extends NativeObject {
 
     public String getDefines() {
         return defines;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public void clearUpdateNeeded() {
-        isUpdateNeeded = false;
-    }
-
-    public boolean isUpdateNeeded() {
-        return isUpdateNeeded;
     }
 
     @Override

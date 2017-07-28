@@ -56,11 +56,11 @@ public class WaterRenderer {
         //dudvTexture.delete();
         //normalMap.delete();
         fbos.cleanUp();
-        shader.cleanUp();
+        //shader.cleanUp();
     }
 
     private void prepareRender(Camera camera, Vector3f lightDir, UniformBindingManager manager) {
-        shader.start();
+        //shader.start();
         manager.setCamera(camera);
         manager.setLightDir(lightDir);
 
@@ -94,7 +94,7 @@ public class WaterRenderer {
 
     private void finish() {
         quad.unbind(0);
-        shader.stop();
+        //shader.stop();
     }
 
     private Matrix4f createModelMatrix(float x, float y, float z, float scale) {

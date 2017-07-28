@@ -11,6 +11,7 @@ import mini.objConverter.ObjFileLoader;
 import mini.renderEngine.RenderEngine;
 import mini.renderEngine.RenderManager;
 import mini.renderEngine.ViewPort;
+import mini.renderEngine.opengl.GLDebug;
 import mini.renderEngine.opengl.GLRenderer;
 import mini.scene.Geometry;
 import mini.scene.Node;

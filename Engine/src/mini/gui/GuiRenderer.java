@@ -43,14 +43,14 @@ public class GuiRenderer {
     }
 
     private void init() {
-        shader.start();
+        //shader.start();
     }
 
     private void end() {
-        shader.stop();
+        //shader.stop();
     }
 
     public void cleanUp() {
-        shader.cleanUp();
+        //shader.cleanUp();
     }
 }

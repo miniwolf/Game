@@ -43,12 +43,12 @@ public class EntityRenderer {
     }
 
     public void cleanUp() {
-        shader.cleanUp();
+        //shader.cleanUp();
     }
 
     private void prepare(CameraImpl camera, Vector3f lightDir, Vector4f clipPlane,
                          RenderManager manager) {
-        shader.start();
+        //shader.start();
         manager.setCamera(camera);
         manager.setLightDir(lightDir);
         shader.getUniform("plane").setValue(VarType.Vector4f, clipPlane);
@@ -59,7 +59,7 @@ public class EntityRenderer {
     }
 
     private void finish() {
-        shader.stop();
+        //shader.stop();
     }
 
     private void prepareSkin(Material material) {

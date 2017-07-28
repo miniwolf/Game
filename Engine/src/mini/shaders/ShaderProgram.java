@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 
 public class ShaderProgram extends NativeObject {
-    private int programID = -1;
     private boolean isUpdateNeeded = true;
 
     /**
@@ -126,50 +125,20 @@ public class ShaderProgram extends NativeObject {
      * @param type  The pipeline to control
      * @param lines The shader source code lines (in GLSL).
      */
-    public void addSource(ShaderType type, String name, List<String> lines) {
-        StringBuilder source = new StringBuilder();
-        try {
-            lines.forEach(line -> source.append(line).append("//\n"));
-        } catch (Exception e) {
-            System.err.println("Could not read file.");
-            e.printStackTrace();
-            System.exit(-1);
-        }
+    public void addSource(ShaderType type, String name, String source, String defines, String language) {
         ShaderSource shaderSource = new ShaderSource(type);
-        shaderSource.setSource(source.toString());
+        shaderSource.setSource(source);
         shaderSource.setName(name);
+        shaderSource.setLanguage(language);
+        if (defines != null) {
+            shaderSource.setDefines(defines);
+        }
         shaderSourceList.add(shaderSource);
         setUpdateNeeded();
     }
 
     public List<ShaderSource> getSources() {
         return shaderSourceList;
-    }
-
-    protected void storeAllUniformLocations(Uniform... uniforms) {
-        for (Uniform uniform : uniforms) {
-            uniform.storeUniformLocation(programID);
-        }
-        GL20.glValidateProgram(programID);
-    }
-
-    public void start() {
-        GL20.glUseProgram(programID);
-    }
-
-    public void stop() {
-        GL20.glUseProgram(0);
-    }
-
-    public void cleanUp() {
-        stop();
-        GL20.glDeleteProgram(programID);
-    }
-
-    private void bindAttributes(String[] inVariables) {
-        for (int i = 0; i < inVariables.length; i++) {
-            GL20.glBindAttribLocation(programID, i, inVariables[i]);
-        }
     }
 
     public void addUniformBinding(UniformBinding binding) {
@@ -204,14 +173,6 @@ public class ShaderProgram extends NativeObject {
             attribs.put(ordinal, attrib);
         }
         return attrib;
-    }
-
-    public void setId(int id) {
-        programID = id;
-    }
-
-    public int getId() {
-        return programID;
     }
 
     public Map<String, Uniform> getUniformMap() {

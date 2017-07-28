@@ -3,9 +3,12 @@ package mini.material;
 import mini.material.logic.TechniqueDefLogic;
 import mini.renderEngine.Caps;
 import mini.shaders.DefineList;
+import mini.shaders.Glsl100ShaderGenerator;
+import mini.shaders.ShaderNode;
 import mini.shaders.ShaderProgram;
 import mini.shaders.UniformBinding;
 import mini.shaders.VarType;
+import mini.shaders.plugins.GLSLLoader;
 import mini.utils.MyFile;
 
 import java.io.IOException;
@@ -27,7 +30,7 @@ public class TechniqueDef implements Cloneable {
 
     /**
      * The default technique name.
-     *
+     * <p>
      * The technique with this name is selected if no specific technique is
      * requested by the user. Currently set to "Default".
      */
@@ -109,8 +112,8 @@ public class TechniqueDef implements Cloneable {
     private String name;
     private int sortId;
 
-    private EnumMap<ShaderProgram.ShaderType,String> shaderLanguages;
-    private EnumMap<ShaderProgram.ShaderType, MyFile> shaderNames;
+    private EnumMap<ShaderProgram.ShaderType, String> shaderLanguages;
+    private EnumMap<ShaderProgram.ShaderType, String> shaderNames;
 
     private String shaderPrologue;
     private List<String> defineNames;
@@ -120,6 +123,9 @@ public class TechniqueDef implements Cloneable {
     private final HashMap<DefineList, ShaderProgram> definesToShaderMap;
 
     private boolean usesNodes = false;
+    private List<ShaderNode> shaderNodes;
+    private ShaderGenerationInfo shaderGenerationInfo;
+
     private boolean noRender = false;
     private RenderState renderState;
     private RenderState forcedRenderState;
@@ -141,7 +147,7 @@ public class TechniqueDef implements Cloneable {
      *
      * @param name The name of the technique
      */
-    public TechniqueDef(String name, int sortId){
+    public TechniqueDef(String name, int sortId) {
         this();
         this.sortId = sortId;
         this.name = name;
@@ -152,7 +158,7 @@ public class TechniqueDef implements Cloneable {
      */
     public TechniqueDef() {
         shaderLanguages = new EnumMap<>(ShaderProgram.ShaderType.class);
-        shaderNames = new EnumMap<ShaderProgram.ShaderType, MyFile>(ShaderProgram.ShaderType.class);
+        shaderNames = new EnumMap<>(ShaderProgram.ShaderType.class);
         defineNames = new ArrayList<>();
         defineTypes = new ArrayList<>();
         paramToDefineId = new HashMap<>();
@@ -174,12 +180,13 @@ public class TechniqueDef implements Cloneable {
      *
      * @return the name of this technique
      */
-    public String getName(){
+    public String getName() {
         return name;
     }
 
     /**
      * Returns the light mode.
+     *
      * @return the light mode.
      * @see LightMode
      */
@@ -191,16 +198,15 @@ public class TechniqueDef implements Cloneable {
      * Set the light mode
      *
      * @param lightMode the light mode
-     *
      * @see LightMode
      */
     public void setLightMode(LightMode lightMode) {
         this.lightMode = lightMode;
         //if light space is not specified we set it to Legacy
-        if(lightSpace == null){
-            if(lightMode== LightMode.MultiPass){
+        if (lightSpace == null) {
+            if (lightMode == LightMode.MultiPass) {
                 lightSpace = LightSpace.Legacy;
-            }else{
+            } else {
                 lightSpace = LightSpace.World;
             }
         }
@@ -216,6 +222,7 @@ public class TechniqueDef implements Cloneable {
 
     /**
      * Returns the shadow mode.
+     *
      * @return the shadow mode.
      */
     public ShadowMode getShadowMode() {
@@ -226,7 +233,6 @@ public class TechniqueDef implements Cloneable {
      * Set the shadow mode.
      *
      * @param shadowMode the shadow mode.
-     *
      * @see ShadowMode
      */
     public void setShadowMode(ShadowMode shadowMode) {
@@ -235,6 +241,7 @@ public class TechniqueDef implements Cloneable {
 
     /**
      * Returns the render state that this technique is using
+     *
      * @return the render state that this technique is using
      * @see #setRenderState(com.jme3.material.RenderState)
      */
@@ -246,7 +253,6 @@ public class TechniqueDef implements Cloneable {
      * Sets the render state that this technique is using.
      *
      * @param renderState the render state that this technique is using.
-     *
      * @see RenderState
      */
     public void setRenderState(RenderState renderState) {
@@ -257,7 +263,6 @@ public class TechniqueDef implements Cloneable {
      * Sets if this technique should not be used to render.
      *
      * @param noRender not render or render ?
-     *
      * @see NoRender
      */
     public void setNoRender(boolean noRender) {
@@ -269,9 +274,8 @@ public class TechniqueDef implements Cloneable {
      * (eg. to not render a material with default technique)
      *
      * @return true if this technique should not be rendered, false otherwise.
-     *
      */
-    public boolean isNoRender(){
+    public boolean isNoRender() {
         return noRender;
     }
 
@@ -279,9 +283,8 @@ public class TechniqueDef implements Cloneable {
      * Returns true if this technique uses Shader Nodes, false otherwise.
      *
      * @return true if this technique uses Shader Nodes, false otherwise.
-     *
      */
-    public boolean isUsingShaderNodes(){
+    public boolean isUsingShaderNodes() {
         return usesNodes;
     }
 
@@ -298,12 +301,13 @@ public class TechniqueDef implements Cloneable {
     /**
      * Sets the shaders that this technique definition will use.
      *
-     * @param vertexShader The name of the vertex shader
+     * @param vertexShader   The name of the vertex shader
      * @param fragmentShader The name of the fragment shader
-     * @param vertLanguage The vertex shader language
-     * @param fragLanguage The fragment shader language
+     * @param vertLanguage   The vertex shader language
+     * @param fragLanguage   The fragment shader language
      */
-    public void setShaderFile(MyFile vertexShader, MyFile fragmentShader, String vertLanguage, String fragLanguage) {
+    public void setShaderFile(String vertexShader, String fragmentShader, String vertLanguage,
+                              String fragLanguage) {
         this.shaderLanguages.put(ShaderProgram.ShaderType.Vertex, vertLanguage);
         this.shaderNames.put(ShaderProgram.ShaderType.Vertex, vertexShader);
         this.shaderLanguages.put(ShaderProgram.ShaderType.Fragment, fragLanguage);
@@ -318,7 +322,7 @@ public class TechniqueDef implements Cloneable {
 
     /**
      * Set a string which is prepended to every shader used by this technique.
-     *
+     * <p>
      * Typically this is used for preset defines.
      *
      * @param shaderPrologue The prologue to append before the technique's shaders.
@@ -339,10 +343,9 @@ public class TechniqueDef implements Cloneable {
      *
      * @param paramName The parameter name to look up
      * @return The define name
-     *
      * @see #addShaderParamDefine(java.lang.String, java.lang.String)
      */
-    public String getShaderParamDefine(String paramName){
+    public String getShaderParamDefine(String paramName) {
         Integer defineId = paramToDefineId.get(paramName);
         if (defineId != null) {
             return defineNames.get(defineId);
@@ -380,11 +383,11 @@ public class TechniqueDef implements Cloneable {
      * typically <code>1</code> if it is set, unless it is an integer or a float,
      * in which case it will converted into an integer.
      *
-     * @param paramName The name of the material parameter to link to.
-     * @param paramType The type of the material parameter to link to.
+     * @param paramName  The name of the material parameter to link to.
+     * @param paramType  The type of the material parameter to link to.
      * @param defineName The name of the define parameter, e.g. USE_LIGHTING
      */
-    public void addShaderParamDefine(String paramName, VarType paramType, String defineName){
+    public void addShaderParamDefine(String paramName, VarType paramType, String defineName) {
         int defineId = defineNames.size();
 
         if (defineId >= DefineList.MAX_DEFINES) {
@@ -399,7 +402,7 @@ public class TechniqueDef implements Cloneable {
 
     /**
      * Add an unmapped define which can only be set by define ID.
-     *
+     * <p>
      * Unmapped defines are used by technique renderers to
      * configure the shader internally before rendering.
      *
@@ -421,7 +424,7 @@ public class TechniqueDef implements Cloneable {
 
     /**
      * Get the names of all defines declared on this technique definition.
-     *
+     * <p>
      * The defines are returned in order of declaration.
      *
      * @return the names of all defines declared.
@@ -432,7 +435,7 @@ public class TechniqueDef implements Cloneable {
 
     /**
      * Get the types of all defines declared on this technique definition.
-     *
+     * <p>
      * The types are returned in order of declaration.
      *
      * @return the types of all defines declared.
@@ -452,24 +455,33 @@ public class TechniqueDef implements Cloneable {
         return new DefineList(defineNames.size());
     }
 
-    private ShaderProgram loadShader(DefineList defines) {
+    private ShaderProgram loadShader(EnumSet<Caps> rendererCaps, DefineList defines) {
         StringBuilder sb = new StringBuilder();
         sb.append(shaderPrologue);
         defines.generateSource(sb, defineNames, defineTypes);
         String definesSourceCode = sb.toString();
 
         ShaderProgram shader;
-        shader = new ShaderProgram();
-        for (ShaderProgram.ShaderType type : ShaderProgram.ShaderType.values()) {
-            String language = shaderLanguages.get(type);
-            MyFile shaderSourceAssetName = shaderNames.get(type);
-            if (language == null || shaderSourceAssetName == null) {
-                continue;
-            }
-            try {
-                shader.addSource(type, shaderSourceAssetName.getName(), shaderSourceAssetName.getLines());
-            } catch (IOException e) {
-                e.printStackTrace();
+        if (isUsingShaderNodes()) {
+            Glsl100ShaderGenerator shaderGenerator = new Glsl100ShaderGenerator();
+            shaderGenerator.initialize(this);
+            shader = shaderGenerator.generateShader(definesSourceCode);
+        } else {
+            shader = new ShaderProgram();
+            for (ShaderProgram.ShaderType type : ShaderProgram.ShaderType.values()) {
+                String language = shaderLanguages.get(type);
+                String shaderSourceAssetName = shaderNames.get(type);
+                if (language == null || shaderSourceAssetName == null) {
+                    continue;
+                }
+                String shaderSourceCode = null;
+                try {
+                    shaderSourceCode = (String) GLSLLoader.load(new MyFile(shaderSourceAssetName));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                shader.addSource(type, shaderSourceAssetName, shaderSourceCode, definesSourceCode,
+                                 language);
             }
         }
 
@@ -482,10 +494,10 @@ public class TechniqueDef implements Cloneable {
         return shader;
     }
 
-    public ShaderProgram getShader(DefineList defines) {
+    public ShaderProgram getShader(EnumSet<Caps> rendererCaps, DefineList defines) {
         ShaderProgram shader = definesToShaderMap.get(defines);
         if (shader == null) {
-            shader = loadShader(defines);
+            shader = loadShader(rendererCaps, defines);
             definesToShaderMap.put(defines.deepClone(), shader);
         }
         return shader;
@@ -494,16 +506,17 @@ public class TechniqueDef implements Cloneable {
     /**
      * Sets the shaders that this technique definition will use.
      *
-     * @param shaderNames EnumMap containing all shader names for this stage
+     * @param shaderNames     EnumMap containing all shader names for this stage
      * @param shaderLanguages EnumMap containing all shader languages for this stage
      */
-    public void setShaderFile(EnumMap<ShaderProgram.ShaderType, MyFile> shaderNames, EnumMap<ShaderProgram.ShaderType, String> shaderLanguages) {
+    public void setShaderFile(EnumMap<ShaderProgram.ShaderType, String> shaderNames,
+                              EnumMap<ShaderProgram.ShaderType, String> shaderLanguages) {
         requiredCaps.clear();
 
         weight = 0;
         for (ShaderProgram.ShaderType shaderType : shaderNames.keySet()) {
             String language = shaderLanguages.get(shaderType);
-            MyFile shaderFile = shaderNames.get(shaderType);
+            String shaderFile = shaderNames.get(shaderType);
 
             this.shaderLanguages.put(shaderType, language);
             this.shaderNames.put(shaderType, shaderFile);
@@ -526,10 +539,9 @@ public class TechniqueDef implements Cloneable {
      *
      * @return the name of the fragment shader to be used.
      */
-    public MyFile getFragmentShaderName() {
+    public String getFragmentShaderName() {
         return shaderNames.get(ShaderProgram.ShaderType.Fragment);
     }
-
 
     /**
      * Returns the name of the vertex shader used by the technique, or null
@@ -537,7 +549,7 @@ public class TechniqueDef implements Cloneable {
      *
      * @return the name of the vertex shader to be used.
      */
-    public MyFile getVertexShaderName() {
+    public String getVertexShaderName() {
         return shaderNames.get(ShaderProgram.ShaderType.Vertex);
     }
 
@@ -555,16 +567,21 @@ public class TechniqueDef implements Cloneable {
         return shaderLanguages.get(ShaderProgram.ShaderType.Vertex);
     }
 
-    /**Returns the language for each shader program
+    /**
+     * Returns the language for each shader program
+     *
      * @param shaderType
      */
-    public String getShaderProgramLanguage(ShaderProgram.ShaderType shaderType){
+    public String getShaderProgramLanguage(ShaderProgram.ShaderType shaderType) {
         return shaderLanguages.get(shaderType);
     }
-    /**Returns the name for each shader program
+
+    /**
+     * Returns the name for each shader program
+     *
      * @param shaderType
      */
-    public MyFile getShaderProgramName(ShaderProgram.ShaderType shaderType){
+    public String getShaderProgramName(ShaderProgram.ShaderType shaderType) {
         return shaderNames.get(shaderType);
     }
 
@@ -585,14 +602,14 @@ public class TechniqueDef implements Cloneable {
      * to the list of world parameters, false otherwise.
      */
     public boolean addWorldParam(String name) {
-        if (worldBinds == null){
+        if (worldBinds == null) {
             worldBinds = new ArrayList<UniformBinding>();
         }
 
         try {
-            worldBinds.add( UniformBinding.valueOf(name) );
+            worldBinds.add(UniformBinding.valueOf(name));
             return true;
-        } catch (IllegalArgumentException ex){
+        } catch (IllegalArgumentException ex) {
             return false;
         }
     }
@@ -617,18 +634,37 @@ public class TechniqueDef implements Cloneable {
 
     /**
      * Returns the Enum containing the ShaderProgramNames;
+     *
      * @return
      */
-    public EnumMap<ShaderProgram.ShaderType, MyFile> getShaderProgramNames() {
+    public EnumMap<ShaderProgram.ShaderType, String> getShaderProgramNames() {
         return shaderNames;
     }
 
     /**
      * Returns the Enum containing the ShaderProgramLanguages;
+     *
      * @return
      */
     public EnumMap<ShaderProgram.ShaderType, String> getShaderProgramLanguages() {
         return shaderLanguages;
+    }
+
+    public List<ShaderNode> getShaderNodes() {
+        return shaderNodes;
+    }
+
+    public void setShaderNodes(List<ShaderNode> shaderNodes) {
+        this.shaderNodes = shaderNodes;
+        usesNodes = true;
+    }
+
+    public ShaderGenerationInfo getShaderGenerationInfo() {
+        return shaderGenerationInfo;
+    }
+
+    public void setShaderGenerationInfo(ShaderGenerationInfo shaderGenerationInfo) {
+        this.shaderGenerationInfo = shaderGenerationInfo;
     }
 
     @Override
@@ -643,6 +679,7 @@ public class TechniqueDef implements Cloneable {
 
     /**
      * Returns the space in which the light data should be passed to the shader.
+     *
      * @return the light space
      */
     public LightSpace getLightSpace() {
@@ -651,6 +688,7 @@ public class TechniqueDef implements Cloneable {
 
     /**
      * Sets the space in which the light data should be passed to the shader.
+     *
      * @param lightSpace the light space
      */
     public void setLightSpace(LightSpace lightSpace) {
@@ -679,6 +717,8 @@ public class TechniqueDef implements Cloneable {
 
         clone.paramToDefineId = new HashMap<>(paramToDefineId.size());
         clone.paramToDefineId.putAll(paramToDefineId);
+
+        clone.shaderGenerationInfo = shaderGenerationInfo.clone();
 
         if (renderState != null) {
             clone.setRenderState(renderState.clone());

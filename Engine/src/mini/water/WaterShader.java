@@ -25,12 +25,12 @@ public class WaterShader extends ShaderProgram {
     //private UniformSampler depthMap = new UniformSampler("depthMap");
 
     public WaterShader() {
-        try {
-            addSource(ShaderType.Vertex, "Water Vertex", VERTEX_SHADER.getLines());
-            addSource(ShaderType.Fragment, "Water Fragment", FRAGMENT_SHADER.getLines());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            addSource(ShaderType.Vertex, "Water Vertex", VERTEX_SHADER.getLines());
+//            addSource(ShaderType.Fragment, "Water Fragment", FRAGMENT_SHADER.getLines());
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
         getAttribute(VertexBuffer.Type.Position).setName("in_position");
 //        super.storeAllUniformLocations(modelMatrix, viewMatrix, projectionMatrix, moveFactor,
 //                                       cameraPosition, lightDirection, reflectionTexture,
@@ -40,12 +40,12 @@ public class WaterShader extends ShaderProgram {
     }
 
     private void connectTextureUnits() {
-        super.start();
+        //super.start();
 //        reflectionTexture.loadTexUnit(0);
 //        refractionTexture.loadTexUnit(1);
 //        dudvMap.loadTexUnit(2);
 //        normalMap.loadTexUnit(3);
 //        depthMap.loadTexUnit(4);
-        super.stop();
+        //super.stop();
     }
 }

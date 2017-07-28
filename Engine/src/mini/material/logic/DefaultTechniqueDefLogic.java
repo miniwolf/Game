@@ -28,7 +28,8 @@ public class DefaultTechniqueDefLogic implements TechniqueDefLogic {
         renderer.renderMesh(geom.getMesh());
     }
 
-    protected static ColorRGBA getAmbientColor(LightList lightList, boolean removeLights, ColorRGBA ambientLightColor) {
+    protected static ColorRGBA getAmbientColor(LightList lightList, boolean removeLights,
+                                               ColorRGBA ambientLightColor) {
         ambientLightColor.set(0, 0, 0, 1);
         for (int j = 0; j < lightList.size(); j++) {
             Light l = lightList.get(j);
@@ -44,8 +45,9 @@ public class DefaultTechniqueDefLogic implements TechniqueDefLogic {
     }
 
     @Override
-    public ShaderProgram makeCurrent(RenderManager renderManager, EnumSet<Caps> rendererCaps, LightList lights, DefineList defines) {
-        return techniqueDef.getShader(defines);
+    public ShaderProgram makeCurrent(RenderManager renderManager, EnumSet<Caps> rendererCaps,
+                                     LightList lights, DefineList defines) {
+        return techniqueDef.getShader(rendererCaps, defines);
     }
 
     @Override

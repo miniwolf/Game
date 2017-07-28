@@ -24,11 +24,11 @@ public class SkyboxRenderer {
     }
 
     public void cleanUp() {
-        shader.cleanUp();
+        //shader.cleanUp();
     }
 
     private void prepare(Skybox skybox, Camera camera, UniformBindingManager manager) {
-        shader.start();
+        //shader.start();
         manager.setCamera(camera);
         manager.updateUniformBindings(shader);
         // TODO: Use GLREnderer for this
@@ -40,6 +40,6 @@ public class SkyboxRenderer {
     }
 
     private void finish() {
-        shader.stop();
+       // shader.stop();
     }
 }

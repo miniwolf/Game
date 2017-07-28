@@ -11,14 +11,14 @@ public class SkyboxShader extends ShaderProgram {
     private static final MyFile VERTEX_SHADER = new MyFile("Engine/shaders", "skyboxVS.glsl");
     private static final MyFile FRAGMENT_SHADER = new MyFile("Engine/shaders", "skyboxFS.glsl");
 
-    public SkyboxShader() {
-        try {
-            addSource(ShaderType.Vertex, "Skybox Vertex", VERTEX_SHADER.getLines());
-            addSource(ShaderType.Fragment, "Skybox Fragment", FRAGMENT_SHADER.getLines());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        getAttribute(VertexBuffer.Type.Position).setName("in_position");
-        addUniformBinding(UniformBinding.ViewProjectionMatrix);
-    }
+//    public SkyboxShader() {
+//        try {
+//            addSource(ShaderType.Vertex, "Skybox Vertex", VERTEX_SHADER.getLines());
+//            addSource(ShaderType.Fragment, "Skybox Fragment", FRAGMENT_SHADER.getLines());
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//        getAttribute(VertexBuffer.Type.Position).setName("in_position");
+//        addUniformBinding(UniformBinding.ViewProjectionMatrix);
+//    }
 }
