@@ -22,7 +22,7 @@ import mini.shaders.VarType;
  * {@code
  *
  * Geometry box = new Geometry("Box", new Box(1,1,1));
- * Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+ * Material mat = new Material(assetManager, "Engine/MatDefs/Misc/Unshaded.j3md");
  * mat.setColor("Color", ColorRGBA.Blue);
  * box.setMaterial(mat);
  * rootNode.attachChild(box);

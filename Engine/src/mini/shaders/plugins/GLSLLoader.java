@@ -65,10 +65,9 @@ public class GLSLLoader {
                         ShaderDependencyNode dependNode = dependCache.get(ln);
 
                         if (dependNode == null) {
-                            throw new UnsupportedOperationException(
-                                    "Does not support ShaderDependencyKey yet");
-                            //Reader dependNodeReader = assetManager.loadAsset(new ShaderDependencyKey(ln));
-                            //dependNode = loadNode(dependNodeReader, ln);
+                            Reader dependNodeReader = new InputStreamReader(
+                                    new MyFile(ln).getInputStream());
+                            dependNode = loadNode(dependNodeReader, ln);
                         }
 
                         node.addDependency(sb.length(), dependNode);

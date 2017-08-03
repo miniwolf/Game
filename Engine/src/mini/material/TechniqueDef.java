@@ -603,7 +603,7 @@ public class TechniqueDef implements Cloneable {
      */
     public boolean addWorldParam(String name) {
         if (worldBinds == null) {
-            worldBinds = new ArrayList<UniformBinding>();
+            worldBinds = new ArrayList<>();
         }
 
         try {
@@ -718,7 +718,12 @@ public class TechniqueDef implements Cloneable {
         clone.paramToDefineId = new HashMap<>(paramToDefineId.size());
         clone.paramToDefineId.putAll(paramToDefineId);
 
-        clone.shaderGenerationInfo = shaderGenerationInfo.clone();
+        if (shaderNodes != null) {
+            for (ShaderNode shaderNode : shaderNodes) {
+                clone.shaderNodes.add(shaderNode.clone());
+            }
+            clone.shaderGenerationInfo = shaderGenerationInfo.clone();
+        }
 
         if (renderState != null) {
             clone.setRenderState(renderState.clone());

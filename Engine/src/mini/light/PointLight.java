@@ -1,5 +1,6 @@
 package mini.light;
 
+import mini.math.Vector3f;
 import mini.scene.Spatial;
 import mini.utils.Camera;
 import mini.utils.TempVars;
@@ -15,6 +16,8 @@ import mini.utils.TempVars;
  *
  */
 public class PointLight extends Light {
+
+    private Vector3f position = new Vector3f();
     private float radius = 0;
     private float invRadius = 0;
 
@@ -57,6 +60,34 @@ public class PointLight extends Light {
 //            lastDistance = owner.getWorldTranslation().distanceSquared(position);
 //        }
 //    }
+
+    /**
+     * Returns the world space position of the light.
+     *
+     * @return the world space position of the light.
+     *
+     * @see PointLight#setPosition(com.jme3.math.Vector3f)
+     */
+    public Vector3f getPosition() {
+        return position;
+    }
+
+    /**
+     * Set the world space position of the light.
+     *
+     * @param position the world space position of the light.
+     */
+    public final void setPosition(Vector3f position) {
+        this.position.set(position);
+    }
+
+    /**
+     * for internal use only
+     * @return the inverse of the radius
+     */
+    public float getInvRadius() {
+        return invRadius;
+    }
 //
 //    @Override
 //    public boolean intersectsFrustum(Camera camera, TempVars vars) {

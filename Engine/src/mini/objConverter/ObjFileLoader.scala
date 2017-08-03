@@ -120,6 +120,9 @@ object ObjFileLoader {
     val nPosBuf = setupBuffers(0, newFaces, posBuf, normBuf, tcBuf, indexBuf)
     m.setBuffer(VertexBuffer.Type.Position, 3, nPosBuf)
 
+    m.setStatic()
+    m.updateCounts()
+
     vertIndexMap = Map()
     indexVertMap = Map()
     curIndex = 0
@@ -204,7 +207,7 @@ object ObjFileLoader {
       material = Some(matList(matName))
     }
     if (material.isEmpty) { // create default material
-      material = Option(new Material())
+      material = Option(new Material("Engine/MatDefs/Light/Lighting.minid"))
       material.get.setFloat("Shininess", 64)
     }
     geom.setMaterial(material.get)

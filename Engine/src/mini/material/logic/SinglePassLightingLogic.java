@@ -3,6 +3,7 @@ package mini.material.logic;
 import mini.light.DirectionalLight;
 import mini.light.Light;
 import mini.light.LightList;
+import mini.light.PointLight;
 import mini.material.RenderState;
 import mini.material.TechniqueDef;
 import mini.math.ColorRGBA;
@@ -118,19 +119,19 @@ public final class SinglePassLightingLogic extends DefaultTechniqueDefLogic {
                     lightData.setVector4fInArray(0, 0, 0, 0, lightDataIndex);
                     lightDataIndex++;
                     break;
-//                case Point:
-//                    PointLight pl = (PointLight) l;
-//                    Vector3f pos = pl.getPosition();
-//                    float invRadius = pl.getInvRadius();
-//                    tmpVec.set(pos.getX(), pos.getY(), pos.getZ(), 1.0f);
-//                    rm.getCurrentCamera().getViewMatrix().mult(tmpVec, tmpVec);
-//                    //tmpVec.divideLocal(tmpVec.w);
-//                    lightData.setVector4InArray(tmpVec.getX(), tmpVec.getY(), tmpVec.getZ(), invRadius, lightDataIndex);
-//                    lightDataIndex++;
-//                    //PADDING
-//                    lightData.setVector4InArray(0, 0, 0, 0, lightDataIndex);
-//                    lightDataIndex++;
-//                    break;
+                case Point:
+                    PointLight pl = (PointLight) l;
+                    Vector3f pos = pl.getPosition();
+                    float invRadius = pl.getInvRadius();
+                    tmpVec.set(pos.getX(), pos.getY(), pos.getZ(), 1.0f);
+                    rm.getCurrentCamera().getViewMatrix().mult(tmpVec, tmpVec);
+                    //tmpVec.divideLocal(tmpVec.w);
+                    lightData.setVector4fInArray(tmpVec.getX(), tmpVec.getY(), tmpVec.getZ(), invRadius, lightDataIndex);
+                    lightDataIndex++;
+                    //PADDING
+                    lightData.setVector4fInArray(0, 0, 0, 0, lightDataIndex);
+                    lightDataIndex++;
+                    break;
                 default:
                     throw new UnsupportedOperationException("Unknown type of light: " + l.getType());
             }

@@ -134,6 +134,22 @@ public class Material {
     }
 
     /**
+     * Check if setting the parameter given the type and name is allowed.
+     * @param type The type that the "set" function is designed to set
+     * @param name The name of the parameter
+     */
+    private void checkSetParam(VarType type, String name) {
+        MatParam paramDef = def.getMaterialParam(name);
+        if (paramDef == null) {
+            throw new IllegalArgumentException("Material parameter is not defined: " + name);
+        }
+        if (type != null && paramDef.getVarType() != type) {
+            System.err.println("Material parameter being set: " + name + " with type " + type.name()
+                               + " doesn''t match definition types " + paramDef.getVarType());
+        }
+    }
+
+    /**
      * Pass a parameter to the material shader.
      *
      * @param name  the name of the parameter defined in the material definition (j3md)
@@ -141,14 +157,21 @@ public class Material {
      * @param value the value of the parameter
      */
     public void setParam(String name, VarType type, Object value) {
+        checkSetParam(type, name);
+
         if (type.isTextureType()) {
-            setTextureParam(name, type, (Texture) value);
+            setTextureParam(name, type, (Texture)value);
         } else {
             MatParam val = getParam(name);
             if (val == null) {
+                MatParam paramDef = def.getMaterialParam(name);
                 paramValues.put(name, new MatParam(type, name, value));
             } else {
                 val.setValue(value);
+            }
+
+            if (technique != null) {
+                technique.notifyParamChanged(name, type, value);
             }
         }
     }

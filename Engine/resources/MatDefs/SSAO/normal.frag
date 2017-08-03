@@ -1,4 +1,4 @@
-#import "Common/ShaderLib/GLSLCompat.glsllib"
+#import "Engine/ShaderLib/GLSLCompat.glsllib"
 varying vec3 normal;
 varying vec2 texCoord;
 

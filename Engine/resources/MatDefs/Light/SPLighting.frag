@@ -1,9 +1,9 @@
-#import "Common/ShaderLib/GLSLCompat.glsllib"
-#import "Common/ShaderLib/Parallax.glsllib"
-#import "Common/ShaderLib/Optics.glsllib"
+#import "Engine/ShaderLib/GLSLCompat.glsllib"
+#import "Engine/ShaderLib/Parallax.glsllib"
+#import "Engine/ShaderLib/Optics.glsllib"
 #ifndef VERTEX_LIGHTING
-    #import "Common/ShaderLib/BlinnPhongLighting.glsllib"
-    #import "Common/ShaderLib/Lighting.glsllib"
+    #import "Engine/ShaderLib/BlinnPhongLighting.glsllib"
+    #import "Engine/ShaderLib/Lighting.glsllib"
 #endif
 
 varying vec2 texCoord;

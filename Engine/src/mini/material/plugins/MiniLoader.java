@@ -545,7 +545,6 @@ public class MiniLoader {
         for (Statement statement : defineList) {
             readDefine(statement.getLine());
         }
-
     }
 
     private void readTechniqueStatement(Statement statement) throws IOException {
@@ -626,6 +625,7 @@ public class MiniLoader {
     private void readTechnique(Statement techStat) throws IOException {
         isUseNodes = false;
         String[] split = techStat.getLine().split(whitespacePattern);
+        Cloner cloner = new Cloner();
 
         String name;
         if (split.length == 1) {
@@ -660,23 +660,21 @@ public class MiniLoader {
 //                break;
 //            case SinglePassAndImageBased:
 //                technique.setLogic(new SinglePassAndImageBasedLightingLogic(technique));
-//                break;
+//            break;
             default:
-                throw new UnsupportedOperationException(technique.getLightMode().toString());
+                throw new UnsupportedOperationException();
         }
 
         List<TechniqueDef> techniqueDefs = new ArrayList<>();
-        Cloner cloner = new Cloner();
 
         if (isUseNodes) {
-            //nodesLoaderDelegate.computeConditions();
-
             //used for caching later, the shader here is not a file.
 
-            // TODO: Not sure if this is needed anymore, since shader caching
+            // KIRILL 9/19/2015
+            // Not sure if this is needed anymore, since shader caching
             // is now done by TechniqueDef.
-//            technique.setShaderFile(technique.hashCode() + "", technique.hashCode() + "", "GLSL100",
-//                                    "GLSL100");
+            technique.setShaderFile(technique.hashCode() + "", technique.hashCode() + "", "GLSL100",
+                                    "GLSL100");
             techniqueDefs.add(technique);
         } else if (shaderNames.containsKey(ShaderProgram.ShaderType.Vertex) && shaderNames
                 .containsKey(ShaderProgram.ShaderType.Fragment)) {
@@ -697,10 +695,9 @@ public class MiniLoader {
             shaderNames.clear();
             presetDefines.clear();
             langSize = 0;
-            System.out.println("Warning: Fixed function technique was ignored");
-            System.out.println(
-                    "Warning: Fixed function technique ''" + name + "'' was ignored for material"
-                    + key);
+            System.err.println("Warning: Fixed function technique was ignored");
+            System.err.println("Warning: Fixed function technique ''" + name
+                               + "'' was ignored for material " + key);
             return;
         }
 

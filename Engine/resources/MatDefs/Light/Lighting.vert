@@ -1,9 +1,9 @@
-#import "Common/ShaderLib/GLSLCompat.glsllib"
-#import "Common/ShaderLib/Instancing.glsllib"
-#import "Common/ShaderLib/Skinning.glsllib"
-#import "Common/ShaderLib/Lighting.glsllib"
+#import "Engine/ShaderLib/GLSLCompat.glsllib"
+#import "Engine/ShaderLib/Instancing.glsllib"
+#import "Engine/ShaderLib/Skinning.glsllib"
+#import "Engine/ShaderLib/Lighting.glsllib"
 #ifdef VERTEX_LIGHTING
-    #import "Common/ShaderLib/BlinnPhongLighting.glsllib"    
+    #import "Engine/ShaderLib/BlinnPhongLighting.glsllib"
 #endif
 
 

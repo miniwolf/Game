@@ -872,7 +872,7 @@ public class GLRenderer {
         if (loc < 0) {
             uniform.setLocation(-1);
             // uniform is not declared in shader
-            System.err.println("Uniform " + uniform.getName() + "{0} is not declared in shader"
+            System.err.println("Uniform " + uniform.getName() + " is not declared in shader"
                                + shader.getSources());
         } else {
             uniform.setLocation(loc);
@@ -942,6 +942,10 @@ public class GLRenderer {
                 assert fb.remaining() == 16;
                 GL20.glUniformMatrix4fv(loc, false, fb);
                 break;
+            case Vector4fArray:
+                fb = uniform.getMultiData();
+                GL20.glUniform4fv(loc, fb);
+                break;
             case Int:
                 Integer i = (Integer) uniform.getValue();
                 GL20.glUniform1i(loc, i);
@@ -968,7 +972,7 @@ public class GLRenderer {
         }
     }
 
-    private void updateShaderSourceData(ShaderSource source) {
+    public void updateShaderSourceData(ShaderSource source) {
         int id = source.getId();
         if (id == -1) {
             // Create id
@@ -982,20 +986,55 @@ public class GLRenderer {
             throw new RuntimeException("Cannot recompile shader source");
         }
 
+        boolean gles2 = caps.contains(Caps.OpenGLES20);
+        String language = source.getLanguage();
+
+        if (gles2 && !language.equals("GLSL100")) {
+            throw new RuntimeException("This shader cannot run in OpenGL ES 2. "
+                                       + "Only GLSL 1.00 shaders are supported.");
+        }
+
         // Upload shader source.
         // Merge the defines and source code.
         StringBuilder stringBuf = new StringBuilder(250);
         stringBuf.setLength(0);
+        if (language.startsWith("GLSL")) {
+            int version = Integer.parseInt(language.substring(4));
+            if (version > 100) {
+                stringBuf.append("#version ");
+                stringBuf.append(language.substring(4));
+                if (version >= 150) {
+                    stringBuf.append(" core");
+                }
+                stringBuf.append("\n");
+            } else {
+                if (gles2) {
+                    // request GLSL ES (1.00) when compiling under GLES2.
+                    stringBuf.append("#version 100\n");
+
+                    if (source.getType() == ShaderProgram.ShaderType.Fragment) {
+                        // GLES2 requires precision qualifier.
+                        stringBuf.append("precision mediump float;\n");
+                    }
+                } else {
+                    // version 100 does not exist in desktop GLSL.
+                    // put version 110 in that case to enable strict checking
+                    // (Only enabled for desktop GL)
+                    stringBuf.append("#version 110\n");
+                }
+            }
+        }
 
         if (linearizeSrgbImages) {
             stringBuf.append("#define SRGB 1\n");
         }
-        //stringBuf.append("#define ").append(source.getType().name().toUpperCase()).append("_SHADER 1\n");
+        stringBuf.append("#define ").append(source.getType().name().toUpperCase())
+                 .append("_SHADER 1\n");
 
-        //stringBuf.append(source.getDefines());
+        stringBuf.append(source.getDefines());
         stringBuf.append(source.getSource());
 
-        GL20.glShaderSource(id, stringBuf.toString());
+        GL20.glShaderSource(id, new String[]{stringBuf.toString()});
         GL20.glCompileShader(id);
 
         boolean compiledOK = GL20.glGetShaderi(id, GL20.GL_COMPILE_STATUS) == GL11.GL_TRUE;
@@ -1008,9 +1047,6 @@ public class GLRenderer {
             if (length > 3) {
                 // get infos
                 infoLog = GL20.glGetShaderInfoLog(id, length);
-                System.err.println(source.getName() + " compiled successfully, compiler "
-                                   + "warnings: \n" + infoLog);
-
             }
         }
 
@@ -1057,7 +1093,7 @@ public class GLRenderer {
 
         if (bindFragDataRequired) {
             // Check if GLSL version is 1.5 for shader
-            GL30.glBindFragDataLocation(id, 0, "out_Colour");
+            GL30.glBindFragDataLocation(id, 0, "outFragColor");
             // For MRT
 //            for (int i = 0; i < limits.get(Limits.FrameBufferMrtAttachments); i++) {
 //                GL30.glBindFragDataLocation(id, i, "outFragData[" + i + "]");
@@ -1702,15 +1738,13 @@ public class GLRenderer {
     }
 
     public void applyRenderState(RenderState state) {
-//        if (gl2 != null) {
-//            if (state.isWireframe() && !context.wireframe) {
-//                gl2.glPolygonMode(GL.GL_FRONT_AND_BACK, GL2.GL_LINE);
-//                context.wireframe = true;
-//            } else if (!state.isWireframe() && context.wireframe) {
-//                gl2.glPolygonMode(GL.GL_FRONT_AND_BACK, GL2.GL_FILL);
-//                context.wireframe = false;
-//            }
-//        }
+        if (state.isWireframe() && !context.wireframe) {
+            GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_LINE);
+            context.wireframe = true;
+        } else if (!state.isWireframe() && context.wireframe) {
+            GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_FILL);
+            context.wireframe = false;
+        }
 
         if (state.isDepthTest() && !context.depthTestEnabled) {
             GL11.glEnable(GL11.GL_DEPTH_TEST);

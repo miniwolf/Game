@@ -1,4 +1,5 @@
 import mini.asset.MaterialKey;
+import mini.light.DirectionalLight;
 import mini.material.plugins.MiniLoader;
 import mini.renderEngine.CameraImpl;
 import mini.light.PointLight;
@@ -119,7 +120,13 @@ public class TestSimpleLighting {
         rootNode.attachChild(lightMdl);
 
         PointLight pl = new PointLight();
+        pl.setColor(ColorRGBA.White);
         pl.setRadius(4f);
         rootNode.addLight(pl);
+
+        DirectionalLight dl = new DirectionalLight();
+        dl.setDirection(new Vector3f(-1, -1, -1).normalizeLocal());
+        dl.setColor(ColorRGBA.Green);
+        rootNode.addLight(dl);
     }
 }

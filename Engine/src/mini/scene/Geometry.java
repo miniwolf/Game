@@ -49,17 +49,6 @@ public class Geometry extends Spatial {
     }
 
     /**
-     * Updates the bounding volume of the mesh. Should be called when the
-     * mesh has been modified.
-     */
-    @Override
-    public void updateModelBound() {
-        // TODO: Bounding volume
-        //mesh.updateBound();
-        setBoundRefresh();
-    }
-
-    /**
      * Returns this geometry's mesh vertex count.
      *
      * @return this geometry's mesh vertex count.
