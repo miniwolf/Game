@@ -207,9 +207,9 @@ public class Cloner {
         if (clone != null || index.containsKey(object)) {
             if (log.isLoggable(Level.FINER)) {
                 log.finer("cloned:" + object.getClass() + "@" + System.identityHashCode(object)
-                          + " as cached:" + (clone == null
-                                             ? "null"
-                                             : (clone.getClass() + "@" + System
+                        + " as cached:" + (clone == null
+                        ? "null"
+                        : (clone.getClass() + "@" + System
                         .identityHashCode(clone))));
             }
             return type.cast(clone);
@@ -230,11 +230,11 @@ public class Cloner {
             if (log.isLoggable(Level.FINER)) {
                 if (result == null) {
                     log.finer("cloned:" + object.getClass() + "@" + System.identityHashCode(object)
-                              + " as transformed:null");
+                            + " as transformed:null");
                 } else {
                     log.finer("clone:" + object.getClass() + "@" + System.identityHashCode(object)
-                              + " as transformed:" + result.getClass() + "@"
-                              + System.identityHashCode(result));
+                            + " as transformed:" + result.getClass() + "@"
+                            + System.identityHashCode(result));
                 }
             }
             return result;
@@ -263,7 +263,7 @@ public class Cloner {
 
         if (log.isLoggable(Level.FINER)) {
             log.finer("cloned:" + object.getClass() + "@" + System.identityHashCode(object)
-                      + " as " + clone.getClass() + "@" + System.identityHashCode(clone));
+                    + " as " + clone.getClass() + "@" + System.identityHashCode(clone));
         }
         return type.cast(clone);
     }
@@ -367,6 +367,7 @@ public class Cloner {
             Class<? extends T> type = objectClass(object);
             return type.cast(m.invoke(object));
         } catch (IllegalAccessException | InvocationTargetException e) {
+            e.printStackTrace();
             throw new RuntimeException("Error cloning object of type:" + object.getClass(), e);
         }
     }

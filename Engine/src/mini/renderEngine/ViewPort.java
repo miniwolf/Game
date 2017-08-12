@@ -6,7 +6,6 @@ import mini.renderEngine.queue.RenderQueue;
 import mini.scene.Geometry;
 import mini.scene.Spatial;
 import mini.textures.FrameBuffer;
-import mini.utils.Camera;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,11 +29,11 @@ import java.util.List;
  * @author minwolf
  * @see RenderManager
  * @see Spatial
- * @see CameraImpl
+ * @see Camera
  */
 public class ViewPort {
     protected final String name;
-    protected final CameraImpl cam;
+    protected final Camera cam;
     protected final RenderQueue queue = new RenderQueue();
     protected final List<Spatial> sceneList = new ArrayList<>();
     protected final List<SceneProcessor> processors = new ArrayList<>();
@@ -47,14 +46,14 @@ public class ViewPort {
     /**
      * Create a new viewport. User code should generally use these methods instead:<br>
      * <ul>
-     * <li>{@link RenderManager#createMainView(java.lang.String, CameraImpl)  }</li>
+     * <li>{@link RenderManager#createMainView(java.lang.String, Camera)  }</li>
      * </ul>
      *
      * @param name The name of the viewport. Used for debugging only.
      * @param cam The camera through which the viewport is rendered. The camera
      * cannot be swapped to a different one after creating the viewport.
      */
-    public ViewPort(String name, CameraImpl cam) {
+    public ViewPort(String name, Camera cam) {
         this.name = name;
         this.cam = cam;
     }
@@ -64,7 +63,7 @@ public class ViewPort {
      *
      * @return the name of the viewport
      *
-     * @see #ViewPort(java.lang.String, CameraImpl)
+     * @see #ViewPort(java.lang.String, Camera)
      */
     public String getName() {
         return name;
@@ -244,9 +243,9 @@ public class ViewPort {
      *
      * @return the camera which renders the attached scenes.
      *
-     * @see CameraImpl
+     * @see Camera
      */
-    public CameraImpl getCamera() {
+    public Camera getCamera() {
         return cam;
     }
 

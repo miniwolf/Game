@@ -1,4 +1,4 @@
-#import "Engine/ShaderLib/Common.glsllib"
+#import "ShaderLib/Common.glsllib"
 
 vec3 Texture_GetNormal(in sampler2D normalMap, in vec2 texCoord){
     #ifdef NORMAL_LATC

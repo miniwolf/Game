@@ -1,8 +1,8 @@
 package mini.light;
 
 import mini.math.ColorRGBA;
+import mini.renderEngine.Camera;
 import mini.scene.Spatial;
-import mini.utils.Camera;
 import mini.utils.TempVars;
 
 /**
@@ -73,6 +73,16 @@ public abstract class Light implements Cloneable {
      */
     protected transient float lastDistance = -1;
 
+    protected boolean enabled = true;
+
+    /**
+     * The light name.
+     */
+    protected String name;
+
+    boolean frustumCheckNeeded = true;
+    boolean intersectsFrustum = false;
+
     protected Light() {
     }
 
@@ -98,23 +108,20 @@ public abstract class Light implements Cloneable {
         return color;
     }
 
-//    /**
-//     * Determines if the light intersects with the given camera frustum.
-//     * <p>
-//     * For non-local lights, such as {@link DirectionalLight directional lights},
-//     * {@link AmbientLight ambient lights}, or {@link PointLight point lights}
-//     * without influence radius, this method should always return true.
-//     *
-//     * @param camera The camera frustum to check intersection against.
-//     * @param vars   TempVars in case it is needed.
-//     * @return True if the light intersects the frustum, false otherwise.
-//     */
-//    public abstract boolean intersectsFrustum(Camera camera, TempVars vars);
-//
-//    /**
-//     * Used internally to compute the last distance value.
-//     */
-//    protected abstract void computeLastDistance(Spatial owner);
+
+    /**
+     * Returns true if this light is enabled.
+     *
+     * @return true if enabled, otherwise false.
+     */
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    /**
+     * Used internally to compute the last distance value.
+     */
+    protected abstract void computeLastDistance(Spatial owner);
 
     /**
      * Returns the light type
@@ -123,6 +130,19 @@ public abstract class Light implements Cloneable {
      * @see Type
      */
     public abstract Type getType();
+
+    /**
+     * Determines if the light intersects with the given camera frustum.
+     * <p>
+     * For non-local lights, such as {@link DirectionalLight directional lights},
+     * {@link AmbientLight ambient lights}, or {@link PointLight point lights}
+     * without influence radius, this method should always return true.
+     *
+     * @param camera The camera frustum to check intersection against.
+     * @param vars   TempVars in case it is needed.
+     * @return True if the light intersects the frustum, false otherwise.
+     */
+    public abstract boolean intersectsFrustum(Camera camera, TempVars vars);
 
     @Override
     public Light clone() {

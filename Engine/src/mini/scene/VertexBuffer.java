@@ -1,5 +1,9 @@
 package mini.scene;
 
+import mini.renderEngine.opengl.GLRenderer;
+import mini.utils.BufferUtils;
+import mini.utils.NativeObject;
+
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ShortBuffer;
@@ -7,7 +11,7 @@ import java.nio.ShortBuffer;
 /**
  * Created by miniwolf on 15-04-2017.
  */
-public class VertexBuffer {
+public class VertexBuffer extends NativeObject {
     private boolean updateNeeded;
     private boolean normalized = false;
     private int id = -1;
@@ -238,6 +242,17 @@ public class VertexBuffer {
     }
 
     /**
+     * Serialization only. Do not use.
+     */
+    public VertexBuffer() {
+        super();
+    }
+
+    protected VertexBuffer(int id) {
+        super(id);
+    }
+
+    /**
      * Called to initialize the data in the <code>VertexBuffer</code>. Must only
      * be called once.
      *
@@ -294,7 +309,7 @@ public class VertexBuffer {
 
         // will force renderer to call glBufferData again
         if (data != null && (this.data.getClass() != data.getClass()
-                             || data.limit() != lastLimit)) {
+                || data.limit() != lastLimit)) {
             dataSizeChanged = true;
             lastLimit = data.limit();
         }
@@ -306,10 +321,6 @@ public class VertexBuffer {
     public void clearUpdateNeeded() {
         updateNeeded = false;
         dataSizeChanged = false;
-    }
-
-    private void setUpdateNeeded() {
-        updateNeeded = true;
     }
 
     /**
@@ -366,6 +377,16 @@ public class VertexBuffer {
      */
     public int getNumComponents() {
         return components;
+    }
+
+    /**
+     * @return The total number of data elements in the data buffer.
+     */
+    public int getNumElements() {
+        int elements = data.limit() / components;
+        if (format == Format.Half)
+            elements /= 2;
+        return elements;
     }
 
     /**
@@ -462,6 +483,39 @@ public class VertexBuffer {
     }
 
     /**
+     * Creates a {@link Buffer} that satisfies the given type and size requirements
+     * of the parameters. The buffer will be of the type specified by
+     * {@link Format format} and would be able to contain the given number
+     * of elements with the given number of components in each element.
+     */
+    public static Buffer createBuffer(Format format, int components, int numElements) {
+        if (components < 1 || components > 4)
+            throw new IllegalArgumentException("Num components must be between 1 and 4");
+
+        int total = numElements * components;
+
+        switch (format) {
+            case Byte:
+            case UnsignedByte:
+                return BufferUtils.createByteBuffer(total);
+            case Half:
+                return BufferUtils.createByteBuffer(total * 2);
+            case Short:
+            case UnsignedShort:
+                return BufferUtils.createShortBuffer(total);
+            case Int:
+            case UnsignedInt:
+                return BufferUtils.createIntBuffer(total);
+            case Float:
+                return BufferUtils.createFloatBuffer(total);
+            case Double:
+                return BufferUtils.createDoubleBuffer(total);
+            default:
+                throw new UnsupportedOperationException("Unrecoginized buffer format: " + format);
+        }
+    }
+
+    /**
      * Returns the number of 'instances' in this VertexBuffer.  This
      * is dependent on the current instanceSpan.  When instanceSpan
      * is 0 then 'instances' is 1. Otherwise, instances is elements *
@@ -473,15 +527,24 @@ public class VertexBuffer {
         // TODO: Support instanced rendering
     }
 
-    public void setId(int id) {
-        this.id = id;
+    @Override
+    public void resetObject() {
+        this.id = -1;
+        setUpdateNeeded();
     }
 
-    public int getId() {
-        return id;
+    @Override
+    public long getUniqueId() {
+        return ((long) OBJTYPE_VERTEXBUFFER << 32) | ((long) id);
     }
 
-    public boolean isUpdateNeeded() {
-        return updateNeeded;
+    @Override
+    public NativeObject createDestructableClone() {
+        return new VertexBuffer(id);
+    }
+
+    @Override
+    public void deleteObject(Object rendererObject) {
+        ((GLRenderer) rendererObject).deleteBuffer(this);
     }
 }

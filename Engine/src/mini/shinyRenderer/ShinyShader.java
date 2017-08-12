@@ -7,8 +7,8 @@ import mini.utils.MyFile;
 import java.io.IOException;
 
 public class ShinyShader extends ShaderProgram {
-    private static final MyFile VERTEX_SHADER = new MyFile("Engine/shaders", "shinyVS.glsl");
-    private static final MyFile FRAGMENT_SHADER = new MyFile("Engine/shaders", "shinyFS.glsl");
+    private static final MyFile VERTEX_SHADER = new MyFile("shaders", "shinyVS.glsl");
+    private static final MyFile FRAGMENT_SHADER = new MyFile("shaders", "shinyFS.glsl");
 
     //protected UniformMatrix projectionViewMatrix = new UniformMatrix("projectionViewMatrix");
     //protected UniformVec3 cameraPosition = new UniformVec3("cameraPosition");

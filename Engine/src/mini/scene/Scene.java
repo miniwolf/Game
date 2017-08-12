@@ -1,11 +1,10 @@
 package mini.scene;
 
 import mini.math.Vector3f;
-import mini.renderEngine.CameraImpl;
+import mini.renderEngine.Camera;
 import mini.skybox.Skybox;
 import mini.textures.GUITexture;
 import mini.textures.Texture;
-import mini.utils.Camera;
 import mini.water.WaterTile;
 
 import java.util.ArrayList;
@@ -24,7 +23,7 @@ public class Scene {
     private List<WaterTile> waterTiles = new ArrayList<>();
     private List<GUITexture> guiTextures = new ArrayList<>();
 
-    private CameraImpl camera;
+    private Camera camera;
     private Vector3f lightDirection = new Vector3f(0, -1, 0);
     private Skybox sky;
 
@@ -32,10 +31,10 @@ public class Scene {
 
     private float waterHeight = -0.1f;//should set elsewhere
 
-    public Scene(CameraImpl camera, Skybox sky) {
+    public Scene(Camera camera, Skybox sky) {
         this.camera = camera;
         this.sky = sky;
-        environmentMap = Texture.newEmptyCubeMap(128);
+//        environmentMap = Texture.newEmptyCubeMap(128);
         waterTiles.add(new WaterTile(-20, 6, waterHeight));
         waterTiles.add(new WaterTile(-10, 6, waterHeight));
         waterTiles.add(new WaterTile(0, 6, waterHeight));
@@ -67,7 +66,7 @@ public class Scene {
         return lightDirection;
     }
 
-    public CameraImpl getCamera() {
+    public Camera getCamera() {
         return camera;
     }
 

@@ -1,7 +1,11 @@
 package mini.textures;
 
 import mini.material.RenderState;
+import mini.renderEngine.Caps;
+import mini.renderEngine.opengl.GLRenderer;
+import mini.utils.NativeObject;
 
+import java.lang.annotation.Native;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,13 +36,13 @@ import java.util.List;
  * several <em>color</em> attachment points and a single <em>depth</em>
  * attachment point.
  * The color attachment points support image formats such as
- * {@link Format#RGBA8}, allowing rendering the color content of the scene.
+ * {@link Image.Format#RGBA8}, allowing rendering the color content of the scene.
  * The depth attachment point requires a depth image format.
  *
  * @author miniwolf
  * @see GLRenderer#setFrameBuffer(FrameBuffer)
  */
-public class FrameBuffer {
+public class FrameBuffer extends NativeObject {
     public static final int SLOT_UNDEF = -1;
     public static final int SLOT_DEPTH = -100;
     public static final int SLOT_DEPTH_STENCIL = -101;
@@ -130,6 +134,10 @@ public class FrameBuffer {
         }
     }
 
+    protected FrameBuffer(FrameBuffer src){
+        super(src.id);
+    }
+
     public boolean isUpdateNeeded() {
         return updateNeeded;
     }
@@ -213,6 +221,20 @@ public class FrameBuffer {
     }
 
     /**
+     * @return The color buffer with the index set by {@link #setTargetIndex(int), or null
+     * if no color buffers are attached.
+     * If MRT is disabled, the first color buffer is returned.
+     */
+    public RenderBuffer getColorBuffer() {
+        if (colorBufs.isEmpty())
+            return null;
+        if (colorBufIndex < 0 || colorBufIndex >= colorBufs.size()) {
+            return colorBufs.get(0);
+        }
+        return colorBufs.get(colorBufIndex);
+    }
+
+    /**
      * @return The depth buffer attached to this FrameBuffer, or null
      * if no depth buffer is attached
      */
@@ -253,13 +275,13 @@ public class FrameBuffer {
     /**
      * Specifies that the color values stored in this framebuffer are in SRGB
      * format.
-     *
+     * <p>
      * The FrameBuffer must have a texture attached with the flag
      * {@link Image#isSrgb()} set to true.
-     *
+     * <p>
      * The Renderer must expose the {@link Caps#Srgb sRGB pipeline} capability
      * for this option to take any effect.
-     *
+     * <p>
      * Rendering operations performed on this framebuffer shall undergo a linear
      * -&gt; sRGB color space conversion when this flag is enabled. If
      * {@link RenderState#getBlendMode() blending} is enabled, it will be
@@ -268,7 +290,7 @@ public class FrameBuffer {
      * sRGB upon being written into the framebuffer.
      *
      * @param srgb If the framebuffer color values should be stored in sRGB
-     * color space.
+     *             color space.
      */
     public void setSrgb(boolean srgb) {
         this.srgb = srgb;
@@ -282,5 +304,34 @@ public class FrameBuffer {
      */
     public boolean isSrgb() {
         return srgb;
+    }
+
+    @Override
+    public void resetObject() {
+        this.id = -1;
+
+        for (RenderBuffer colorBuf : colorBufs) {
+            colorBuf.resetObject();
+        }
+
+        if (depthBuf != null)
+            depthBuf.resetObject();
+
+        setUpdateNeeded();
+    }
+
+    @Override
+    public long getUniqueId() {
+        return ((long)OBJTYPE_TEXTURE << 32) | ((long)id);
+    }
+
+    @Override
+    public void deleteObject(Object rendererObject) {
+        ((GLRenderer)rendererObject).deleteFrameBuffer(this);
+    }
+
+    @Override
+    public NativeObject createDestructableClone() {
+        return new FrameBuffer(this);
     }
 }

@@ -1,8 +1,8 @@
 package mini.light;
 
 import mini.math.Vector3f;
+import mini.renderEngine.Camera;
 import mini.scene.Spatial;
-import mini.utils.Camera;
 import mini.utils.TempVars;
 
 /**
@@ -13,13 +13,26 @@ import mini.utils.TempVars;
  * In addition to a position, point lights also have a radius which
  * can be used to attenuate the influence of the light depending on the
  * distance between the light and the effected object.
- *
  */
 public class PointLight extends Light {
-
     private Vector3f position = new Vector3f();
     private float radius = 0;
     private float invRadius = 0;
+
+    /**
+     * Creates a PointLight
+     */
+    public PointLight() {
+    }
+
+    /**
+     * Creates a PointLight at the given position
+     *
+     * @param position the position in world space
+     */
+    public PointLight(Vector3f position) {
+        setPosition(position);
+    }
 
     /**
      * Set the radius of the light influence.
@@ -31,7 +44,6 @@ public class PointLight extends Light {
      * the magnitude of the influence is equal to distance / radius.
      *
      * @param radius the radius of the light influence.
-     *
      * @throws IllegalArgumentException If radius is negative
      */
     public final void setRadius(float radius) {
@@ -51,22 +63,21 @@ public class PointLight extends Light {
         return Light.Type.Point;
     }
 
-//    @Override
-//    public void computeLastDistance(Spatial owner) {
+    @Override
+    public void computeLastDistance(Spatial owner) {
 //        if (owner.getWorldBound() != null) {
 //            BoundingVolume bv = owner.getWorldBound();
 //            lastDistance = bv.distanceSquaredTo(position);
 //        } else {
-//            lastDistance = owner.getWorldTranslation().distanceSquared(position);
+            lastDistance = owner.getWorldTranslation().distanceSquared(position);
 //        }
-//    }
+    }
 
     /**
      * Returns the world space position of the light.
      *
      * @return the world space position of the light.
-     *
-     * @see PointLight#setPosition(com.jme3.math.Vector3f)
+     * @see PointLight#setPosition(mini.math.Vector3f)
      */
     public Vector3f getPosition() {
         return position;
@@ -83,23 +94,24 @@ public class PointLight extends Light {
 
     /**
      * for internal use only
+     *
      * @return the inverse of the radius
      */
     public float getInvRadius() {
         return invRadius;
     }
-//
-//    @Override
-//    public boolean intersectsFrustum(Camera camera, TempVars vars) {
-//        if (this.radius == 0) {
-//            return true;
-//        } else {
+
+    @Override
+    public boolean intersectsFrustum(Camera camera, TempVars vars) {
+        if (this.radius == 0) {
+            return true;
+        } else {
 //            for (int i = 5; i >= 0; i--) {
 //                if (camera.getWorldPlane(i).pseudoDistance(position) <= -radius) {
 //                    return false;
 //                }
 //            }
-//            return true;
-//        }
-//    }
+            return true;
+        }
+    }
 }

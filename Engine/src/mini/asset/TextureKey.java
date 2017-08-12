@@ -11,8 +11,6 @@ import mini.utils.MyFile;
  * method. Since textures are cloneable smart assets, the texture stored
  * in the cache will be collected when all clones of the texture become
  * unreachable.
- *
- * @author Kirill Vainer
  */
 public class TextureKey extends AssetKey {
     private boolean generateMips;
@@ -29,8 +27,8 @@ public class TextureKey extends AssetKey {
         this(new MyFile(path), flipY);
     }
 
-    public TextureKey(MyFile name) {
-        super(name);
+    public TextureKey(String name) {
+        super(new MyFile(name));
         this.flipY = true;
     }
 

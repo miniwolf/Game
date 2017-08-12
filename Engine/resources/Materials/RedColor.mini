@@ -1,4 +1,4 @@
-Material Red Color : Engine/MatDefs/Misc/Unshaded.minid {
+Material Red Color : MatDefs/Misc/Unshaded.minid {
      MaterialParameters {
          Color : 1 0 0 1
      }

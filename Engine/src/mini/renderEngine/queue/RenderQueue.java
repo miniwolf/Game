@@ -1,7 +1,7 @@
 package mini.renderEngine.queue;
 
 import mini.post.SceneProcessor;
-import mini.renderEngine.CameraImpl;
+import mini.renderEngine.Camera;
 import mini.renderEngine.RenderManager;
 import mini.scene.Geometry;
 
@@ -224,7 +224,7 @@ public class RenderQueue {
         }
     }
 
-    private void renderGeometryList(GeometryList list, RenderManager rm, CameraImpl cam, boolean clear) {
+    private void renderGeometryList(GeometryList list, RenderManager rm, Camera cam, boolean clear) {
         list.setCamera(cam); // select camera for sorting
         list.sort();
         for (int i = 0; i < list.size(); i++) {
@@ -238,7 +238,7 @@ public class RenderQueue {
         }
     }
 
-    public void renderShadowQueue(GeometryList list, RenderManager rm, CameraImpl cam, boolean clear) {
+    public void renderShadowQueue(GeometryList list, RenderManager rm, Camera cam, boolean clear) {
         renderGeometryList(list, rm, cam, clear);
     }
 
@@ -259,11 +259,11 @@ public class RenderQueue {
         }
     }
 
-    public void renderQueue(Bucket bucket, RenderManager rm, CameraImpl cam) {
+    public void renderQueue(Bucket bucket, RenderManager rm, Camera cam) {
         renderQueue(bucket, rm, cam, true);
     }
 
-    public void renderQueue(Bucket bucket, RenderManager rm, CameraImpl cam, boolean clear) {
+    public void renderQueue(Bucket bucket, RenderManager rm, Camera cam, boolean clear) {
         switch (bucket) {
             case Opaque:
                 renderGeometryList(opaqueList, rm, cam, clear);

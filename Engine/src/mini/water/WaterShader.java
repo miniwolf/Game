@@ -7,8 +7,8 @@ import mini.utils.MyFile;
 import java.io.IOException;
 
 public class WaterShader extends ShaderProgram {
-    private static final MyFile VERTEX_SHADER = new MyFile("Engine/shaders", "waterVS.glsl");
-    private static final MyFile FRAGMENT_SHADER = new MyFile("Engine/shaders", "waterFS.glsl");
+    private static final MyFile VERTEX_SHADER = new MyFile("shaders", "waterVS.glsl");
+    private static final MyFile FRAGMENT_SHADER = new MyFile("shaders", "waterFS.glsl");
 
     //protected UniformMatrix modelMatrix = new UniformMatrix("modelMatrix");
     //protected UniformMatrix viewMatrix = new UniformMatrix("viewMatrix");

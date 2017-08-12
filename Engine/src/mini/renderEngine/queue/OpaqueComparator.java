@@ -2,15 +2,15 @@ package mini.renderEngine.queue;
 
 import mini.material.Material;
 import mini.math.Vector3f;
-import mini.renderEngine.CameraImpl;
+import mini.renderEngine.Camera;
 import mini.scene.Geometry;
 
 public class OpaqueComparator implements GeometryComparator {
-    private CameraImpl cam;
+    private Camera cam;
     private final Vector3f tempVec = new Vector3f();
     private final Vector3f tempVec2 = new Vector3f();
 
-    public void setCamera(CameraImpl cam) {
+    public void setCamera(Camera cam) {
         this.cam = cam;
     }
 

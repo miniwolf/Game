@@ -1,6 +1,6 @@
 package mini.system;
 
-import mini.Application;
+import mini.app.Application;
 
 public class ApplicationSystem {
     private static ApplicationSystemDelegate systemDelegate;
@@ -8,6 +8,24 @@ public class ApplicationSystem {
     public static ApplicationContext newContext() {
         checkDelegate();
         return systemDelegate.newContext();
+    }
+
+    public static Platform getPlatform() {
+        checkDelegate();
+        return systemDelegate.getPlatform();
+    }
+
+    /**
+     * Displays an error message to the user in whichever way the context
+     * feels is appropriate. If this is a headless or an offscreen surface
+     * context, this method should do nothing.
+     *
+     * @param message The error message to display. May contain new line
+     * characters.
+     */
+    public static void showErrorDialog(String message){
+        checkDelegate();
+        systemDelegate.showErrorDialog(message);
     }
 
     private static ApplicationSystemDelegate tryLoadDelegate(String className) throws InstantiationException, IllegalAccessException {
@@ -18,11 +36,15 @@ public class ApplicationSystem {
         }
     }
 
+    public static void setSystemDelegate(ApplicationSystemDelegate systemDelegate) {
+        ApplicationSystem.systemDelegate = systemDelegate;
+    }
+
     @SuppressWarnings("unchecked")
     private static void checkDelegate() {
         if (systemDelegate == null) {
             try {
-                systemDelegate = tryLoadDelegate("mini.system.JmeDesktopSystem");
+                systemDelegate = tryLoadDelegate("mini.system.ApplicationDesktopSystem");
                 if (systemDelegate == null) {
                     // None of the system delegates were found ..
                     System.err.println("Severe: Failed to find an ApplicationSystem delegate!\n"

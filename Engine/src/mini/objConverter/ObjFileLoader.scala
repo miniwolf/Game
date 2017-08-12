@@ -2,10 +2,12 @@ package mini.objConverter
 
 import java.nio.FloatBuffer
 
+import mini.asset.ModelKey
 import mini.material.Material
 import mini.math.{Vector2f, Vector3f}
 import mini.scene._
 import mini.scene.mesh.{IndexBuffer, IndexIntBuffer, IndexShortBuffer}
+import mini.scene.plugins.MTLLoader
 import mini.utils.{BufferUtils, MyFile}
 
 import collection.JavaConverters._
@@ -27,14 +29,6 @@ object ObjFileLoader {
   private var geomIndex = 0
   private var objName = ""
   private var objNode: Node = _
-
-  private def processMaterialLib(line: String, path: String): Map[String, List[Face]] = {
-    line.substring("mtllib".length).trim.split(".mtl ").flatMap {
-      libname =>
-        matList = MTLFileLoader.load(new MyFile(path, libname))
-        matList.keys.map(matName => matName -> List[Face]())
-    }.toMap
-  }
 
   @tailrec
   private def setupFaces(faceList: List[Face], newFaces: List[Face], hasTexCoord: Boolean = false,
@@ -207,7 +201,7 @@ object ObjFileLoader {
       material = Some(matList(matName))
     }
     if (material.isEmpty) { // create default material
-      material = Option(new Material("Engine/MatDefs/Light/Lighting.minid"))
+      material = Option(new Material("MatDefs/Light/Lighting.minid"))
       material.get.setFloat("Shininess", 64)
     }
     geom.setMaterial(material.get)
@@ -244,7 +238,7 @@ object ObjFileLoader {
               val vn = getVector3(x.substring(3))
               parseLines(cdr, vertices, texCoords, vn :: normals, indices)
             case x if x startsWith "mtllib" =>
-              matFaces = processMaterialLib(line, objFile.getDirectory)
+              //matFaces = processMaterialLib(line, objFile.getDirectory)
               parseLines(cdr, vertices, texCoords, normals, indices)
             case x if x startsWith "usemtl" =>
               currentMatName = x.substring("usermtl".length).trim

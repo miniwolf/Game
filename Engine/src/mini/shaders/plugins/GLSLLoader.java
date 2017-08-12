@@ -1,6 +1,7 @@
 package mini.shaders.plugins;
 
 import mini.asset.AssetKey;
+import mini.asset.ShaderNodeDefinitionKey;
 import mini.utils.MyFile;
 
 import java.io.BufferedReader;
@@ -66,7 +67,7 @@ public class GLSLLoader {
 
                         if (dependNode == null) {
                             Reader dependNodeReader = new InputStreamReader(
-                                    new MyFile(ln).getInputStream());
+                                    new MyFile(ln).getInputStream(true));
                             dependNode = loadNode(dependNodeReader, ln);
                         }
 
@@ -125,11 +126,11 @@ public class GLSLLoader {
         }
     }
 
-    public static Object load(MyFile info) throws IOException {
+    public static Object load(ShaderNodeDefinitionKey info) throws IOException {
         // The input stream provided is for the vertex shader,
         // to retrieve the fragment shader, use the content manager
-        Reader reader = new InputStreamReader(info.getInputStream());
-        if (info.getExtension().equals("glsllib")) {
+        Reader reader = new InputStreamReader(info.getFile().getInputStream(false));
+        if (info.getFile().getExtension().equals("glsllib")) {
             // NOTE: Loopback, GLSLLIB is loaded by this loader
             // and needs data as InputStream
             return reader;

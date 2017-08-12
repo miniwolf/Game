@@ -4,6 +4,7 @@ import java.util.List;
 
 import mini.math.Matrix4f;
 import mini.math.Vector3f;
+import mini.renderEngine.Camera;
 import mini.shaders.UniformBindingManager;
 import mini.shaders.VarType;
 import org.lwjgl.opengl.GL11;
@@ -11,13 +12,12 @@ import org.lwjgl.opengl.GL13;
 
 import mini.openglObjects.VAO;
 import mini.textures.Texture;
-import mini.utils.Camera;
 import mini.utils.MyFile;
 import mini.utils.OpenGlUtils;
 
 public class WaterRenderer {
-    private static final MyFile DUDV_MAP = new MyFile("Engine/textures", "waterDUDV.png");
-    private static final MyFile NORMAL_MAP = new MyFile("Engine/textures", "normal.png");
+    private static final MyFile DUDV_MAP = new MyFile("textures", "waterDUDV.png");
+    private static final MyFile NORMAL_MAP = new MyFile("textures", "normal.png");
     // private static final float WAVE_SPEED = 0.03f;
 
     private VAO quad;
@@ -33,8 +33,8 @@ public class WaterRenderer {
         this.shader = new WaterShader();
         this.fbos = fbos;
         this.quad = QuadGenerator.generateQuad();
-        this.normalMap = Texture.newTexture(NORMAL_MAP).create();
-        this.dudvTexture = Texture.newTexture(DUDV_MAP).anisotropic().create();
+//        this.normalMap = Texture.newTexture(NORMAL_MAP).create();
+//        this.dudvTexture = Texture.newTexture(DUDV_MAP).anisotropic().create();
     }
 
     public void render(List<WaterTile> water, Camera camera, Vector3f lightDir,

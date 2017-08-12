@@ -3,7 +3,7 @@ package mini.entityRenderers;
 import mini.material.Material;
 import mini.math.Vector3f;
 import mini.math.Vector4f;
-import mini.renderEngine.CameraImpl;
+import mini.renderEngine.Camera;
 import mini.renderEngine.RenderManager;
 import mini.scene.Geometry;
 import mini.scene.Node;
@@ -20,7 +20,7 @@ public class EntityRenderer {
         this.shader = new EntityShader();
     }
 
-    public void render(List<Node> entities, CameraImpl camera, Vector3f lightDir, Vector4f clipPlane,
+    public void render(List<Node> entities, Camera camera, Vector3f lightDir, Vector4f clipPlane,
                        RenderManager rendererManager) {
         prepare(camera, lightDir, clipPlane, rendererManager);
         for (Node entity : entities) {
@@ -46,7 +46,7 @@ public class EntityRenderer {
         //shader.cleanUp();
     }
 
-    private void prepare(CameraImpl camera, Vector3f lightDir, Vector4f clipPlane,
+    private void prepare(Camera camera, Vector3f lightDir, Vector4f clipPlane,
                          RenderManager manager) {
         //shader.start();
         manager.setCamera(camera);

@@ -1,5 +1,7 @@
 package mini.textures;
 
+import mini.textures.image.ColorSpace;
+
 /**
  * @author Joshua Slack
  */
@@ -26,6 +28,19 @@ public class Texture2D extends Texture {
             setMagFilter(MagFilter.Nearest);
             setMinFilter(MinFilter.NearestNoMipMaps);
         }
+    }
+
+    /**
+     * Creates a new two-dimensional texture for the purpose of offscreen
+     * rendering.
+     *
+     * @param width
+     * @param height
+     * @param format
+     * @see mini.textures.FrameBuffer
+     */
+    public Texture2D(int width, int height, Image.Format format) {
+        this(new Image(format, width, height, null, ColorSpace.Linear));
     }
 
     /**

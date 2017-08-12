@@ -1,18 +1,16 @@
 package mini.textures.plugins;
 
+import mini.asset.TextureKey;
 import mini.textures.Image;
 import mini.textures.image.ColorSpace;
 import mini.utils.BufferUtils;
-import mini.utils.MyFile;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
+import java.awt.Transparency;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
 import java.awt.image.DataBufferUShort;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -21,7 +19,7 @@ import java.nio.ByteBuffer;
  * Created by miniwolf on 22-04-2017.
  */
 public class AWTLoader {
-    private static Object extractImageData(BufferedImage img) {
+    private Object extractImageData(BufferedImage img) {
         DataBuffer buf = img.getRaster().getDataBuffer();
         switch (buf.getDataType()) {
             case DataBuffer.TYPE_BYTE:
@@ -34,7 +32,7 @@ public class AWTLoader {
         return null;
     }
 
-    public static Image load(BufferedImage img) {
+    public Image load(BufferedImage img) {
         int width = img.getWidth();
         int height = img.getHeight();
 
@@ -95,7 +93,7 @@ public class AWTLoader {
         }
     }
 
-    public static Image load(InputStream in) throws IOException {
+    public Image load(InputStream in) throws IOException {
         ImageIO.setUseCache(false);
         BufferedImage img = ImageIO.read(in);
         if (img == null) {
@@ -104,13 +102,14 @@ public class AWTLoader {
         return load(img);
     }
 
-    public static Object load(MyFile path) {
-        if (ImageIO.getImageReadersBySuffix(path.getName().split("\\.")[1]) != null) {
+    public static Object load(TextureKey key) {
+        if (ImageIO.getImageReadersBySuffix(key.getFile().getName().split("\\.")[1]) != null) {
             try {
-                Image img = load(path.getInputStream());
+                AWTLoader loader = new AWTLoader();
+                Image img = loader.load(key.getFile().getInputStream(true));
                 if (img == null) {
                     throw new RuntimeException(
-                            "The given image cannot be loaded " + path.getPath());
+                            "The given image cannot be loaded " + key.getFile().getPath());
                 }
                 return img;
             } catch (IOException e) {
@@ -118,7 +117,7 @@ public class AWTLoader {
             }
         } else {
             throw new IllegalArgumentException(
-                    "The extension " + path.getName().split(".")[1] + " is not supported");
+                    "The extension " + key.getFile().getName().split(".")[1] + " is not supported");
         }
         return null;
     }

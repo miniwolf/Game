@@ -8,8 +8,8 @@ import mini.utils.MyFile;
 import java.io.IOException;
 
 public class SkyboxShader extends ShaderProgram {
-    private static final MyFile VERTEX_SHADER = new MyFile("Engine/shaders", "skyboxVS.glsl");
-    private static final MyFile FRAGMENT_SHADER = new MyFile("Engine/shaders", "skyboxFS.glsl");
+    private static final MyFile VERTEX_SHADER = new MyFile("shaders", "skyboxVS.glsl");
+    private static final MyFile FRAGMENT_SHADER = new MyFile("shaders", "skyboxFS.glsl");
 
 //    public SkyboxShader() {
 //        try {

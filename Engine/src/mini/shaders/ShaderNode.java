@@ -13,8 +13,8 @@ import java.util.List;
  * output variables. This node can be activated based on a condition, and has
  * input and output mapping.
  *
- * This class is not intended to be used by JME users directly. It's the
- * structure for loading shader nodes from a J3md material definition file
+ * This class is not intended to be used by the engine users directly. It's the
+ * structure for loading shader nodes from a minid material definition file
  *
  * @author Nehon
  */

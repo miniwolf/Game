@@ -16,12 +16,10 @@ import mini.math.Vector3f;
 import mini.shaders.DefineList;
 import mini.shaders.ShaderProgram;
 import mini.shaders.VarType;
-import mini.textures.Image;
 import mini.textures.Texture;
 import mini.textures.Texture2D;
 import mini.textures.image.ColorSpace;
 import mini.textures.plugins.AWTLoader;
-import mini.utils.MyFile;
 import mini.utils.blockparser.BlockLanguageParser;
 import mini.utils.blockparser.Statement;
 import mini.utils.clone.Cloner;
@@ -37,16 +35,17 @@ import java.util.regex.Pattern;
 
 public class MiniLoader {
     // private ErrorLogger errors;
-    //private ShaderNodeLoaderDelegate nodesLoaderDelegate;
-    private boolean isUseNodes = false;
-    private int langSize = 0;
+    private ShaderNodeLoaderDelegate nodesLoaderDelegate;
+    boolean isUseNodes = false;
+    int langSize = 0;
+
     private AssetKey key;
 
     private MaterialDef materialDef;
     private Material material;
     private TechniqueDef technique;
     private RenderState renderState;
-    private List<String> presetDefines = new ArrayList<>();
+    private ArrayList<String> presetDefines = new ArrayList<String>();
 
     private List<EnumMap<ShaderProgram.ShaderType, String>> shaderLanguages;
     private EnumMap<ShaderProgram.ShaderType, String> shaderNames;
@@ -57,6 +56,7 @@ public class MiniLoader {
         shaderLanguages = new ArrayList<>();// EnumMap<>(Shader.ShaderType.class);
         shaderNames = new EnumMap<>(ShaderProgram.ShaderType.class);
     }
+
 
     // <TYPE> <LANG> : <SOURCE>
     private void readShaderStatement(String statement) throws IOException {
@@ -69,24 +69,22 @@ public class MiniLoader {
         for (ShaderProgram.ShaderType shaderType : ShaderProgram.ShaderType.values()) {
             if (typeAndLang[0].equals(shaderType.toString() + "Shader")) {
 
-                readShaderDefinition(shaderType, split[1].trim(), Arrays
-                        .copyOfRange(typeAndLang, 1, typeAndLang.length));
+                readShaderDefinition(shaderType, split[1].trim(), Arrays.copyOfRange(typeAndLang, 1, typeAndLang.length));
             }
         }
     }
 
-    private void readShaderDefinition(ShaderProgram.ShaderType shaderType, String name,
-                                      String... languages) {
+
+    private void readShaderDefinition(ShaderProgram.ShaderType shaderType, String name, String... languages) {
         shaderNames.put(shaderType, name);
 
         if (langSize != 0 && langSize != languages.length) {
-            throw new RuntimeException("Technique " + technique.getName()
-                                       + " must have the same number of languages for each shader type.");
+            throw new RuntimeException("Technique " + technique.getName() + " must have the same number of languages for each shader type.");
         }
         langSize = languages.length;
         for (int i = 0; i < languages.length; i++) {
             if (i >= shaderLanguages.size()) {
-                shaderLanguages.add(new EnumMap<>(ShaderProgram.ShaderType.class));
+                shaderLanguages.add(new EnumMap<ShaderProgram.ShaderType, String>(ShaderProgram.ShaderType.class));
             }
             shaderLanguages.get(i).put(shaderType, languages[i]);
         }
@@ -102,6 +100,7 @@ public class MiniLoader {
         TechniqueDef.LightMode lm = TechniqueDef.LightMode.valueOf(split[1]);
         technique.setLightMode(lm);
     }
+
 
     // LightMode <SPACE>
     private void readLightSpace(String statement) throws IOException {
@@ -142,7 +141,7 @@ public class MiniLoader {
     }
 
     private List<TextureOptionValue> parseTextureOptions(final List<String> values) {
-        final List<TextureOptionValue> matchList = new ArrayList<>();
+        final List<TextureOptionValue> matchList = new ArrayList<TextureOptionValue>();
 
         if (values.isEmpty() || values.size() == 1) {
             return matchList;
@@ -153,11 +152,9 @@ public class MiniLoader {
             final String value = values.get(i);
             final TextureOption textureOption = TextureOption.getTextureOption(value);
 
-            if (textureOption == null && !value.contains("\\") && !value.contains("/") && !values
-                    .get(0).equals("Flip") && !values.get(0).equals("Repeat")) {
-                System.err.println("Warning: Unknown texture option \"" + value
-                                   + "\" encountered for \"" + key + "\" in material \""
-                                   + material.getKey() + "\"");
+            if (textureOption == null && !value.contains("\\") && !value.contains("/") && !values.get(0).equals("Flip") && !values.get(0).equals("Repeat")) {
+                System.err.println("Unknown texture option \"" + value + "\" encountered for \"" + key
+                        + "\" in material \"" + material.getKey().getFile().getName() + "\"");
             } else if (textureOption != null) {
                 final String option = textureOption.getOptionValue(value);
                 matchList.add(new TextureOptionValue(textureOption, option));
@@ -167,28 +164,19 @@ public class MiniLoader {
         return matchList;
     }
 
-    private boolean isTexturePathDeclaredTheTraditionalWay(
-            final List<TextureOptionValue> optionValues, final String texturePath) {
-        final boolean startsWithOldStyle = texturePath.startsWith("Flip Repeat ") || texturePath
-                .startsWith("Flip ") ||
-                                           texturePath.startsWith("Repeat ") || texturePath
-                                                   .startsWith("Repeat Flip ");
+    private boolean isTexturePathDeclaredTheTraditionalWay(final List<TextureOptionValue> optionValues, final String texturePath) {
+        final boolean startsWithOldStyle = texturePath.startsWith("Flip Repeat ") || texturePath.startsWith("Flip ") ||
+                texturePath.startsWith("Repeat ") || texturePath.startsWith("Repeat Flip ");
 
         if (!startsWithOldStyle) {
             return false;
         }
 
-        if (optionValues.size() == 1 && (optionValues.get(0).textureOption == TextureOption.Flip
-                                         || optionValues.get(0).textureOption
-                                            == TextureOption.Repeat)) {
+        if (optionValues.size() == 1 && (optionValues.get(0).textureOption == TextureOption.Flip || optionValues.get(0).textureOption == TextureOption.Repeat)) {
             return true;
-        } else if (optionValues.size() == 2
-                   && optionValues.get(0).textureOption == TextureOption.Flip
-                   && optionValues.get(1).textureOption == TextureOption.Repeat) {
+        } else if (optionValues.size() == 2 && optionValues.get(0).textureOption == TextureOption.Flip && optionValues.get(1).textureOption == TextureOption.Repeat) {
             return true;
-        } else if (optionValues.size() == 2
-                   && optionValues.get(0).textureOption == TextureOption.Repeat
-                   && optionValues.get(1).textureOption == TextureOption.Flip) {
+        } else if (optionValues.size() == 2 && optionValues.get(0).textureOption == TextureOption.Repeat && optionValues.get(1).textureOption == TextureOption.Flip) {
             return true;
         }
 
@@ -211,8 +199,7 @@ public class MiniLoader {
             if (isTexturePathDeclaredTheTraditionalWay(textureOptionValues, texturePath)) {
                 boolean flipY = false;
 
-                if (texturePath.startsWith("Flip Repeat ") || texturePath
-                        .startsWith("Repeat Flip ")) {
+                if (texturePath.startsWith("Flip Repeat ") || texturePath.startsWith("Repeat Flip ")) {
                     texturePath = texturePath.substring(12).trim();
                     flipY = true;
                 } else if (texturePath.startsWith("Flip ")) {
@@ -264,16 +251,17 @@ public class MiniLoader {
         Texture texture;
 
         try {
-            Image load = AWTLoader.load(textureKey.getFilename().getInputStream());
-            texture = new Texture2D(load);
-        } catch (IOException ex) {
-            System.err
-                    .println("Warning: Cannot locate " + textureKey + "for material " + key);
+            texture = (Texture) AWTLoader.load(textureKey);
+        } catch (RuntimeException ex) {
+            System.err.println("Cannot locate " + textureKey + " for material " + key);
             texture = null;
         }
 
         if (texture == null) {
-            System.err.println("Issue no texture found in MiniLoader");
+            Texture load = (Texture) AWTLoader.load(new TextureKey("Textures/MissingTexture.png"));
+            texture = new Texture2D(load.getImage());
+            texture.setKey(textureKey);
+            texture.setName(textureKey.getFile().getName());
         }
 
         // Apply texture options to the texture
@@ -299,28 +287,25 @@ public class MiniLoader {
                     return Float.parseFloat(split[0]);
                 case Vector2f:
                     if (split.length != 2) {
-                        throw new IOException(
-                                "Vector2f value parameter must have 2 entries: " + value);
+                        throw new IOException("Vector2 value parameter must have 2 entries: " + value);
                     }
                     return new Vector2f(Float.parseFloat(split[0]),
-                                        Float.parseFloat(split[1]));
+                            Float.parseFloat(split[1]));
                 case Vector3f:
                     if (split.length != 3) {
-                        throw new IOException(
-                                "Vector3f value parameter must have 3 entries: " + value);
+                        throw new IOException("Vector3 value parameter must have 3 entries: " + value);
                     }
                     return new Vector3f(Float.parseFloat(split[0]),
-                                        Float.parseFloat(split[1]),
-                                        Float.parseFloat(split[2]));
+                            Float.parseFloat(split[1]),
+                            Float.parseFloat(split[2]));
                 case Vector4f:
                     if (split.length != 4) {
-                        throw new IOException(
-                                "Vector4f value parameter must have 4 entries: " + value);
+                        throw new IOException("Vector4 value parameter must have 4 entries: " + value);
                     }
                     return new ColorRGBA(Float.parseFloat(split[0]),
-                                         Float.parseFloat(split[1]),
-                                         Float.parseFloat(split[2]),
-                                         Float.parseFloat(split[3]));
+                            Float.parseFloat(split[1]),
+                            Float.parseFloat(split[2]),
+                            Float.parseFloat(split[3]));
                 case Int:
                     if (split.length != 1) {
                         throw new IOException("Int value parameter must have 1 entry: " + value);
@@ -328,8 +313,7 @@ public class MiniLoader {
                     return Integer.parseInt(split[0]);
                 case Boolean:
                     if (split.length != 1) {
-                        throw new IOException(
-                                "Boolean value parameter must have 1 entry: " + value);
+                        throw new IOException("Boolean value parameter must have 1 entry: " + value);
                     }
                     return Boolean.parseBoolean(split[0]);
                 default:
@@ -347,7 +331,9 @@ public class MiniLoader {
         String[] split = statement.split(":");
 
         // Parse default val
-        if (split.length != 1) {
+        if (split.length == 1) {
+            // Doesn't contain default value
+        } else {
             if (split.length != 2) {
                 throw new IOException("Parameter statement syntax incorrect");
             }
@@ -394,6 +380,7 @@ public class MiniLoader {
         } else {
             materialDef.addMaterialParam(type, name, defaultValObj);
         }
+
     }
 
     private void readValueParam(String statement) throws IOException {
@@ -466,7 +453,6 @@ public class MiniLoader {
                 break;
             case "AlphaTestFalloff":
                 // Ignore for backwards compatbility
-                // TODO: Remove all references
                 break;
             case "PolyOffset":
                 float factor = Float.parseFloat(split[1]);
@@ -478,11 +464,13 @@ public class MiniLoader {
                 break;
             case "PointSprite":
                 // Ignore for backwards compatbility
-                // TODO: Remove all references
                 break;
             case "DepthFunc":
                 renderState.setDepthFunc(RenderState.TestFunction.valueOf(split[1]));
                 break;
+//            case "AlphaFunc":
+//                renderState.setAlphaFunc(RenderState.TestFunction.valueOf(split[1]));
+//                break;
             case "LineWidth":
                 renderState.setLineWidth(Float.parseFloat(split[1]));
                 break;
@@ -528,9 +516,9 @@ public class MiniLoader {
             String paramName = split[1].trim();
             MatParam param = materialDef.getMaterialParam(paramName);
             if (param == null) {
-                System.out.println("In technique ''" + technique.getName() + "'':\n"
-                                   + "Define ''" + defineName + "'' mapped to non-existent"
-                                   + " material parameter ''" + paramName + "'', ignoring.");
+                System.err.println("In technique ''" + technique.getName() + "'':\n"
+                        + "Define ''" + defineName + "'' mapped to non-existent"
+                        + " material parameter ''" + paramName + "'', ignoring.");
                 return;
             }
 
@@ -545,10 +533,11 @@ public class MiniLoader {
         for (Statement statement : defineList) {
             readDefine(statement.getLine());
         }
+
     }
 
     private void readTechniqueStatement(Statement statement) throws IOException {
-        String[] split = statement.getLine().split("[ {]");
+        String[] split = statement.getLine().split("[ \\{]");
         switch (split[0]) {
             case "VertexShader":
             case "FragmentShader":
@@ -578,24 +567,24 @@ public class MiniLoader {
             case "Defines":
                 readDefines(statement.getContents());
                 break;
-//            case "ShaderNodesDefinitions":
-//                initNodesLoader();
-//                if (isUseNodes) {
-//                    nodesLoaderDelegate.readNodesDefinitions(statement.getContents());
-//                }
-//                break;
-//            case "VertexShaderNodes":
-//                initNodesLoader();
-//                if (isUseNodes) {
-//                    nodesLoaderDelegate.readVertexShaderNodes(statement.getContents());
-//                }
-//                break;
-//            case "FragmentShaderNodes":
-//                initNodesLoader();
-//                if (isUseNodes) {
-//                    nodesLoaderDelegate.readFragmentShaderNodes(statement.getContents());
-//                }
-//                break;
+            case "ShaderNodesDefinitions":
+                initNodesLoader();
+                if (isUseNodes) {
+                    nodesLoaderDelegate.readNodesDefinitions(statement.getContents());
+                }
+                break;
+            case "VertexShaderNodes":
+                initNodesLoader();
+                if (isUseNodes) {
+                    nodesLoaderDelegate.readVertexShaderNodes(statement.getContents());
+                }
+                break;
+            case "FragmentShaderNodes":
+                initNodesLoader();
+                if (isUseNodes) {
+                    nodesLoaderDelegate.readFragmentShaderNodes(statement.getContents());
+                }
+                break;
             case "NoRender":
                 technique.setNoRender(true);
                 break;
@@ -660,7 +649,7 @@ public class MiniLoader {
 //                break;
 //            case SinglePassAndImageBased:
 //                technique.setLogic(new SinglePassAndImageBasedLightingLogic(technique));
-//            break;
+//                break;
             default:
                 throw new UnsupportedOperationException();
         }
@@ -673,11 +662,9 @@ public class MiniLoader {
             // KIRILL 9/19/2015
             // Not sure if this is needed anymore, since shader caching
             // is now done by TechniqueDef.
-            technique.setShaderFile(technique.hashCode() + "", technique.hashCode() + "", "GLSL100",
-                                    "GLSL100");
+            technique.setShaderFile(technique.hashCode() + "", technique.hashCode() + "", "GLSL100", "GLSL100");
             techniqueDefs.add(technique);
-        } else if (shaderNames.containsKey(ShaderProgram.ShaderType.Vertex) && shaderNames
-                .containsKey(ShaderProgram.ShaderType.Fragment)) {
+        } else if (shaderNames.containsKey(ShaderProgram.ShaderType.Vertex) && shaderNames.containsKey(ShaderProgram.ShaderType.Fragment)) {
             if (shaderLanguages.size() > 1) {
                 for (int i = 1; i < shaderLanguages.size(); i++) {
                     cloner.clearIndex();
@@ -695,9 +682,8 @@ public class MiniLoader {
             shaderNames.clear();
             presetDefines.clear();
             langSize = 0;
-            System.err.println("Warning: Fixed function technique was ignored");
-            System.err.println("Warning: Fixed function technique ''" + name
-                               + "'' was ignored for material " + key);
+            System.err.println("Fixed function technique was ignored");
+            System.err.println("Fixed function technique ''" + name + "'' was ignored for material " + key);
             return;
         }
 
@@ -719,8 +705,7 @@ public class MiniLoader {
             if (line.startsWith("Exception")) {
                 throw new RuntimeException(line.substring("Exception ".length()));
             } else {
-                throw new IOException(
-                        "In multiroot material, expected first statement to be 'Exception'");
+                throw new IOException("In multiroot material, expected first statement to be 'Exception'");
             }
         } else if (roots.size() != 1) {
             throw new IOException("Too many roots in J3M/J3MD file");
@@ -742,20 +727,19 @@ public class MiniLoader {
         String[] split = materialName.split(":", 2);
 
         if (materialName.equals("")) {
-            throw new RuntimeException("Material name cannot be empty" + materialStat);
+            throw new MatParseException("Material name cannot be empty", materialStat);
         }
 
         if (split.length == 2) {
             if (!extending) {
-                throw new RuntimeException("Must use 'Material' when extending." + materialStat);
+                throw new MatParseException("Must use 'Material' when extending.", materialStat);
             }
 
             String extendedMat = split[1].trim();
 
-            MaterialDef def = (MaterialDef) MiniLoader.load(new MaterialKey(extendedMat));
+            MaterialDef def = (MaterialDef) load(new MaterialKey(extendedMat));
             if (def == null) {
-                throw new RuntimeException(
-                        "Extended material " + extendedMat + " cannot be found." + materialStat);
+                throw new MatParseException("Extended material " + extendedMat + " cannot be found.", materialStat);
             }
 
             material = new Material(def);
@@ -764,13 +748,13 @@ public class MiniLoader {
 //            material.setAssetName(fileName);
         } else if (split.length == 1) {
             if (extending) {
-                throw new RuntimeException("Expected ':', got '{'" + materialStat);
+                throw new MatParseException("Expected ':', got '{'", materialStat);
             }
             materialDef = new MaterialDef(materialName);
             // NOTE: pass file name for defs so they can be loaded later
-            materialDef.setAssetName(key.getFilename().getName());
+            materialDef.setAssetName(key.getFile().getName());
         } else {
-            throw new RuntimeException("Cannot use colon in material name/path" + materialStat);
+            throw new MatParseException("Cannot use colon in material name/path", materialStat);
         }
 
         for (Statement statement : materialStat.getContents()) {
@@ -797,55 +781,52 @@ public class MiniLoader {
                         readMaterialParams(statement.getContents());
                         break;
                     default:
-                        throw new RuntimeException(
-                                "Expected material statement, got '" + statType + "'" + statement);
+                        throw new MatParseException("Expected material statement, got '" + statType + "'", statement);
                 }
             }
         }
     }
 
-    public static Object load(MaterialKey key) throws IOException {
-        InputStream in = key.getFilename().getInputStream();
-        MiniLoader miniLoader = new MiniLoader();
-        miniLoader.key = key;
+    public static Object load(MaterialKey info) throws IOException {
+        InputStream in = info.getFile().getInputStream(false);
+        MiniLoader loader = new MiniLoader();
         try {
-            miniLoader.loadFromRoot(BlockLanguageParser.parse(in));
+            loader.key = info;
+//            if (loader.key.getFile().getExtension().equals("mini") && !(loader.key instanceof MaterialKey)) {
+//                throw new IOException("Material instances must be loaded via MaterialKey");
+//            } else if (loader.key.getFile().getExtension().equals("minid") && loader.key instanceof MaterialKey) {
+//                throw new IOException("Material definitions must be loaded via AssetKey");
+//            }
+            loader.loadFromRoot(BlockLanguageParser.parse(in));
         } finally {
             if (in != null) {
                 in.close();
             }
         }
 
-        if (miniLoader.material != null) {
+        if (loader.material != null) {
             // material implementation
-            return miniLoader.material;
+            return loader.material;
         } else {
             // material definition
-            return miniLoader.materialDef;
+            return loader.materialDef;
         }
     }
 
-    public MaterialDef loadMaterialDef(List<Statement> roots) throws IOException {
-        loadFromRoot(roots);
-        return materialDef;
+    protected void initNodesLoader() {
+        if (!isUseNodes) {
+            isUseNodes = shaderNames.get(ShaderProgram.ShaderType.Vertex) == null && shaderNames.get(ShaderProgram.ShaderType.Fragment) == null;
+            if (isUseNodes) {
+                if (nodesLoaderDelegate == null) {
+                    nodesLoaderDelegate = new ShaderNodeLoaderDelegate();
+                } else {
+                    nodesLoaderDelegate.clear();
+                }
+                nodesLoaderDelegate.setTechniqueDef(technique);
+                nodesLoaderDelegate.setMaterialDef(materialDef);
+            }
+        }
     }
-
-//    protected void initNodesLoader() {
-//        if (!isUseNodes) {
-//            isUseNodes = shaderNames.get(ShaderProgram.ShaderType.Vertex) == null
-//                         && shaderNames.get(ShaderProgram.ShaderType.Fragment) == null;
-//            if (isUseNodes) {
-//                if (nodesLoaderDelegate == null) {
-//                    nodesLoaderDelegate = new ShaderNodeLoaderDelegate();
-//                } else {
-//                    nodesLoaderDelegate.clear();
-//                }
-//                nodesLoaderDelegate.setTechniqueDef(technique);
-//                nodesLoaderDelegate.setMaterialDef(materialDef);
-//                nodesLoaderDelegate.setAssetManager(assetManager);
-//            }
-//        }
-//    }
 
     /**
      * Texture options allow you to specify how a texture should be initialized by including an option before
@@ -864,7 +845,7 @@ public class MiniLoader {
     private enum TextureOption {
 
         /**
-         * Applies a {@link com.jme3.texture.Texture.MinFilter} to the texture.
+         * Applies a {@link mini.textures.Texture.MinFilter} to the texture.
          */
         Min {
             @Override
@@ -874,7 +855,7 @@ public class MiniLoader {
         },
 
         /**
-         * Applies a {@link com.jme3.texture.Texture.MagFilter} to the texture.
+         * Applies a {@link mini.textures.Texture.MagFilter} to the texture.
          */
         Mag {
             @Override
@@ -884,7 +865,7 @@ public class MiniLoader {
         },
 
         /**
-         * Applies a {@link com.jme3.texture.Texture.WrapMode} to the texture. This also supports {@link com.jme3.texture.Texture.WrapAxis}
+         * Applies a {@link mini.textures.Texture.WrapMode} to the texture. This also supports {@link mini.textures.Texture.WrapAxis}
          * by adding "_AXIS" to the texture option. For instance if you wanted to repeat on the S (horizontal) axis, you
          * would use <pre>WrapRepeat_S</pre> as a texture option.
          */
@@ -905,7 +886,7 @@ public class MiniLoader {
         },
 
         /**
-         * Applies a {@link com.jme3.texture.Texture.WrapMode#Repeat} to the texture. This is simply an alias for
+         * Applies a {@link mini.textures.Texture.WrapMode#Repeat} to the texture. This is simply an alias for
          * WrapRepeat, please use WrapRepeat instead if possible as this may become deprecated later on.
          */
         Repeat {
@@ -947,7 +928,7 @@ public class MiniLoader {
     }
 
     /**
-     * Internal object used for holding a {@link com.jme3.material.plugins.J3MLoader.TextureOption} and it's value. Also
+     * Internal object used for holding a {@link mini.material.plugins.MiniLoader.TextureOption} and it's value. Also
      * contains a couple of convenience methods for applying the TextureOption to either a TextureKey or a Texture.
      */
     private static class TextureOptionValue {

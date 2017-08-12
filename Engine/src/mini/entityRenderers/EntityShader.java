@@ -8,8 +8,8 @@ import mini.utils.MyFile;
 import java.io.IOException;
 
 public class EntityShader extends ShaderProgram {
-    private static final MyFile VERTEX_SHADER = new MyFile("Engine/shaders", "entityVS.glsl");
-    private static final MyFile FRAGMENT_SHADER = new MyFile("Engine/shaders", "entityFS.glsl");
+    private static final MyFile VERTEX_SHADER = new MyFile("shaders", "entityVS.glsl");
+    private static final MyFile FRAGMENT_SHADER = new MyFile("shaders", "entityFS.glsl");
 
     //protected UniformBoolean hasExtraMap = new UniformBoolean("hasExtraMap");
     //protected UniformVec4 plane = new UniformVec4("plane");

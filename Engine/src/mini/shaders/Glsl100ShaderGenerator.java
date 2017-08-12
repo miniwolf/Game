@@ -1,6 +1,7 @@
 package mini.shaders;
 
 import mini.asset.AssetKey;
+import mini.asset.ShaderNodeDefinitionKey;
 import mini.material.ShaderGenerationInfo;
 import mini.material.TechniqueDef;
 import mini.material.plugins.ConditionParser;
@@ -143,7 +144,7 @@ public class Glsl100ShaderGenerator {
                 String shaderPath = shaderNode.getDefinition().getShadersPath().get(index);
                 String loadedSource = null;
                 try {
-                    loadedSource = (String) GLSLLoader.load(new MyFile(shaderPath));
+                    loadedSource = (String) GLSLLoader.load(new ShaderNodeDefinitionKey(shaderPath));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

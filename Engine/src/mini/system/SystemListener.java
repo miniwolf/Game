@@ -38,20 +38,6 @@ public interface SystemListener {
     void requestClose(boolean esc);
 
     /**
-     * Called when the application gained focus. The display
-     * implementation is not allowed to call this method before
-     * initialize() has been called or after destroy() has been called.
-     */
-    void gainFocus();
-
-    /**
-     * Called when the application lost focus. The display
-     * implementation is not allowed to call this method before
-     * initialize() has been called or after destroy() has been called.
-     */
-    void loseFocus();
-
-    /**
      * Called when an error has occured. This is typically
      * invoked when an uncought exception is thrown in the render thread.
      *

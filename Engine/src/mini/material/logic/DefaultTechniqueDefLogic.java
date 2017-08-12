@@ -7,6 +7,7 @@ import mini.material.TechniqueDef;
 import mini.math.ColorRGBA;
 import mini.renderEngine.Caps;
 import mini.renderEngine.RenderManager;
+import mini.renderEngine.Renderer;
 import mini.renderEngine.opengl.GLRenderer;
 import mini.scene.Geometry;
 import mini.shaders.DefineList;
@@ -24,8 +25,8 @@ public class DefaultTechniqueDefLogic implements TechniqueDefLogic {
         this.techniqueDef = techniqueDef;
     }
 
-    public static void renderMeshFromGeometry(GLRenderer renderer, Geometry geom) {
-        renderer.renderMesh(geom.getMesh());
+    public static void renderMeshFromGeometry(Renderer renderer, Geometry geom) {
+        renderer.renderMesh(geom.getMesh(), 0, 1, null);
     }
 
     protected static ColorRGBA getAmbientColor(LightList lightList, boolean removeLights,
@@ -53,7 +54,7 @@ public class DefaultTechniqueDefLogic implements TechniqueDefLogic {
     @Override
     public void render(RenderManager renderManager, ShaderProgram shader, Geometry geometry,
                        LightList lights, int lastTexUnit) {
-        GLRenderer renderer = renderManager.getRenderer();
+        Renderer renderer = renderManager.getRenderer();
         renderer.setShader(shader);
         renderMeshFromGeometry(renderer, geometry);
     }

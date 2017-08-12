@@ -1,13 +1,9 @@
 package mini.light;
 
 import mini.scene.Spatial;
+import mini.utils.SortUtil;
 
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.Spliterator;
-import java.util.Spliterators;
+import java.util.*;
 import java.util.function.Consumer;
 
 /**
@@ -24,6 +20,15 @@ public class LightList implements Iterable<Light> {
 
     private static final int DEFAULT_SIZE = 1;
 
+    private static final Comparator<Light> c = new Comparator<Light>() {
+        /**
+         * This assumes lastDistance have been computed in a previous step.
+         */
+        public int compare(Light l1, Light l2) {
+            return Float.compare(l1.lastDistance, l2.lastDistance);
+        }
+    };
+
     /**
      * Creates a <code>LightList</code> for the given {@link Spatial}.
      *
@@ -35,6 +40,38 @@ public class LightList implements Iterable<Light> {
         distToOwner = new float[DEFAULT_SIZE];
         Arrays.fill(distToOwner, Float.NEGATIVE_INFINITY);
         this.owner = owner;
+    }
+
+    /**
+     * Sorts the elements in the list according to their Comparator.
+     * There are two reasons why lights should be resorted.
+     * First, if the lights have moved, that means their distance to
+     * the spatial changed.
+     * Second, if the spatial itself moved, it means the distance from it to
+     * the individual lights might have changed.
+     *
+     *
+     * @param transformChanged Whether the spatial's transform has changed
+     */
+    public void sort(boolean transformChanged) {
+        if (listSize > 1) {
+            // resize or populate our temporary array as necessary
+            if (tlist == null || tlist.length != list.length) {
+                tlist = list.clone();
+            } else {
+                System.arraycopy(list, 0, tlist, 0, list.length);
+            }
+
+            if (transformChanged){
+                // check distance of each light
+                for (int i = 0; i < listSize; i++){
+                    list[i].computeLastDistance(owner);
+                }
+            }
+
+            // now merge sort tlist into list
+            SortUtil.msort(tlist, list, 0, listSize - 1, c);
+        }
     }
 
     /**

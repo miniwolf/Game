@@ -3,6 +3,7 @@ package mini.shinyRenderer;
 import java.util.List;
 
 import mini.math.Vector3f;
+import mini.renderEngine.Camera;
 import mini.renderEngine.opengl.GLRenderer;
 import mini.scene.Geometry;
 import mini.scene.Node;
@@ -10,7 +11,6 @@ import mini.scene.Spatial;
 import mini.shaders.UniformBindingManager;
 
 import mini.textures.Texture;
-import mini.utils.Camera;
 import mini.utils.OpenGlUtils;
 
 public class ShinyRenderer {
@@ -26,7 +26,7 @@ public class ShinyRenderer {
         for (Node entity : shinyEntities) {
             for (Spatial spatial : entity.getChildren()) {
                 if (spatial instanceof Geometry) {
-                    renderer.renderMeshFromGeometry((Geometry) spatial);
+//                    renderer.renderMeshFromGeometry((Geometry) spatial);
 //                    Geometry geom = (Geometry) spatial;
 //                    geom.getMaterial().getDiffuseTexture().bindToUnit(0);
 //                    VAO model = geom.getVao();

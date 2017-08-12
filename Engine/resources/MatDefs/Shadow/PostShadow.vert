@@ -1,6 +1,6 @@
-#import "Engine/ShaderLib/GLSLCompat.glsllib"
-#import "Engine/ShaderLib/Instancing.glsllib"
-#import "Engine/ShaderLib/Skinning.glsllib"
+#import "ShaderLib/GLSLCompat.glsllib"
+#import "ShaderLib/Instancing.glsllib"
+#import "ShaderLib/Skinning.glsllib"
 
 uniform mat4 m_LightViewProjectionMatrix0;
 uniform mat4 m_LightViewProjectionMatrix1;

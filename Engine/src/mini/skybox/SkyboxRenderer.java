@@ -1,10 +1,10 @@
 package mini.skybox;
 
+import mini.renderEngine.Camera;
 import mini.shaders.UniformBindingManager;
 import org.lwjgl.opengl.GL11;
 
 import mini.openglObjects.VAO;
-import mini.utils.Camera;
 import mini.utils.OpenGlUtils;
 
 public class SkyboxRenderer {

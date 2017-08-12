@@ -1,6 +1,6 @@
 package mini.renderEngine.queue;
 
-import mini.renderEngine.CameraImpl;
+import mini.renderEngine.Camera;
 import mini.scene.Geometry;
 import mini.utils.ListSort;
 
@@ -50,11 +50,11 @@ public class GeometryList implements Iterable<Geometry> {
 
     /**
      * Set the camera that will be set on the geometry comparators
-     * via {@link GeometryComparator#setCamera(CameraImpl)}.
+     * via {@link GeometryComparator#setCamera(Camera)}.
      *
      * @param cam Camera to use for sorting.
      */
-    public void setCamera(CameraImpl cam) {
+    public void setCamera(Camera cam) {
         this.comparator.setCamera(cam);
     }
 

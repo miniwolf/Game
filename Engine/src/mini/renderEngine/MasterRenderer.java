@@ -9,7 +9,6 @@ import mini.shaders.UniformBindingManager;
 import mini.shinyRenderer.ShinyRenderer;
 import mini.skybox.SkyboxRenderer;
 import mini.textures.GUITexture;
-import mini.utils.Camera;
 import mini.water.WaterFrameBuffers;
 import mini.water.WaterRenderer;
 import org.lwjgl.opengl.GL11;
@@ -32,7 +31,7 @@ public class MasterRenderer {
     protected MasterRenderer(EntityRenderer entityRenderer, SkyboxRenderer skyRenderer,
                              WaterRenderer waterRenderer, WaterFrameBuffers waterFbos,
                              ShinyRenderer shinyRenderer, GuiRenderer guiRenderer,
-                             GLRenderer glRenderer) {
+                             Renderer glRenderer) {
         this.entityRenderer = entityRenderer;
         this.skyRenderer = skyRenderer;
         this.waterRenderer = waterRenderer;
@@ -42,7 +41,7 @@ public class MasterRenderer {
         renderManager = new RenderManager(glRenderer);
     }
 
-    public void renderLowQualityScene(Scene scene, CameraImpl cubeMapCamera) {
+    public void renderLowQualityScene(Scene scene, Camera cubeMapCamera) {
         prepare();
         entityRenderer.render(scene.getImportantEntities(), cubeMapCamera,
                               scene.getLightDirection(), NO_CLIP, renderManager);
@@ -72,17 +71,17 @@ public class MasterRenderer {
         GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
     }
 
-    private void renderWaterReflectionPass(Scene scene) {
-        waterFbos.bindReflectionFrameBuffer();
-        prepare();
-        scene.getCamera().reflect(scene.getWaterHeight());
-        entityRenderer.render(scene.getReflectedEntities(), scene.getCamera(),
-                              scene.getLightDirection(), new Vector4f(0, 1, 0, 0.1f),
-                              renderManager);
-        skyRenderer.render(scene.getSky(), scene.getCamera(), uniformBindingManager);
-        waterFbos.unbindCurrentFrameBuffer();
-        scene.getCamera().reflect(scene.getWaterHeight());
-    }
+//    private void renderWaterReflectionPass(Scene scene) {
+//        waterFbos.bindReflectionFrameBuffer();
+//        prepare();
+//        scene.getCamera().reflect(scene.getWaterHeight());
+//        entityRenderer.render(scene.getReflectedEntities(), scene.getCamera(),
+//                              scene.getLightDirection(), new Vector4f(0, 1, 0, 0.1f),
+//                              renderManager);
+//        skyRenderer.render(scene.getSky(), scene.getCamera(), uniformBindingManager);
+//        waterFbos.unbindCurrentFrameBuffer();
+//        scene.getCamera().reflect(scene.getWaterHeight());
+//    }
 
     private void renderWaterRefractionPass(Scene scene) {
         waterFbos.bindRefractionFrameBuffer();

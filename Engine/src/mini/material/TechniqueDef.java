@@ -1,5 +1,6 @@
 package mini.material;
 
+import mini.asset.ShaderNodeDefinitionKey;
 import mini.material.logic.TechniqueDefLogic;
 import mini.renderEngine.Caps;
 import mini.shaders.DefineList;
@@ -476,7 +477,7 @@ public class TechniqueDef implements Cloneable {
                 }
                 String shaderSourceCode = null;
                 try {
-                    shaderSourceCode = (String) GLSLLoader.load(new MyFile(shaderSourceAssetName));
+                    shaderSourceCode = (String) GLSLLoader.load(new ShaderNodeDefinitionKey(shaderSourceAssetName));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

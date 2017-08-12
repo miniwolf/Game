@@ -9,22 +9,7 @@ import mini.input.KeyboardListener;
 import mini.input.Mouse;
 import mini.input.MouseButton;
 import mini.input.MouseListener;
-import mini.math.Vector3f;
 import mini.renderEngine.RenderEngine;
-import mini.scene.Scene;
-import mini.utils.DisplayManager;
-import mini.utils.MyFile;
-import org.lwjgl.glfw.GLFWErrorCallback;
-import org.lwjgl.opengl.GL;
-import org.lwjgl.opengl.GLUtil;
-import org.lwjgl.system.Callback;
-
-import static java.awt.SystemColor.window;
-import static org.lwjgl.glfw.GLFW.GLFW_OPENGL_DEBUG_CONTEXT;
-import static org.lwjgl.glfw.GLFW.GLFW_TRUE;
-import static org.lwjgl.glfw.GLFW.glfwMakeContextCurrent;
-import static org.lwjgl.glfw.GLFW.glfwSetErrorCallback;
-import static org.lwjgl.glfw.GLFW.glfwWindowHint;
 
 public class MainApp {
     public static void main(String[] args) {

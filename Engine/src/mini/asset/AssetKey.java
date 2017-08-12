@@ -17,7 +17,7 @@ public class AssetKey {
     public AssetKey() {
     }
 
-    public MyFile getFilename() {
+    public MyFile getFile() {
         return filename;
     }
 }

@@ -31,10 +31,7 @@
  */
 package mini.utils;
 
-import mini.math.Quaternion;
-import mini.math.Vector2f;
-import mini.math.Vector3f;
-import mini.math.Vector4f;
+import mini.math.*;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.PhantomReference;
@@ -250,6 +247,25 @@ public final class BufferUtils {
         }
 
         return createFloatBuffer(3 * vertices);
+    }
+
+    /**
+     * Sets the data contained in the given color into the FloatBuffer at the
+     * specified index.
+     *
+     * @param color
+     *            the data to insert
+     * @param buf
+     *            the buffer to insert into
+     * @param index
+     *            the postion to place the data; in terms of colors not floats
+     */
+    public static void setInBuffer(ColorRGBA color, FloatBuffer buf, int index) {
+        buf.position(index * 4);
+        buf.put(color.r);
+        buf.put(color.g);
+        buf.put(color.b);
+        buf.put(color.a);
     }
 
     /**

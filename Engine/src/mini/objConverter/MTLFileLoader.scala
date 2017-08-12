@@ -1,5 +1,6 @@
 package mini.objConverter
 
+import mini.asset.ModelKey
 import mini.material.Material
 import mini.math.ColorRGBA
 import mini.utils.MyFile
@@ -12,7 +13,7 @@ import collection.JavaConverters._
   * Created by miniwolf on 17-03-2017.
   */
 object MTLFileLoader {
-  def load(mtlFile: MyFile): Map[String, Material] = {
+  def load(mtlFile: ModelKey): Map[String, Material] = {
     def parseLines(lines: List[String], material: Material, matList: Map[String, Material])
     : Map[String, Material] = {
       lines match {
@@ -41,7 +42,7 @@ object MTLFileLoader {
       }
     }
 
-    parseLines(mtlFile.getLines.asScala.toList, null, Map[String, Material]())
+    parseLines(mtlFile.getFile.getLines.asScala.toList, null, Map[String, Material]())
   }
 
   private def createColorParam(x: String): ColorRGBA = {

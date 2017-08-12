@@ -9,7 +9,7 @@ import mini.math.Matrix4f;
 import mini.math.Quaternion;
 import mini.math.Transform;
 import mini.math.Vector3f;
-import mini.renderEngine.CameraImpl;
+import mini.renderEngine.Camera;
 import mini.renderEngine.queue.RenderQueue;
 import mini.utils.TempVars;
 import mini.utils.clone.Cloner;
@@ -30,7 +30,7 @@ import java.util.Queue;
  *
  * @author miniwolf
  */
-public abstract class Spatial {
+public abstract class Spatial implements Cloneable {
     /**
      * Specifies how frustum culling should be handled by
      * this spatial.
@@ -103,8 +103,8 @@ public abstract class Spatial {
      */
     protected String name;
     // scale values
-    protected transient CameraImpl.FrustumIntersect frustrumIntersects
-            = CameraImpl.FrustumIntersect.Intersects;
+    protected transient Camera.FrustumIntersect frustrumIntersects
+            = Camera.FrustumIntersect.Intersects;
     protected RenderQueue.Bucket queueBucket = RenderQueue.Bucket.Inherit;
     protected RenderQueue.ShadowMode shadowMode = RenderQueue.ShadowMode.Inherit;
     public transient float queueDistance = Float.NEGATIVE_INFINITY;
@@ -295,7 +295,7 @@ public abstract class Spatial {
      * @return true if inside or intersecting camera frustum
      * (should be rendered), false if outside.
      */
-    public boolean checkCulling(CameraImpl cam) {
+    public boolean checkCulling(Camera cam) {
         if (refreshFlags != 0) {
             throw new IllegalStateException("Scene graph is not properly updated for rendering.\n"
                                             + "State was changed after rootNode.updateGeometricState() call. \n"
@@ -306,18 +306,18 @@ public abstract class Spatial {
         CullHint cm = getCullHint();
         assert cm != CullHint.Inherit;
         if (cm == Spatial.CullHint.Always) {
-            setLastFrustumIntersection(CameraImpl.FrustumIntersect.Outside);
+            setLastFrustumIntersection(Camera.FrustumIntersect.Outside);
             return false;
         } else if (cm == Spatial.CullHint.Never) {
-            setLastFrustumIntersection(CameraImpl.FrustumIntersect.Intersects);
+            setLastFrustumIntersection(Camera.FrustumIntersect.Intersects);
             return true;
         }
 
         // check to see if we can cull this node
         frustrumIntersects = (parent != null ? parent.frustrumIntersects
-                                             : CameraImpl.FrustumIntersect.Intersects);
+                                             : Camera.FrustumIntersect.Intersects);
 
-//        if (frustrumIntersects == CameraImpl.FrustumIntersect.Intersects) {
+//        if (frustrumIntersects == Camera.FrustumIntersect.Intersects) {
 ////            if (getQueueBucket() == RenderQueue.Bucket.Gui) { TODO: GUI rendering
 ////                return cam.containsGui(getWorldBound()); TODO: Bounding check against frustum
 ////            } else {
@@ -325,7 +325,7 @@ public abstract class Spatial {
 //            //}
 //        }
 //
-//        return frustrumIntersects != CameraImpl.FrustumIntersect.Outside;
+//        return frustrumIntersects != Camera.FrustumIntersect.Outside;
         return true;
     }
 
@@ -1247,7 +1247,7 @@ public abstract class Spatial {
      *
      * @return The spatial's last frustum intersection result.
      */
-    public CameraImpl.FrustumIntersect getLastFrustumIntersection() {
+    public Camera.FrustumIntersect getLastFrustumIntersection() {
         return frustrumIntersects;
     }
 
@@ -1258,7 +1258,7 @@ public abstract class Spatial {
      *
      * @param intersects the new value
      */
-    public void setLastFrustumIntersection(CameraImpl.FrustumIntersect intersects) {
+    public void setLastFrustumIntersection(Camera.FrustumIntersect intersects) {
         frustrumIntersects = intersects;
     }
 

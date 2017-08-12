@@ -1,5 +1,6 @@
 package mini.textures;
 
+import mini.asset.TextureKey;
 import mini.textures.plugins.AWTLoader;
 import mini.utils.MyFile;
 
@@ -16,7 +17,7 @@ public class TextureBuilder {
     }
 
     public Texture create() {
-        Image load = (Image) AWTLoader.load(file);
+        Image load = (Image) AWTLoader.load(new TextureKey(file.getName()));
         return new Texture2D(load);
     }
 

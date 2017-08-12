@@ -37,7 +37,7 @@ public class RenderContext {
     public boolean colorWriteEnabled = true;
 
     /**
-     * @see Renderer#setClipRect(int, int, int, int)
+     * @see GLRenderer#setClipRect(int, int, int, int)
      */
     public boolean clipRectEnabled = false;
 
@@ -107,14 +107,14 @@ public class RenderContext {
     public FrameBuffer boundFB;
 
 //    /**
-//     * @see Renderer#setFrameBuffer(com.jme3.texture.FrameBuffer)
+//     * @see Renderer#setFrameBuffer(mini.texture.FrameBuffer)
 //     */
 //    public FrameBuffer boundFB;
 
     /**
      * Currently bound Renderbuffer
      *
-     * @see Renderer#setFrameBuffer(com.jme3.texture.FrameBuffer)
+     * @see GLRenderer#setFrameBuffer(mini.textures.FrameBuffer)
      */
     public int boundRB = 0;
 
@@ -126,7 +126,7 @@ public class RenderContext {
      *  n = GL_COLOR_ATTACHMENTn
      *  where n is an integer greater than 1
      *
-     * @see Renderer#setFrameBuffer(com.jme3.texture.FrameBuffer)
+     * @see GLRenderer#setFrameBuffer(mini.textures.FrameBuffer)
      * @see FrameBuffer#setTargetIndex(int)
      */
     public int boundDrawBuf = -1;
@@ -135,7 +135,7 @@ public class RenderContext {
      * Currently bound read buffer
      *
      * @see RenderContext#boundDrawBuf
-     * @see Renderer#setFrameBuffer(com.jme3.texture.FrameBuffer)
+     * @see GLRenderer#setFrameBuffer(mini.textures.FrameBuffer)
      * @see FrameBuffer#setTargetIndex(int)
      */
     public int boundReadBuf = -1;
@@ -143,7 +143,7 @@ public class RenderContext {
     /**
      * Currently bound element array vertex buffer.
      *
-     * @see GLRenderer#renderMesh(Meshh, int, int)
+     * @see GLRenderer#renderMesh(Mesh, int, int)
      */
     public int boundElementArrayVBO;
 

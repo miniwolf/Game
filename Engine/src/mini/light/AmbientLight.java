@@ -1,8 +1,8 @@
 package mini.light;
 
 import mini.math.ColorRGBA;
+import mini.renderEngine.Camera;
 import mini.scene.Spatial;
-import mini.utils.Camera;
 import mini.utils.TempVars;
 
 /**

@@ -1,9 +1,10 @@
 package mini.shaders;
 
+import mini.material.Material;
 import mini.math.Matrix4f;
 import mini.math.Vector3f;
+import mini.renderEngine.Camera;
 import mini.scene.Geometry;
-import mini.utils.Camera;
 
 import java.util.List;
 
@@ -15,8 +16,8 @@ public class UniformBindingManager {
     private Matrix4f viewProjMatrix = new Matrix4f();
     private Matrix4f viewMatrix = new Matrix4f();
     private Matrix4f projMatrix = new Matrix4f();
-    private Vector3f camLoc;
-    private Vector3f lightDir;
+    private Vector3f camLoc = new Vector3f();
+    private Vector3f lightDir = new Vector3f();
 
     private int viewX, viewY, viewWidth, viewHeight;
 

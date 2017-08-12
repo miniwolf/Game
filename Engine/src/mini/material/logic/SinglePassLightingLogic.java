@@ -11,6 +11,7 @@ import mini.math.Vector3f;
 import mini.math.Vector4f;
 import mini.renderEngine.Caps;
 import mini.renderEngine.RenderManager;
+import mini.renderEngine.Renderer;
 import mini.renderEngine.opengl.GLDebug;
 import mini.renderEngine.opengl.GLRenderer;
 import mini.scene.Geometry;
@@ -148,7 +149,7 @@ public final class SinglePassLightingLogic extends DefaultTechniqueDefLogic {
     @Override
     public void render(RenderManager renderManager, ShaderProgram shader, Geometry geometry, LightList lights, int lastTexUnit) {
         int nbRenderedLights = 0;
-        GLRenderer renderer = renderManager.getRenderer();
+        Renderer renderer = renderManager.getRenderer();
         int batchSize = renderManager.getSinglePassLightBatchSize();
         if (lights.size() == 0) {
             updateLightListUniforms(shader, geometry, lights, batchSize, renderManager, 0);

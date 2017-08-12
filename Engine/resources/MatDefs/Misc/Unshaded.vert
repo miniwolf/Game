@@ -1,6 +1,6 @@
-#import "Engine/ShaderLib/GLSLCompat.glsllib"
-#import "Engine/ShaderLib/Skinning.glsllib"
-#import "Engine/ShaderLib/Instancing.glsllib"
+#import "ShaderLib/GLSLCompat.glsllib"
+#import "ShaderLib/Skinning.glsllib"
+#import "ShaderLib/Instancing.glsllib"
 
 attribute vec3 inPosition;
 

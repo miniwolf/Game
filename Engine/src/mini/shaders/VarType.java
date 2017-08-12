@@ -12,6 +12,8 @@ public enum VarType {
     Vector3f("vec3"),
     Vector4f("vec4"),
 
+    IntArray(true,false,"int"),
+    FloatArray(true,false,"float"),
     Vector2fArray(true,false,"vec2"),
     Vector3fArray(true,false,"vec3"),
     Vector4fArray(true,false,"vec4"),
@@ -43,5 +45,9 @@ public enum VarType {
 
     public boolean isTextureType() {
         return textureType;
+    }
+
+    public String getGlslType() {
+        return glslType;
     }
 }

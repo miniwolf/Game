@@ -4,9 +4,7 @@ import mini.math.Vector3f;
 import mini.renderEngine.MasterRenderer;
 import mini.scene.Scene;
 import mini.textures.Texture;
-import mini.utils.DisplayManager;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL14;
 import org.lwjgl.opengl.GL30;
 
@@ -51,7 +49,7 @@ public class EnvironMapRenderer {
 
         //stop rendering to fbo
         GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
-        GL11.glViewport(0, 0, DisplayManager.WIDTH, DisplayManager.HEIGHT);
+//        GL11.glViewport(0, 0, DisplayManager.WIDTH, DisplayManager.HEIGHT);
 
         //delete fbo
         GL30.glDeleteRenderbuffers(depthBuffer);

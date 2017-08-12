@@ -1,16 +1,12 @@
 package mini.renderEngine;
 
 import mini.light.LightList;
-import mini.material.Material;
-import mini.material.MaterialDef;
-import mini.material.RenderState;
-import mini.material.Technique;
-import mini.material.TechniqueDef;
+import mini.material.*;
 import mini.math.Matrix4f;
 import mini.math.Vector3f;
 import mini.post.SceneProcessor;
-import mini.renderEngine.opengl.GLDebug;
 import mini.renderEngine.opengl.GLRenderer;
+import mini.renderEngine.queue.GeometryList;
 import mini.renderEngine.queue.RenderQueue;
 import mini.scene.Geometry;
 import mini.scene.Node;
@@ -18,7 +14,6 @@ import mini.scene.Spatial;
 import mini.shaders.ShaderProgram;
 import mini.shaders.UniformBinding;
 import mini.shaders.UniformBindingManager;
-import mini.utils.Camera;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,8 +25,9 @@ public class RenderManager {
     private final UniformBindingManager uniformBindingManager = new UniformBindingManager();
     private final List<ViewPort> viewPorts = new ArrayList<>();
     private final List<ViewPort> preViewPorts = new ArrayList<>();
-    private final GLRenderer renderer;
+    private final Renderer renderer;
     private Camera prevCam = null;
+    private final List<MatParamOverride> forcedOverrides = new ArrayList<>();
     private int viewX, viewY, viewWidth, viewHeight;
     private final Matrix4f orthoMatrix = new Matrix4f();
     private TechniqueDef.LightMode preferredLightMode = TechniqueDef.LightMode.SinglePass;
@@ -43,7 +39,7 @@ public class RenderManager {
      *
      * @param renderer
      */
-    public RenderManager(GLRenderer renderer) {
+    public RenderManager(Renderer renderer) {
         this.renderer = renderer;
     }
 
@@ -53,11 +49,91 @@ public class RenderManager {
      * The view will be processed before the post viewports but after
      * the pre viewports.
      */
-    public ViewPort createMainView(String viewName, CameraImpl cam) {
+    public ViewPort createMainView(String viewName, Camera cam) {
         ViewPort vp = new ViewPort(viewName, cam);
         viewPorts.add(vp);
         return vp;
     }
+
+    private void notifyReshape(ViewPort vp, int w, int h) {
+        List<SceneProcessor> processors = vp.getProcessors();
+        for (SceneProcessor proc : processors) {
+            if (!proc.isInitialized()) {
+                proc.initialize(this, vp);
+            } else {
+                proc.reshape(vp, w, h);
+            }
+        }
+    }
+
+    /**
+     * Internal use only.
+     * Updates the resolution of all on-screen cameras to match
+     * the given width and height.
+     */
+    public void notifyReshape(int w, int h) {
+        for (ViewPort vp : preViewPorts) {
+            if (vp.getOutputFrameBuffer() == null) {
+                Camera cam = vp.getCamera();
+                cam.resize(w, h, true);
+            }
+            notifyReshape(vp, w, h);
+        }
+        for (ViewPort vp : viewPorts) {
+            if (vp.getOutputFrameBuffer() == null) {
+                Camera cam = vp.getCamera();
+                cam.resize(w, h, true);
+            }
+            notifyReshape(vp, w, h);
+        }
+//        for (ViewPort vp : postViewPorts) {
+//            if (vp.getOutputFrameBuffer() == null) {
+//                Camera cam = vp.getCamera();
+//                cam.resize(w, h, true);
+//            }
+//            notifyReshape(vp, w, h);
+//        }
+    }
+
+
+    /**
+     * Adds a forced material parameter to use when rendering geometries.
+     * <p>
+     * The provided parameter takes precedence over parameters set on the
+     * material or any overrides that exist in the scene graph that have the
+     * same name.
+     *
+     * @param override The override to add
+     * @see MatParamOverride
+     * @see #removeForcedMatParam(mini.material.MatParamOverride)
+     */
+    public void addForcedMatParam(MatParamOverride override) {
+        forcedOverrides.add(override);
+    }
+
+    /**
+     * Remove a forced material parameter previously added.
+     *
+     * @param override The override to remove.
+     * @see #addForcedMatParam(mini.material.MatParamOverride)
+     */
+    public void removeForcedMatParam(MatParamOverride override) {
+        forcedOverrides.remove(override);
+    }
+
+    /**
+     * Get the forced material parameters applied to rendered geometries.
+     * <p>
+     * Forced parameters can be added via
+     * {@link #addForcedMatParam(mini.material.MatParamOverride)} or removed
+     * via {@link #removeForcedMatParam(mini.material.MatParamOverride)}.
+     *
+     * @return The forced material parameters.
+     */
+    public List<MatParamOverride> getForcedMatParams() {
+        return forcedOverrides;
+    }
+
 
     /**
      * Internal use only. Sets the world matrix to use for future
@@ -85,9 +161,9 @@ public class RenderManager {
      * Set the camera to use for rendering.
      * <p>
      * First, the camera's
-     * {@link CameraImpl#setViewPort(float, float, float, float) view port parameters}
-     * are applied. Then, the camera's {@link CameraImpl#getViewMatrix() view} and
-     * {@link CameraImpl#getProjectionMatrix() projection} matrices are set
+     * {@link Camera#setViewPort(float, float, float, float) view port parameters}
+     * are applied. Then, the camera's {@link Camera#getViewMatrix() view} and
+     * {@link Camera#getProjectionMatrix() projection} matrices are set
      * on the renderer. If <code>ortho</code> is <code>true</code>, then
      * instead of using the camera's view and projection matrices, an ortho
      * matrix is computed and used instead of the view projection matrix.
@@ -96,7 +172,7 @@ public class RenderManager {
      *
      * @param cam The camera to set
      */
-    public void setCamera(CameraImpl cam) {
+    public void setCamera(Camera cam) {
         // Tell the light filter which camera to use for filtering. TODO
 //        if (lightFilter != null) {
 //            lightFilter.setCamera(cam);
@@ -105,7 +181,7 @@ public class RenderManager {
         setViewProjection(cam);
     }
 
-    private void setViewPort(CameraImpl cam) {
+    private void setViewPort(Camera cam) {
         // this will make sure to update viewport only if needed
         if (cam != prevCam || cam.isViewportChanged()) {
             viewX = (int) (cam.getViewPortLeft() * cam.getWidth());
@@ -133,7 +209,7 @@ public class RenderManager {
     /**
      * Returns the camera currently used for rendering.
      * <p>
-     * The camera can be set with {@link #setCamera(com.jme3.renderer.Camera, boolean) }.
+     * The camera can be set with {@link #setCamera(mini.renderEngine.Camera, boolean) }.
      *
      * @return the camera currently used for rendering.
      */
@@ -145,10 +221,10 @@ public class RenderManager {
      * The renderer implementation used for rendering operations.
      *
      * @return The renderer implementation
-     * @see #RenderManager(GLRenderer)
-     * @see GLRenderer
+     * @see #RenderManager(Renderer)
+     * @see Renderer
      */
-    public GLRenderer getRenderer() {
+    public Renderer getRenderer() {
         return renderer;
     }
 
@@ -159,7 +235,7 @@ public class RenderManager {
      * so there's no need to clear them manually.
      *
      * @param vp The ViewPort of which the queue will be flushed
-     * @see RenderQueue#renderQueue(RenderQueue.Bucket, RenderManager, CameraImpl)
+     * @see RenderQueue#renderQueue(RenderQueue.Bucket, RenderManager, Camera)
      * @see #renderGeometryList(GeometryList)
      */
     public void flushQueue(ViewPort vp) {
@@ -198,7 +274,7 @@ public class RenderManager {
      * <li>The ViewPort's {@link ViewPort#getOutputFrameBuffer() output framebuffer}
      * is set on the Renderer</li>
      * <li>The camera is set on the renderer, including its view port parameters.
-     * (see {@link #setCamera(CameraImpl) })</li>
+     * (see {@link #setCamera(Camera) })</li>
      * <li>Any buffers that the ViewPort requests to be cleared are cleared
      * and the {@link ViewPort#getBackgroundColor() background color} is set</li>
      * <li>Every scene that is attached to the ViewPort is flattened into
@@ -216,13 +292,12 @@ public class RenderManager {
      * (see {@link #renderTranslucentQueue(ViewPort) })</li>
      * <li>If any objects remained in the render queue, they are removed
      * from the queue. This is generally objects added to the
-     * {@link RenderQueue#renderShadowQueue(RenderQueue.ShadowMode, RenderManager, CameraImpl, boolean)
+     * {@link RenderQueue#renderShadowQueue(RenderQueue.ShadowMode, RenderManager, Camera, boolean)
      * shadow queue}
      * which were not rendered because of a missing shadow renderer.</li>
      * </ul>
      *
      * @param vp  View port to render
-     * @param tpf Time per frame value
      */
     public void renderViewPort(ViewPort vp) {
         if (!vp.isEnabled()) {
@@ -354,7 +429,7 @@ public class RenderManager {
      */
     public void renderViewPortQueues(ViewPort vp, boolean flush) {
         RenderQueue rq = vp.getQueue();
-        CameraImpl cam = vp.getCamera();
+        Camera cam = vp.getCamera();
         boolean depthRangeChanged = false;
 
         // render opaque objects with default depth range
@@ -453,7 +528,7 @@ public class RenderManager {
      * {@link Spatial#setShadowMode(RenderQueue.ShadowMode) shadow mode}
      * set to not off, will be put into the appropriate shadow queue, note that
      * this process does not check for frustum culling on any
-     * {@link ShadowMode#Cast shadow casters}, as they don't have to be
+     * {@link RenderQueue.ShadowMode#Cast shadow casters}, as they don't have to be
      * in the eye camera frustum to cast shadows on objects that are inside it.
      *
      * @param scene The scene to flatten into the queue

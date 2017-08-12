@@ -4,7 +4,10 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -16,7 +19,7 @@ public class MyFile {
     private String name;
 
     public MyFile(String path) {
-        this.path = FILE_SEPARATOR + path;
+        this.path = path;
         String[] dirs = path.split(FILE_SEPARATOR);
         this.name = dirs[dirs.length - 1];
     }
@@ -59,10 +62,22 @@ public class MyFile {
         return getPath();
     }
 
-    public InputStream getInputStream() {
+    public InputStream getInputStream(boolean useProduction) {
         try {
-            return new FileInputStream(Paths.get("out/production/" + path).toFile());
+            try {
+                URL systemResource = ClassLoader.getSystemResource(this.path);
+                Path path = Paths.get(systemResource.toURI());
+                return new FileInputStream(path.toFile());
+            } catch (URISyntaxException e) {
+                e.printStackTrace();
+            }
+//            return useProduction
+//                    ? new FileInputStream(Paths.get("out/production/" + path).toFile())
+//                    : new FileInputStream(Paths.get(path).toFile());
+//
+//
         } catch (FileNotFoundException e) {
+            System.out.println(Paths.get("/").toFile().getAbsolutePath());
             e.printStackTrace();
         }
         return null;

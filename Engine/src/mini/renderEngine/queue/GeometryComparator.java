@@ -1,6 +1,6 @@
 package mini.renderEngine.queue;
 
-import mini.renderEngine.CameraImpl;
+import mini.renderEngine.Camera;
 import mini.scene.Geometry;
 
 import java.util.Comparator;
@@ -17,5 +17,5 @@ public interface GeometryComparator extends Comparator<Geometry> {
      *
      * @param cam The camera to use for sorting
      */
-    void setCamera(CameraImpl cam);
+    void setCamera(Camera cam);
 }

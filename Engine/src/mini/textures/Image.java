@@ -1,8 +1,11 @@
 package mini.textures;
 
 import mini.math.FastMath;
+import mini.renderEngine.Caps;
+import mini.renderEngine.opengl.GLRenderer;
 import mini.textures.image.ColorSpace;
 import mini.textures.image.LastTextureState;
+import mini.utils.NativeObject;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -11,7 +14,7 @@ import java.util.List;
 /**
  * Created by miniwolf on 22-04-2017.
  */
-public class Image {
+public class Image extends NativeObject {
     public enum Format {
         /**
          * 8-bit alpha
@@ -211,6 +214,10 @@ public class Image {
     public Image() {
         super();
         data = new ArrayList<>(1);
+    }
+
+    protected Image(int id){
+        super(id);
     }
 
     /**
@@ -464,7 +471,7 @@ public class Image {
     /**
      * Specifies that this image is an SRGB image and therefore must undergo an
      * sRGB -&gt; linear RGB color conversion prior to being read by a shader and
-     * with the {@link Renderer#setLinearizeSrgbImages(boolean)} option is
+     * with the {@link GLRenderer#setLinearizeSrgbImages(boolean)} option is
      * enabled.
      *
      * This option is only supported for the 8-bit color and grayscale image
@@ -554,19 +561,27 @@ public class Image {
         }
     }
 
-    public void clearUpdateNeeded() {
-        updateNeeded = false;
+    @Override
+    public NativeObject createDestructableClone() {
+        return new Image(id);
     }
 
-    public boolean isUpdateNeeded() {
-        return updateNeeded;
+
+    @Override
+    public void deleteObject(Object rendererObject) {
+        ((GLRenderer)rendererObject).deleteImage(this);
     }
 
-    public int getId() {
-        return id;
+    @Override
+    public long getUniqueId() {
+        return ((long)OBJTYPE_TEXTURE << 32) | ((long)id);
     }
 
-    public void setId(int id) {
-        this.id = id;
+    @Override
+    public void resetObject() {
+        this.id = -1;
+        this.mipsWereGenerated = false;
+        this.lastTextureState.reset();
+        setUpdateNeeded();
     }
 }

@@ -2,11 +2,9 @@ package mini.light;
 
 import mini.math.ColorRGBA;
 import mini.math.Vector3f;
+import mini.renderEngine.Camera;
 import mini.scene.Spatial;
-import mini.utils.Camera;
 import mini.utils.TempVars;
-
-import java.io.IOException;
 
 /**
  * <code>DirectionalLight</code> is a light coming from a certain direction in world space.
@@ -55,7 +53,7 @@ public class DirectionalLight extends Light {
      * Returns the direction vector of the light.
      *
      * @return The direction vector of the light.
-     * @see DirectionalLight#setDirection(com.jme3.math.Vector3f)
+     * @see DirectionalLight#setDirection(mini.math.Vector3f)
      */
     public Vector3f getDirection() {
         return direction;

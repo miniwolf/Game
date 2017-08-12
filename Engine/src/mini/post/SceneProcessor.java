@@ -27,6 +27,12 @@ public interface SceneProcessor {
     boolean isInitialized();
 
     /**
+     * Called when the resolution of the viewport has been changed.
+     * @param vp
+     */
+    void reshape(ViewPort vp, int w, int h);
+
+    /**
      * Called before a frame
      */
     void preFrame();

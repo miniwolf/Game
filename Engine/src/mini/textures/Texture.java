@@ -1,9 +1,24 @@
 package mini.textures;
 
-import mini.utils.MyFile;
+import mini.asset.AssetKey;
+import mini.asset.TextureKey;
 
-public abstract class Texture {
+/**
+ * <code>Texture</code> defines a texture object to be used to display an
+ * image on a piece of geometry. The image to be displayed is defined by the
+ * <code>Image</code> class. All attributes required for texture mapping are
+ * contained within this class. This includes mipmapping if desired,
+ * magnificationFilter options, apply options and correction options. Default
+ * values are as follows: minificationFilter - NearestNeighborNoMipMaps,
+ * magnificationFilter - NearestNeighbor, wrap - EdgeClamp on S,T and R, apply -
+ * Modulate, environment - None.
+ *
+ * @see mini.textures.Image
+ */
+public abstract class Texture implements Cloneable {
+
     public enum Type {
+
         /**
          * Two dimensional texture (default). A rectangle.
          */
@@ -23,10 +38,11 @@ public abstract class Texture {
          * A set of 6 TwoDimensional textures arranged as faces of a cube facing
          * inwards.
          */
-        CubeMap
+        CubeMap;
     }
 
     public enum MinFilter {
+
         /**
          * Nearest neighbor interpolation is the fastest and crudest filtering
          * method - it simply uses the color of the texel closest to the pixel
@@ -87,7 +103,7 @@ public abstract class Texture {
 
         private final boolean usesMipMapLevels;
 
-        MinFilter(boolean usesMipMapLevels) {
+        private MinFilter(boolean usesMipMapLevels) {
             this.usesMipMapLevels = usesMipMapLevels;
         }
 
@@ -97,6 +113,7 @@ public abstract class Texture {
     }
 
     public enum MagFilter {
+
         /**
          * Nearest neighbor interpolation is the fastest and crudest filtering
          * mode - it simply uses the color of the texel closest to the pixel
@@ -113,7 +130,8 @@ public abstract class Texture {
          * change from one texel to the next, instead of an abrupt jump as the
          * pixel center crosses the texel boundary. (GL equivalent: GL_LINEAR)
          */
-        Bilinear
+        Bilinear;
+
     }
 
     public enum WrapMode {
@@ -130,11 +148,66 @@ public abstract class Texture {
         MirroredRepeat,
 
         /**
+         * coordinate will be clamped to [0,1]
+         *
+         * @deprecated Not supported by OpenGL 3
+         */
+        @Deprecated
+        Clamp,
+        /**
+         * mirrors and clamps the texture coordinate, where mirroring and
+         * clamping a value f computes:
+         * <code>mirrorClamp(f) = min(1, max(1/(2*N),
+         * abs(f)))</code> where N
+         * is the size of the one-, two-, or three-dimensional texture image in
+         * the direction of wrapping. (Introduced after OpenGL1.4) Falls back on
+         * Clamp if not supported.
+         *
+         * @deprecated Not supported by OpenGL 3
+         */
+        @Deprecated
+        MirrorClamp,
+
+        /**
+         * coordinate will be clamped to the range [-1/(2N), 1 + 1/(2N)] where N
+         * is the size of the texture in the direction of clamping. Falls back
+         * on Clamp if not supported.
+         *
+         * @deprecated Not supported by OpenGL 3 or OpenGL ES 2
+         */
+        @Deprecated
+        BorderClamp,
+        /**
+         * Wrap mode MIRROR_CLAMP_TO_BORDER_EXT mirrors and clamps to border the
+         * texture coordinate, where mirroring and clamping to border a value f
+         * computes:
+         * <code>mirrorClampToBorder(f) = min(1+1/(2*N), max(1/(2*N), abs(f)))</code>
+         * where N is the size of the one-, two-, or three-dimensional texture
+         * image in the direction of wrapping." (Introduced after OpenGL1.4)
+         * Falls back on BorderClamp if not supported.
+         *
+         * @deprecated Not supported by OpenGL 3
+         */
+        @Deprecated
+        MirrorBorderClamp,
+        /**
          * coordinate will be clamped to the range [1/(2N), 1 - 1/(2N)] where N
          * is the size of the texture in the direction of clamping. Falls back
          * on Clamp if not supported.
          */
-        EdgeClamp
+        EdgeClamp,
+
+        /**
+         * mirrors and clamps to edge the texture coordinate, where mirroring
+         * and clamping to edge a value f computes:
+         * <code>mirrorClampToEdge(f) = min(1-1/(2*N), max(1/(2*N), abs(f)))</code>
+         * where N is the size of the one-, two-, or three-dimensional texture
+         * image in the direction of wrapping. (Introduced after OpenGL1.4)
+         * Falls back on EdgeClamp if not supported.
+         *
+         * @deprecated Not supported by OpenGL 3
+         */
+        MirrorEdgeClamp;
     }
 
     public enum WrapAxis {
@@ -149,16 +222,72 @@ public abstract class Texture {
         /**
          * R wrapping (w or "depth" wrap)
          */
-        R
+        R;
     }
+
+    /**
+     * If this texture is a depth texture (the format is Depth*) then
+     * this value may be used to compare the texture depth to the R texture
+     * coordinate.
+     */
+    public enum ShadowCompareMode {
+        /**
+         * Shadow comparison mode is disabled.
+         * Texturing is done normally.
+         */
+        Off,
+
+        /**
+         * Compares the 3rd texture coordinate R to the value
+         * in this depth texture. If R <= texture value then result is 1.0,
+         * otherwise, result is 0.0. If filtering is set to bilinear or trilinear
+         * the implementation may sample the texture multiple times to provide
+         * smoother results in the range [0, 1].
+         */
+        LessOrEqual,
+
+        /**
+         * Compares the 3rd texture coordinate R to the value
+         * in this depth texture. If R >= texture value then result is 1.0,
+         * otherwise, result is 0.0. If filtering is set to bilinear or trilinear
+         * the implementation may sample the texture multiple times to provide
+         * smoother results in the range [0, 1].
+         */
+        GreaterOrEqual
+    }
+
+    /**
+     * The name of the texture (if loaded as a resource).
+     */
+    private String name = null;
 
     /**
      * The image stored in the texture
      */
     private Image image = null;
 
+    /**
+     * The texture key allows to reload a texture from a file
+     * if needed.
+     */
+    private TextureKey key = null;
+
     private MinFilter minificationFilter = MinFilter.BilinearNoMipMaps;
     private MagFilter magnificationFilter = MagFilter.Bilinear;
+    private ShadowCompareMode shadowCompareMode = ShadowCompareMode.Off;
+    private int anisotropicFilter;
+
+    /**
+     * @return A cloned Texture object.
+     */
+    @Override
+    public Texture clone(){
+        try {
+            return (Texture) super.clone();
+        } catch (CloneNotSupportedException ex) {
+            throw new AssertionError();
+        }
+    }
 
     /**
      * Constructor instantiates a new <code>Texture</code> object with default
@@ -186,7 +315,7 @@ public abstract class Texture {
                     "minificationFilter can not be null.");
         }
         this.minificationFilter = minificationFilter;
-        if (minificationFilter.usesMipMapLevels() && image != null && !image.hasMipmaps()) {
+        if (minificationFilter.usesMipMapLevels() && image != null && !image.isGeneratedMipmapsRequired() && !image.hasMipmaps()) {
             image.setNeedGeneratedMipmaps();
         }
     }
@@ -212,25 +341,62 @@ public abstract class Texture {
         this.magnificationFilter = magnificationFilter;
     }
 
-    /*public void bindToUnit(int unit) {
-        GL13.glActiveTexture(GL13.GL_TEXTURE0 + unit);
-        GL11.glBindTexture(type, textureId);
+    /**
+     * @return The ShadowCompareMode of this texture.
+     * @see ShadowCompareMode
+     */
+    public ShadowCompareMode getShadowCompareMode(){
+        return shadowCompareMode;
     }
 
-    public void delete() {
-        GL11.glDeleteTextures(textureId);
+    /**
+     * @param compareMode
+     *            the new ShadowCompareMode for this texture.
+     * @throws IllegalArgumentException
+     *             if compareMode is null
+     * @see ShadowCompareMode
+     */
+    public void setShadowCompareMode(ShadowCompareMode compareMode){
+        if (compareMode == null){
+            throw new IllegalArgumentException(
+                    "compareMode can not be null.");
+        }
+        this.shadowCompareMode = compareMode;
     }
-    */
 
-    public static TextureBuilder newTexture(MyFile textureFile) {
-        return new TextureBuilder(textureFile);
+    /**
+     * <code>setImage</code> sets the image object that defines the texture.
+     *
+     * @param image
+     *            the image that defines the texture.
+     */
+    public void setImage(Image image) {
+        this.image = image;
+
+        // Test if mipmap generation required.
+        setMinFilter(getMinFilter());
     }
 
-    // TODO: Rewrite this using new TextureCubeMap
-//    public static Texture newCubeMap(MyFile[] textureFiles) {
-//        int cubeMapId = TextureUtils.loadCubeMap(textureFiles);
-//        return new Texture(cubeMapId, GL13.GL_TEXTURE_CUBE_MAP, 0);
-//    }
+    /**
+     * @param key The texture key that was used to load this texture
+     */
+    public void setKey(AssetKey key){
+        this.key = (TextureKey) key;
+    }
+
+    public AssetKey getKey(){
+        return this.key;
+    }
+
+    /**
+     * <code>getImage</code> returns the image data that makes up this
+     * texture. If no image data has been set, this will return null.
+     *
+     * @return the image data that makes up the texture.
+     */
+    public Image getImage() {
+        return image;
+    }
 
     /**
      * <code>setWrap</code> sets the wrap mode of this texture for a
@@ -269,31 +435,74 @@ public abstract class Texture {
 
     public abstract Type getType();
 
-    /**
-     * <code>setImage</code> sets the image object that defines the texture.
-     *
-     * @param image
-     *            the image that defines the texture.
-     */
-    public void setImage(Image image) {
-        this.image = image;
+    public String getName() {
+        return name;
+    }
 
-        // Test if mipmap generation required.
-        setMinFilter(getMinFilter());
+    public void setName(String name) {
+        this.name = name;
     }
 
     /**
-     * <code>getImage</code> returns the image data that makes up this
-     * texture. If no image data has been set, this will return null.
-     *
-     * @return the image data that makes up the texture.
+     * @return the anisotropic filtering level for this texture. Default value
+     * is 0 (use value from config),
+     * 1 means 1x (no anisotropy), 2 means x2, 4 is x4, etc.
      */
-    public Image getImage() {
-        return image;
+    public int getAnisotropicFilter() {
+        return anisotropicFilter;
     }
 
+    /**
+     * @param level
+     *            the anisotropic filtering level for this texture.
+     */
+    public void setAnisotropicFilter(int level) {
+        anisotropicFilter = Math.max(0, level);
+    }
 
-    public static Texture newEmptyCubeMap(int size) {
-        return new TextureCubeMap(size, size, Image.Format.RGB8);
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(getClass().getSimpleName());
+        sb.append("[name=").append(name);
+        if (image != null) {
+            sb.append(", image=").append(image.toString());
+        }
+
+        sb.append("]");
+        return sb.toString();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final Texture other = (Texture) obj;
+
+        // NOTE: Since images are generally considered unique assets in jME3,
+        // using the image's equals() implementation is not neccessary here
+        // (would be too slow)
+        return this.image == other.image && this.minificationFilter == other.minificationFilter
+                && this.magnificationFilter == other.magnificationFilter
+                && this.shadowCompareMode == other.shadowCompareMode
+                && this.anisotropicFilter == other.anisotropicFilter;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 5;
+        // NOTE: Since images are generally considered unique assets in jME3,
+        // using the image's hashCode() implementation is not neccessary here
+        // (would be too slow)
+        hash = 67 * hash + (this.image != null ? System.identityHashCode(this.image) : 0);
+        hash = 67 * hash + (this.minificationFilter != null ? this.minificationFilter.hashCode() : 0);
+        hash = 67 * hash + (this.magnificationFilter != null ? this.magnificationFilter.hashCode() : 0);
+        hash = 67 * hash + (this.shadowCompareMode != null ? this.shadowCompareMode.hashCode() : 0);
+        hash = 67 * hash + this.anisotropicFilter;
+        return hash;
     }
 }

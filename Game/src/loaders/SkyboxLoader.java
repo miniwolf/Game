@@ -1,5 +1,6 @@
 package loaders;
 
+import mini.asset.TextureKey;
 import mini.environment.EnvMapUtils;
 import mini.skybox.Skybox;
 import mini.textures.Image;
@@ -12,7 +13,7 @@ public class SkyboxLoader {
         MyFile[] textureFiles = getSkyboxTexFiles(skyboxFolder);
         Image[] cubeMapImages = new Image[6];
         for (int i = 0; i < 6; ++i) {
-            cubeMapImages[i] = (Image) AWTLoader.load(textureFiles[i]);
+            cubeMapImages[i] = (Image) AWTLoader.load(new TextureKey(textureFiles[i].getName()));
         }
         Texture cubeMap = EnvMapUtils.makeCubeMap(cubeMapImages[0], cubeMapImages[1],
                                                   cubeMapImages[2], cubeMapImages[3],

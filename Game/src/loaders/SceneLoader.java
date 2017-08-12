@@ -1,10 +1,9 @@
 package loaders;
 
-import mini.renderEngine.CameraImpl;
+import mini.renderEngine.Camera;
 import mini.scene.Node;
 import mini.scene.Scene;
 import mini.skybox.Skybox;
-import mini.utils.Camera;
 import mini.utils.MyFile;
 
 import java.util.List;
@@ -31,7 +30,7 @@ public class SceneLoader {
 
     private Node createScene(MyFile[] terrainFiles, MyFile[] entityFiles, MyFile[] shinyFiles,
                               Skybox sky) {
-        Camera camera = new CameraImpl();
+        Camera camera = new Camera();
         Node scene = new Node("rootnode");
         //scene.attachChild(camera);
         //(camera, sky);

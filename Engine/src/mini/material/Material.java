@@ -3,16 +3,17 @@ package mini.material;
 import mini.asset.AssetKey;
 import mini.asset.MaterialKey;
 import mini.light.LightList;
-import mini.material.logic.DefaultTechniqueDefLogic;
 import mini.material.plugins.MiniLoader;
 import mini.math.ColorRGBA;
 import mini.post.SceneProcessor;
 import mini.renderEngine.Caps;
 import mini.renderEngine.RenderManager;
+import mini.renderEngine.Renderer;
 import mini.renderEngine.opengl.GLRenderer;
 import mini.scene.Geometry;
 import mini.shaders.ShaderProgram;
 import mini.shaders.Uniform;
+import mini.shaders.UniformBindingManager;
 import mini.shaders.VarType;
 import mini.textures.Image;
 import mini.textures.Texture;
@@ -22,11 +23,10 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 
 /**
  * <code>Material</code> describes the rendering style for a given
- * {@link mini.scene.Entity}.
+ * {@link Geometry}.
  * <p>A material is essentially a list of {@link MatParam parameters},
  * those parameters map to uniforms which are defined in a shader.
  * Setting the parameters can modify the behavior of a
@@ -35,13 +35,13 @@ import java.util.logging.Level;
  *
  * @author miniwolf
  */
-public class Material {
+public class Material implements Cloneable {
     private MaterialDef def;
     private Technique technique;
     private String name;
     private RenderState additionalState = null;
     private RenderState mergedRenderState = new RenderState();
-    private final Map<String, MatParam> paramValues = new HashMap<>();
+    private Map<String, MatParam> paramValues = new HashMap<>();
     private Map<String, Technique> techniques = new HashMap<>();
     private Texture diffuseTexture;
     private Texture extraInfoMap;
@@ -81,7 +81,7 @@ public class Material {
      * @return Asset key name of the j3m file
      */
     public String getAssetName() {
-        return key != null ? key.getFilename().getName() : null;
+        return key != null ? key.getFile().getName() : null;
     }
 
     /**
@@ -378,10 +378,27 @@ public class Material {
      *
      * @return a ListMap of all parameters set on this material.
      *
-     * @see #setParam(java.lang.String, com.jme3.shader.VarType, java.lang.Object)
+     * @see #setParam(java.lang.String, mini.shader.VarType, java.lang.Object)
      */
     public Map<String, MatParam> getParamsMap() {
         return paramValues;
+    }
+
+
+    /**
+     * Returns the currently active technique.
+     * <p>
+     * The technique is selected automatically by the {@link RenderManager}
+     * based on system capabilities. Users may select their own
+     * technique by using
+     * {@link #selectTechnique(java.lang.String, mini.renderEngine.RenderManager) }.
+     *
+     * @return the currently active technique.
+     *
+     * @see #selectTechnique(java.lang.String, mini.renderEngine.RenderManager)
+     */
+    public Technique getActiveTechnique() {
+        return technique;
     }
 
     public void setTransparent(boolean transparent) {
@@ -417,7 +434,7 @@ public class Material {
      * or the first default technique that the renderer supports
      * (based on the technique's {@link TechniqueDef#getRequiredCaps() requested rendering capabilities})<ul>
      * <li>If the technique has been changed since the last frame, then it is notified via
-     * {@link Technique#makeCurrent(AssetManager, boolean, java.util.EnumSet)
+     * {@link Technique#makeCurrent(boolean, java.util.EnumSet)
      * Technique.makeCurrent()}.
      * If the technique wants to use a shader to render the model, it should load it at this part -
      * the shader should have all the proper defines as declared in the technique definition,
@@ -441,11 +458,11 @@ public class Material {
      * The uniform is set to the texture unit where the texture is bound.</li></ul>
      * <li>If the technique uses a shader, the model is then rendered according
      * to the lighting mode specified on the technique definition.<ul>
-     * <li>{@link LightMode#SinglePass single pass light mode} fills the shader's light uniform arrays
+     * <li>{@link TechniqueDef.LightMode#SinglePass single pass light mode} fills the shader's light uniform arrays
      * with the first 4 lights and renders the model once.</li>
-     * <li>{@link LightMode#MultiPass multi pass light mode} light mode renders the model multiple times,
+     * <li>{@link TechniqueDef.LightMode#MultiPass multi pass light mode} light mode renders the model multiple times,
      * for the first light it is rendered opaque, on subsequent lights it is
-     * rendered with {@link BlendMode#AlphaAdditive alpha-additive} blending and depth writing disabled.</li>
+     * rendered with {@link RenderState.BlendMode#AlphaAdditive alpha-additive} blending and depth writing disabled.</li>
      * </ul>
      * <li>For techniques that do not use shaders,
      * fixed function OpenGL is used to render the model (see {@link GLRenderer} interface):<ul>
@@ -468,7 +485,7 @@ public class Material {
         }
 
         TechniqueDef techniqueDef = technique.getDef();
-        GLRenderer renderer = renderManager.getRenderer();
+        Renderer renderer = renderManager.getRenderer();
         EnumSet<Caps> rendererCaps = renderer.getCaps();
 
         // Apply render state
@@ -511,7 +528,7 @@ public class Material {
         render(geom, geom.getWorldLightList(), rm);
     }
 
-    private void updateRenderState(GLRenderer renderer, TechniqueDef techniqueDef) {
+    private void updateRenderState(Renderer renderer, TechniqueDef techniqueDef) {
         if (techniqueDef.getRenderState() != null) {
             renderer.applyRenderState(
                     techniqueDef.getRenderState().copyMergedTo(additionalState, mergedRenderState));
@@ -542,7 +559,7 @@ public class Material {
         }
     }
 
-    private int updateShaderMaterialParameters(GLRenderer renderer, ShaderProgram shader) {
+    private int updateShaderMaterialParameters(Renderer renderer, ShaderProgram shader) {
         int unit = 0;
         for (MatParam param : paramValues.values()) {
             VarType type = param.getVarType();
@@ -607,5 +624,32 @@ public class Material {
             sortingId |= texturesSortId & 0xFFFF;
         }
         return sortingId;
+    }
+
+    /**
+     * Clones this material. The result is returned.
+     */
+    @Override
+    public Material clone() {
+        try {
+            Material mat = (Material) super.clone();
+
+            if (additionalState != null) {
+                mat.additionalState = additionalState.clone();
+            }
+            mat.technique = null;
+            mat.techniques = new HashMap<>();
+
+            mat.paramValues = new HashMap<>();
+            for (Map.Entry<String, MatParam> entry : paramValues.entrySet()) {
+                mat.paramValues.put(entry.getKey(), entry.getValue().clone());
+            }
+
+            mat.sortingId = -1;
+
+            return mat;
+        } catch (CloneNotSupportedException ex) {
+            throw new AssertionError(ex);
+        }
     }
 }
