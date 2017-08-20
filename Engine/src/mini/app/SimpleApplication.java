@@ -18,7 +18,7 @@ import mini.system.SystemListener;
 /**
  * <code>SimpleApplication</code> is the base class for all jME3 Applications.
  * <code>SimpleApplication</code> will display a statistics view
- * using the {@link com.jme3.app.StatsAppState} AppState. It will display
+ * using the {@link mini.app.StatsAppState} AppState. It will display
  * the current frames-per-second value on-screen in addition to the statistics.
  * Several keys have special functionality in <code>SimpleApplication</code>:<br/>
  *
@@ -28,7 +28,7 @@ import mini.system.SystemListener;
  * <tr><td>M</td><td>- Display memory usage in the console.</td></tr>
  * </table>
  *
- * A {@link com.jme3.app.FlyCamAppState} is by default attached as well and can
+ * A {@link mini.app.FlyCamAppState} is by default attached as well and can
  * be removed by calling <code>stateManager.detach( stateManager.getState(FlyCamAppState.class) );</code>
  */
 public abstract class SimpleApplication extends LegacyApplication {

@@ -244,7 +244,7 @@ public class TechniqueDef implements Cloneable {
      * Returns the render state that this technique is using
      *
      * @return the render state that this technique is using
-     * @see #setRenderState(com.jme3.material.RenderState)
+     * @see #setRenderState(mini.material.RenderState)
      */
     public RenderState getRenderState() {
         return renderState;

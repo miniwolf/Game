@@ -847,7 +847,7 @@ public class MiniLoader {
     private enum TextureOption {
 
         /**
-         * Applies a {@link com.jme3.texture.Texture.MinFilter} to the texture.
+         * Applies a {@link mini.texture.Texture.MinFilter} to the texture.
          */
         Min {
             @Override
@@ -857,7 +857,7 @@ public class MiniLoader {
         },
 
         /**
-         * Applies a {@link com.jme3.texture.Texture.MagFilter} to the texture.
+         * Applies a {@link mini.texture.Texture.MagFilter} to the texture.
          */
         Mag {
             @Override
@@ -867,7 +867,7 @@ public class MiniLoader {
         },
 
         /**
-         * Applies a {@link com.jme3.texture.Texture.WrapMode} to the texture. This also supports {@link com.jme3.texture.Texture.WrapAxis}
+         * Applies a {@link mini.texture.Texture.WrapMode} to the texture. This also supports {@link mini.texture.Texture.WrapAxis}
          * by adding "_AXIS" to the texture option. For instance if you wanted to repeat on the S (horizontal) axis, you
          * would use <pre>WrapRepeat_S</pre> as a texture option.
          */
@@ -888,7 +888,7 @@ public class MiniLoader {
         },
 
         /**
-         * Applies a {@link com.jme3.texture.Texture.WrapMode#Repeat} to the texture. This is simply an alias for
+         * Applies a {@link mini.texture.Texture.WrapMode#Repeat} to the texture. This is simply an alias for
          * WrapRepeat, please use WrapRepeat instead if possible as this may become deprecated later on.
          */
         Repeat {
@@ -930,7 +930,7 @@ public class MiniLoader {
     }
 
     /**
-     * Internal object used for holding a {@link com.jme3.material.plugins.J3MLoader.TextureOption} and it's value. Also
+     * Internal object used for holding a {@link mini.material.plugins.J3MLoader.TextureOption} and it's value. Also
      * contains a couple of convenience methods for applying the TextureOption to either a TextureKey or a Texture.
      */
     private static class TextureOptionValue {

@@ -111,7 +111,7 @@ public final class NativeLibraryLoader {
      */
     public static boolean isUsingNativeBullet() {
         try {
-            Class clazz = Class.forName("com.jme3.bullet.util.NativeMeshUtil");
+            Class clazz = Class.forName("mini.bullet.util.NativeMeshUtil");
             return clazz != null;
         } catch (ClassNotFoundException ex) {
             return false;

@@ -370,7 +370,7 @@ public class InputManager implements RawInputListener {
      * @param mappingNames The mapping names which the listener will receive
      * events from.
      *
-     * @see InputManager#removeListener(com.jme3.input.controls.InputListener)
+     * @see InputManager#removeListener(mini.input.controls.InputListener)
      */
     public void addListener(InputListener listener, String... mappingNames) {
         for (String mappingName : mappingNames) {
@@ -390,11 +390,11 @@ public class InputManager implements RawInputListener {
      *
      * <p>This will unregister the listener from any mappings that it
      * was previously registered with via
-     * {@link InputManager#addListener(com.jme3.input.controls.InputListener, java.lang.String[]) }.
+     * {@link InputManager#addListener(mini.input.controls.InputListener, java.lang.String[]) }.
      *
      * @param listener The listener to unregister.
      *
-     * @see InputManager#addListener(com.jme3.input.controls.InputListener, java.lang.String[])
+     * @see InputManager#addListener(mini.input.controls.InputListener, java.lang.String[])
      */
     public void removeListener(InputListener listener) {
         for (Mapping mapping : mappings.values()) {
@@ -444,7 +444,7 @@ public class InputManager implements RawInputListener {
      *
      * @param mappingName The mapping name to check.
      *
-     * @see InputManager#addMapping(java.lang.String, com.jme3.input.controls.Trigger[])
+     * @see InputManager#addMapping(java.lang.String, mini.input.controls.Trigger[])
      * @see InputManager#deleteMapping(java.lang.String)
      */
     public boolean hasMapping(String mappingName) {
@@ -460,7 +460,7 @@ public class InputManager implements RawInputListener {
      *
      * @param mappingName The mapping name to unregister.
      *
-     * @see InputManager#addMapping(java.lang.String, com.jme3.input.controls.Trigger[])
+     * @see InputManager#addMapping(java.lang.String, mini.input.controls.Trigger[])
      */
     public void deleteMapping(String mappingName) {
         Mapping mapping = mappings.remove(mappingName);
@@ -585,7 +585,7 @@ public class InputManager implements RawInputListener {
      *
      * @param listener The listener to cease receiving raw input events.
      *
-     * @see InputManager#addRawInputListener(com.jme3.input.RawInputListener)
+     * @see InputManager#addRawInputListener(mini.input.RawInputListener)
      */
     public void removeRawInputListener(RawInputListener listener) {
         rawListeners.remove(listener);
@@ -594,7 +594,7 @@ public class InputManager implements RawInputListener {
     /**
      * Clears all {@link RawInputListener}s.
      *
-     * @see InputManager#addRawInputListener(com.jme3.input.RawInputListener)
+     * @see InputManager#addRawInputListener(mini.input.RawInputListener)
      */
     public void clearRawInputListeners() {
         rawListeners.clear();

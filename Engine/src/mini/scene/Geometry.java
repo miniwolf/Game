@@ -115,7 +115,7 @@ public class Geometry extends Spatial {
      * Sets the LOD level to use when rendering the mesh of this geometry.
      * Level 0 indicates that the default index buffer should be used,
      * levels [1, LodLevels + 1] represent the levels set on the mesh
-     * with {@link Mesh#setLodLevels(com.jme3.scene.VertexBuffer[]) }.
+     * with {@link Mesh#setLodLevels(mini.scene.VertexBuffer[]) }.
      *
      * @param lod The lod level to set
      */
@@ -192,7 +192,7 @@ public class Geometry extends Spatial {
      *
      * @return the mesh to use for this geometry
      *
-     * @see #setMesh(com.jme3.scene.Mesh)
+     * @see #setMesh(mini.scene.Mesh)
      */
     public Mesh getMesh() {
         return mesh;
@@ -217,7 +217,7 @@ public class Geometry extends Spatial {
      *
      * @return the material that is used for this geometry
      *
-     * @see #setMaterial(com.jme3.material.Material)
+     * @see #setMaterial(mini.material.Material)
      */
     public Material getMaterial() {
         return material;

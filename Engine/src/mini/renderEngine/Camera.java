@@ -41,7 +41,7 @@ public class Camera implements Cloneable {
     /**
      * The <code>FrustumIntersect</code> enum is returned as a result
      * of a culling check operation,
-     * see {@link #contains(com.jme3.bounding.BoundingVolume) }
+     * see {@link #contains(mini.bounding.BoundingVolume) }
      */
     public enum FrustumIntersect {
 
@@ -669,7 +669,7 @@ public class Camera implements Cloneable {
      * @param up        the up axis of the camera.
      * @param direction the direction the camera is facing.
      *
-     * @see Camera#setAxes(com.jme3.math.Quaternion)
+     * @see Camera#setAxes(mini.math.Quaternion)
      */
     public void setAxes(Vector3f left, Vector3f up, Vector3f direction) {
         this.rotation.fromAxes(left, up, direction);
@@ -758,8 +758,8 @@ public class Camera implements Cloneable {
      * @param left      the left axis of the camera.
      * @param up        the up axis of the camera.
      * @param direction the facing of the camera.
-     * @see Camera#setFrame(com.jme3.math.Vector3f,
-     *      com.jme3.math.Vector3f, com.jme3.math.Vector3f, com.jme3.math.Vector3f)
+     * @see Camera#setFrame(mini.math.Vector3f,
+     *      mini.math.Vector3f, mini.math.Vector3f, mini.math.Vector3f)
      */
     public void setFrame(Vector3f location, Vector3f left, Vector3f up,
                          Vector3f direction) {

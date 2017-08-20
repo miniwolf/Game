@@ -23,7 +23,7 @@ import java.util.concurrent.Future;
  * An <code>LegacyApplication</code> provides all the tools that are commonly used in jME3
  * applications.
  * <p>
- * jME3 applications *SHOULD NOT EXTEND* this class but extend {@link com.jme3.app.SimpleApplication} instead.
+ * jME3 applications *SHOULD NOT EXTEND* this class but extend {@link mini.app.SimpleApplication} instead.
  */
 public class LegacyApplication implements Application, SystemListener {
 
@@ -100,7 +100,7 @@ public class LegacyApplication implements Application, SystemListener {
     /**
      * Starts the application in {@link Type#Display display} mode.
      *
-     * @see #start(com.jme3.system.JmeContext.Type)
+     * @see #start(mini.system.JmeContext.Type)
      */
     public void start() {
         start(false);

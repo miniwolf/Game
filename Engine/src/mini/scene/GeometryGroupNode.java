@@ -42,7 +42,7 @@ public abstract class GeometryGroupNode extends Node {
 
     /**
      * Called by {@link Geometry geom} to specify that its
-     * {@link Geometry#setMaterial(com.jme3.material.Material) material}
+     * {@link Geometry#setMaterial(mini.material.Material) material}
      * has been changed.
      *
      * @param geom The Geometry whose material changed.
@@ -54,7 +54,7 @@ public abstract class GeometryGroupNode extends Node {
 
     /**
      * Called by {@link Geometry geom} to specify that its
-     * {@link Geometry#setMesh(com.jme3.scene.Mesh) mesh}
+     * {@link Geometry#setMesh(mini.scene.Mesh) mesh}
      * has been changed.
      *
      * This is also called when the geometry's

@@ -287,10 +287,10 @@ public class Material implements Cloneable {
      * The technique is selected automatically by the {@link RenderManager}
      * based on system capabilities. Users may select their own
      * technique by using
-     * {@link #selectTechnique(java.lang.String, com.jme3.renderer.RenderManager) }.
+     * {@link #selectTechnique(java.lang.String, mini.renderer.RenderManager) }.
      *
      * @return the currently active technique.
-     * @see #selectTechnique(java.lang.String, com.jme3.renderer.RenderManager)
+     * @see #selectTechnique(java.lang.String, mini.renderer.RenderManager)
      */
     public Technique getActiveTechnique() {
         return technique;
@@ -404,7 +404,7 @@ public class Material implements Cloneable {
      * Returns a collection of all parameters set on this material.
      *
      * @return a collection of all parameters set on this material.
-     * @see #setParam(java.lang.String, com.jme3.shader.VarType, java.lang.Object)
+     * @see #setParam(java.lang.String, mini.shader.VarType, java.lang.Object)
      */
     public Collection<MatParam> getParams() {
         return paramValues.values();
@@ -414,7 +414,7 @@ public class Material implements Cloneable {
      * Returns the ListMap of all parameters set on this material.
      *
      * @return a ListMap of all parameters set on this material.
-     * @see #setParam(java.lang.String, com.jme3.shader.VarType, java.lang.Object)
+     * @see #setParam(java.lang.String, mini.shader.VarType, java.lang.Object)
      */
     public Map<String, MatParam> getParamsMap() {
         return paramValues;
@@ -864,12 +864,12 @@ public class Material implements Cloneable {
      * <ul>
      * <li>Determine which technique to use to render the material -
      * either what the user selected via
-     * {@link #selectTechnique(java.lang.String, com.jme3.renderer.RenderManager)
+     * {@link #selectTechnique(java.lang.String, mini.renderer.RenderManager)
      * Material.selectTechnique()},
      * or the first default technique that the renderer supports
      * (based on the technique's {@link TechniqueDef#getRequiredCaps() requested rendering capabilities})<ul>
      * <li>If the technique has been changed since the last frame, then it is notified via
-     * {@link Technique#makeCurrent(com.jme3.asset.AssetManager, boolean, java.util.EnumSet)
+     * {@link Technique#makeCurrent(mini.asset.AssetManager, boolean, java.util.EnumSet)
      * Technique.makeCurrent()}.
      * If the technique wants to use a shader to render the model, it should load it at this part -
      * the shader should have all the proper defines as declared in the technique definition,
@@ -883,7 +883,7 @@ public class Material implements Cloneable {
      * <li>{@link #getAdditionalRenderState() Material Instance Additional RenderState}
      * - i.e. ad-hoc renderstate set per model</li>
      * <li>{@link RenderManager#getForcedRenderState() RenderManager's Forced RenderState}
-     * - i.e. renderstate requested by a {@link com.jme3.post.SceneProcessor} or
+     * - i.e. renderstate requested by a {@link mini.post.SceneProcessor} or
      * post-processing filter.</li></ol>
      * <li>If the technique {@link TechniqueDef#isUsingShaders() uses a shader}, then the uniforms of the shader must be updated.<ul>
      * <li>Uniforms bound to material parameters are updated based on the current material parameter values.</li>

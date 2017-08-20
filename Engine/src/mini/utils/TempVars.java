@@ -175,7 +175,7 @@ public class TempVars {
     public final Vector3f vect5 = new Vector3f();
     public final Vector3f vect6 = new Vector3f();
     public final Vector3f vect7 = new Vector3f();
-    //seems the maximum number of vector used is 7 in com.jme3.bounding.java
+    //seems the maximum number of vector used is 7 in mini.bounding.java
     public final Vector3f vect8 = new Vector3f();
     public final Vector3f vect9 = new Vector3f();
     public final Vector3f vect10 = new Vector3f();

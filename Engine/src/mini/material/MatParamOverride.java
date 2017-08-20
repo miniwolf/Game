@@ -13,7 +13,7 @@ import mini.shaders.VarType;
  * using the same rules as the ones used for regular material parameters.
  * <p>
  * <code>MatParamOverrides</code> are applied to a {@link Spatial} via the
- * {@link Spatial#addMatParamOverride(com.jme3.material.MatParamOverride)}
+ * {@link Spatial#addMatParamOverride(mini.material.MatParamOverride)}
  * method. They are propagated to child <code>Spatials</code> via
  * {@link Spatial#updateGeometricState()} similar to how lights are propagated.
  * <p>

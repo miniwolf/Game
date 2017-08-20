@@ -78,7 +78,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * <li>java.util.concurrent.CopyOnWriteArrayList: ListCloneFunction
  * <li>java.util.Vector: ListCloneFunction
  * <li>java.util.Stack: ListCloneFunction
- * <li>com.jme3.util.SafeArrayList: ListCloneFunction
+ * <li>java.util.List: ListCloneFunction
  * </ul>
  * <p>
  * <p>Usage:</p>

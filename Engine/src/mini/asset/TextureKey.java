@@ -7,7 +7,7 @@ import mini.utils.MyFile;
  * Used to load textures from image files such as JPG or PNG.
  * Note that texture loaders actually load the asset as an {@link Image}
  * object, which is then converted to a {@link Texture} in the
- * {@link TextureProcessor#postProcess(com.jme3.asset.AssetKey, java.lang.Object) }
+ * {@link TextureProcessor#postProcess(mini.asset.AssetKey, java.lang.Object) }
  * method. Since textures are cloneable smart assets, the texture stored
  * in the cache will be collected when all clones of the texture become
  * unreachable.

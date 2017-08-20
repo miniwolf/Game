@@ -10,7 +10,7 @@ import java.util.logging.Logger;
  */
 public class BufferAllocatorFactory {
     public static final String PROPERTY_BUFFER_ALLOCATOR_IMPLEMENTATION
-            = "com.jme3.BufferAllocatorImplementation";
+            = "mini.BufferAllocatorImplementation";
 
     private static final Logger LOGGER = Logger.getLogger(BufferAllocatorFactory.class.getName());
 

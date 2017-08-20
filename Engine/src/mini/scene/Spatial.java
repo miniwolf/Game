@@ -1280,7 +1280,7 @@ public abstract class Spatial implements Cloneable {
 
     /**
      * Returns the Spatial's name followed by the class of the spatial <br>
-     * Example: "MyNode (com.jme3.scene.Spatial)
+     * Example: "MyNode (mini.scene.Spatial)
      *
      * @return Spatial's name followed by the class of the Spatial
      */

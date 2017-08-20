@@ -189,10 +189,10 @@ public final class BufferUtils {
             return null;
         }
         FloatBuffer buff = createFloatBuffer(4 * data.length);
-        for (int x = 0; x < data.length; x++) {
-            if (data[x] != null) {
-                buff.put(data[x].getX()).put(data[x].getY()).put(data[x].getZ())
-                    .put(data[x].getW());
+        for (Vector4f vec : data) {
+            if (vec != null) {
+                buff.put(vec.getX()).put(vec.getY()).put(vec.getZ())
+                    .put(vec.getW());
             } else {
                 buff.put(0).put(0).put(0).put(0);
             }

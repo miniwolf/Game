@@ -103,7 +103,8 @@ public class ShaderUtils {
      * @return true if a variable of the given type can have a swizzle
      */
     public static boolean isSwizzlable(String type) {
-        return type.indexOf("vec4") > -1 || type.indexOf("vec3") > -1 || type.indexOf("vec2") > -1 || type.equals("float");
+        return type.contains("vec4") || type.contains("vec3") || type.contains("vec2")
+               || type.equals("float");
     }
 }
 

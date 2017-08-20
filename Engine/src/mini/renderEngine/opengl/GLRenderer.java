@@ -985,7 +985,7 @@ public final class GLRenderer implements Renderer {
         switch (uniform.getVarType()) {
             case Float:
                 Float f = (Float) uniform.getValue();
-                GL20.glUniform1f(loc, f.floatValue());
+                GL20.glUniform1f(loc, f);
                 break;
             case Vector2f:
                 Vector2f v2 = (Vector2f) uniform.getValue();
@@ -1042,6 +1042,8 @@ public final class GLRenderer implements Renderer {
                 fb = uniform.getMultiData();
                 GL20.glUniform4(loc, fb);
                 break;
+            case Matrix3fArray:
+                break;
             case Matrix4fArray:
                 fb = uniform.getMultiData();
                 GL20.glUniformMatrix4(loc, false, fb);
@@ -1049,6 +1051,14 @@ public final class GLRenderer implements Renderer {
             case Int:
                 Integer i = (Integer) uniform.getValue();
                 GL20.glUniform1i(loc, i);
+                break;
+            case Texture2D:
+                break;
+            case Texture3D:
+                break;
+            case TextureArray:
+                break;
+            case TextureCubeMap:
                 break;
             default:
                 throw new UnsupportedOperationException("Unsupported uniform type: " + uniform.getVarType());

@@ -69,7 +69,7 @@ public class RenderManager {
      *
      * @param viewName The name of the pre ViewPort to look up
      * @return The ViewPort, or null if not found.
-     * @see #createPreView(java.lang.String, com.jme3.renderer.Camera)
+     * @see #createPreView(java.lang.String, mini.renderer.Camera)
      */
     public ViewPort getPreView(String viewName) {
         for (ViewPort preViewPort : preViewPorts) {
@@ -85,7 +85,7 @@ public class RenderManager {
      *
      * @param viewName The name of the pre ViewPort to remove
      * @return True if the ViewPort was removed successfully.
-     * @see #createPreView(java.lang.String, com.jme3.renderer.Camera)
+     * @see #createPreView(java.lang.String, mini.renderer.Camera)
      */
     public boolean removePreView(String viewName) {
         for (int i = 0; i < preViewPorts.size(); i++) {
@@ -102,7 +102,7 @@ public class RenderManager {
      *
      * @param view The pre ViewPort to remove
      * @return True if the ViewPort was removed successfully.
-     * @see #createPreView(java.lang.String, com.jme3.renderer.Camera)
+     * @see #createPreView(java.lang.String, mini.renderer.Camera)
      */
     public boolean removePreView(ViewPort view) {
         return preViewPorts.remove(view);
@@ -113,7 +113,7 @@ public class RenderManager {
      *
      * @param viewName The name of the main ViewPort to look up
      * @return The ViewPort, or null if not found.
-     * @see #createMainView(java.lang.String, com.jme3.renderer.Camera)
+     * @see #createMainView(java.lang.String, mini.renderer.Camera)
      */
     public ViewPort getMainView(String viewName) {
         for (ViewPort viewPort : viewPorts) {
@@ -129,7 +129,7 @@ public class RenderManager {
      *
      * @param viewName The main ViewPort name to remove
      * @return True if the ViewPort was removed successfully.
-     * @see #createMainView(java.lang.String, com.jme3.renderer.Camera)
+     * @see #createMainView(java.lang.String, mini.renderer.Camera)
      */
     public boolean removeMainView(String viewName) {
         for (int i = 0; i < viewPorts.size(); i++) {
@@ -146,7 +146,7 @@ public class RenderManager {
      *
      * @param view The main ViewPort to remove
      * @return True if the ViewPort was removed successfully.
-     * @see #createMainView(java.lang.String, com.jme3.renderer.Camera)
+     * @see #createMainView(java.lang.String, mini.renderer.Camera)
      */
     public boolean removeMainView(ViewPort view) {
         return viewPorts.remove(view);
@@ -157,7 +157,7 @@ public class RenderManager {
      *
      * @param viewName The name of the post ViewPort to look up
      * @return The ViewPort, or null if not found.
-     * @see #createPostView(java.lang.String, com.jme3.renderer.Camera)
+     * @see #createPostView(java.lang.String, mini.renderer.Camera)
      */
     public ViewPort getPostView(String viewName) {
         for (ViewPort postViewPort : postViewPorts) {
@@ -173,7 +173,7 @@ public class RenderManager {
      *
      * @param viewName The post ViewPort name to remove
      * @return True if the ViewPort was removed successfully.
-     * @see #createPostView(java.lang.String, com.jme3.renderer.Camera)
+     * @see #createPostView(java.lang.String, mini.renderer.Camera)
      */
     public boolean removePostView(String viewName) {
         for (int i = 0; i < postViewPorts.size(); i++) {
@@ -191,7 +191,7 @@ public class RenderManager {
      *
      * @param view The post ViewPort to remove
      * @return True if the ViewPort was removed successfully.
-     * @see #createPostView(java.lang.String, com.jme3.renderer.Camera)
+     * @see #createPostView(java.lang.String, mini.renderer.Camera)
      */
     public boolean removePostView(ViewPort view) {
         return postViewPorts.remove(view);
@@ -201,7 +201,7 @@ public class RenderManager {
      * Returns a read-only list of all pre ViewPorts
      *
      * @return a read-only list of all pre ViewPorts
-     * @see #createPreView(java.lang.String, com.jme3.renderer.Camera)
+     * @see #createPreView(java.lang.String, mini.renderer.Camera)
      */
     public List<ViewPort> getPreViews() {
         return Collections.unmodifiableList(preViewPorts);
@@ -211,7 +211,7 @@ public class RenderManager {
      * Returns a read-only list of all main ViewPorts
      *
      * @return a read-only list of all main ViewPorts
-     * @see #createMainView(java.lang.String, com.jme3.renderer.Camera)
+     * @see #createMainView(java.lang.String, mini.renderer.Camera)
      */
     public List<ViewPort> getMainViews() {
         return Collections.unmodifiableList(viewPorts);
@@ -221,7 +221,7 @@ public class RenderManager {
      * Returns a read-only list of all post ViewPorts
      *
      * @return a read-only list of all post ViewPorts
-     * @see #createPostView(java.lang.String, com.jme3.renderer.Camera)
+     * @see #createPostView(java.lang.String, mini.renderer.Camera)
      */
     public List<ViewPort> getPostViews() {
         return Collections.unmodifiableList(postViewPorts);
@@ -316,7 +316,7 @@ public class RenderManager {
 
     /**
      * Returns the forced render state previously set with
-     * {@link #setForcedRenderState(com.jme3.material.RenderState) }.
+     * {@link #setForcedRenderState(mini.material.RenderState) }.
      *
      * @return the forced render state
      */
@@ -352,13 +352,13 @@ public class RenderManager {
      * <p>
      * If the specified technique name is available on the geometry's
      * material, then it is used, otherwise, the
-     * {@link #setForcedMaterial(com.jme3.material.Material) forced material} is used.
+     * {@link #setForcedMaterial(mini.material.Material) forced material} is used.
      * If a forced material is not set and the forced technique name cannot
      * be found on the material, the geometry will <em>not</em> be rendered.
      *
      * @param forcedTechnique The forced technique name to use, set to null
      *                        to return to normal functionality.
-     * @see #renderGeometry(com.jme3.scene.Geometry)
+     * @see #renderGeometry(mini.scene.Geometry)
      */
     public void setForcedTechnique(String forcedTechnique) {
         this.forcedTechnique = forcedTechnique;
@@ -373,7 +373,7 @@ public class RenderManager {
      *
      * @param override The override to add
      * @see MatParamOverride
-     * @see #removeForcedMatParam(com.jme3.material.MatParamOverride)
+     * @see #removeForcedMatParam(mini.material.MatParamOverride)
      */
     public void addForcedMatParam(MatParamOverride override) {
         forcedOverrides.add(override);
@@ -383,7 +383,7 @@ public class RenderManager {
      * Remove a forced material parameter previously added.
      *
      * @param override The override to remove.
-     * @see #addForcedMatParam(com.jme3.material.MatParamOverride)
+     * @see #addForcedMatParam(mini.material.MatParamOverride)
      */
     public void removeForcedMatParam(MatParamOverride override) {
         forcedOverrides.remove(override);
@@ -393,8 +393,8 @@ public class RenderManager {
      * Get the forced material parameters applied to rendered geometries.
      * <p>
      * Forced parameters can be added via
-     * {@link #addForcedMatParam(com.jme3.material.MatParamOverride)} or removed
-     * via {@link #removeForcedMatParam(com.jme3.material.MatParamOverride)}.
+     * {@link #addForcedMatParam(mini.material.MatParamOverride)} or removed
+     * via {@link #removeForcedMatParam(mini.material.MatParamOverride)}.
      *
      * @return The forced material parameters.
      */
@@ -443,8 +443,8 @@ public class RenderManager {
     /**
      * Internal use only. Sets the world matrix to use for future
      * rendering. This has no effect unless objects are rendered manually
-     * using {@link Material#render(com.jme3.scene.Geometry, com.jme3.renderer.RenderManager) }.
-     * Using {@link #renderGeometry(com.jme3.scene.Geometry) } will
+     * using {@link Material#render(mini.scene.Geometry, mini.renderer.RenderManager) }.
+     * Using {@link #renderGeometry(mini.scene.Geometry) } will
      * override this value.
      *
      * @param mat The world matrix to set
@@ -471,7 +471,7 @@ public class RenderManager {
      * geometry's {@link Geometry#getWorldMatrix() world transform matrix} is used.
      * <p>
      * Once the world matrix is applied, the proper material is chosen for rendering.
-     * If a {@link #setForcedMaterial(com.jme3.material.Material) forced material} is
+     * If a {@link #setForcedMaterial(mini.material.Material) forced material} is
      * set on this RenderManager, then it is used for rendering the geometry,
      * otherwise, the {@link Geometry#getMaterial() geometry's material} is used.
      * <p>
@@ -481,7 +481,7 @@ public class RenderManager {
      * of the {@link MaterialDef#getDefaultTechniques() default techniques} is
      * used.
      * <p>
-     * If a {@link #setForcedRenderState(com.jme3.material.RenderState) forced
+     * If a {@link #setForcedRenderState(mini.material.RenderState) forced
      * render state} is set on this RenderManager, then it is used
      * for rendering the material, and the material's own render state is ignored.
      * Otherwise, the material's render state is used as intended.
@@ -489,8 +489,8 @@ public class RenderManager {
      * @param geom The geometry to render
      * @see Technique
      * @see RenderState
-     * @see Material#selectTechnique(java.lang.String, com.jme3.renderer.RenderManager)
-     * @see Material#render(com.jme3.scene.Geometry, com.jme3.renderer.RenderManager)
+     * @see Material#selectTechnique(java.lang.String, mini.renderer.RenderManager)
+     * @see Material#render(mini.scene.Geometry, mini.renderer.RenderManager)
      */
     public void renderGeometry(Geometry geom) {
         if (geom.isIgnoreTransform()) {
@@ -557,11 +557,11 @@ public class RenderManager {
      * Renders the given GeometryList.
      * <p>
      * For every geometry in the list, the
-     * {@link #renderGeometry(com.jme3.scene.Geometry) } method is called.
+     * {@link #renderGeometry(mini.scene.Geometry) } method is called.
      *
      * @param gl The geometry list to render.
      * @see GeometryList
-     * @see #renderGeometry(com.jme3.scene.Geometry)
+     * @see #renderGeometry(mini.scene.Geometry)
      */
     public void renderGeometryList(GeometryList gl) {
         for (int i = 0; i < gl.size(); i++) {
@@ -616,7 +616,7 @@ public class RenderManager {
      * checking for culling as the call goes down the graph recursively.
      * <p>
      * First, the scene is checked for culling based on the <code>Spatial</code>s
-     * {@link Spatial#setCullHint(com.jme3.scene.Spatial.CullHint) cull hint},
+     * {@link Spatial#setCullHint(mini.scene.Spatial.CullHint) cull hint},
      * if the camera frustum contains the scene, then this method is recursively
      * called on its children.
      * <p>
@@ -627,9 +627,9 @@ public class RenderManager {
      * In addition to enqueuing the visible geometries, this method
      * also scenes which cast or receive shadows, by putting them into the
      * RenderQueue's
-     * {@link RenderQueue#addToShadowQueue(com.jme3.scene.Geometry, com.jme3.renderer.queue.RenderQueue.ShadowMode)
+     * {@link RenderQueue#addToShadowQueue(mini.scene.Geometry, mini.renderer.queue.RenderQueue.ShadowMode)
      * shadow queue}. Each Spatial which has its
-     * {@link Spatial#setShadowMode(com.jme3.renderer.queue.RenderQueue.ShadowMode) shadow mode}
+     * {@link Spatial#setShadowMode(mini.renderer.queue.RenderQueue.ShadowMode) shadow mode}
      * set to not off, will be put into the appropriate shadow queue, note that
      * this process does not check for frustum culling on any
      * {@link ShadowMode#Cast shadow casters}, as they don't have to be
@@ -681,7 +681,7 @@ public class RenderManager {
     /**
      * Returns the camera currently used for rendering.
      * <p>
-     * The camera can be set with {@link #setCamera(com.jme3.renderer.Camera, boolean) }.
+     * The camera can be set with {@link #setCamera(mini.renderer.Camera, boolean) }.
      *
      * @return the camera currently used for rendering.
      */
@@ -693,7 +693,7 @@ public class RenderManager {
      * The renderer implementation used for rendering operations.
      *
      * @return The renderer implementation
-     * @see #RenderManager(com.jme3.renderer.Renderer)
+     * @see #RenderManager(mini.renderer.Renderer)
      * @see Renderer
      */
     public Renderer getRenderer() {
@@ -707,8 +707,8 @@ public class RenderManager {
      * so there's no need to clear them manually.
      *
      * @param vp The ViewPort of which the queue will be flushed
-     * @see RenderQueue#renderQueue(com.jme3.renderer.queue.RenderQueue.Bucket, com.jme3.renderer.RenderManager, com.jme3.renderer.Camera)
-     * @see #renderGeometryList(com.jme3.renderer.queue.GeometryList)
+     * @see RenderQueue#renderQueue(mini.renderer.queue.RenderQueue.Bucket, mini.renderer.RenderManager, mini.renderer.Camera)
+     * @see #renderGeometryList(mini.renderer.queue.GeometryList)
      */
     public void flushQueue(ViewPort vp) {
         renderViewPortQueues(vp, true);
@@ -788,19 +788,19 @@ public class RenderManager {
      * <p>
      * Changes the {@link Renderer#setDepthRange(float, float) depth range}
      * appropriately as expected by each queue and then calls
-     * {@link RenderQueue#renderQueue(com.jme3.renderer.queue.RenderQueue.Bucket, com.jme3.renderer.RenderManager, com.jme3.renderer.Camera, boolean) }
+     * {@link RenderQueue#renderQueue(mini.renderer.queue.RenderQueue.Bucket, mini.renderer.RenderManager, mini.renderer.Camera, boolean) }
      * on the queue. Makes sure to restore the depth range to [0, 1]
      * at the end of the call.
      * Note that the {@link Bucket#Translucent translucent bucket} is NOT
      * rendered by this method. Instead the user should call
-     * {@link #renderTranslucentQueue(com.jme3.renderer.ViewPort) }
+     * {@link #renderTranslucentQueue(mini.renderer.ViewPort) }
      * after this call.
      *
      * @param vp    the viewport of which queue should be rendered
      * @param flush If true, the queues will be cleared after
      *              rendering.
      * @see RenderQueue
-     * @see #renderTranslucentQueue(com.jme3.renderer.ViewPort)
+     * @see #renderTranslucentQueue(mini.renderer.ViewPort)
      */
     public void renderViewPortQueues(ViewPort vp, boolean flush) {
         RenderQueue rq = vp.getQueue();
@@ -852,7 +852,7 @@ public class RenderManager {
      * it.
      *
      * @param vp The viewport of which the translucent queue should be rendered.
-     * @see #renderViewPortQueues(com.jme3.renderer.ViewPort, boolean)
+     * @see #renderViewPortQueues(mini.renderer.ViewPort, boolean)
      * @see #setHandleTranslucentBucket(boolean)
      */
     public void renderTranslucentQueue(ViewPort vp) {
@@ -932,7 +932,7 @@ public class RenderManager {
      * processors} of any rendering events.
      *
      * @param vp The ViewPort to render
-     * @see #renderViewPort(com.jme3.renderer.ViewPort, float)
+     * @see #renderViewPort(mini.renderer.ViewPort, float)
      */
     public void renderViewPortRaw(ViewPort vp) {
         setCamera(vp.getCamera(), false);
@@ -951,32 +951,32 @@ public class RenderManager {
      * the following process:<br>
      * <ul>
      * <li>All {@link SceneProcessor scene processors} that are attached
-     * to the ViewPort are {@link SceneProcessor#initialize(com.jme3.renderer.RenderManager, com.jme3.renderer.ViewPort) initialized}.
+     * to the ViewPort are {@link SceneProcessor#initialize(mini.renderer.RenderManager, mini.renderer.ViewPort) initialized}.
      * </li>
      * <li>The SceneProcessors' {@link SceneProcessor#preFrame(float) } method
      * is called.</li>
      * <li>The ViewPort's {@link ViewPort#getOutputFrameBuffer() output framebuffer}
      * is set on the Renderer</li>
      * <li>The camera is set on the renderer, including its view port parameters.
-     * (see {@link #setCamera(com.jme3.renderer.Camera, boolean) })</li>
+     * (see {@link #setCamera(mini.renderer.Camera, boolean) })</li>
      * <li>Any buffers that the ViewPort requests to be cleared are cleared
      * and the {@link ViewPort#getBackgroundColor() background color} is set</li>
      * <li>Every scene that is attached to the ViewPort is flattened into
      * the ViewPort's render queue
-     * (see {@link #renderViewPortQueues(com.jme3.renderer.ViewPort, boolean) })
+     * (see {@link #renderViewPortQueues(mini.renderer.ViewPort, boolean) })
      * </li>
-     * <li>The SceneProcessors' {@link SceneProcessor#postQueue(com.jme3.renderer.queue.RenderQueue) }
+     * <li>The SceneProcessors' {@link SceneProcessor#postQueue(mini.renderer.queue.RenderQueue) }
      * method is called.</li>
      * <li>The render queue is sorted and then flushed, sending
      * rendering commands to the underlying Renderer implementation.
-     * (see {@link #flushQueue(com.jme3.renderer.ViewPort) })</li>
-     * <li>The SceneProcessors' {@link SceneProcessor#postFrame(com.jme3.texture.FrameBuffer) }
+     * (see {@link #flushQueue(mini.renderer.ViewPort) })</li>
+     * <li>The SceneProcessors' {@link SceneProcessor#postFrame(mini.texture.FrameBuffer) }
      * method is called.</li>
      * <li>The translucent queue of the ViewPort is sorted and then flushed
-     * (see {@link #renderTranslucentQueue(com.jme3.renderer.ViewPort) })</li>
+     * (see {@link #renderTranslucentQueue(mini.renderer.ViewPort) })</li>
      * <li>If any objects remained in the render queue, they are removed
      * from the queue. This is generally objects added to the
-     * {@link RenderQueue#renderShadowQueue(com.jme3.renderer.queue.RenderQueue.ShadowMode, com.jme3.renderer.RenderManager, com.jme3.renderer.Camera, boolean)
+     * {@link RenderQueue#renderShadowQueue(mini.renderer.queue.RenderQueue.ShadowMode, mini.renderer.RenderManager, mini.renderer.Camera, boolean)
      * shadow queue}
      * which were not rendered because of a missing shadow renderer.</li>
      * </ul>
@@ -1045,9 +1045,9 @@ public class RenderManager {
      * <p>
      * Renders any viewports that were added using the following methods:
      * <ul>
-     * <li>{@link #createPreView(java.lang.String, com.jme3.renderer.Camera) }</li>
-     * <li>{@link #createMainView(java.lang.String, com.jme3.renderer.Camera) }</li>
-     * <li>{@link #createPostView(java.lang.String, com.jme3.renderer.Camera) }</li>
+     * <li>{@link #createPreView(java.lang.String, mini.renderer.Camera) }</li>
+     * <li>{@link #createMainView(java.lang.String, mini.renderer.Camera) }</li>
+     * <li>{@link #createPostView(java.lang.String, mini.renderer.Camera) }</li>
      * </ul>
      *
      * @param tpf Time per frame value

@@ -533,8 +533,8 @@ public class Image extends NativeObject {
      * @param depth
      * @param data
      * @param mipMapSizes
-     * @see {@link #Image(com.jme3.texture.Image.Format, int, int, int, java.util.ArrayList, int[], boolean)}
-     * @deprecated use {@link #Image(com.jme3.texture.Image.Format, int, int, int, java.util.ArrayList, int[], boolean)}
+     * @see {@link #Image(mini.texture.Image.Format, int, int, int, java.util.ArrayList, int[], boolean)}
+     * @deprecated use {@link #Image(mini.texture.Image.Format, int, int, int, java.util.ArrayList, int[], boolean)}
      */
     @Deprecated
     public Image(Format format, int width, int height, int depth, ArrayList<ByteBuffer> data,
@@ -583,8 +583,8 @@ public class Image extends NativeObject {
      * @param height
      * @param data
      * @param mipMapSizes
-     * @see {@link #Image(com.jme3.texture.Image.Format, int, int, java.nio.ByteBuffer, int[], boolean)}
-     * @deprecated use {@link #Image(com.jme3.texture.Image.Format, int, int, java.nio.ByteBuffer, int[], boolean)}
+     * @see {@link #Image(mini.texture.Image.Format, int, int, java.nio.ByteBuffer, int[], boolean)}
+     * @deprecated use {@link #Image(mini.texture.Image.Format, int, int, java.nio.ByteBuffer, int[], boolean)}
      */
     @Deprecated
     public Image(Format format, int width, int height, ByteBuffer data,
@@ -614,8 +614,8 @@ public class Image extends NativeObject {
      * @param height
      * @param depth
      * @param data
-     * @see {@link #Image(com.jme3.texture.Image.Format, int, int, int, java.util.ArrayList, boolean)}
-     * @deprecated use {@link #Image(com.jme3.texture.Image.Format, int, int, int, java.util.ArrayList, boolean)}
+     * @see {@link #Image(mini.texture.Image.Format, int, int, int, java.util.ArrayList, boolean)}
+     * @deprecated use {@link #Image(mini.texture.Image.Format, int, int, int, java.util.ArrayList, boolean)}
      */
     @Deprecated
     public Image(Format format, int width, int height, int depth, ArrayList<ByteBuffer> data) {
@@ -642,8 +642,8 @@ public class Image extends NativeObject {
      * @param width
      * @param height
      * @param data
-     * @see {@link #Image(com.jme3.texture.Image.Format, int, int, java.nio.ByteBuffer, boolean)}
-     * @deprecated use {@link #Image(com.jme3.texture.Image.Format, int, int, java.nio.ByteBuffer, boolean)}
+     * @see {@link #Image(mini.texture.Image.Format, int, int, java.nio.ByteBuffer, boolean)}
+     * @deprecated use {@link #Image(mini.texture.Image.Format, int, int, java.nio.ByteBuffer, boolean)}
      */
     @Deprecated
     public Image(Format format, int width, int height, ByteBuffer data) {
