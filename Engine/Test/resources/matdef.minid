@@ -8,7 +8,7 @@ MaterialDef Simple {
         }
         VertexShaderNodes {
             ShaderNode CommonVert {
-                Definition : CommonVert : MatDefs/ShaderNodes/Common/CommonVert.j3sn
+                Definition : CommonVert : MatDefs/ShaderNodes/Common/CommonVert.minisn
                 InputMappings {
                     worldViewProjectionMatrix = WorldParam.WorldViewProjectionMatrix
                     modelPosition = Global.position.xyz
@@ -20,7 +20,7 @@ MaterialDef Simple {
         }
         FragmentShaderNodes {
             ShaderNode ColorMult {
-                Definition : ColorMult : MatDefs/ShaderNodes/Basic/ColorMult.j3sn
+                Definition : ColorMult : MatDefs/ShaderNodes/Basic/ColorMult.minisn
                 InputMappings {
                     color1 = MatParam.Color
                     color2 = Global.color

@@ -219,30 +219,30 @@ public class SceneMatParamOverrideTest {
         validateScene(scene);
     }
 
-    @Test
-    public void testOverrides_CloningScene_DoesntCloneMPO() {
-        Node originalScene = createDummyScene();
-
-        originalScene.getChild("A").addMatParamOverride(mpoInt("int", 5));
-        originalScene.getChild("A").addMatParamOverride(mpoBool("bool", true));
-        originalScene.getChild("A").addMatParamOverride(mpoFloat("float", 3.12f));
-
-        Node clonedScene = originalScene.clone(false);
-
-        validateScene(clonedScene);
-        validateScene(originalScene);
-
-        List<MatParamOverride> clonedOverrides = clonedScene.getChild("A").getLocalMatParamOverrides();
-        List<MatParamOverride> originalOverrides = originalScene.getChild("A").getLocalMatParamOverrides();
-
-        assertNotSame(clonedOverrides, originalOverrides);
-        assertEquals(clonedOverrides, originalOverrides);
-
-        for (int i = 0; i < clonedOverrides.size(); i++) {
-            assertNotSame(clonedOverrides.get(i), originalOverrides.get(i));
-            assertEquals(clonedOverrides.get(i), originalOverrides.get(i));
-        }
-    }
+//    @Test
+//    public void testOverrides_CloningScene_DoesntCloneMPO() {
+//        Node originalScene = createDummyScene();
+//
+//        originalScene.getChild("A").addMatParamOverride(mpoInt("int", 5));
+//        originalScene.getChild("A").addMatParamOverride(mpoBool("bool", true));
+//        originalScene.getChild("A").addMatParamOverride(mpoFloat("float", 3.12f));
+//
+//        Node clonedScene = originalScene.clone(false);
+//
+//        validateScene(clonedScene);
+//        validateScene(originalScene);
+//
+//        List<MatParamOverride> clonedOverrides = clonedScene.getChild("A").getLocalMatParamOverrides();
+//        List<MatParamOverride> originalOverrides = originalScene.getChild("A").getLocalMatParamOverrides();
+//
+//        assertNotSame(clonedOverrides, originalOverrides);
+//        assertEquals(clonedOverrides, originalOverrides);
+//
+//        for (int i = 0; i < clonedOverrides.size(); i++) {
+//            assertNotSame(clonedOverrides.get(i), originalOverrides.get(i));
+//            assertEquals(clonedOverrides.get(i), originalOverrides.get(i));
+//        }
+//    }
 
 //    @Test
 //    public void testOverrides_SaveAndLoad_KeepsMPOs() {

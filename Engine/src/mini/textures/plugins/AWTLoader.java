@@ -2,6 +2,7 @@ package mini.textures.plugins;
 
 import mini.asset.TextureKey;
 import mini.textures.Image;
+import mini.textures.TextureProcessor;
 import mini.textures.image.ColorSpace;
 import mini.utils.BufferUtils;
 
@@ -106,12 +107,12 @@ public class AWTLoader {
         if (ImageIO.getImageReadersBySuffix(key.getFile().getName().split("\\.")[1]) != null) {
             try {
                 AWTLoader loader = new AWTLoader();
-                Image img = loader.load(key.getFile().getInputStream(true));
+                Image img = loader.load(key.getFile().getInputStream());
                 if (img == null) {
                     throw new RuntimeException(
                             "The given image cannot be loaded " + key.getFile().getPath());
                 }
-                return img;
+                return TextureProcessor.postProcess(key, img);
             } catch (IOException e) {
                 e.printStackTrace();
             }

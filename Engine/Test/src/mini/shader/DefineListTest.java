@@ -286,7 +286,7 @@ public class DefineListTest {
         dl.set(INT_VAR, 123);
 
         assertEquals("#define BOOL_VAR 1\n"
-                + "#define INT_VAR 123\n", generateSource(dl));
+                     + "#define INT_VAR 123\n", generateSource(dl));
 
         dl.set(BOOL_VAR, false);
 
@@ -296,7 +296,7 @@ public class DefineListTest {
 
         // should have predictable ordering based on defineId
         assertEquals("#define BOOL_VAR 1\n"
-                + "#define INT_VAR 123\n", generateSource(dl));
+                     + "#define INT_VAR 123\n", generateSource(dl));
 
         dl.unset(BOOL_VAR);
         assertEquals("#define INT_VAR 123\n", generateSource(dl));

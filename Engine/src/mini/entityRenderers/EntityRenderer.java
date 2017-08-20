@@ -49,8 +49,8 @@ public class EntityRenderer {
     private void prepare(Camera camera, Vector3f lightDir, Vector4f clipPlane,
                          RenderManager manager) {
         //shader.start();
-        manager.setCamera(camera);
-        manager.setLightDir(lightDir);
+//        manager.setCamera(camera);
+//        manager.setLightDir(lightDir);
         shader.getUniform("plane").setValue(VarType.Vector4f, clipPlane);
         manager.updateUniformBindings(shader);
         //OpenGlUtils.antialias(true);
@@ -68,7 +68,7 @@ public class EntityRenderer {
 //        if (material.hasExtraMap()) {
 //            material.getExtraInfoMap().bindToUnit(1);
 //        }
-        shader.getUniform("hasExtraMap").setValue(VarType.Boolean, material.hasExtraMap());
-        OpenGlUtils.cullBackFaces(!material.hasTransparency());
+//        shader.getUniform("hasExtraMap").setValue(VarType.Boolean, material.hasExtraMap());
+//        OpenGlUtils.cullBackFaces(!material.hasTransparency());
     }
 }

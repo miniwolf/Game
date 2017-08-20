@@ -154,4 +154,149 @@ MaterialDef Phong Lighting {
             INSTANCING : UseInstancing
         }
     }
+
+    Technique {
+
+        LightMode MultiPass
+
+        VertexShader GLSL100 GLSL150:   MatDefs/Light/Lighting.vert
+        FragmentShader GLSL100 GLSL150: MatDefs/Light/Lighting.frag
+
+        WorldParameters {
+            WorldViewProjectionMatrix
+            NormalMatrix
+            WorldViewMatrix
+            ViewMatrix
+            CameraPosition
+            WorldMatrix
+            ViewProjectionMatrix
+        }
+
+        Defines {
+            VERTEX_COLOR : UseVertexColor
+            VERTEX_LIGHTING : VertexLighting
+            MATERIAL_COLORS : UseMaterialColors
+            DIFFUSEMAP : DiffuseMap
+            NORMALMAP : NormalMap
+            SPECULARMAP : SpecularMap
+            PARALLAXMAP : ParallaxMap
+            NORMALMAP_PARALLAX : PackedNormalParallax
+            STEEP_PARALLAX : SteepParallax
+            ALPHAMAP : AlphaMap
+            COLORRAMP : ColorRamp
+            LIGHTMAP : LightMap
+            SEPARATE_TEXCOORD : SeparateTexCoord
+            DISCARD_ALPHA : AlphaDiscardThreshold
+            USE_REFLECTION : EnvMap
+            SPHERE_MAP : EnvMapAsSphereMap
+            NUM_BONES : NumberOfBones
+            INSTANCING : UseInstancing
+        }
+    }
+
+    Technique PreShadow {
+
+        VertexShader GLSL100 GLSL150 :   MatDefs/Shadow/PreShadow.vert
+        FragmentShader GLSL100 GLSL150 : MatDefs/Shadow/PreShadow.frag
+
+        WorldParameters {
+            WorldViewProjectionMatrix
+            WorldViewMatrix
+            ViewProjectionMatrix
+            ViewMatrix
+        }
+
+        Defines {
+            DISCARD_ALPHA : AlphaDiscardThreshold
+            NUM_BONES : NumberOfBones
+            INSTANCING : UseInstancing
+        }
+
+        ForcedRenderState {
+            FaceCull Off
+            DepthTest On
+            DepthWrite On
+            PolyOffset 5 3
+            ColorWrite Off
+        }
+
+    }
+
+
+    Technique PostShadow {
+        VertexShader GLSL100 GLSL150:   MatDefs/Shadow/PostShadow.vert
+        FragmentShader GLSL100 GLSL150: MatDefs/Shadow/PostShadow.frag
+
+        WorldParameters {
+            WorldViewProjectionMatrix
+            WorldMatrix
+            ViewProjectionMatrix
+            ViewMatrix
+            NormalMatrix
+        }
+
+        Defines {
+            HARDWARE_SHADOWS : HardwareShadows
+            FILTER_MODE : FilterMode
+            PCFEDGE : PCFEdge
+            DISCARD_ALPHA : AlphaDiscardThreshold
+            SHADOWMAP_SIZE : ShadowMapSize
+            FADE : FadeInfo
+            PSSM : Splits
+            POINTLIGHT : LightViewProjectionMatrix5
+            NUM_BONES : NumberOfBones
+            INSTANCING : UseInstancing
+            BACKFACE_SHADOWS: BackfaceShadows
+        }
+
+        ForcedRenderState {
+            Blend Modulate
+            DepthWrite Off
+            PolyOffset -0.1 0
+        }
+    }
+
+
+  Technique PreNormalPass {
+
+        VertexShader GLSL100 GLSL150 :   MatDefs/SSAO/normal.vert
+        FragmentShader GLSL100 GLSL150 : MatDefs/SSAO/normal.frag
+
+        WorldParameters {
+            WorldViewProjectionMatrix
+            WorldViewMatrix
+            NormalMatrix
+            ViewProjectionMatrix
+            ViewMatrix
+        }
+
+        Defines {
+            DIFFUSEMAP_ALPHA : DiffuseMap
+            NUM_BONES : NumberOfBones
+            INSTANCING : UseInstancing
+        }
+
+    }
+
+    Technique Glow {
+
+        VertexShader GLSL100 GLSL150:   MatDefs/Misc/Unshaded.vert
+        FragmentShader GLSL100 GLSL150: MatDefs/Light/Glow.frag
+
+        WorldParameters {
+            WorldViewProjectionMatrix
+            ViewProjectionMatrix
+            ViewMatrix
+        }
+
+        Defines {
+            NEED_TEXCOORD1
+            HAS_GLOWMAP : GlowMap
+            HAS_GLOWCOLOR : GlowColor
+
+            NUM_BONES : NumberOfBones
+            INSTANCING : UseInstancing
+        }
+    }
+
 }

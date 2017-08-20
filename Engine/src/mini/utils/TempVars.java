@@ -31,6 +31,7 @@
  */
 package mini.utils;
 
+import mini.collision.CollisionResults;
 import mini.math.ColorRGBA;
 import mini.math.Matrix3f;
 import mini.math.Matrix4f;
@@ -219,5 +220,6 @@ public class TempVars {
     /**
      * BIHTree
      */
+    public final CollisionResults collisionResults = new CollisionResults();
     public final float[] bihSwapTmp = new float[9];
 }

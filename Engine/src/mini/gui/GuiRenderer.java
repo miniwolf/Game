@@ -26,18 +26,18 @@ public class GuiRenderer {
                        List<GUITexture> guiTextures) {
         init();
         for (GUITexture guiTexture : guiTextures) {
-            VAO model = guiTexture.getGeometry().getVao();
-            model.bind(0);
-            GL13.glActiveTexture(GL13.GL_TEXTURE0);
-            GL11.glBindTexture(GL11.GL_TEXTURE_2D, guiTexture.getTextureId());
-            Matrix4f worldMatrix = new Matrix4f(); // TODO: Create this inside Gui Texture
-            worldMatrix.setScale(guiTexture.getScale().x, guiTexture.getScale().y, 1);
-            worldMatrix.setTranslation(guiTexture.getPosition().x,
-                                                guiTexture.getPosition().y, 0);
-            uniformBindingManager.setWorldMatrix(worldMatrix);
-            uniformBindingManager.updateUniformBindings(shader);
-            GL11.glDrawArrays(GL11.GL_TRIANGLE_STRIP, 0, 4);
-            model.unbind(0);
+            //VAO model = guiTexture.getGeometry().getVao();
+//            model.bind(0);
+//            GL13.glActiveTexture(GL13.GL_TEXTURE0);
+//            GL11.glBindTexture(GL11.GL_TEXTURE_2D, guiTexture.getTextureId());
+//            Matrix4f worldMatrix = new Matrix4f(); // TODO: Create this inside Gui Texture
+//            worldMatrix.setScale(guiTexture.getScale().x, guiTexture.getScale().y, 1);
+//            worldMatrix.setTranslation(guiTexture.getPosition().x,
+//                                                guiTexture.getPosition().y, 0);
+//            uniformBindingManager.setWorldMatrix(worldMatrix);
+//            uniformBindingManager.updateUniformBindings(shader);
+//            GL11.glDrawArrays(GL11.GL_TRIANGLE_STRIP, 0, 4);
+//            model.unbind(0);
         }
         end();
     }

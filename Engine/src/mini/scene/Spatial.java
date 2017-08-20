@@ -1,5 +1,6 @@
 package mini.scene;
 
+import mini.bounding.BoundingVolume;
 import mini.light.Light;
 import mini.light.LightList;
 import mini.material.MatParamOverride;
@@ -89,6 +90,10 @@ public abstract class Spatial implements Cloneable {
 
     protected CullHint cullHint = CullHint.Inherit;
     protected BatchHint batchHint = BatchHint.Inherit;
+    /**
+     * Spatial's bounding volume relative to the world.
+     */
+    protected BoundingVolume worldBound;
     /**
      * LightList
      */
@@ -1154,6 +1159,17 @@ public abstract class Spatial implements Cloneable {
         clone.setMatParamOverrideRefresh();
 
         return clone;
+    }
+
+    /**
+     * <code>getWorldBound</code> retrieves the world bound at this node
+     * level.
+     *
+     * @return the world bound at this level.
+     */
+    public BoundingVolume getWorldBound() {
+        checkDoBoundUpdate();
+        return worldBound;
     }
 
     /**

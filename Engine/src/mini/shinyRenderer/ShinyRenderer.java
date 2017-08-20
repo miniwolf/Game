@@ -46,8 +46,8 @@ public class ShinyRenderer {
     private void prepare(Camera camera, Vector3f lightDir, Texture enviromap,
                          GLRenderer renderer, UniformBindingManager manager) {
         //shader.start();
-        manager.setCamera(camera);
-        manager.setLightDir(lightDir);
+//        manager.setCamera(camera);
+//        manager.setLightDir(lightDir);
         manager.updateUniformBindings(shader);
         renderer.setTexture(1, enviromap);
         OpenGlUtils.antialias(true);

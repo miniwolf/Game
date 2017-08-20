@@ -9,10 +9,12 @@ import mini.material.MaterialDef;
 import mini.material.RenderState;
 import mini.material.TechniqueDef;
 import mini.material.logic.DefaultTechniqueDefLogic;
+import mini.material.logic.MultiPassLightingLogic;
 import mini.material.logic.SinglePassLightingLogic;
 import mini.math.ColorRGBA;
 import mini.math.Vector2f;
 import mini.math.Vector3f;
+import mini.renderEngine.queue.RenderQueue;
 import mini.shaders.DefineList;
 import mini.shaders.ShaderProgram;
 import mini.shaders.VarType;
@@ -57,7 +59,6 @@ public class MiniLoader {
         shaderNames = new EnumMap<>(ShaderProgram.ShaderType.class);
     }
 
-
     // <TYPE> <LANG> : <SOURCE>
     private void readShaderStatement(String statement) throws IOException {
         String[] split = statement.split(":");
@@ -69,22 +70,24 @@ public class MiniLoader {
         for (ShaderProgram.ShaderType shaderType : ShaderProgram.ShaderType.values()) {
             if (typeAndLang[0].equals(shaderType.toString() + "Shader")) {
 
-                readShaderDefinition(shaderType, split[1].trim(), Arrays.copyOfRange(typeAndLang, 1, typeAndLang.length));
+                readShaderDefinition(shaderType, split[1].trim(),
+                                     Arrays.copyOfRange(typeAndLang, 1, typeAndLang.length));
             }
         }
     }
 
-
-    private void readShaderDefinition(ShaderProgram.ShaderType shaderType, String name, String... languages) {
+    private void readShaderDefinition(ShaderProgram.ShaderType shaderType, String name,
+                                      String... languages) {
         shaderNames.put(shaderType, name);
 
         if (langSize != 0 && langSize != languages.length) {
-            throw new RuntimeException("Technique " + technique.getName() + " must have the same number of languages for each shader type.");
+            throw new RuntimeException("Technique " + technique.getName()
+                                       + " must have the same number of languages for each shader type.");
         }
         langSize = languages.length;
         for (int i = 0; i < languages.length; i++) {
             if (i >= shaderLanguages.size()) {
-                shaderLanguages.add(new EnumMap<ShaderProgram.ShaderType, String>(ShaderProgram.ShaderType.class));
+                shaderLanguages.add(new EnumMap<>(ShaderProgram.ShaderType.class));
             }
             shaderLanguages.get(i).put(shaderType, languages[i]);
         }
@@ -100,7 +103,6 @@ public class MiniLoader {
         TechniqueDef.LightMode lm = TechniqueDef.LightMode.valueOf(split[1]);
         technique.setLightMode(lm);
     }
-
 
     // LightMode <SPACE>
     private void readLightSpace(String statement) throws IOException {
@@ -141,7 +143,7 @@ public class MiniLoader {
     }
 
     private List<TextureOptionValue> parseTextureOptions(final List<String> values) {
-        final List<TextureOptionValue> matchList = new ArrayList<TextureOptionValue>();
+        final List<TextureOptionValue> matchList = new ArrayList<>();
 
         if (values.isEmpty() || values.size() == 1) {
             return matchList;
@@ -152,9 +154,12 @@ public class MiniLoader {
             final String value = values.get(i);
             final TextureOption textureOption = TextureOption.getTextureOption(value);
 
-            if (textureOption == null && !value.contains("\\") && !value.contains("/") && !values.get(0).equals("Flip") && !values.get(0).equals("Repeat")) {
-                System.err.println("Unknown texture option \"" + value + "\" encountered for \"" + key
-                        + "\" in material \"" + material.getKey().getFile().getName() + "\"");
+            if (textureOption == null && !value.contains("\\") && !value.contains("/") && !values
+                    .get(0).equals("Flip") && !values.get(0).equals("Repeat")) {
+                System.err
+                        .println("Unknown texture option \"" + value + "\" encountered for \"" + key
+                                 + "\" in material \"" + material.getKey().getFile().getName()
+                                 + "\"");
             } else if (textureOption != null) {
                 final String option = textureOption.getOptionValue(value);
                 matchList.add(new TextureOptionValue(textureOption, option));
@@ -164,19 +169,28 @@ public class MiniLoader {
         return matchList;
     }
 
-    private boolean isTexturePathDeclaredTheTraditionalWay(final List<TextureOptionValue> optionValues, final String texturePath) {
-        final boolean startsWithOldStyle = texturePath.startsWith("Flip Repeat ") || texturePath.startsWith("Flip ") ||
-                texturePath.startsWith("Repeat ") || texturePath.startsWith("Repeat Flip ");
+    private boolean isTexturePathDeclaredTheTraditionalWay(
+            final List<TextureOptionValue> optionValues, final String texturePath) {
+        final boolean startsWithOldStyle = texturePath.startsWith("Flip Repeat ") || texturePath
+                .startsWith("Flip ") ||
+                                           texturePath.startsWith("Repeat ") || texturePath
+                                                   .startsWith("Repeat Flip ");
 
         if (!startsWithOldStyle) {
             return false;
         }
 
-        if (optionValues.size() == 1 && (optionValues.get(0).textureOption == TextureOption.Flip || optionValues.get(0).textureOption == TextureOption.Repeat)) {
+        if (optionValues.size() == 1 && (optionValues.get(0).textureOption == TextureOption.Flip
+                                         || optionValues.get(0).textureOption
+                                            == TextureOption.Repeat)) {
             return true;
-        } else if (optionValues.size() == 2 && optionValues.get(0).textureOption == TextureOption.Flip && optionValues.get(1).textureOption == TextureOption.Repeat) {
+        } else if (optionValues.size() == 2
+                   && optionValues.get(0).textureOption == TextureOption.Flip
+                   && optionValues.get(1).textureOption == TextureOption.Repeat) {
             return true;
-        } else if (optionValues.size() == 2 && optionValues.get(0).textureOption == TextureOption.Repeat && optionValues.get(1).textureOption == TextureOption.Flip) {
+        } else if (optionValues.size() == 2
+                   && optionValues.get(0).textureOption == TextureOption.Repeat
+                   && optionValues.get(1).textureOption == TextureOption.Flip) {
             return true;
         }
 
@@ -199,7 +213,8 @@ public class MiniLoader {
             if (isTexturePathDeclaredTheTraditionalWay(textureOptionValues, texturePath)) {
                 boolean flipY = false;
 
-                if (texturePath.startsWith("Flip Repeat ") || texturePath.startsWith("Repeat Flip ")) {
+                if (texturePath.startsWith("Flip Repeat ") || texturePath
+                        .startsWith("Repeat Flip ")) {
                     texturePath = texturePath.substring(12).trim();
                     flipY = true;
                 } else if (texturePath.startsWith("Flip ")) {
@@ -287,25 +302,28 @@ public class MiniLoader {
                     return Float.parseFloat(split[0]);
                 case Vector2f:
                     if (split.length != 2) {
-                        throw new IOException("Vector2 value parameter must have 2 entries: " + value);
+                        throw new IOException(
+                                "Vector2 value parameter must have 2 entries: " + value);
                     }
                     return new Vector2f(Float.parseFloat(split[0]),
-                            Float.parseFloat(split[1]));
+                                        Float.parseFloat(split[1]));
                 case Vector3f:
                     if (split.length != 3) {
-                        throw new IOException("Vector3 value parameter must have 3 entries: " + value);
+                        throw new IOException(
+                                "Vector3 value parameter must have 3 entries: " + value);
                     }
                     return new Vector3f(Float.parseFloat(split[0]),
-                            Float.parseFloat(split[1]),
-                            Float.parseFloat(split[2]));
+                                        Float.parseFloat(split[1]),
+                                        Float.parseFloat(split[2]));
                 case Vector4f:
                     if (split.length != 4) {
-                        throw new IOException("Vector4 value parameter must have 4 entries: " + value);
+                        throw new IOException(
+                                "Vector4 value parameter must have 4 entries: " + value);
                     }
                     return new ColorRGBA(Float.parseFloat(split[0]),
-                            Float.parseFloat(split[1]),
-                            Float.parseFloat(split[2]),
-                            Float.parseFloat(split[3]));
+                                         Float.parseFloat(split[1]),
+                                         Float.parseFloat(split[2]),
+                                         Float.parseFloat(split[3]));
                 case Int:
                     if (split.length != 1) {
                         throw new IOException("Int value parameter must have 1 entry: " + value);
@@ -313,7 +331,8 @@ public class MiniLoader {
                     return Integer.parseInt(split[0]);
                 case Boolean:
                     if (split.length != 1) {
-                        throw new IOException("Boolean value parameter must have 1 entry: " + value);
+                        throw new IOException(
+                                "Boolean value parameter must have 1 entry: " + value);
                     }
                     return Boolean.parseBoolean(split[0]);
                 default:
@@ -429,53 +448,36 @@ public class MiniLoader {
 
     private void readRenderStateStatement(Statement statement) throws IOException {
         String[] split = statement.getLine().split(whitespacePattern);
-        switch (split[0]) {
-            case "Wireframe":
-                renderState.setWireframe(parseBoolean(split[1]));
-                break;
-            case "FaceCull":
-                renderState.setFaceCullMode(RenderState.FaceCullMode.valueOf(split[1]));
-                break;
-            case "DepthWrite":
-                renderState.setDepthWrite(parseBoolean(split[1]));
-                break;
-            case "DepthTest":
-                renderState.setDepthTest(parseBoolean(split[1]));
-                break;
-            case "Blend":
-                renderState.setBlendMode(RenderState.BlendMode.valueOf(split[1]));
-                break;
-            case "BlendEquation":
-                renderState.setBlendEquation(RenderState.BlendEquation.valueOf(split[1]));
-                break;
-            case "BlendEquationAlpha":
-                renderState.setBlendEquationAlpha(RenderState.BlendEquationAlpha.valueOf(split[1]));
-                break;
-            case "AlphaTestFalloff":
-                // Ignore for backwards compatbility
-                break;
-            case "PolyOffset":
-                float factor = Float.parseFloat(split[1]);
-                float units = Float.parseFloat(split[2]);
-                renderState.setPolyOffset(factor, units);
-                break;
-            case "ColorWrite":
-                renderState.setColorWrite(parseBoolean(split[1]));
-                break;
-            case "PointSprite":
-                // Ignore for backwards compatbility
-                break;
-            case "DepthFunc":
-                renderState.setDepthFunc(RenderState.TestFunction.valueOf(split[1]));
-                break;
-//            case "AlphaFunc":
-//                renderState.setAlphaFunc(RenderState.TestFunction.valueOf(split[1]));
-//                break;
-            case "LineWidth":
-                renderState.setLineWidth(Float.parseFloat(split[1]));
-                break;
-            default:
-                throw new MatParseException(null, split[0], statement);
+        if (split[0].equals("Wireframe")) {
+            renderState.setWireframe(parseBoolean(split[1]));
+        } else if (split[0].equals("FaceCull")) {
+            renderState.setFaceCullMode(RenderState.FaceCullMode.valueOf(split[1]));
+        } else if (split[0].equals("DepthWrite")) {
+            renderState.setDepthWrite(parseBoolean(split[1]));
+        } else if (split[0].equals("DepthTest")) {
+            renderState.setDepthTest(parseBoolean(split[1]));
+        } else if (split[0].equals("Blend")) {
+            renderState.setBlendMode(RenderState.BlendMode.valueOf(split[1]));
+        } else if (split[0].equals("BlendEquation")) {
+            renderState.setBlendEquation(RenderState.BlendEquation.valueOf(split[1]));
+        } else if (split[0].equals("BlendEquationAlpha")) {
+            renderState.setBlendEquationAlpha(RenderState.BlendEquationAlpha.valueOf(split[1]));
+        } else if (split[0].equals("AlphaTestFalloff")) {
+            // Ignore for backwards compatbility
+        } else if (split[0].equals("PolyOffset")) {
+            float factor = Float.parseFloat(split[1]);
+            float units = Float.parseFloat(split[2]);
+            renderState.setPolyOffset(factor, units);
+        } else if (split[0].equals("ColorWrite")) {
+            renderState.setColorWrite(parseBoolean(split[1]));
+        } else if (split[0].equals("PointSprite")) {
+            // Ignore for backwards compatbility
+        } else if (split[0].equals("DepthFunc")) {
+            renderState.setDepthFunc(RenderState.TestFunction.valueOf(split[1]));
+        } else if (split[0].equals("LineWidth")) {
+            renderState.setLineWidth(Float.parseFloat(split[1]));
+        } else {
+            throw new MatParseException(null, split[0], statement);
         }
     }
 
@@ -538,58 +540,45 @@ public class MiniLoader {
 
     private void readTechniqueStatement(Statement statement) throws IOException {
         String[] split = statement.getLine().split("[ \\{]");
-        switch (split[0]) {
-            case "VertexShader":
-            case "FragmentShader":
-            case "GeometryShader":
-            case "TessellationControlShader":
-            case "TessellationEvaluationShader":
-                readShaderStatement(statement.getLine());
-                break;
-            case "LightMode":
-                readLightMode(statement.getLine());
-                break;
-            case "LightSpace":
-                readLightSpace(statement.getLine());
-                break;
-            case "ShadowMode":
-                readShadowMode(statement.getLine());
-                break;
-            case "WorldParameters":
-                readWorldParams(statement.getContents());
-                break;
-            case "RenderState":
-                readRenderState(statement.getContents());
-                break;
-            case "ForcedRenderState":
-                readForcedRenderState(statement.getContents());
-                break;
-            case "Defines":
-                readDefines(statement.getContents());
-                break;
-            case "ShaderNodesDefinitions":
-                initNodesLoader();
-                if (isUseNodes) {
-                    nodesLoaderDelegate.readNodesDefinitions(statement.getContents());
-                }
-                break;
-            case "VertexShaderNodes":
-                initNodesLoader();
-                if (isUseNodes) {
-                    nodesLoaderDelegate.readVertexShaderNodes(statement.getContents());
-                }
-                break;
-            case "FragmentShaderNodes":
-                initNodesLoader();
-                if (isUseNodes) {
-                    nodesLoaderDelegate.readFragmentShaderNodes(statement.getContents());
-                }
-                break;
-            case "NoRender":
-                technique.setNoRender(true);
-                break;
-            default:
-                throw new MatParseException(null, split[0], statement);
+        if (split[0].equals("VertexShader") ||
+            split[0].equals("FragmentShader") ||
+            split[0].equals("GeometryShader") ||
+            split[0].equals("TessellationControlShader") ||
+            split[0].equals("TessellationEvaluationShader")) {
+            readShaderStatement(statement.getLine());
+        } else if (split[0].equals("LightMode")) {
+            readLightMode(statement.getLine());
+        } else if (split[0].equals("LightSpace")) {
+            readLightSpace(statement.getLine());
+        } else if (split[0].equals("ShadowMode")) {
+            readShadowMode(statement.getLine());
+        } else if (split[0].equals("WorldParameters")) {
+            readWorldParams(statement.getContents());
+        } else if (split[0].equals("RenderState")) {
+            readRenderState(statement.getContents());
+        } else if (split[0].equals("ForcedRenderState")) {
+            readForcedRenderState(statement.getContents());
+        } else if (split[0].equals("Defines")) {
+            readDefines(statement.getContents());
+        } else if (split[0].equals("ShaderNodesDefinitions")) {
+            initNodesLoader();
+            if (isUseNodes) {
+                nodesLoaderDelegate.readNodesDefinitions(statement.getContents());
+            }
+        } else if (split[0].equals("VertexShaderNodes")) {
+            initNodesLoader();
+            if (isUseNodes) {
+                nodesLoaderDelegate.readVertexShaderNodes(statement.getContents());
+            }
+        } else if (split[0].equals("FragmentShaderNodes")) {
+            initNodesLoader();
+            if (isUseNodes) {
+                nodesLoaderDelegate.readFragmentShaderNodes(statement.getContents());
+            }
+        } else if (split[0].equals("NoRender")) {
+            technique.setNoRender(true);
+        } else {
+            throw new MatParseException(null, split[0], statement);
         }
     }
 
@@ -638,9 +627,9 @@ public class MiniLoader {
             case Disable:
                 technique.setLogic(new DefaultTechniqueDefLogic(technique));
                 break;
-//            case MultiPass:
-//                technique.setLogic(new MultiPassLightingLogic(technique));
-//                break;
+            case MultiPass:
+                technique.setLogic(new MultiPassLightingLogic(technique));
+                break;
             case SinglePass:
                 technique.setLogic(new SinglePassLightingLogic(technique));
                 break;
@@ -662,9 +651,11 @@ public class MiniLoader {
             // KIRILL 9/19/2015
             // Not sure if this is needed anymore, since shader caching
             // is now done by TechniqueDef.
-            technique.setShaderFile(technique.hashCode() + "", technique.hashCode() + "", "GLSL100", "GLSL100");
+            technique.setShaderFile(technique.hashCode() + "", technique.hashCode() + "", "GLSL100",
+                                    "GLSL100");
             techniqueDefs.add(technique);
-        } else if (shaderNames.containsKey(ShaderProgram.ShaderType.Vertex) && shaderNames.containsKey(ShaderProgram.ShaderType.Fragment)) {
+        } else if (shaderNames.containsKey(ShaderProgram.ShaderType.Vertex) && shaderNames
+                .containsKey(ShaderProgram.ShaderType.Fragment)) {
             if (shaderLanguages.size() > 1) {
                 for (int i = 1; i < shaderLanguages.size(); i++) {
                     cloner.clearIndex();
@@ -683,7 +674,8 @@ public class MiniLoader {
             presetDefines.clear();
             langSize = 0;
             System.err.println("Fixed function technique was ignored");
-            System.err.println("Fixed function technique ''" + name + "'' was ignored for material " + key);
+            System.err.println(
+                    "Fixed function technique ''" + name + "'' was ignored for material " + key);
             return;
         }
 
@@ -705,13 +697,14 @@ public class MiniLoader {
             if (line.startsWith("Exception")) {
                 throw new RuntimeException(line.substring("Exception ".length()));
             } else {
-                throw new IOException("In multiroot material, expected first statement to be 'Exception'");
+                throw new IOException(
+                        "In multiroot material, expected first statement to be 'Exception'");
             }
         } else if (roots.size() != 1) {
             throw new IOException("Too many roots in J3M/J3MD file");
         }
 
-        boolean extending;
+        boolean extending = false;
         Statement materialStat = roots.get(0);
         String materialName = materialStat.getLine();
         if (materialName.startsWith("MaterialDef")) {
@@ -739,7 +732,8 @@ public class MiniLoader {
 
             MaterialDef def = (MaterialDef) load(new MaterialKey(extendedMat));
             if (def == null) {
-                throw new MatParseException("Extended material " + extendedMat + " cannot be found.", materialStat);
+                throw new MatParseException(
+                        "Extended material " + extendedMat + " cannot be found.", materialStat);
             }
 
             material = new Material(def);
@@ -781,20 +775,21 @@ public class MiniLoader {
                         readMaterialParams(statement.getContents());
                         break;
                     default:
-                        throw new MatParseException("Expected material statement, got '" + statType + "'", statement);
+                        throw new MatParseException(
+                                "Expected material statement, got '" + statType + "'", statement);
                 }
             }
         }
     }
 
     public static Object load(MaterialKey info) throws IOException {
-        InputStream in = info.getFile().getInputStream(false);
+        InputStream in = info.getFile().getInputStream();
         MiniLoader loader = new MiniLoader();
         try {
             loader.key = info;
-//            if (loader.key.getFile().getExtension().equals("mini") && !(loader.key instanceof MaterialKey)) {
+//            if (key.getExtension().equals("mini") && !(key instanceof MaterialKey)) {
 //                throw new IOException("Material instances must be loaded via MaterialKey");
-//            } else if (loader.key.getFile().getExtension().equals("minid") && loader.key instanceof MaterialKey) {
+//            } else if (key.getExtension().equals("minid") && key instanceof MaterialKey) {
 //                throw new IOException("Material definitions must be loaded via AssetKey");
 //            }
             loader.loadFromRoot(BlockLanguageParser.parse(in));
@@ -813,9 +808,16 @@ public class MiniLoader {
         }
     }
 
+    public MaterialDef loadMaterialDef(List<Statement> roots, AssetKey key) throws IOException {
+        this.key = key;
+        loadFromRoot(roots);
+        return materialDef;
+    }
+
     protected void initNodesLoader() {
         if (!isUseNodes) {
-            isUseNodes = shaderNames.get(ShaderProgram.ShaderType.Vertex) == null && shaderNames.get(ShaderProgram.ShaderType.Fragment) == null;
+            isUseNodes = shaderNames.get(ShaderProgram.ShaderType.Vertex) == null
+                         && shaderNames.get(ShaderProgram.ShaderType.Fragment) == null;
             if (isUseNodes) {
                 if (nodesLoaderDelegate == null) {
                     nodesLoaderDelegate = new ShaderNodeLoaderDelegate();
@@ -845,7 +847,7 @@ public class MiniLoader {
     private enum TextureOption {
 
         /**
-         * Applies a {@link mini.textures.Texture.MinFilter} to the texture.
+         * Applies a {@link com.jme3.texture.Texture.MinFilter} to the texture.
          */
         Min {
             @Override
@@ -855,7 +857,7 @@ public class MiniLoader {
         },
 
         /**
-         * Applies a {@link mini.textures.Texture.MagFilter} to the texture.
+         * Applies a {@link com.jme3.texture.Texture.MagFilter} to the texture.
          */
         Mag {
             @Override
@@ -865,7 +867,7 @@ public class MiniLoader {
         },
 
         /**
-         * Applies a {@link mini.textures.Texture.WrapMode} to the texture. This also supports {@link mini.textures.Texture.WrapAxis}
+         * Applies a {@link com.jme3.texture.Texture.WrapMode} to the texture. This also supports {@link com.jme3.texture.Texture.WrapAxis}
          * by adding "_AXIS" to the texture option. For instance if you wanted to repeat on the S (horizontal) axis, you
          * would use <pre>WrapRepeat_S</pre> as a texture option.
          */
@@ -886,7 +888,7 @@ public class MiniLoader {
         },
 
         /**
-         * Applies a {@link mini.textures.Texture.WrapMode#Repeat} to the texture. This is simply an alias for
+         * Applies a {@link com.jme3.texture.Texture.WrapMode#Repeat} to the texture. This is simply an alias for
          * WrapRepeat, please use WrapRepeat instead if possible as this may become deprecated later on.
          */
         Repeat {
@@ -928,7 +930,7 @@ public class MiniLoader {
     }
 
     /**
-     * Internal object used for holding a {@link mini.material.plugins.MiniLoader.TextureOption} and it's value. Also
+     * Internal object used for holding a {@link com.jme3.material.plugins.J3MLoader.TextureOption} and it's value. Also
      * contains a couple of convenience methods for applying the TextureOption to either a TextureKey or a Texture.
      */
     private static class TextureOptionValue {

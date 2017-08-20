@@ -23,7 +23,7 @@ public class OpaqueComparator implements GeometryComparator {
             return spat.queueDistance;
         }
 
-        Vector3f camPosition = cam.getPosition();
+        Vector3f camPosition = cam.getLocation();
         Vector3f viewVector = cam.getDirection(tempVec2);
         Vector3f spatPosition = spat.getWorldTranslation();
         // TODO: SpatPosition needs boundingVolume

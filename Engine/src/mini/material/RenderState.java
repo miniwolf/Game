@@ -3,9 +3,12 @@ package mini.material;
 import mini.scene.Mesh;
 
 /**
- * Created by miniwolf on 30-04-2017.
+ * <code>RenderState</code> specifies material rendering properties that cannot
+ * be controlled by a shader on a {@link Material}. The properties
+ * allow manipulation of rendering features such as depth testing, alpha blending,
+ * face culling, stencil operations, and much more.
  */
-public class RenderState {
+public class RenderState implements Cloneable {
 
     /**
      * The <code>DEFAULT</code> render state is the one used by default

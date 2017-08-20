@@ -64,7 +64,7 @@ public class LightFilterTest {
         
         cam = new Camera(512, 512);
         cam.setFrustumPerspective(45, 1, 1, 1000);
-        cam.setPosition(Vector3f.ZERO);
+        cam.setLocation(Vector3f.ZERO);
         cam.lookAt(Vector3f.UNIT_Z, Vector3f.UNIT_Y);
         filter.setCamera(cam);
         

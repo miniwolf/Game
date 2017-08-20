@@ -1,6 +1,5 @@
 package mini.system.lwjgl;
 
-import mini.system.ApplicationSystem;
 import org.lwjgl.LWJGLException;
 import org.lwjgl.Sys;
 import org.lwjgl.opengl.Display;
@@ -44,14 +43,12 @@ public abstract class LwjglAbstractDisplay extends LwjglContext implements Runna
     protected boolean initInThread(){
         try {
             // Enable uncaught exception handler only for current thread
-            Thread.currentThread().setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-                public void uncaughtException(Thread thread, Throwable thrown) {
-                    listener.handleError("Uncaught exception thrown in "+thread.toString(), thrown);
-                    if (needClose.get()){
-                        // listener.handleError() has requested the
-                        // context to close. Satisfy request.
-                        deinitInThread();
-                    }
+            Thread.currentThread().setUncaughtExceptionHandler((thread, thrown) -> {
+                listener.handleError("Uncaught exception thrown in "+thread.toString(), thrown);
+                if (needClose.get()){
+                    // listener.handleError() has requested the
+                    // context to close. Satisfy request.
+                    deinitInThread();
                 }
             });
 

@@ -13,7 +13,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.io.IOException;
 import java.util.EnumSet;
@@ -34,14 +34,14 @@ public class MiniLoaderTest {
     @Test
     public void noDefaultTechnique_shouldBeSupported() throws IOException {
         //when(assetInfo.()).thenReturn(MiniLoader.class.getResourceAsStream("/no-default-technique.j3md"));
-        MaterialDef def = (MaterialDef) MiniLoader.load(new MaterialKey("resources/no-default-technique.minid"));
+        MaterialDef def = (MaterialDef) MiniLoader.load(new MaterialKey("no-default-technique.minid"));
         assertEquals(1, def.getTechniqueDefs("Test").size());
     }
 
     @Test
     public void fixedPipelineTechnique_shouldBeIgnored() throws IOException {
 //        when(assetInfo.openStream()).thenReturn(MiniLoader.class.getResourceAsStream("/no-shader-specified.j3md"));
-        MaterialDef def = (MaterialDef) MiniLoader.load(new MaterialKey("resources/no-shader-specified.minid"));
+        MaterialDef def = (MaterialDef) MiniLoader.load(new MaterialKey("no-shader-specified.minid"));
         assertEquals(null, def.getTechniqueDefs("A"));
         assertEquals(1, def.getTechniqueDefs("B").size());
     }
@@ -49,7 +49,7 @@ public class MiniLoaderTest {
     @Test
     public void multipleSameNamedTechniques_shouldBeSupported() throws IOException {
 //        when(assetInfo.openStream()).thenReturn(MiniLoader.class.getResourceAsStream("/same-name-technique.j3md"));
-        MaterialDef def = (MaterialDef) MiniLoader.load(new MaterialKey("resources/same-name-technique.minid"));
+        MaterialDef def = (MaterialDef) MiniLoader.load(new MaterialKey("same-name-technique.minid"));
         assertEquals(2, def.getTechniqueDefs("Test").size());
         assertEquals(EnumSet.of(Caps.GLSL150), def.getTechniqueDefs("Test").get(0).getRequiredCaps());
         assertEquals(EnumSet.of(Caps.GLSL100), def.getTechniqueDefs("Test").get(1).getRequiredCaps());
@@ -65,11 +65,11 @@ public class MiniLoaderTest {
         final TextureKey textureKeyUsingQuotes = setupMockForTexture("OldStyleUsingQuotes", "old style using quotes/texture.png", true, textureOldStyleUsingQuotes);
         final TextureKey textureKeyOldStyle = setupMockForTexture("OldStyle", "old style/texture.png", true, textureOldStyle);
 
-        MiniLoader.load(new MaterialKey("resources/texture-parameters-oldstyle.mini"));
+        MiniLoader.load(new MaterialKey("texture-parameters-oldstyle.mini"));
 
         AWTLoader loader = new AWTLoader();
-        verify(loader).load(textureKeyUsingQuotes.getFile().getInputStream(false));
-        verify(loader).load(textureKeyOldStyle.getFile().getInputStream(false));
+        verify(loader).load(textureKeyUsingQuotes.getFile().getInputStream());
+        verify(loader).load(textureKeyOldStyle.getFile().getInputStream());
         verify(textureOldStyle).setWrap(Texture.WrapMode.Repeat);
         verify(textureOldStyleUsingQuotes).setWrap(Texture.WrapMode.Repeat);
     }
@@ -96,11 +96,11 @@ public class MiniLoaderTest {
         setupMockForTexture("Combined", "combined.png", true, textureCombined);
         setupMockForTexture("LooksLikeOldStyle", "oldstyle.png", true, textureLooksLikeOldStyle);
 
-        MiniLoader.load(new MaterialKey("resources/texture-parameters-newstyle.mini"));
+        MiniLoader.load(new MaterialKey("texture-parameters-newstyle.mini"));
 
         AWTLoader loader = new AWTLoader();
-        verify(loader).load(textureKeyNoParameters.getFile().getInputStream(false));
-        verify(loader).load(textureKeyFlip.getFile().getInputStream(false));
+        verify(loader).load(textureKeyNoParameters.getFile().getInputStream());
+        verify(loader).load(textureKeyFlip.getFile().getInputStream());
 
         verify(textureRepeat).setWrap(Texture.WrapMode.Repeat);
         verify(textureRepeatAxis).setWrap(Texture.WrapAxis.T, Texture.WrapMode.Repeat);
@@ -118,7 +118,7 @@ public class MiniLoaderTest {
         final TextureKey textureKey = new TextureKey(path, flipY);
         textureKey.setGenerateMips(true);
 
-//        when(assetManager.loadTexture(textureKey)).thenReturn(texture);
+        when(AWTLoader.load(textureKey)).thenReturn(texture);
 
         return textureKey;
     }

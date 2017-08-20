@@ -839,7 +839,7 @@ public class ShaderNodeLoaderDelegate {
             if (defLine.length == 3) {
                 List<ShaderNodeDefinition> defs;
                 try {
-                    defs = (List<ShaderNodeDefinition>) GLSLLoader.load(new ShaderNodeDefinitionKey(defLine[2].trim()));
+                    defs = (List<ShaderNodeDefinition>) ShaderNodeDefinitionLoader.load(new ShaderNodeDefinitionKey(defLine[2].trim()));
                 } catch (RuntimeException e) {
                     throw new MatParseException("Couldn't find " + defLine[2].trim(), statement, e);
                 }

@@ -67,7 +67,7 @@ public class GLSLLoader {
 
                         if (dependNode == null) {
                             Reader dependNodeReader = new InputStreamReader(
-                                    new MyFile(ln).getInputStream(true));
+                                    new MyFile(ln).getInputStream());
                             dependNode = loadNode(dependNodeReader, ln);
                         }
 
@@ -129,7 +129,7 @@ public class GLSLLoader {
     public static Object load(ShaderNodeDefinitionKey info) throws IOException {
         // The input stream provided is for the vertex shader,
         // to retrieve the fragment shader, use the content manager
-        Reader reader = new InputStreamReader(info.getFile().getInputStream(false));
+        Reader reader = new InputStreamReader(info.getFile().getInputStream());
         if (info.getFile().getExtension().equals("glsllib")) {
             // NOTE: Loopback, GLSLLIB is loaded by this loader
             // and needs data as InputStream

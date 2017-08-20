@@ -29,7 +29,7 @@ public class SkyboxRenderer {
 
     private void prepare(Skybox skybox, Camera camera, UniformBindingManager manager) {
         //shader.start();
-        manager.setCamera(camera);
+//        manager.setCamera(camera);
         manager.updateUniformBindings(shader);
         // TODO: Use GLREnderer for this
         //skybox.getTexture().bindToUnit(0);

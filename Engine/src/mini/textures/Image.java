@@ -2,29 +2,43 @@ package mini.textures;
 
 import mini.math.FastMath;
 import mini.renderEngine.Caps;
+import mini.renderEngine.Renderer;
 import mini.renderEngine.opengl.GLRenderer;
 import mini.textures.image.ColorSpace;
 import mini.textures.image.LastTextureState;
+import mini.utils.BufferUtils;
 import mini.utils.NativeObject;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
- * Created by miniwolf on 22-04-2017.
+ * <code>Image</code> defines a data format for a graphical image. The image
+ * is defined by a format, a height and width, and the image data. The width and
+ * height must be greater than 0. The data is contained in a byte buffer, and
+ * should be packed before creation of the image object.
  */
 public class Image extends NativeObject {
+
     public enum Format {
         /**
          * 8-bit alpha
          */
         Alpha8(8),
 
+        @Deprecated
+        Reserved1(0),
+
         /**
          * 8-bit grayscale/luminance.
          */
         Luminance8(8),
+
+        @Deprecated
+        Reserved2(0),
 
         /**
          * half-precision floating-point grayscale/luminance.
@@ -45,12 +59,21 @@ public class Image extends NativeObject {
          */
         Luminance8Alpha8(16),
 
+        @Deprecated
+        Reserved3(0),
+
         /**
          * half-precision floating-point grayscale/luminance and alpha.
          * <p>
          * Requires {@link Caps#FloatTexture}.
          */
         Luminance16FAlpha16F(32, true),
+
+        @Deprecated
+        Reserved4(0),
+
+        @Deprecated
+        Reserved5(0),
 
         /**
          * 8-bit blue, green, and red.
@@ -62,10 +85,19 @@ public class Image extends NativeObject {
          */
         RGB8(24),
 
+        @Deprecated
+        Reserved6(0),
+
+        @Deprecated
+        Reserved7(0),
+
         /**
          * 5-bit red, 6-bit green, and 5-bit blue.
          */
         RGB565(16),
+
+        @Deprecated
+        Reserved8(0),
 
         /**
          * 5-bit red, green, and blue with 1-bit alpha.
@@ -92,6 +124,37 @@ public class Image extends NativeObject {
          */
         BGRA8(32),
 
+        @Deprecated
+        Reserved9(0),
+
+        /**
+         * S3TC compression DXT1.
+         */
+        DXT1(4, false, true, false),
+
+        /**
+         * S3TC compression DXT1 with 1-bit alpha.
+         */
+        DXT1A(4, false, true, false),
+
+        /**
+         * S3TC compression DXT3 with 4-bit alpha.
+         */
+        DXT3(8, false, true, false),
+
+        /**
+         * S3TC compression DXT5 with interpolated 8-bit alpha.
+         */
+        DXT5(8, false, true, false),
+
+        /**
+         * Luminance-Alpha Texture Compression.
+         *
+         * @deprecated Not supported by OpenGL 3.0.
+         */
+        @Deprecated
+        Reserved10(0),
+
         /**
          * Arbitrary depth format. The precision is chosen by the video
          * hardware.
@@ -112,6 +175,45 @@ public class Image extends NativeObject {
          * 32-bit depth.
          */
         Depth32(32, true, false, false),
+
+        /**
+         * single-precision floating point depth.
+         * <p>
+         * Requires {@link Caps#FloatDepthBuffer}.
+         */
+        Depth32F(32, true, false, true),
+
+        /**
+         * Texture data is stored as {@link Format#RGB16F} in system memory,
+         * but will be converted to {@link Format#RGB111110F} when sent
+         * to the video hardware.
+         * <p>
+         * Requires {@link Caps#FloatTexture} and {@link Caps#PackedFloatTexture}.
+         */
+        RGB16F_to_RGB111110F(48, true),
+
+        /**
+         * unsigned floating-point red, green and blue that uses 32 bits.
+         * <p>
+         * Requires {@link Caps#PackedFloatTexture}.
+         */
+        RGB111110F(32, true),
+
+        /**
+         * Texture data is stored as {@link Format#RGB16F} in system memory,
+         * but will be converted to {@link Format#RGB9E5} when sent
+         * to the video hardware.
+         * <p>
+         * Requires {@link Caps#FloatTexture} and {@link Caps#SharedExponentTexture}.
+         */
+        RGB16F_to_RGB9E5(48, true),
+
+        /**
+         * 9-bit red, green and blue with 5-bit exponent.
+         * <p>
+         * Requires {@link Caps#SharedExponentTexture}.
+         */
+        RGB9E5(32, true),
 
         /**
          * half-precision floating point red, green, and blue.
@@ -139,23 +241,67 @@ public class Image extends NativeObject {
          * <p>
          * Requires {@link Caps#FloatTexture}.
          */
-        RGBA32F(128, true);
+        RGBA32F(128, true),
+
+        @Deprecated
+        Reserved11(0),
+
+        /**
+         * 24-bit depth with 8-bit stencil.
+         * Check the cap {@link Caps#PackedDepthStencilBuffer}.
+         */
+        Depth24Stencil8(32, true, false, false),
+
+        @Deprecated
+        Reserved12(0),
+
+        /**
+         * Ericsson Texture Compression. Typically used on Android.
+         * <p>
+         * Requires {@link Caps#TextureCompressionETC1}.
+         */
+        ETC1(4, false, true, false),
+
+        R8I(8),
+        R8UI(8),
+        R16I(16),
+        R16UI(16),
+        R32I(32),
+        R32UI(32),
+        RG8I(16),
+        RG8UI(16),
+        RG16I(32),
+        RG16UI(32),
+        RG32I(64),
+        RG32UI(64),
+        RGB8I(24),
+        RGB8UI(24),
+        RGB16I(48),
+        RGB16UI(48),
+        RGB32I(96),
+        RGB32UI(96),
+        RGBA8I(32),
+        RGBA8UI(32),
+        RGBA16I(64),
+        RGBA16UI(64),
+        RGBA32I(128),
+        RGBA32UI(128);
 
         private int bpp;
         private boolean isDepth;
         private boolean isCompressed;
         private boolean isFloatingPoint;
 
-        Format(int bpp) {
+        private Format(int bpp) {
             this.bpp = bpp;
         }
 
-        Format(int bpp, boolean isFP) {
+        private Format(int bpp, boolean isFP) {
             this(bpp);
             this.isFloatingPoint = isFP;
         }
 
-        Format(int bpp, boolean isDepth, boolean isCompressed, boolean isFP) {
+        private Format(int bpp, boolean isDepth, boolean isCompressed, boolean isFP) {
             this(bpp, isFP);
             this.isDepth = isDepth;
             this.isCompressed = isCompressed;
@@ -176,6 +322,13 @@ public class Image extends NativeObject {
         }
 
         /**
+         * @return True if this format is a depth + stencil (packed) format, false otherwise.
+         */
+        boolean isDepthStencilFormat() {
+            return this == Depth24Stencil8;
+        }
+
+        /**
          * @return True if this is a compressed image format, false if
          * uncompressed.
          */
@@ -190,136 +343,22 @@ public class Image extends NativeObject {
         public boolean isFloatingPont() {
             return isFloatingPoint;
         }
+
     }
 
     // image attributes
     protected Format format;
     protected int width, height, depth;
-    private int id = -1;
-    protected int multiSamples = 1;
     protected int[] mipMapSizes;
-    protected List<ByteBuffer> data;
+    protected ArrayList<ByteBuffer> data;
+    protected int multiSamples = 1;
     protected ColorSpace colorSpace = null;
-    private boolean updateNeeded;
+//    protected int mipOffset = 0;
 
     // attributes relating to GL object
-    protected boolean needGeneratedMips = false;
     protected boolean mipsWereGenerated = false;
+    protected boolean needGeneratedMips = false;
     protected LastTextureState lastTextureState = new LastTextureState();
-
-    /**
-     * Constructor instantiates a new <code>Image</code> object. All values
-     * are undefined.
-     */
-    public Image() {
-        super();
-        data = new ArrayList<>(1);
-    }
-
-    protected Image(int id){
-        super(id);
-    }
-
-    /**
-     * Constructor instantiates a new <code>Image</code> object. The
-     * attributes of the image are defined during construction.
-     *
-     * @param format      the data format of the image.
-     * @param width       the width of the image.
-     * @param height      the height of the image.
-     * @param data        the image data.
-     * @param mipMapSizes the array of mipmap sizes, or null for no mipmaps.
-     * @param colorSpace
-     * @see ColorSpace the colorSpace of the image
-     */
-    public Image(Format format, int width, int height, int depth, List<ByteBuffer> data,
-                 int[] mipMapSizes, ColorSpace colorSpace) {
-
-        this();
-
-        if (mipMapSizes != null) {
-            if (mipMapSizes.length <= 1) {
-                mipMapSizes = null;
-            } else {
-                needGeneratedMips = false;
-                mipsWereGenerated = true;
-            }
-        }
-
-        setFormat(format);
-        this.width = width;
-        this.height = height;
-        this.data = data;
-        this.depth = depth;
-        this.mipMapSizes = mipMapSizes;
-        this.colorSpace = colorSpace;
-    }
-
-    /**
-     * Constructor instantiates a new <code>Image</code> object. The
-     * attributes of the image are defined during construction.
-     *
-     * @param format      the data format of the image.
-     * @param width       the width of the image.
-     * @param height      the height of the image.
-     * @param data        the image data.
-     * @param mipMapSizes the array of mipmap sizes, or null for no mipmaps.
-     * @param colorSpace
-     * @see ColorSpace the colorSpace of the image
-     */
-    public Image(Format format, int width, int height, ByteBuffer data,
-                 int[] mipMapSizes, ColorSpace colorSpace) {
-
-        this();
-
-        if (mipMapSizes != null && mipMapSizes.length <= 1) {
-            mipMapSizes = null;
-        } else {
-            needGeneratedMips = false;
-            mipsWereGenerated = true;
-        }
-
-        setFormat(format);
-        this.width = width;
-        this.height = height;
-        if (data != null) {
-            this.data = new ArrayList<>(1);
-            this.data.add(data);
-        }
-        this.mipMapSizes = mipMapSizes;
-        this.colorSpace = colorSpace;
-    }
-
-    /**
-     * Constructor instantiates a new <code>Image</code> object. The
-     * attributes of the image are defined during construction.
-     *
-     * @param format     the data format of the image.
-     * @param width      the width of the image.
-     * @param height     the height of the image.
-     * @param data       the image data.
-     * @param colorSpace
-     * @see ColorSpace the colorSpace of the image
-     */
-    public Image(Format format, int width, int height, int depth, List<ByteBuffer> data,
-                 ColorSpace colorSpace) {
-        this(format, width, height, depth, data, null, colorSpace);
-    }
-
-    /**
-     * Constructor instantiates a new <code>Image</code> object. The
-     * attributes of the image are defined during construction.
-     *
-     * @param format     the data format of the image.
-     * @param width      the width of the image.
-     * @param height     the height of the image.
-     * @param data       the image data.
-     * @param colorSpace
-     * @see ColorSpace the colorSpace of the image
-     */
-    public Image(Format format, int width, int height, ByteBuffer data, ColorSpace colorSpace) {
-        this(format, width, height, data, null, colorSpace);
-    }
 
     /**
      * Internal use only.
@@ -364,21 +403,251 @@ public class Image extends NativeObject {
     }
 
     /**
-     * Returns whether the image data contains mipmaps.
-     *
-     * @return true if the image data contains mipmaps, false if not.
-     */
-    public boolean hasMipmaps() {
-        return mipMapSizes != null;
-    }
-
-    /**
      * @return True if the image needs to have mipmaps generated
      * for it (as requested by the texture). This stays true even
      * after mipmaps have been generated.
      */
     public boolean isGeneratedMipmapsRequired() {
         return needGeneratedMips;
+    }
+
+    /**
+     * Sets the update needed flag, while also checking if mipmaps
+     * need to be regenerated.
+     */
+    @Override
+    public void setUpdateNeeded() {
+        super.setUpdateNeeded();
+        if (isGeneratedMipmapsRequired() && !hasMipmaps()) {
+            // Mipmaps are no longer valid, since the image was changed.
+            setMipmapsGenerated(false);
+        }
+    }
+
+    /**
+     * Determine if the image is NPOT.
+     *
+     * @return if the image is a non-power-of-2 image, e.g. having dimensions
+     * that are not powers of 2.
+     */
+    public boolean isNPOT() {
+        return width != 0 && height != 0
+               && (!FastMath.isPowerOfTwo(width) || !FastMath.isPowerOfTwo(height));
+    }
+
+    @Override
+    public void resetObject() {
+        this.id = -1;
+        this.mipsWereGenerated = false;
+        this.lastTextureState.reset();
+        setUpdateNeeded();
+    }
+
+    @Override
+    protected void deleteNativeBuffers() {
+        for (ByteBuffer buf : data) {
+            BufferUtils.destroyDirectBuffer(buf);
+        }
+    }
+
+    @Override
+    public void deleteObject(Object rendererObject) {
+        ((Renderer) rendererObject).deleteImage(this);
+    }
+
+    @Override
+    public NativeObject createDestructableClone() {
+        return new Image(id);
+    }
+
+    @Override
+    public long getUniqueId() {
+        return ((long) OBJTYPE_TEXTURE << 32) | ((long) id);
+    }
+
+    /**
+     * @return A shallow clone of this image. The data is not cloned.
+     */
+    @Override
+    public Image clone() {
+        Image clone = (Image) super.clone();
+        clone.mipMapSizes = mipMapSizes != null ? mipMapSizes.clone() : null;
+        clone.data = data != null ? new ArrayList<ByteBuffer>(data) : null;
+        clone.lastTextureState = new LastTextureState();
+        clone.setUpdateNeeded();
+        return clone;
+    }
+
+    /**
+     * Constructor instantiates a new <code>Image</code> object. All values
+     * are undefined.
+     */
+    public Image() {
+        super();
+        data = new ArrayList<ByteBuffer>(1);
+    }
+
+    protected Image(int id) {
+        super(id);
+    }
+
+    /**
+     * Constructor instantiates a new <code>Image</code> object. The
+     * attributes of the image are defined during construction.
+     *
+     * @param format      the data format of the image.
+     * @param width       the width of the image.
+     * @param height      the height of the image.
+     * @param data        the image data.
+     * @param mipMapSizes the array of mipmap sizes, or null for no mipmaps.
+     * @param colorSpace
+     * @see ColorSpace the colorSpace of the image
+     */
+    public Image(Format format, int width, int height, int depth, ArrayList<ByteBuffer> data,
+                 int[] mipMapSizes, ColorSpace colorSpace) {
+
+        this();
+
+        if (mipMapSizes != null) {
+            if (mipMapSizes.length <= 1) {
+                mipMapSizes = null;
+            } else {
+                needGeneratedMips = false;
+                mipsWereGenerated = true;
+            }
+        }
+
+        setFormat(format);
+        this.width = width;
+        this.height = height;
+        this.data = data;
+        this.depth = depth;
+        this.mipMapSizes = mipMapSizes;
+        this.colorSpace = colorSpace;
+    }
+
+    /**
+     * @param format
+     * @param width
+     * @param height
+     * @param depth
+     * @param data
+     * @param mipMapSizes
+     * @see {@link #Image(com.jme3.texture.Image.Format, int, int, int, java.util.ArrayList, int[], boolean)}
+     * @deprecated use {@link #Image(com.jme3.texture.Image.Format, int, int, int, java.util.ArrayList, int[], boolean)}
+     */
+    @Deprecated
+    public Image(Format format, int width, int height, int depth, ArrayList<ByteBuffer> data,
+                 int[] mipMapSizes) {
+        this(format, width, height, depth, data, mipMapSizes, ColorSpace.Linear);
+    }
+
+    /**
+     * Constructor instantiates a new <code>Image</code> object. The
+     * attributes of the image are defined during construction.
+     *
+     * @param format      the data format of the image.
+     * @param width       the width of the image.
+     * @param height      the height of the image.
+     * @param data        the image data.
+     * @param mipMapSizes the array of mipmap sizes, or null for no mipmaps.
+     * @param colorSpace
+     * @see ColorSpace the colorSpace of the image
+     */
+    public Image(Format format, int width, int height, ByteBuffer data,
+                 int[] mipMapSizes, ColorSpace colorSpace) {
+
+        this();
+
+        if (mipMapSizes != null && mipMapSizes.length <= 1) {
+            mipMapSizes = null;
+        } else {
+            needGeneratedMips = false;
+            mipsWereGenerated = true;
+        }
+
+        setFormat(format);
+        this.width = width;
+        this.height = height;
+        if (data != null) {
+            this.data = new ArrayList<ByteBuffer>(1);
+            this.data.add(data);
+        }
+        this.mipMapSizes = mipMapSizes;
+        this.colorSpace = colorSpace;
+    }
+
+    /**
+     * @param format
+     * @param width
+     * @param height
+     * @param data
+     * @param mipMapSizes
+     * @see {@link #Image(com.jme3.texture.Image.Format, int, int, java.nio.ByteBuffer, int[], boolean)}
+     * @deprecated use {@link #Image(com.jme3.texture.Image.Format, int, int, java.nio.ByteBuffer, int[], boolean)}
+     */
+    @Deprecated
+    public Image(Format format, int width, int height, ByteBuffer data,
+                 int[] mipMapSizes) {
+        this(format, width, height, data, mipMapSizes, ColorSpace.Linear);
+    }
+
+    /**
+     * Constructor instantiates a new <code>Image</code> object. The
+     * attributes of the image are defined during construction.
+     *
+     * @param format     the data format of the image.
+     * @param width      the width of the image.
+     * @param height     the height of the image.
+     * @param data       the image data.
+     * @param colorSpace
+     * @see ColorSpace the colorSpace of the image
+     */
+    public Image(Format format, int width, int height, int depth, ArrayList<ByteBuffer> data,
+                 ColorSpace colorSpace) {
+        this(format, width, height, depth, data, null, colorSpace);
+    }
+
+    /**
+     * @param format
+     * @param width
+     * @param height
+     * @param depth
+     * @param data
+     * @see {@link #Image(com.jme3.texture.Image.Format, int, int, int, java.util.ArrayList, boolean)}
+     * @deprecated use {@link #Image(com.jme3.texture.Image.Format, int, int, int, java.util.ArrayList, boolean)}
+     */
+    @Deprecated
+    public Image(Format format, int width, int height, int depth, ArrayList<ByteBuffer> data) {
+        this(format, width, height, depth, data, ColorSpace.Linear);
+    }
+
+    /**
+     * Constructor instantiates a new <code>Image</code> object. The
+     * attributes of the image are defined during construction.
+     *
+     * @param format     the data format of the image.
+     * @param width      the width of the image.
+     * @param height     the height of the image.
+     * @param data       the image data.
+     * @param colorSpace
+     * @see ColorSpace the colorSpace of the image
+     */
+    public Image(Format format, int width, int height, ByteBuffer data, ColorSpace colorSpace) {
+        this(format, width, height, data, null, colorSpace);
+    }
+
+    /**
+     * @param format
+     * @param width
+     * @param height
+     * @param data
+     * @see {@link #Image(com.jme3.texture.Image.Format, int, int, java.nio.ByteBuffer, boolean)}
+     * @deprecated use {@link #Image(com.jme3.texture.Image.Format, int, int, java.nio.ByteBuffer, boolean)}
+     */
+    @Deprecated
+    public Image(Format format, int width, int height, ByteBuffer data) {
+        this(format, width, height, data, null, ColorSpace.Linear);
     }
 
     /**
@@ -391,8 +660,8 @@ public class Image extends NativeObject {
 
     /**
      * @param multiSamples Set the number of samples to use for this image,
-     * setting this to a value higher than 1 turns this image/texture
-     * into a multisample texture (on OpenGL3.1 and higher).
+     *                     setting this to a value higher than 1 turns this image/texture
+     *                     into a multisample texture (on OpenGL3.1 and higher).
      */
     public void setMultiSamples(int multiSamples) {
         if (multiSamples <= 0) {
@@ -410,79 +679,122 @@ public class Image extends NativeObject {
         this.multiSamples = multiSamples;
     }
 
+    /**
+     * <code>setData</code> sets the data that makes up the image. This data
+     * is packed into an array of <code>ByteBuffer</code> objects.
+     *
+     * @param data the data that contains the image information.
+     */
+    public void setData(ArrayList<ByteBuffer> data) {
+        this.data = data;
+        setUpdateNeeded();
+    }
+
+    /**
+     * <code>setData</code> sets the data that makes up the image. This data
+     * is packed into a single <code>ByteBuffer</code>.
+     *
+     * @param data the data that contains the image information.
+     */
+    public void setData(ByteBuffer data) {
+        this.data = new ArrayList<ByteBuffer>(1);
+        this.data.add(data);
+        setUpdateNeeded();
+    }
+
     public void addData(ByteBuffer data) {
         if (this.data == null) {
-            this.data = new ArrayList<>(1);
+            this.data = new ArrayList<ByteBuffer>(1);
         }
         this.data.add(data);
         setUpdateNeeded();
     }
 
-    /**
-     * <code>getData</code> returns the data for this image. If the data is
-     * undefined, null will be returned.
-     *
-     * @return the data for this image.
-     */
-    public List<ByteBuffer> getData() {
-        return data;
+    public void setData(int index, ByteBuffer data) {
+        if (index >= 0) {
+            while (this.data.size() <= index) {
+                this.data.add(null);
+            }
+            this.data.set(index, data);
+            setUpdateNeeded();
+        } else {
+            throw new IllegalArgumentException("index must be greater than or equal to 0.");
+        }
     }
 
     /**
-     * <code>getData</code> returns the data for this image. If the data is
-     * undefined, null will be returned.
-     *
-     * @return the data for this image.
+     * @deprecated This feature is no longer used by the engine
      */
-    public ByteBuffer getData(int index) {
-        return data.size() > index ? data.get(index) : null;
+    @Deprecated
+    public void setEfficentData(Object efficientData) {
     }
 
     /**
-     * Returns the mipmap sizes for this image.
-     *
-     * @return the mipmap sizes for this image.
+     * @deprecated This feature is no longer used by the engine
      */
-    public int[] getMipMapSizes() {
-        return mipMapSizes;
+    @Deprecated
+    public Object getEfficentData() {
+        return null;
     }
 
     /**
-     * image loader is responsible for setting this attribute based on the color
-     * space in which the image has been encoded with. In the majority of cases,
-     * this flag will be set to sRGB by default since many image formats do not
-     * contain any color space information and the most frequently used colors
-     * space is sRGB
+     * Sets the mipmap sizes stored in this image's data buffer. Mipmaps are
+     * stored sequentially, and the first mipmap is the main image data. To
+     * specify no mipmaps, pass null and this will automatically be expanded
+     * into a single mipmap of the full
      *
-     * The material loader may override this attribute to Lineat if it determines that
-     * such conversion must not be performed, for example, when loading normal
-     * maps.
-     *
-     * @param colorSpace @see ColorSpace. Set to sRGB to enable srgb -&gt; linear
-     * conversion, Linear otherwise.
-     *
-     * @seealso Renderer#setLinearizeSrgbImages(boolean)
-     *
+     * @param mipMapSizes the mipmap sizes array, or null for a single image map.
      */
-    public void setColorSpace(ColorSpace colorSpace) {
-        this.colorSpace = colorSpace;
+    public void setMipMapSizes(int[] mipMapSizes) {
+        if (mipMapSizes != null && mipMapSizes.length <= 1) {
+            mipMapSizes = null;
+        }
+
+        this.mipMapSizes = mipMapSizes;
+
+        if (mipMapSizes != null) {
+            needGeneratedMips = false;
+            mipsWereGenerated = false;
+        } else {
+            needGeneratedMips = true;
+            mipsWereGenerated = false;
+        }
+
+        setUpdateNeeded();
     }
 
     /**
-     * Specifies that this image is an SRGB image and therefore must undergo an
-     * sRGB -&gt; linear RGB color conversion prior to being read by a shader and
-     * with the {@link GLRenderer#setLinearizeSrgbImages(boolean)} option is
-     * enabled.
+     * <code>setHeight</code> sets the height value of the image. It is
+     * typically a good idea to try to keep this as a multiple of 2.
      *
-     * This option is only supported for the 8-bit color and grayscale image
-     * formats. Determines if the image is in SRGB color space or not.
-     *
-     * @return True, if the image is an SRGB image, false if it is linear RGB.
-     *
-     * @seealso Renderer#setLinearizeSrgbImages(boolean)
+     * @param height the height of the image.
      */
-    public ColorSpace getColorSpace() {
-        return colorSpace;
+    public void setHeight(int height) {
+        this.height = height;
+        setUpdateNeeded();
+    }
+
+    /**
+     * <code>setDepth</code> sets the depth value of the image. It is
+     * typically a good idea to try to keep this as a multiple of 2. This is
+     * used for 3d images.
+     *
+     * @param depth the depth of the image.
+     */
+    public void setDepth(int depth) {
+        this.depth = depth;
+        setUpdateNeeded();
+    }
+
+    /**
+     * <code>setWidth</code> sets the width value of the image. It is
+     * typically a good idea to try to keep this as a multiple of 2.
+     *
+     * @param width the width of the image.
+     */
+    public void setWidth(int width) {
+        this.width = width;
+        setUpdateNeeded();
     }
 
     /**
@@ -539,49 +851,156 @@ public class Image extends NativeObject {
     }
 
     /**
-     * Determine if the image is NPOT.
+     * <code>getData</code> returns the data for this image. If the data is
+     * undefined, null will be returned.
      *
-     * @return if the image is a non-power-of-2 image, e.g. having dimensions
-     * that are not powers of 2.
+     * @return the data for this image.
      */
-    public boolean isNPOT() {
-        return width != 0 && height != 0
-               && (!FastMath.isPowerOfTwo(width) || !FastMath.isPowerOfTwo(height));
+    public List<ByteBuffer> getData() {
+        return data;
     }
 
     /**
-     * Sets the update needed flag, while also checking if mipmaps
-     * need to be regenerated.
+     * <code>getData</code> returns the data for this image. If the data is
+     * undefined, null will be returned.
+     *
+     * @return the data for this image.
      */
-    public void setUpdateNeeded() {
-        updateNeeded = true;
-        if (isGeneratedMipmapsRequired() && !hasMipmaps()) {
-            // Mipmaps are no longer valid, since the image was changed.
-            setMipmapsGenerated(false);
+    public ByteBuffer getData(int index) {
+        if (data.size() > index) {
+            return data.get(index);
+        } else {
+            return null;
         }
     }
 
-    @Override
-    public NativeObject createDestructableClone() {
-        return new Image(id);
+    /**
+     * Returns whether the image data contains mipmaps.
+     *
+     * @return true if the image data contains mipmaps, false if not.
+     */
+    public boolean hasMipmaps() {
+        return mipMapSizes != null;
     }
 
+    /**
+     * Returns the mipmap sizes for this image.
+     *
+     * @return the mipmap sizes for this image.
+     */
+    public int[] getMipMapSizes() {
+        return mipMapSizes;
+    }
 
-    @Override
-    public void deleteObject(Object rendererObject) {
-        ((GLRenderer)rendererObject).deleteImage(this);
+    /**
+     * image loader is responsible for setting this attribute based on the color
+     * space in which the image has been encoded with. In the majority of cases,
+     * this flag will be set to sRGB by default since many image formats do not
+     * contain any color space information and the most frequently used colors
+     * space is sRGB
+     * <p>
+     * The material loader may override this attribute to Lineat if it determines that
+     * such conversion must not be performed, for example, when loading normal
+     * maps.
+     *
+     * @param colorSpace @see ColorSpace. Set to sRGB to enable srgb -&gt; linear
+     *                   conversion, Linear otherwise.
+     * @seealso Renderer#setLinearizeSrgbImages(boolean)
+     */
+    public void setColorSpace(ColorSpace colorSpace) {
+        this.colorSpace = colorSpace;
+    }
+
+    /**
+     * Specifies that this image is an SRGB image and therefore must undergo an
+     * sRGB -&gt; linear RGB color conversion prior to being read by a shader and
+     * with the {@link Renderer#setLinearizeSrgbImages(boolean)} option is
+     * enabled.
+     * <p>
+     * This option is only supported for the 8-bit color and grayscale image
+     * formats. Determines if the image is in SRGB color space or not.
+     *
+     * @return True, if the image is an SRGB image, false if it is linear RGB.
+     * @seealso Renderer#setLinearizeSrgbImages(boolean)
+     */
+    public ColorSpace getColorSpace() {
+        return colorSpace;
     }
 
     @Override
-    public long getUniqueId() {
-        return ((long)OBJTYPE_TEXTURE << 32) | ((long)id);
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(getClass().getSimpleName());
+        sb.append("[size=").append(width).append("x").append(height);
+
+        if (depth > 1) {
+            sb.append("x").append(depth);
+        }
+
+        sb.append(", format=").append(format.name());
+
+        if (hasMipmaps()) {
+            sb.append(", mips");
+        }
+
+        if (getId() >= 0) {
+            sb.append(", id=").append(id);
+        }
+
+        sb.append("]");
+
+        return sb.toString();
     }
 
     @Override
-    public void resetObject() {
-        this.id = -1;
-        this.mipsWereGenerated = false;
-        this.lastTextureState.reset();
-        setUpdateNeeded();
+    public boolean equals(Object other) {
+        if (other == this) {
+            return true;
+        }
+        if (!(other instanceof Image)) {
+            return false;
+        }
+        Image that = (Image) other;
+        if (this.getFormat() != that.getFormat()) {
+            return false;
+        }
+        if (this.getWidth() != that.getWidth()) {
+            return false;
+        }
+        if (this.getHeight() != that.getHeight()) {
+            return false;
+        }
+        if (this.getData() != null && !this.getData().equals(that.getData())) {
+            return false;
+        }
+        if (this.getData() == null && that.getData() != null) {
+            return false;
+        }
+        if (this.getMipMapSizes() != null
+            && !Arrays.equals(this.getMipMapSizes(), that.getMipMapSizes())) {
+            return false;
+        }
+        if (this.getMipMapSizes() == null && that.getMipMapSizes() != null) {
+            return false;
+        }
+        if (this.getMultiSamples() != that.getMultiSamples()) {
+            return false;
+        }
+
+        return true;
     }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 97 * hash + (this.format != null ? this.format.hashCode() : 0);
+        hash = 97 * hash + this.width;
+        hash = 97 * hash + this.height;
+        hash = 97 * hash + this.depth;
+        hash = 97 * hash + Arrays.hashCode(this.mipMapSizes);
+        hash = 97 * hash + (this.data != null ? this.data.hashCode() : 0);
+        hash = 97 * hash + this.multiSamples;
+        return hash;
+    }
+
 }

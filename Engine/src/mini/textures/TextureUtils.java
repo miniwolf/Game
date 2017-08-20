@@ -50,7 +50,7 @@ public class TextureUtils {
         int height = 0;
         ByteBuffer buffer = null;
         try {
-            InputStream in = file.getInputStream(true);
+            InputStream in = file.getInputStream();
             PNGDecoder decoder = new PNGDecoder(in);
             width = decoder.getWidth();
             height = decoder.getHeight();

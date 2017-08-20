@@ -89,7 +89,8 @@ public class Technique {
      * @return A compatible shader.
      */
     ShaderProgram makeCurrent(RenderManager renderManager, List<MatParamOverride> worldOverrides,
-                              LightList lights, EnumSet<Caps> rendererCaps) {
+                              List<MatParamOverride> forcedOverrides, LightList lights,
+                              EnumSet<Caps> rendererCaps) {
         TechniqueDefLogic logic = def.getLogic();
 
         dynamicDefines.clear();
@@ -97,6 +98,9 @@ public class Technique {
 
         if (worldOverrides != null) {
             applyOverrides(dynamicDefines, worldOverrides);
+        }
+        if (forcedOverrides != null) {
+            applyOverrides(dynamicDefines, forcedOverrides);
         }
 
         return logic.makeCurrent(renderManager, rendererCaps, lights, dynamicDefines);

@@ -1,4 +1,5 @@
 import mini.app.Application;
+import mini.app.SimpleApplication;
 import mini.asset.MaterialKey;
 import mini.asset.ModelKey;
 import mini.light.DirectionalLight;
@@ -20,10 +21,10 @@ import java.io.IOException;
 /**
  * Created by miniwolf on 06-05-2017.
  */
-public class TestSimpleLighting extends Application {
+public class TestSimpleLighting extends SimpleApplication {
     public static void main(String[] args) {
         System.setProperty("org.lwjgl.librarypath",
-                           "C:/Users/nicklas/Game/Engine/lib/native/windows/");
+                           "C:/Users/miniwolf/Engine/Engine/lib/native/windows/");
         TestSimpleLighting app = new TestSimpleLighting();
         app.start();
     }
@@ -32,7 +33,7 @@ public class TestSimpleLighting extends Application {
     public void simpleInitApp() {
         Geometry teapot = null;
         try {
-            teapot = (Geometry) OBJLoader.load(new ModelKey("Game/obj/teapot.obj"));
+            teapot = (Geometry) OBJLoader.load(new ModelKey("obj/teapot.obj"));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -41,7 +42,7 @@ public class TestSimpleLighting extends Application {
         Material mat = new Material("MatDefs/Light/Lighting.minid");
         mat.setFloat("Shininess", 25);
         mat.setBoolean("UseMaterialColors", true);
-        cam.setPosition(new Vector3f(0.015041917f, 0.4572918f, 5.2874837f));
+        cam.setLocation(new Vector3f(0.015041917f, 0.4572918f, 5.2874837f));
         cam.setRotation(new Quaternion(-1.8875003E-4f, 0.99882424f, 0.04832061f, 0.0039016632f));
 
         mat.setColor("Ambient", ColorRGBA.Black);

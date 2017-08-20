@@ -8,17 +8,40 @@ import mini.math.FastMath;
 import mini.math.Matrix4f;
 import mini.math.Plane;
 import mini.math.Quaternion;
+import mini.math.Vector2f;
 import mini.math.Vector3f;
+import mini.math.Vector4f;
 import mini.utils.TempVars;
 
+import java.io.IOException;
+
 /**
- * This camera is implementing the techniques of a follow camera.
+ * <code>Camera</code> is a standalone, purely mathematical class for doing
+ * camera-related computations.
+ *
+ * <p>
+ * Given input data such as location, orientation (direction, left, up),
+ * and viewport settings, it can compute data necessary to render objects
+ * with the graphics library. Two matrices are generated, the view matrix
+ * transforms objects from world space into eye space, while the projection
+ * matrix transforms objects from eye space into clip space.
+ * </p>
+ * <p>Another purpose of the camera class is to do frustum culling operations,
+ * defined by six planes which define a 3D frustum shape, it is possible to
+ * test if an object bounded by a mathematically defined volume is inside
+ * the camera frustum, and thus to avoid rendering objects that are outside
+ * the frustum
+ * </p>
+ *
+ * @author Mark Powell
+ * @author Joshua Slack
  */
-public class Camera implements MouseListener, KeyboardListener {
+public class Camera implements Cloneable {
+
     /**
      * The <code>FrustumIntersect</code> enum is returned as a result
      * of a culling check operation,
-     * see {@link #contains(bounding.BoundingVolume) }
+     * see {@link #contains(com.jme3.bounding.BoundingVolume) }
      */
     public enum FrustumIntersect {
 
@@ -153,12 +176,6 @@ public class Camera implements MouseListener, KeyboardListener {
     /** The camera's name. */
     protected String name;
 
-//    public Camera() {
-//        this.projectionMatrix = createProjectionMatrix();
-//        Mouse.addMouseListener(this);
-//        Keyboard.addListener(this);
-//    }
-
     /**
      * Serialization only. Do not use.
      */
@@ -203,27 +220,553 @@ public class Camera implements MouseListener, KeyboardListener {
         onFrameChange();
     }
 
+    @Override
+    public Camera clone() {
+        try {
+            Camera cam = (Camera) super.clone();
+            cam.viewportChanged = true;
+            cam.planeState = 0;
+
+            cam.worldPlane = new Plane[MAX_WORLD_PLANES];
+            for (int i = 0; i < worldPlane.length; i++) {
+                cam.worldPlane[i] = worldPlane[i].clone();
+            }
+
+            cam.coeffLeft = new float[2];
+            cam.coeffRight = new float[2];
+            cam.coeffBottom = new float[2];
+            cam.coeffTop = new float[2];
+
+            cam.location = location.clone();
+            cam.rotation = rotation.clone();
+
+            if (projectionMatrixOverride != null) {
+                cam.projectionMatrixOverride = projectionMatrixOverride.clone();
+            }
+
+            cam.viewMatrix = viewMatrix.clone();
+            cam.projectionMatrix = projectionMatrix.clone();
+            cam.viewProjectionMatrix = viewProjectionMatrix.clone();
+
+            cam.update();
+
+            return cam;
+        } catch (CloneNotSupportedException ex) {
+            throw new AssertionError();
+        }
+    }
+
     /**
-     * Resizes this camera's view with the given width and height. This is
-     * similar to constructing a new camera, but reusing the same Object. This
-     * method is called by an associated {@link RenderManager} to notify the camera of
-     * changes in the display dimensions.
+     * This method copies the settings of the given camera.
      *
-     * @param width the view width
-     * @param height the view height
-     * @param fixAspect If true, the camera's aspect ratio will be recomputed.
-     * Recomputing the aspect ratio requires changing the frustum values.
+     * @param cam
+     *            the camera we copy the settings from
+     */
+    public void copyFrom(Camera cam) {
+        location.set(cam.location);
+        rotation.set(cam.rotation);
+
+        frustumNear = cam.frustumNear;
+        frustumFar = cam.frustumFar;
+        frustumLeft = cam.frustumLeft;
+        frustumRight = cam.frustumRight;
+        frustumTop = cam.frustumTop;
+        frustumBottom = cam.frustumBottom;
+
+        coeffLeft[0] = cam.coeffLeft[0];
+        coeffLeft[1] = cam.coeffLeft[1];
+        coeffRight[0] = cam.coeffRight[0];
+        coeffRight[1] = cam.coeffRight[1];
+        coeffBottom[0] = cam.coeffBottom[0];
+        coeffBottom[1] = cam.coeffBottom[1];
+        coeffTop[0] = cam.coeffTop[0];
+        coeffTop[1] = cam.coeffTop[1];
+
+        viewPortLeft = cam.viewPortLeft;
+        viewPortRight = cam.viewPortRight;
+        viewPortTop = cam.viewPortTop;
+        viewPortBottom = cam.viewPortBottom;
+
+        this.width = cam.width;
+        this.height = cam.height;
+
+        this.planeState = 0;
+        this.viewportChanged = true;
+        for (int i = 0; i < MAX_WORLD_PLANES; ++i) {
+            worldPlane[i].setNormal(cam.worldPlane[i].getNormal());
+            worldPlane[i].setConstant(cam.worldPlane[i].getConstant());
+        }
+
+        this.parallelProjection = cam.parallelProjection;
+        this.overrideProjection = cam.overrideProjection;
+        this.projectionMatrixOverride.set(cam.projectionMatrixOverride);
+
+        this.viewMatrix.set(cam.viewMatrix);
+        this.projectionMatrix.set(cam.projectionMatrix);
+        this.viewProjectionMatrix.set(cam.viewProjectionMatrix);
+
+        this.name = cam.name;
+    }
+
+    /**
+     * This method sets the cameras name.
+     * @param name the cameras name
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
+     * This method returns the cameras name.
+     * @return the cameras name
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * Sets a clipPlane for this camera.
+     * The clipPlane is used to recompute the
+     * projectionMatrix using the plane as the near plane
+     * This technique is known as the oblique near-plane clipping method introduced by Eric Lengyel
+     * more info here
+     * <ul>
+     * <li><a href="http://www.terathon.com/code/oblique.html">http://www.terathon.com/code/oblique.html</a>
+     * <li><a href="http://aras-p.info/texts/obliqueortho.html">http://aras-p.info/texts/obliqueortho.html</a>
+     * <li><a href="http://hacksoflife.blogspot.com/2008/12/every-now-and-then-i-come-across.html">http://hacksoflife.blogspot.com/2008/12/every-now-and-then-i-come-across.html</a>
+     * </ul>
+     *
+     * Note that this will work properly only if it's called on each update, and be aware that it won't work properly with the sky bucket.
+     * if you want to handle the sky bucket, look at how it's done in SimpleWaterProcessor.java
+     * @param clipPlane the plane
+     * @param side the side the camera stands from the plane
+     */
+    public void setClipPlane(Plane clipPlane, Plane.Side side) {
+        float sideFactor = 1;
+        if (side == Plane.Side.Negative) {
+            sideFactor = -1;
+        }
+        //we are on the other side of the plane no need to clip anymore.
+        if (clipPlane.whichSide(location) == side) {
+            return;
+        }
+
+        TempVars vars = TempVars.get();
+        try {
+            Matrix4f p = projectionMatrixOverride.set(projectionMatrix);
+
+            Matrix4f ivm = viewMatrix;
+
+            Vector3f point = clipPlane.getNormal().mult(clipPlane.getConstant(), vars.vect1);
+            Vector3f pp = ivm.mult(point, vars.vect2);
+            Vector3f pn = ivm.multNormal(clipPlane.getNormal(), vars.vect3);
+            Vector4f clipPlaneV = vars.vect4f1.set(pn.x * sideFactor, pn.y * sideFactor, pn.z * sideFactor, -(pp.dot(pn)) * sideFactor);
+
+            Vector4f v = vars.vect4f2.set(0, 0, 0, 0);
+
+            v.x = (Math.signum(clipPlaneV.x) + p.m02) / p.m00;
+            v.y = (Math.signum(clipPlaneV.y) + p.m12) / p.m11;
+            v.z = -1.0f;
+            v.w = (1.0f + p.m22) / p.m23;
+
+            float dot = clipPlaneV.dot(v);//clipPlaneV.x * v.x + clipPlaneV.y * v.y + clipPlaneV.z * v.z + clipPlaneV.w * v.w;
+            Vector4f c = clipPlaneV.multLocal(2.0f / dot);
+
+            p.m20 = c.x - p.m30;
+            p.m21 = c.y - p.m31;
+            p.m22 = c.z - p.m32;
+            p.m23 = c.w - p.m33;
+            setProjectionMatrix(p);
+        } finally {
+            vars.release();
+        }
+    }
+
+    /**
+     * Sets a clipPlane for this camera.
+     * The cliPlane is used to recompute the projectionMatrix using the plane as the near plane
+     * This technique is known as the oblique near-plane clipping method introduced by Eric Lengyel
+     * more info here
+     * <ul>
+     * <li><a href="http://www.terathon.com/code/oblique.html">http://www.terathon.com/code/oblique.html</a></li>
+     * <li><a href="http://aras-p.info/texts/obliqueortho.html">http://aras-p.info/texts/obliqueortho.html</a></li>
+     * <li><a href="http://hacksoflife.blogspot.com/2008/12/every-now-and-then-i-come-across.html">
+     * http://hacksoflife.blogspot.com/2008/12/every-now-and-then-i-come-across.html</a></li>
+     * </ul>
+     *
+     * Note that this will work properly only if it's called on each update, and be aware that it won't work properly with the sky bucket.
+     * if you want to handle the sky bucket, look at how it's done in SimpleWaterProcessor.java
+     * @param clipPlane the plane
+     */
+    public void setClipPlane(Plane clipPlane) {
+        setClipPlane(clipPlane, clipPlane.whichSide(location));
+    }
+
+    /**
+     * Resize this camera's view for the specified display size. Invoked by an
+     * associated {@link RenderManager} to notify the camera of changes to the
+     * display dimensions.
+     *
+     * @param width the new width of the display, in pixels
+     * @param height the new height of the display, in pixels
+     * @param fixAspect if true, recompute the camera's frustum to preserve its
+     * prior aspect ratio
      */
     public void resize(int width, int height, boolean fixAspect) {
         this.width = width;
         this.height = height;
         onViewPortChange();
 
-        if (fixAspect /*&& !parallelProjection*/) {
-            frustumRight = frustumTop * ((float) width / height);
+        if (fixAspect) {
+            float h = height * (viewPortTop - viewPortBottom);
+            float w = width * (viewPortRight - viewPortLeft);
+            float aspectRatio = w / h;
+            frustumRight = frustumTop * aspectRatio;
             frustumLeft = -frustumRight;
             onFrustumChange();
         }
+    }
+
+    /**
+     * <code>getFrustumBottom</code> returns the value of the bottom frustum
+     * plane.
+     *
+     * @return the value of the bottom frustum plane.
+     */
+    public float getFrustumBottom() {
+        return frustumBottom;
+    }
+
+    /**
+     * <code>setFrustumBottom</code> sets the value of the bottom frustum
+     * plane.
+     *
+     * @param frustumBottom the value of the bottom frustum plane.
+     */
+    public void setFrustumBottom(float frustumBottom) {
+        this.frustumBottom = frustumBottom;
+        onFrustumChange();
+    }
+
+    /**
+     * <code>getFrustumFar</code> gets the value of the far frustum plane.
+     *
+     * @return the value of the far frustum plane.
+     */
+    public float getFrustumFar() {
+        return frustumFar;
+    }
+
+    /**
+     * <code>setFrustumFar</code> sets the value of the far frustum plane.
+     *
+     * @param frustumFar the value of the far frustum plane.
+     */
+    public void setFrustumFar(float frustumFar) {
+        this.frustumFar = frustumFar;
+        onFrustumChange();
+    }
+
+    /**
+     * <code>getFrustumLeft</code> gets the value of the left frustum plane.
+     *
+     * @return the value of the left frustum plane.
+     */
+    public float getFrustumLeft() {
+        return frustumLeft;
+    }
+
+    /**
+     * <code>setFrustumLeft</code> sets the value of the left frustum plane.
+     *
+     * @param frustumLeft the value of the left frustum plane.
+     */
+    public void setFrustumLeft(float frustumLeft) {
+        this.frustumLeft = frustumLeft;
+        onFrustumChange();
+    }
+
+    /**
+     * <code>getFrustumNear</code> gets the value of the near frustum plane.
+     *
+     * @return the value of the near frustum plane.
+     */
+    public float getFrustumNear() {
+        return frustumNear;
+    }
+
+    /**
+     * <code>setFrustumNear</code> sets the value of the near frustum plane.
+     *
+     * @param frustumNear the value of the near frustum plane.
+     */
+    public void setFrustumNear(float frustumNear) {
+        this.frustumNear = frustumNear;
+        onFrustumChange();
+    }
+
+    /**
+     * <code>getFrustumRight</code> gets the value of the right frustum plane.
+     *
+     * @return frustumRight the value of the right frustum plane.
+     */
+    public float getFrustumRight() {
+        return frustumRight;
+    }
+
+    /**
+     * <code>setFrustumRight</code> sets the value of the right frustum plane.
+     *
+     * @param frustumRight the value of the right frustum plane.
+     */
+    public void setFrustumRight(float frustumRight) {
+        this.frustumRight = frustumRight;
+        onFrustumChange();
+    }
+
+    /**
+     * <code>getFrustumTop</code> gets the value of the top frustum plane.
+     *
+     * @return the value of the top frustum plane.
+     */
+    public float getFrustumTop() {
+        return frustumTop;
+    }
+
+    /**
+     * <code>setFrustumTop</code> sets the value of the top frustum plane.
+     *
+     * @param frustumTop the value of the top frustum plane.
+     */
+    public void setFrustumTop(float frustumTop) {
+        this.frustumTop = frustumTop;
+        onFrustumChange();
+    }
+
+    /**
+     * <code>getLocation</code> retrieves the location vector of the camera.
+     *
+     * @return the position of the camera.
+     * @see Camera#getLocation()
+     */
+    public Vector3f getLocation() {
+        return location;
+    }
+
+    /**
+     * <code>getRotation</code> retrieves the rotation quaternion of the camera.
+     *
+     * @return the rotation of the camera.
+     */
+    public Quaternion getRotation() {
+        return rotation;
+    }
+
+    /**
+     * <code>getDirection</code> retrieves the direction vector the camera is
+     * facing.
+     *
+     * @return the direction the camera is facing.
+     * @see Camera#getDirection()
+     */
+    public Vector3f getDirection() {
+        return rotation.getRotationColumn(2);
+    }
+
+    /**
+     * <code>getLeft</code> retrieves the left axis of the camera.
+     *
+     * @return the left axis of the camera.
+     * @see Camera#getLeft()
+     */
+    public Vector3f getLeft() {
+        return rotation.getRotationColumn(0);
+    }
+
+    /**
+     * <code>getUp</code> retrieves the up axis of the camera.
+     *
+     * @return the up axis of the camera.
+     * @see Camera#getUp()
+     */
+    public Vector3f getUp() {
+        return rotation.getRotationColumn(1);
+    }
+
+    /**
+     * <code>getDirection</code> retrieves the direction vector the camera is
+     * facing.
+     *
+     * @return the direction the camera is facing.
+     * @see Camera#getDirection()
+     */
+    public Vector3f getDirection(Vector3f store) {
+        return rotation.getRotationColumn(2, store);
+    }
+
+    /**
+     * <code>getLeft</code> retrieves the left axis of the camera.
+     *
+     * @return the left axis of the camera.
+     * @see Camera#getLeft()
+     */
+    public Vector3f getLeft(Vector3f store) {
+        return rotation.getRotationColumn(0, store);
+    }
+
+    /**
+     * <code>getUp</code> retrieves the up axis of the camera.
+     *
+     * @return the up axis of the camera.
+     * @see Camera#getUp()
+     */
+    public Vector3f getUp(Vector3f store) {
+        return rotation.getRotationColumn(1, store);
+    }
+
+    /**
+     * <code>setLocation</code> sets the position of the camera.
+     *
+     * @param location the position of the camera.
+     */
+    public void setLocation(Vector3f location) {
+        this.location.set(location);
+        onFrameChange();
+    }
+
+    /**
+     * <code>setRotation</code> sets the orientation of this camera. This will
+     * be equivalent to setting each of the axes:
+     * <code><br>
+     * cam.setLeft(rotation.getRotationColumn(0));<br>
+     * cam.setUp(rotation.getRotationColumn(1));<br>
+     * cam.setDirection(rotation.getRotationColumn(2));<br>
+     * </code>
+     *
+     * @param rotation the rotation of this camera
+     */
+    public void setRotation(Quaternion rotation) {
+        this.rotation.set(rotation);
+        onFrameChange();
+    }
+
+    /**
+     * <code>lookAtDirection</code> sets the direction the camera is facing
+     * given a direction and an up vector.
+     *
+     * @param direction the direction this camera is facing.
+     */
+    public void lookAtDirection(Vector3f direction, Vector3f up) {
+        this.rotation.lookAt(direction, up);
+        onFrameChange();
+    }
+
+    /**
+     * <code>setAxes</code> sets the axes (left, up and direction) for this
+     * camera.
+     *
+     * @param left      the left axis of the camera.
+     * @param up        the up axis of the camera.
+     * @param direction the direction the camera is facing.
+     *
+     * @see Camera#setAxes(com.jme3.math.Quaternion)
+     */
+    public void setAxes(Vector3f left, Vector3f up, Vector3f direction) {
+        this.rotation.fromAxes(left, up, direction);
+        onFrameChange();
+    }
+
+    /**
+     * <code>setAxes</code> uses a rotational matrix to set the axes of the
+     * camera.
+     *
+     * @param axes the matrix that defines the orientation of the camera.
+     */
+    public void setAxes(Quaternion axes) {
+        this.rotation.set(axes);
+        onFrameChange();
+    }
+
+    /**
+     * normalize normalizes the camera vectors.
+     */
+    public void normalize() {
+        this.rotation.normalizeLocal();
+        onFrameChange();
+    }
+
+    /**
+     * <code>setFrustum</code> sets the frustum of this camera object.
+     *
+     * @param near   the near plane.
+     * @param far    the far plane.
+     * @param left   the left plane.
+     * @param right  the right plane.
+     * @param top    the top plane.
+     * @param bottom the bottom plane.
+     * @see Camera#setFrustum(float, float, float, float,
+     *      float, float)
+     */
+    public void setFrustum(float near, float far, float left, float right,
+                           float top, float bottom) {
+
+        frustumNear = near;
+        frustumFar = far;
+        frustumLeft = left;
+        frustumRight = right;
+        frustumTop = top;
+        frustumBottom = bottom;
+        onFrustumChange();
+    }
+
+    /**
+     * <code>setFrustumPerspective</code> defines the frustum for the camera.  This
+     * frustum is defined by a viewing angle, aspect ratio, and near/far planes
+     *
+     * @param fovY   Frame of view angle along the Y in degrees.
+     * @param aspect Width:Height ratio
+     * @param near   Near view plane distance
+     * @param far    Far view plane distance
+     */
+    public void setFrustumPerspective(float fovY, float aspect, float near,
+                                      float far) {
+        if (Float.isNaN(aspect) || Float.isInfinite(aspect)) {
+            // ignore.
+            System.err.println("Invalid aspect given to setFrustumPerspective: " + aspect);
+            return;
+        }
+
+        float h = FastMath.tan(fovY * FastMath.DEG_TO_RAD * .5f) * near;
+        float w = h * aspect;
+        frustumLeft = -w;
+        frustumRight = w;
+        frustumBottom = -h;
+        frustumTop = h;
+        frustumNear = near;
+        frustumFar = far;
+
+        // Camera is no longer parallel projection even if it was before
+        parallelProjection = false;
+
+        onFrustumChange();
+    }
+
+    /**
+     * <code>setFrame</code> sets the orientation and location of the camera.
+     *
+     * @param location  the point position of the camera.
+     * @param left      the left axis of the camera.
+     * @param up        the up axis of the camera.
+     * @param direction the facing of the camera.
+     * @see Camera#setFrame(com.jme3.math.Vector3f,
+     *      com.jme3.math.Vector3f, com.jme3.math.Vector3f, com.jme3.math.Vector3f)
+     */
+    public void setFrame(Vector3f location, Vector3f left, Vector3f up,
+                         Vector3f direction) {
+
+        this.location = location;
+        this.rotation.fromAxes(left, up, direction);
+        onFrameChange();
     }
 
     /**
@@ -269,120 +812,31 @@ public class Camera implements MouseListener, KeyboardListener {
     }
 
     /**
-     * <code>setFrustumPerspective</code> defines the frustum for the camera.  This
-     * frustum is defined by a viewing angle, aspect ratio, and near/far planes
+     * <code>setFrame</code> sets the orientation and location of the camera.
      *
-     * @param fovY   Frame of view angle along the Y in degrees.
-     * @param aspect Width:Height ratio
-     * @param near   Near view plane distance
-     * @param far    Far view plane distance
+     * @param location
+     *            the point position of the camera.
+     * @param axes
+     *            the orientation of the camera.
      */
-    public void setFrustumPerspective(float fovY, float aspect, float near,
-                                      float far) {
-        if (Float.isNaN(aspect) || Float.isInfinite(aspect)) {
-            // ignore.
-            System.err.println("Warning: Invalid aspect given to setFrustumPerspective: " + aspect);
-            return;
-        }
-
-        float h = FastMath.tan(fovY * FastMath.DEG_TO_RAD * .5f) * near;
-        float w = h * aspect;
-        frustumLeft = -w;
-        frustumRight = w;
-        frustumBottom = -h;
-        frustumTop = h;
-        frustumNear = near;
-        frustumFar = far;
-
-        // Camera is no longer parallel projection even if it was before
-        parallelProjection = false;
-
-        onFrustumChange();
+    public void setFrame(Vector3f location, Quaternion axes) {
+        this.location = location;
+        this.rotation.set(axes);
+        onFrameChange();
     }
 
+    /**
+     * <code>update</code> updates the camera parameters by calling
+     * <code>onFrustumChange</code>,<code>onViewPortChange</code> and
+     * <code>onFrameChange</code>.
+     *
+     * @see Camera#update()
+     */
     public void update() {
-    }
-
-    public Vector3f getPosition() {
-        return location;
-    }
-
-    /**
-     * @return the width/resolution of the display.
-     */
-    public int getWidth() {
-        return width;
-    }
-
-    /**
-     * @return the height/resolution of the display.
-     */
-    public int getHeight() {
-        return height;
-    }
-
-    /**
-     * <code>setLocation</code> sets the position of the camera.
-     *
-     * @param location the position of the camera.
-     */
-    public void setPosition(Vector3f location) {
-        this.location.set(location);
-        onFrameChange();
-    }
-
-    /**
-     * <code>setRotation</code> sets the orientation of this camera. This will
-     * be equivalent to setting each of the axes:
-     * <code><br>
-     * cam.setLeft(rotation.getRotationColumn(0));<br>
-     * cam.setUp(rotation.getRotationColumn(1));<br>
-     * cam.setDirection(rotation.getRotationColumn(2));<br>
-     * </code>
-     *
-     * @param rotation the rotation of this camera
-     */
-    public void setRotation(Quaternion rotation) {
-        this.rotation.set(rotation);
-        onFrameChange();
-    }
-
-    /**
-     * <code>getDirection</code> retrieves the direction vector the camera is
-     * facing.
-     *
-     * @return the direction the camera is facing.
-     * @see Camera#getDirection()
-     */
-    public Vector3f getDirection(Vector3f store) {
-        return rotation.getRotationColumn(2, store);
-    }
-
-    /**
-     * <code>getLeft</code> retrieves the left axis of the camera.
-     *
-     * @return the left axis of the camera.
-     * @see Camera#getLeft()
-     */
-    public Vector3f getLeft(Vector3f store) {
-        return rotation.getRotationColumn(0, store);
-    }
-
-    /**
-     * <code>getUp</code> retrieves the up axis of the camera.
-     *
-     * @return the up axis of the camera.
-     * @see Camera#getUp()
-     */
-    public Vector3f getUp(Vector3f store) {
-        return rotation.getRotationColumn(1, store);
-    }
-
-    /**
-     * Called when the viewport has been changed.
-     */
-    public void onViewPortChange() {
-        viewportChanged = true;
+        onFrustumChange();
+        onViewPortChange();
+        //...this is always called by onFrustumChange()
+        //onFrameChange();
     }
 
     /**
@@ -499,6 +953,168 @@ public class Camera implements MouseListener, KeyboardListener {
     }
 
     /**
+     * Returns the pseudo distance from the given position to the near
+     * plane of the camera. This is used for render queue sorting.
+     * @param pos The position to compute a distance to.
+     * @return Distance from the near plane to the point.
+     */
+    public float distanceToNearPlane(Vector3f pos) {
+        return worldPlane[NEAR_PLANE].pseudoDistance(pos);
+    }
+
+    public Plane getWorldPlane(int planeId) {
+        return worldPlane[planeId];
+    }
+
+    /**
+     * @return the view matrix of the camera.
+     * The view matrix transforms world space into eye space.
+     * This matrix is usually defined by the position and
+     * orientation of the camera.
+     */
+    public Matrix4f getViewMatrix() {
+        return viewMatrix;
+    }
+
+    /**
+     * Overrides the projection matrix used by the camera. Will
+     * use the matrix for computing the view projection matrix as well.
+     * Use null argument to return to normal functionality.
+     *
+     * @param projMatrix
+     */
+    public void setProjectionMatrix(Matrix4f projMatrix) {
+        if (projMatrix == null) {
+            overrideProjection = false;
+            projectionMatrixOverride.loadIdentity();
+        } else {
+            overrideProjection = true;
+            projectionMatrixOverride.set(projMatrix);
+        }
+        updateViewProjection();
+    }
+
+    /**
+     * @return the projection matrix of the camera.
+     * The view projection matrix  transforms eye space into clip space.
+     * This matrix is usually defined by the viewport and perspective settings
+     * of the camera.
+     */
+    public Matrix4f getProjectionMatrix() {
+        if (overrideProjection) {
+            return projectionMatrixOverride;
+        }
+
+        return projectionMatrix;
+    }
+
+    /**
+     * Updates the view projection matrix.
+     */
+    public void updateViewProjection() {
+        if (overrideProjection) {
+            viewProjectionMatrix.set(projectionMatrixOverride).multLocal(viewMatrix);
+        } else {
+            //viewProjectionMatrix.set(viewMatrix).multLocal(projectionMatrix);
+            viewProjectionMatrix.set(projectionMatrix).multLocal(viewMatrix);
+        }
+    }
+
+    /**
+     * @return The result of multiplying the projection matrix by the view
+     * matrix. This matrix is required for rendering an object. It is
+     * precomputed so as to not compute it every time an object is rendered.
+     */
+    public Matrix4f getViewProjectionMatrix() {
+        return viewProjectionMatrix;
+    }
+
+    /**
+     * @return True if the viewport (width, height, left, right, bottom, up)
+     * has been changed. This is needed in the renderer so that the proper
+     * viewport can be set-up.
+     */
+    public boolean isViewportChanged() {
+        return viewportChanged;
+    }
+
+    /**
+     * Clears the viewport changed flag once it has been updated inside
+     * the renderer.
+     */
+    public void clearViewportChanged() {
+        viewportChanged = false;
+    }
+
+    /**
+     * Called when the viewport has been changed.
+     */
+    public void onViewPortChange() {
+        viewportChanged = true;
+        setGuiBounding();
+    }
+
+    private void setGuiBounding() {
+        float sx = width * viewPortLeft;
+        float ex = width * viewPortRight;
+        float sy = height * viewPortBottom;
+        float ey = height * viewPortTop;
+        float xExtent = Math.max(0f, (ex - sx) / 2f);
+        float yExtent = Math.max(0f, (ey - sy) / 2f);
+    }
+
+    /**
+     * <code>onFrustumChange</code> updates the frustum to reflect any changes
+     * made to the planes. The new frustum values are kept in a temporary
+     * location for use when calculating the new frame. The projection
+     * matrix is updated to reflect the current values of the frustum.
+     */
+    public void onFrustumChange() {
+        if (!isParallelProjection()) {
+            float nearSquared = frustumNear * frustumNear;
+            float leftSquared = frustumLeft * frustumLeft;
+            float rightSquared = frustumRight * frustumRight;
+            float bottomSquared = frustumBottom * frustumBottom;
+            float topSquared = frustumTop * frustumTop;
+
+            float inverseLength = FastMath.invSqrt(nearSquared + leftSquared);
+            coeffLeft[0] = -frustumNear * inverseLength;
+            coeffLeft[1] = -frustumLeft * inverseLength;
+
+            inverseLength = FastMath.invSqrt(nearSquared + rightSquared);
+            coeffRight[0] = frustumNear * inverseLength;
+            coeffRight[1] = frustumRight * inverseLength;
+
+            inverseLength = FastMath.invSqrt(nearSquared + bottomSquared);
+            coeffBottom[0] = frustumNear * inverseLength;
+            coeffBottom[1] = -frustumBottom * inverseLength;
+
+            inverseLength = FastMath.invSqrt(nearSquared + topSquared);
+            coeffTop[0] = -frustumNear * inverseLength;
+            coeffTop[1] = frustumTop * inverseLength;
+        } else {
+            coeffLeft[0] = 1;
+            coeffLeft[1] = 0;
+
+            coeffRight[0] = -1;
+            coeffRight[1] = 0;
+
+            coeffBottom[0] = 1;
+            coeffBottom[1] = 0;
+
+            coeffTop[0] = -1;
+            coeffTop[1] = 0;
+        }
+
+        projectionMatrix.fromFrustum(frustumNear, frustumFar, frustumLeft, frustumRight, frustumTop, frustumBottom, parallelProjection);
+//        projectionMatrix.transposeLocal();
+
+        // The frame is effected by the frustum values
+        // update it as well
+        onFrameChange();
+    }
+
+    /**
      * <code>onFrameChange</code> updates the view frame of the camera.
      */
     public void onFrameChange() {
@@ -546,6 +1162,13 @@ public class Camera implements MouseListener, KeyboardListener {
                                                            * coeffTop[1], direction.z * coeffTop[1]);
         worldPlane[TOP_PLANE].setConstant(location.dot(topPlaneNormal));
 
+        if (isParallelProjection()) {
+            worldPlane[LEFT_PLANE].setConstant(worldPlane[LEFT_PLANE].getConstant() + frustumLeft);
+            worldPlane[RIGHT_PLANE].setConstant(worldPlane[RIGHT_PLANE].getConstant() - frustumRight);
+            worldPlane[TOP_PLANE].setConstant(worldPlane[TOP_PLANE].getConstant() - frustumTop);
+            worldPlane[BOTTOM_PLANE].setConstant(worldPlane[BOTTOM_PLANE].getConstant() + frustumBottom);
+        }
+
         // far plane
         worldPlane[FAR_PLANE].setNormal(left);
         worldPlane[FAR_PLANE].setNormal(-direction.x, -direction.y, -direction.z);
@@ -559,92 +1182,141 @@ public class Camera implements MouseListener, KeyboardListener {
 
         vars.release();
 
+//        viewMatrix.transposeLocal();
         updateViewProjection();
     }
 
     /**
-     * <code>onFrustumChange</code> updates the frustum to reflect any changes
-     * made to the planes. The new frustum values are kept in a temporary
-     * location for use when calculating the new frame. The projection
-     * matrix is updated to reflect the current values of the frustum.
+     * @return true if parallel projection is enable, false if in normal perspective mode
+     * @see #setParallelProjection(boolean)
      */
-    private void onFrustumChange() {
-        coeffLeft[0] = 1;
-        coeffLeft[1] = 0;
-
-        coeffRight[0] = -1;
-        coeffRight[1] = 0;
-
-        coeffBottom[0] = 1;
-        coeffBottom[1] = 0;
-
-        coeffTop[0] = -1;
-        coeffTop[1] = 0;
-
-        projectionMatrix.fromFrustum(frustumNear, frustumFar, frustumLeft, frustumRight, frustumTop, frustumBottom, parallelProjection);
-
-        // The frame is effected by the frustum values
-        // update it as well
-        onFrameChange();
-    }
-
-    public Matrix4f getViewMatrix() {
-        return viewMatrix;
-    }
-
-    public Matrix4f getProjectionMatrix() {
-        return projectionMatrix;
+    public boolean isParallelProjection() {
+        return this.parallelProjection;
     }
 
     /**
-     * Updates the view projection matrix.
+     * Enable/disable parallel projection.
+     *
+     * @param value true to set up this camera for parallel projection is enable, false to enter normal perspective mode
      */
-    private void updateViewProjection() {
-        if (overrideProjection) {
-            viewProjectionMatrix.set(projectionMatrixOverride).multLocal(viewMatrix);
-        } else {
-            viewProjectionMatrix.set(projectionMatrix).multLocal(viewMatrix);
+    public void setParallelProjection(final boolean value) {
+        this.parallelProjection = value;
+        onFrustumChange();
+    }
+
+    /**
+     * Computes the z value in projection space from the z value in view space
+     * Note that the returned value is going non linearly from 0 to 1.
+     * for more explanations on non linear z buffer see
+     * http://www.sjbaker.org/steve/omniv/love_your_z_buffer.html
+     * @param viewZPos the z value in view space.
+     * @return the z value in projection space.
+     */
+    public float getViewToProjectionZ(float viewZPos) {
+        float far = getFrustumFar();
+        float near = getFrustumNear();
+        float a = far / (far - near);
+        float b = far * near / (near - far);
+        return a + b / viewZPos;
+    }
+
+    /**
+     * Computes a position in World space given a screen position in screen space (0,0 to width, height)
+     * and a z position in projection space ( 0 to 1 non linear).
+     * This former value is also known as the Z buffer value or non linear depth buffer.
+     * for more explanations on non linear z buffer see
+     * http://www.sjbaker.org/steve/omniv/love_your_z_buffer.html
+     *
+     * To compute the projection space z from the view space z (distance from cam to object) @see Camera#getViewToProjectionZ
+     *
+     * @param screenPos 2d coordinate in screen space
+     * @param projectionZPos non linear z value in projection space
+     * @return the position in world space.
+     */
+    public Vector3f getWorldCoordinates(Vector2f screenPos, float projectionZPos) {
+        return getWorldCoordinates(screenPos, projectionZPos, null);
+    }
+
+    /**
+     * @see Camera#getWorldCoordinates
+     */
+    public Vector3f getWorldCoordinates(Vector2f screenPosition,
+                                        float projectionZPos, Vector3f store) {
+        if (store == null) {
+            store = new Vector3f();
         }
+
+        Matrix4f inverseMat = new Matrix4f(viewProjectionMatrix);
+        inverseMat.invertLocal();
+
+        store.set(
+                (screenPosition.x / getWidth() - viewPortLeft) / (viewPortRight - viewPortLeft) * 2 - 1,
+                (screenPosition.y / getHeight() - viewPortBottom) / (viewPortTop - viewPortBottom) * 2 - 1,
+                projectionZPos * 2 - 1);
+
+        float w = inverseMat.multProj(store, store);
+        store.multLocal(1f / w);
+
+        return store;
     }
 
     /**
-     * @return True if the viewport (width, height, left, right, bottom, up)
-     * has been changed. This is needed in the renderer so that the proper
-     * viewport can be set-up.
+     * Converts the given position from world space to screen space.
+     *
+     * @see Camera#getScreenCoordinates
      */
-    public boolean isViewportChanged() {
-        return viewportChanged;
+    public Vector3f getScreenCoordinates(Vector3f worldPos) {
+        return getScreenCoordinates(worldPos, null);
     }
 
     /**
-     * Clears the viewport changed flag once it has been updated inside
-     * the renderer.
+     * Converts the given position from world space to screen space.
+     *
+     * @see Camera#getScreenCoordinates(Vector3f, Vector3f)
      */
-    public void clearViewportChanged() {
-        viewportChanged = false;
+    public Vector3f getScreenCoordinates(Vector3f worldPosition, Vector3f store) {
+        if (store == null) {
+            store = new Vector3f();
+        }
+
+//        TempVars vars = vars.lock();
+//        Quaternion tmp_quat = vars.quat1;
+//        tmp_quat.set( worldPosition.x, worldPosition.y, worldPosition.z, 1 );
+//        viewProjectionMatrix.mult(tmp_quat, tmp_quat);
+//        tmp_quat.multLocal( 1.0f / tmp_quat.getW() );
+//        store.x = ( ( tmp_quat.getX() + 1 ) * ( viewPortRight - viewPortLeft ) / 2 + viewPortLeft ) * getWidth();
+//        store.y = ( ( tmp_quat.getY() + 1 ) * ( viewPortTop - viewPortBottom ) / 2 + viewPortBottom ) * getHeight();
+//        store.z = ( tmp_quat.getZ() + 1 ) / 2;
+//        vars.release();
+
+        float w = viewProjectionMatrix.multProj(worldPosition, store);
+        store.divideLocal(w);
+
+        store.x = ((store.x + 1f) * (viewPortRight - viewPortLeft) / 2f + viewPortLeft) * getWidth();
+        store.y = ((store.y + 1f) * (viewPortTop - viewPortBottom) / 2f + viewPortBottom) * getHeight();
+        store.z = (store.z + 1f) / 2f;
+
+        return store;
     }
 
-    public Matrix4f getProjectionViewMatrix() {
-        return projectionMatrix.mult(viewMatrix);
+    /**
+     * @return the width/resolution of the display.
+     */
+    public int getWidth() {
+        return width;
+    }
+
+    /**
+     * @return the height/resolution of the display.
+     */
+    public int getHeight() {
+        return height;
     }
 
     @Override
-    public void onClick(MouseButton btn, double x, double y) {
-    }
-
-    @Override
-    public void onRelease(MouseButton btn, double x, double y) {
-    }
-
-    @Override
-    public void onScroll(double offset) {
-    }
-
-    @Override
-    public void onClick(KeyboardKey key, int mods) {
-    }
-
-    @Override
-    public void onRelease(KeyboardKey key, int mods) {
+    public String toString() {
+        return "Camera[location=" + location + "\n, direction=" + getDirection() + "\n"
+               + "res=" + width + "x" + height + ", parallel=" + parallelProjection + "\n"
+               + "near=" + frustumNear + ", far=" + frustumFar + "]";
     }
 }

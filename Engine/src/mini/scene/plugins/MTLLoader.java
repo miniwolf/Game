@@ -258,7 +258,7 @@ public class MTLLoader {
 
         InputStream in = null;
         try {
-            in = info.getFile().getInputStream(true);
+            in = info.getFile().getInputStream();
             loader.scan = new Scanner(in);
             loader.scan.useLocale(Locale.US);
 

@@ -62,22 +62,18 @@ public class MyFile {
         return getPath();
     }
 
-    public InputStream getInputStream(boolean useProduction) {
+    public InputStream getInputStream() {
+        URL systemResource = ClassLoader.getSystemResource(this.path);
         try {
-            try {
-                URL systemResource = ClassLoader.getSystemResource(this.path);
-                Path path = Paths.get(systemResource.toURI());
-                return new FileInputStream(path.toFile());
-            } catch (URISyntaxException e) {
-                e.printStackTrace();
-            }
-//            return useProduction
-//                    ? new FileInputStream(Paths.get("out/production/" + path).toFile())
-//                    : new FileInputStream(Paths.get(path).toFile());
-//
-//
+            Path path = Paths.get(systemResource.toURI());
+            return new FileInputStream(path.toFile());
+        } catch (NullPointerException e) {
+            System.err.println("Could not load " + this.path);
         } catch (FileNotFoundException e) {
             System.out.println(Paths.get("/").toFile().getAbsolutePath());
+            e.printStackTrace();
+        } catch (URISyntaxException e) {
+            System.out.println(systemResource.toString());
             e.printStackTrace();
         }
         return null;

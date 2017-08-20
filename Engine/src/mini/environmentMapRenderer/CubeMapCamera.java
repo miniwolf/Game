@@ -58,7 +58,7 @@ public class CubeMapCamera extends Camera {
     }
 
     @Override
-    public Vector3f getPosition() {
+    public Vector3f getLocation() {
         return center;
     }
 
@@ -73,7 +73,7 @@ public class CubeMapCamera extends Camera {
     }
 
     @Override
-    public Matrix4f getProjectionViewMatrix() {
+    public Matrix4f getViewProjectionMatrix() {
         return projectionViewMatrix;
     }
 

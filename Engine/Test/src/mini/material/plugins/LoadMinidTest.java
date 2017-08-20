@@ -34,7 +34,6 @@ package mini.material.plugins;
 import mini.material.*;
 import mini.renderEngine.Caps;
 import mini.renderEngine.RenderManager;
-import mini.renderer.*;
 import mini.scene.Geometry;
 import mini.scene.shape.Box;
 import mini.shaders.ShaderProgram;
@@ -49,7 +48,7 @@ import java.util.EnumSet;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(MockitoJUnitRunner.class)
-public class LoadJ3mdTest {
+public class LoadMinidTest {
 
     private Material material;
     private final Geometry geometry = new Geometry("Geometry", new Box(1, 1, 1));
@@ -57,14 +56,14 @@ public class LoadJ3mdTest {
     private final RenderManager renderManager = new RenderManager(new NullRenderer() {
         @Override
         public EnumSet<Caps> getCaps() {
-            return LoadJ3mdTest.this.myCaps;
+            return LoadMinidTest.this.myCaps;
         }
     });
 
     @Test
     public void testShaderNodesMaterialDefLoading() {
         supportGlsl(100);
-        material("testMatDef.minid");
+        material("matdef.minid");
         material.selectTechnique("Default", renderManager);
 
         assertEquals(material.getActiveTechnique().getDef().getShaderNodes().size(), 2);

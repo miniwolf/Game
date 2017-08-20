@@ -8,15 +8,13 @@ import mini.scene.Geometry;
 /**
  * <code>RenderQueue</code> is used to queue up and sort
  * {@link Geometry geometries} for rendering.
- *
- * @author Kirill Vainer
  */
 public class RenderQueue {
     private GeometryList opaqueList;
-//    private GeometryList guiList;
-//    private GeometryList transparentList;
-//    private GeometryList translucentList;
-//    private GeometryList skyList;
+    private GeometryList guiList;
+    private GeometryList transparentList;
+    private GeometryList translucentList;
+    private GeometryList skyList;
 
     /**
      * Creates a new RenderQueue, the default {@link GeometryComparator comparators}
@@ -24,10 +22,10 @@ public class RenderQueue {
      */
     public RenderQueue() {
         this.opaqueList = new GeometryList(new OpaqueComparator());
-//        this.guiList = new GeometryList(new GuiComparator());
-//        this.transparentList = new GeometryList(new TransparentComparator());
-//        this.translucentList = new GeometryList(new TransparentComparator());
-//        this.skyList = new GeometryList(new NullComparator());
+        this.guiList = new GeometryList(new GuiComparator());
+        this.transparentList = new GeometryList(new TransparentComparator());
+        this.translucentList = new GeometryList(new TransparentComparator());
+        this.skyList = new GeometryList(new NullComparator());
     }
 
     /**
@@ -154,18 +152,18 @@ public class RenderQueue {
             case Opaque:
                 opaqueList = new GeometryList(c);
                 break;
-//            case Gui:
-//                guiList = new GeometryList(c);
-//                break;
-//            case Sky:
-//                skyList = new GeometryList(c);
-//                break;
-//            case Transparent:
-//                transparentList = new GeometryList(c);
-//                break;
-//            case Translucent:
-//                translucentList = new GeometryList(c);
-//                break;
+            case Gui:
+                guiList = new GeometryList(c);
+                break;
+            case Sky:
+                skyList = new GeometryList(c);
+                break;
+            case Transparent:
+                transparentList = new GeometryList(c);
+                break;
+            case Translucent:
+                translucentList = new GeometryList(c);
+                break;
             default:
                 throw new UnsupportedOperationException("Unknown bucket type: " + bucket);
         }
@@ -179,14 +177,14 @@ public class RenderQueue {
         switch (bucket) {
             case Opaque:
                 return opaqueList.getComparator();
-//            case Gui:
-//                return guiList.getComparator();
-//            case Sky:
-//                return skyList.getComparator();
-//            case Transparent:
-//                return transparentList.getComparator();
-//            case Translucent:
-//                return translucentList.getComparator();
+            case Gui:
+                return guiList.getComparator();
+            case Sky:
+                return skyList.getComparator();
+            case Transparent:
+                return transparentList.getComparator();
+            case Translucent:
+                return translucentList.getComparator();
             default:
                 throw new UnsupportedOperationException("Unknown bucket type: " + bucket);
         }
@@ -207,18 +205,18 @@ public class RenderQueue {
             case Opaque:
                 opaqueList.add(g);
                 break;
-//            case Gui:
-//                guiList.add(g);
-//                break;
-//            case Sky:
-//                skyList.add(g);
-//                break;
-//            case Transparent:
-//                transparentList.add(g);
-//                break;
-//            case Translucent:
-//                translucentList.add(g);
-//                break;
+            case Gui:
+                guiList.add(g);
+                break;
+            case Sky:
+                skyList.add(g);
+                break;
+            case Transparent:
+                transparentList.add(g);
+                break;
+            case Translucent:
+                translucentList.add(g);
+                break;
             default:
                 throw new UnsupportedOperationException("Unknown bucket type: " + bucket);
         }
@@ -246,14 +244,14 @@ public class RenderQueue {
         switch (bucket) {
             case Opaque:
                 return opaqueList.size() == 0;
-//            case Gui:
-//                return guiList.size() == 0;
-//            case Sky:
-//                return skyList.size() == 0;
-//            case Transparent:
-//                return transparentList.size() == 0;
-//            case Translucent:
-//                return translucentList.size() == 0;
+            case Gui:
+                return guiList.size() == 0;
+            case Sky:
+                return skyList.size() == 0;
+            case Transparent:
+                return transparentList.size() == 0;
+            case Translucent:
+                return translucentList.size() == 0;
             default:
                 throw new UnsupportedOperationException("Unsupported bucket type: " + bucket);
         }
@@ -268,18 +266,18 @@ public class RenderQueue {
             case Opaque:
                 renderGeometryList(opaqueList, rm, cam, clear);
                 break;
-//            case Sky:
-//                renderGeometryList(skyList, rm, cam, clear);
-//                break;
-//            case Transparent:
-//                renderGeometryList(transparentList, rm, cam, clear);
-//                break;
-//            case Translucent:
-//                renderGeometryList(translucentList, rm, cam, clear);
-//                break;
-//            case Gui:
-//                renderGeometryList(guiList, rm, cam, clear);
-//                break;
+            case Sky:
+                renderGeometryList(skyList, rm, cam, clear);
+                break;
+            case Transparent:
+                renderGeometryList(transparentList, rm, cam, clear);
+                break;
+            case Translucent:
+                renderGeometryList(translucentList, rm, cam, clear);
+                break;
+            case Gui:
+                renderGeometryList(guiList, rm, cam, clear);
+                break;
             default:
                 throw new UnsupportedOperationException("Unsupported bucket type: " + bucket);
         }
@@ -287,9 +285,9 @@ public class RenderQueue {
 
     public void clear() {
         opaqueList.clear();
-//        guiList.clear();
-//        transparentList.clear();
-//        translucentList.clear();
-//        skyList.clear();
+        guiList.clear();
+        transparentList.clear();
+        translucentList.clear();
+        skyList.clear();
     }
 }

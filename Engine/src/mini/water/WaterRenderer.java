@@ -16,8 +16,8 @@ import mini.utils.MyFile;
 import mini.utils.OpenGlUtils;
 
 public class WaterRenderer {
-    private static final MyFile DUDV_MAP = new MyFile("textures", "waterDUDV.png");
-    private static final MyFile NORMAL_MAP = new MyFile("textures", "normal.png");
+    private static final MyFile DUDV_MAP = new MyFile("Textures", "waterDUDV.png");
+    private static final MyFile NORMAL_MAP = new MyFile("Textures", "normal.png");
     // private static final float WAVE_SPEED = 0.03f;
 
     private VAO quad;
@@ -61,8 +61,8 @@ public class WaterRenderer {
 
     private void prepareRender(Camera camera, Vector3f lightDir, UniformBindingManager manager) {
         //shader.start();
-        manager.setCamera(camera);
-        manager.setLightDir(lightDir);
+//        manager.setCamera(camera);
+//        manager.setLightDir(lightDir);
 
         moveFactor += 0.0005f;
         moveFactor %= 1;
