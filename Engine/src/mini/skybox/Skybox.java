@@ -22,6 +22,6 @@ public class Skybox {
 
     public void delete() {
         cube.delete();
-        texture.delete();
+        //texture.delete();
     }
 }

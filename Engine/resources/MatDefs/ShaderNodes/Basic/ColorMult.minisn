@@ -1,0 +1,19 @@
+ShaderNodeDefinitions{
+    ShaderNodeDefinition ColorMult {
+        Type: Fragment
+        Shader GLSL100: MatDefs/ShaderNodes/Basic/ColorMult.frag
+        Documentation{
+            Multiplies two colors
+            @input color1 the first color
+            @input color2 the second color
+            @output outColor the resulting color
+        }
+        Input {
+            vec4 color1
+            vec4 color2
+        }
+        Output {
+            vec4 outColor
+        }
+    }
+}

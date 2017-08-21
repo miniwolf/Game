@@ -31,10 +31,7 @@
  */
 package mini.utils;
 
-import mini.math.Quaternion;
-import mini.math.Vector2f;
-import mini.math.Vector3f;
-import mini.math.Vector4f;
+import mini.math.*;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.PhantomReference;
@@ -182,20 +179,20 @@ public final class BufferUtils {
     }
 
     /**
-     * Generate a new FloatBuffer using the given array of Vector4 objects. The
+     * Generate a new FloatBuffer using the given array of Vector4f objects. The
      * FloatBuffer will be 4 * data.length long and contain the vector data.
      *
-     * @param data array of Vector4 objects to place into a new FloatBuffer
+     * @param data array of Vector4f objects to place into a new FloatBuffer
      */
     public static FloatBuffer createFloatBuffer(Vector4f... data) {
         if (data == null) {
             return null;
         }
         FloatBuffer buff = createFloatBuffer(4 * data.length);
-        for (int x = 0; x < data.length; x++) {
-            if (data[x] != null) {
-                buff.put(data[x].getX()).put(data[x].getY()).put(data[x].getZ())
-                    .put(data[x].getW());
+        for (Vector4f vec : data) {
+            if (vec != null) {
+                buff.put(vec.getX()).put(vec.getY()).put(vec.getZ())
+                    .put(vec.getW());
             } else {
                 buff.put(0).put(0).put(0).put(0);
             }
@@ -250,6 +247,25 @@ public final class BufferUtils {
         }
 
         return createFloatBuffer(3 * vertices);
+    }
+
+    /**
+     * Sets the data contained in the given color into the FloatBuffer at the
+     * specified index.
+     *
+     * @param color
+     *            the data to insert
+     * @param buf
+     *            the buffer to insert into
+     * @param index
+     *            the postion to place the data; in terms of colors not floats
+     */
+    public static void setInBuffer(ColorRGBA color, FloatBuffer buf, int index) {
+        buf.position(index * 4);
+        buf.put(color.r);
+        buf.put(color.g);
+        buf.put(color.b);
+        buf.put(color.a);
     }
 
     /**

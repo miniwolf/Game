@@ -1,8 +1,9 @@
 package mini.textures;
 
 import mini.math.Vector2f;
+import mini.scene.Mesh;
 import mini.openglObjects.VAO;
-import mini.scene.Model;
+import mini.scene.Geometry;
 
 /**
  * Created by miniwolf on 17-02-2017.
@@ -12,7 +13,7 @@ public class GUITexture {
     private Vector2f position;
     private Vector2f scale;
     private float[] positions = {-1, 1, -1, -1, 1, 1, 1, -1};
-    private Model model;
+    private Geometry geometry;
 
     public GUITexture(int textureId, Vector2f position, Vector2f scale) {
         this.textureId = textureId;
@@ -25,7 +26,9 @@ public class GUITexture {
     private void setupVAO() {
         VAO vao = VAO.create();
         vao.storeUnindexedData(positions.length / 2, positions);
-        model = new Model(vao);
+        Mesh mesh = new Mesh();
+        mesh.setId(vao.getId());
+        geometry = new Geometry("texture", mesh);
     }
 
     public int getTextureId() {
@@ -40,7 +43,7 @@ public class GUITexture {
         return scale;
     }
 
-    public Model getModel() {
-        return model;
+    public Geometry getGeometry() {
+        return geometry;
     }
 }

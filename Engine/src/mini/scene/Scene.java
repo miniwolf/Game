@@ -1,10 +1,10 @@
 package mini.scene;
 
 import mini.math.Vector3f;
+import mini.renderEngine.Camera;
 import mini.skybox.Skybox;
 import mini.textures.GUITexture;
 import mini.textures.Texture;
-import mini.utils.Camera;
 import mini.water.WaterTile;
 
 import java.util.ArrayList;
@@ -14,11 +14,11 @@ public class Scene {
     // storing the entities multiple times in these various lists isn't great, but
     // it's okay for this very simple mini.scene with just a few object.
 
-    private List<Entity> standardEntities = new ArrayList<>();
-    private List<Entity> reflectableEntities = new ArrayList<>();
-    private List<Entity> underwaterEntities = new ArrayList<>();
-    private List<Entity> importantEntities = new ArrayList<>();
-    private List<Entity> shinyEntities = new ArrayList<>();
+    private List<Node> standardEntities = new ArrayList<>();
+    private List<Node> reflectableEntities = new ArrayList<>();
+    private List<Node> underwaterEntities = new ArrayList<>();
+    private List<Node> importantEntities = new ArrayList<>();
+    private List<Node> shinyEntities = new ArrayList<>();
 
     private List<WaterTile> waterTiles = new ArrayList<>();
     private List<GUITexture> guiTextures = new ArrayList<>();
@@ -34,7 +34,7 @@ public class Scene {
     public Scene(Camera camera, Skybox sky) {
         this.camera = camera;
         this.sky = sky;
-        environmentMap = Texture.newEmptyCubeMap(128);
+//        environmentMap = Texture.newEmptyCubeMap(128);
         waterTiles.add(new WaterTile(-20, 6, waterHeight));
         waterTiles.add(new WaterTile(-10, 6, waterHeight));
         waterTiles.add(new WaterTile(0, 6, waterHeight));
@@ -58,36 +58,6 @@ public class Scene {
         return waterTiles;
     }
 
-    public void addTerrain(Entity terrain) {
-        standardEntities.add(terrain);
-        importantEntities.add(terrain);
-        reflectableEntities.add(terrain);
-        underwaterEntities.add(terrain);
-    }
-
-    public void addShiny(Entity entity) {
-        if (entity.isSeenUnderWater()) {
-            underwaterEntities.add(entity);
-        }
-        if (entity.hasReflection()) {
-            reflectableEntities.add(entity);
-        }
-        shinyEntities.add(entity);
-    }
-
-    public void addEntity(Entity entity) {
-        standardEntities.add(entity);
-        if (entity.isSeenUnderWater()) {
-            underwaterEntities.add(entity);
-        }
-        if (entity.hasReflection()) {
-            reflectableEntities.add(entity);
-        }
-        if (entity.isImportant()) {
-            importantEntities.add(entity);
-        }
-    }
-
     public Skybox getSky() {
         return sky;
     }
@@ -100,23 +70,23 @@ public class Scene {
         return camera;
     }
 
-    public List<Entity> getReflectedEntities() {
+    public List<Node> getReflectedEntities() {
         return reflectableEntities;
     }
 
-    public List<Entity> getImportantEntities() {
+    public List<Node> getImportantEntities() {
         return importantEntities;
     }
 
-    public List<Entity> getShinyEntities() {
+    public List<Node> getShinyEntities() {
         return shinyEntities;
     }
 
-    public List<Entity> getUnderwaterEntities() {
+    public List<Node> getUnderwaterEntities() {
         return underwaterEntities;
     }
 
-    public List<Entity> getAllEntities() {
+    public List<Node> getAllEntities() {
         return standardEntities;
     }
 
@@ -126,10 +96,10 @@ public class Scene {
 
     public void delete() {
         sky.delete();
-        for (Entity entity : standardEntities) {
-            entity.delete();
+        for (Node node : standardEntities) {
+            //node.delete();
         }
-        environmentMap.delete();
+        //environmentMap.delete();
     }
 
     public void addGUITexture(GUITexture texture) {

@@ -6,7 +6,6 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL14;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL32;
-import mini.utils.DisplayManager;
 
 public class WaterFrameBuffers {
     protected static final int REFLECTION_WIDTH = 1280;
@@ -47,7 +46,7 @@ public class WaterFrameBuffers {
 
     public void unbindCurrentFrameBuffer() {//call after rendering to texture
         GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
-        GL11.glViewport(0, 0, DisplayManager.WIDTH, DisplayManager.HEIGHT);
+//        GL11.glViewport(0, 0, DisplayManager.WIDTH, DisplayManager.HEIGHT);
         GL11.glFinish();
     }
 

@@ -4,3 +4,4 @@ hasReflection;TRUE
 hasRefraction;FALSE
 castsShadow;TRUE
 important;FALSE
+diffuse;[diffuse.png]

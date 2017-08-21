@@ -7,7 +7,7 @@ in vec3 pass_viewVector;
 
 out vec4 out_colour;
 
-uniform sampler2D diffuseMap;
+uniform sampler2D m_diffuseMap;
 uniform samplerCube enviroMap;
 uniform vec3 lightDirection;
 
@@ -21,7 +21,7 @@ void main(void) {
     float diffuseLight = max(dot(-lightDirection, normalizedNormal), 0.0) * 0.8 + 0.5;
     float specularLight = pow(max(dot(reflectedLight, normalize(-pass_viewVector)), 0.0), specularDamper)*0.8;
 
-    out_colour = texture(diffuseMap, pass_textureCoords) * diffuseLight;
+    out_colour = texture(m_diffuseMap, pass_textureCoords) * diffuseLight;
 
     vec3 reflectVector = reflect(pass_viewVector, normalizedNormal);
     vec4 reflectedColour = texture(enviroMap, reflectVector);

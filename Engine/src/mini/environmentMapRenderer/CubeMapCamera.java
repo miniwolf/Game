@@ -2,9 +2,9 @@ package mini.environmentMapRenderer;
 
 import mini.math.Matrix4f;
 import mini.math.Vector3f;
-import mini.utils.Camera;
+import mini.renderEngine.Camera;
 
-public class CubeMapCamera implements Camera {
+public class CubeMapCamera extends Camera {
     private static final float NEAR_PLANE = 0.1f;
     private static final float FAR_PLANE = 200f;
     private static final float FOV = 90;// don't change!
@@ -58,7 +58,7 @@ public class CubeMapCamera implements Camera {
     }
 
     @Override
-    public Vector3f getPosition() {
+    public Vector3f getLocation() {
         return center;
     }
 
@@ -68,17 +68,12 @@ public class CubeMapCamera implements Camera {
     }
 
     @Override
-    public void reflect(float height) {
-
-    }
-
-    @Override
     public Matrix4f getProjectionMatrix() {
         return projectionMatrix;
     }
 
     @Override
-    public Matrix4f getProjectionViewMatrix() {
+    public Matrix4f getViewProjectionMatrix() {
         return projectionViewMatrix;
     }
 

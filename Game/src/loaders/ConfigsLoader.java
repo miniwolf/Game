@@ -2,7 +2,9 @@ package loaders;
 
 import mini.utils.MyFile;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ConfigsLoader {
     public Configs loadConfigs(MyFile configsFile) {
@@ -29,5 +31,18 @@ public class ConfigsLoader {
         configs.setRefraction(takeBooleanValue(lines.get(3)));
         configs.setCastsShadow(takeBooleanValue(lines.get(4)));
         configs.setImportant(takeBooleanValue(lines.get(5)));
+        if (lines.size() == 7) {
+            // TODO: Create a parser for this
+            configs.setDiffuseMaps(takeListValue(lines.get(6)));
+        }
+    }
+
+    private List<String> takeListValue(String line) {
+        String[] split = line.split("\\[")[1].split("]")[0].split(",");
+        return Arrays.stream(split).map(String::trim).collect(Collectors.toList());
+    }
+
+    private String takeStringValue(String line) {
+        return line.split(LoaderSettings.SEPARATOR)[1];
     }
 }

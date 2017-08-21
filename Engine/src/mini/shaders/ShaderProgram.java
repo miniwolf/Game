@@ -1,17 +1,81 @@
 package mini.shaders;
 
-import mini.utils.MyFile;
-import org.lwjgl.opengl.GL11;
+import mini.renderEngine.opengl.GLRenderer;
+import mini.scene.VertexBuffer;
+import mini.utils.NativeObject;
 import org.lwjgl.opengl.GL20;
 
-import java.io.BufferedReader;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
-public class ShaderProgram {
-    private int programID;
+public class ShaderProgram extends NativeObject {
+    private boolean isUpdateNeeded = true;
 
-    public ShaderProgram(MyFile vertexFile, MyFile fragmentFile, String... inVariables) {
+    /**
+     * A list of all shader sources currently attached.
+     */
+    private List<ShaderSource> shaderSourceList = new ArrayList<>();
+
+    /**
+     * Maps attribute name to the location of the attribute in the shader.
+     */
+    private Map<Integer, Attribute> attribs = new HashMap<>();
+
+    /**
+     * Maps uniform name to the uniform variable.
+     */
+    private Map<String, Uniform> uniforms = new HashMap<>();
+
+    /**
+     * Uniforms bound to {@link UniformBinding}s.
+     * <p>
+     * Managed by the {@link UniformBindingManager}.
+     */
+    private List<Uniform> boundUniforms = new ArrayList<>();
+
+    /**
+     * Type of shader. The shader will control the pipeline of it's type.
+     */
+    public enum ShaderType {
+
+        /**
+         * Control fragment rasterization. (e.g color of pixel).
+         */
+        Fragment("frag"),
+        /**
+         * Control vertex processing. (e.g transform of model to clip space)
+         */
+        Vertex("vert"),
+        /**
+         * Control geometry assembly. (e.g compile a triangle list from input
+         * data)
+         */
+        Geometry("geom"),
+        /**
+         * Controls tesselation factor (e.g how often a input patch should be
+         * subdivided)
+         */
+        TessellationControl("tsctrl"),
+        /**
+         * Controls tesselation transform (e.g similar to the vertex shader, but
+         * required to mix inputs manual)
+         */
+        TessellationEvaluation("tseval");
+
+        private String extension;
+
+        public String getExtension() {
+            return extension;
+        }
+
+        ShaderType(String extension) {
+            this.extension = extension;
+        }
+    }
+
+    /*public ShaderProgram(MyFile vertexFile, MyFile fragmentFile, String... inVariables) {
         int vertexShaderID = loadShader(vertexFile, GL20.GL_VERTEX_SHADER);
         int fragmentShaderID = loadShader(fragmentFile, GL20.GL_FRAGMENT_SHADER);
         programID = GL20.glCreateProgram();
@@ -23,52 +87,166 @@ public class ShaderProgram {
         GL20.glDetachShader(programID, fragmentShaderID);
         GL20.glDeleteShader(vertexShaderID);
         GL20.glDeleteShader(fragmentShaderID);
+    }*/
+
+    /**
+     * Creates a new shader, {@link #initialize() } must be called
+     * after this constructor for the shader to be usable.
+     */
+    public ShaderProgram() {
+        super();
+        shaderSourceList = new ArrayList<>();
+        uniforms = new HashMap<>();
+        attribs = new HashMap<>();
+        boundUniforms = new ArrayList<>();
     }
 
-    protected void storeAllUniformLocations(Uniform... uniforms) {
-        for (Uniform uniform : uniforms) {
-            uniform.storeUniformLocation(programID);
+    /**
+     * Do not use this constructor. Used for destructable clones only.
+     */
+    protected ShaderProgram(ShaderProgram s) {
+        super(s.id);
+
+        // Shader sources cannot be shared, therefore they must
+        // be destroyed together with the parent shader.
+        shaderSourceList = new ArrayList<>();
+        for (ShaderSource source : s.shaderSourceList) {
+            shaderSourceList.add((ShaderSource) source.createDestructableClone());
         }
-        GL20.glValidateProgram(programID);
+
+        uniforms = null;
+        boundUniforms = null;
+        attribs = null;
     }
 
-    public void start() {
-        GL20.glUseProgram(programID);
+    /**
+     * Adds source code to a certain pipeline.
+     *
+     * @param type  The pipeline to control
+     * @param lines The shader source code lines (in GLSL).
+     */
+    public void addSource(ShaderType type, String name, String source, String defines, String language) {
+        ShaderSource shaderSource = new ShaderSource(type);
+        shaderSource.setSource(source);
+        shaderSource.setName(name);
+        shaderSource.setLanguage(language);
+        if (defines != null) {
+            shaderSource.setDefines(defines);
+        }
+        shaderSourceList.add(shaderSource);
+        setUpdateNeeded();
     }
 
-    public void stop() {
-        GL20.glUseProgram(0);
+    public List<ShaderSource> getSources() {
+        return shaderSourceList;
     }
 
-    public void cleanUp() {
-        stop();
-        GL20.glDeleteProgram(programID);
-    }
-
-    private void bindAttributes(String[] inVariables) {
-        for (int i = 0; i < inVariables.length; i++) {
-            GL20.glBindAttribLocation(programID, i, inVariables[i]);
+    public void addUniformBinding(UniformBinding binding) {
+        String uniformName = "g_" + binding.name();
+        Uniform uniform = uniforms.get(uniformName);
+        if (uniform == null) {
+            uniform = new Uniform();
+            uniform.name = uniformName;
+            uniform.binding = binding;
+            uniforms.put(uniformName, uniform);
+            boundUniforms.add(uniform);
         }
     }
 
-    private int loadShader(MyFile file, int type) {
-        StringBuilder shaderSource = new StringBuilder();
-        try {
-            List<String> lines = file.getLines();
-            lines.forEach(line -> shaderSource.append(line).append("//\n"));
-        } catch (Exception e) {
-            System.err.println("Could not read file.");
-            e.printStackTrace();
-            System.exit(-1);
+    public Uniform getUniform(String name) {
+        assert name.startsWith("m_") || name.startsWith("g_");
+        Uniform uniform = uniforms.get(name);
+        if (uniform == null) {
+            uniform = new Uniform();
+            uniform.name = name;
+            uniforms.put(name, uniform);
         }
-        int shaderID = GL20.glCreateShader(type);
-        GL20.glShaderSource(shaderID, shaderSource);
-        GL20.glCompileShader(shaderID);
-        if (GL20.glGetShaderi(shaderID, GL20.GL_COMPILE_STATUS) == GL11.GL_FALSE) {
-            System.out.println(GL20.glGetShaderInfoLog(shaderID, 500));
-            System.err.println("Could not compile shader " + file);
-            System.exit(-1);
+        return uniform;
+    }
+
+    public Attribute getAttribute(VertexBuffer.Type attribType) {
+        int ordinal = attribType.ordinal();
+        Attribute attrib = attribs.get(ordinal);
+        if (attrib == null) {
+            attrib = new Attribute();
+            attrib.name = attribType.name();
+            attribs.put(ordinal, attrib);
         }
-        return shaderID;
+        return attrib;
+    }
+
+    public Map<String, Uniform> getUniformMap() {
+        return uniforms;
+    }
+
+    public List<Uniform> getBoundUniforms() {
+        return boundUniforms;
+    }
+
+    public boolean isUpdateNeeded() {
+        return isUpdateNeeded;
+    }
+
+    public void clearUpdateNeeded() {
+        isUpdateNeeded = false;
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() +
+               "[numSources=" + shaderSourceList.size() +
+               ", numUniforms=" + uniforms.size() +
+               ", shaderSources=" + getSources() + "]";
+    }
+
+    /**
+     * Usually called when the shader itself changes or during any
+     * time when the variable locations need to be refreshed.
+     */
+    public void resetLocations() {
+        if (uniforms != null) {
+            // NOTE: Shader sources will be reset seperately from the shader itself.
+            for (Uniform uniform : uniforms.values()) {
+                uniform.reset(); // fixes issue with re-initialization
+            }
+        }
+        if (attribs != null) {
+            for (Map.Entry<Integer, Attribute> entry : attribs.entrySet()) {
+                entry.getValue().location = ShaderVariable.LOC_UNKNOWN;
+            }
+        }
+    }
+
+    @Override
+    public void setUpdateNeeded() {
+        super.setUpdateNeeded();
+        resetLocations();
+    }
+
+    /**
+     * Called by the object manager to reset all object IDs. This causes
+     * the shader to be reuploaded to the GPU incase the display was restarted.
+     */
+    @Override
+    public void resetObject() {
+        this.id = -1;
+        for (ShaderSource source : shaderSourceList) {
+            source.resetObject();
+        }
+        setUpdateNeeded();
+    }
+
+    @Override
+    public void deleteObject(Object rendererObject) {
+        ((GLRenderer) rendererObject).deleteShader(this);
+    }
+
+    public NativeObject createDestructableClone() {
+        return new ShaderProgram(this);
+    }
+
+    @Override
+    public long getUniqueId() {
+        return ((long) OBJTYPE_SHADER << 32) | ((long) id);
     }
 }

@@ -4,7 +4,10 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -16,7 +19,7 @@ public class MyFile {
     private String name;
 
     public MyFile(String path) {
-        this.path = FILE_SEPARATOR + path;
+        this.path = path;
         String[] dirs = path.split(FILE_SEPARATOR);
         this.name = dirs[dirs.length - 1];
     }
@@ -50,15 +53,27 @@ public class MyFile {
         return path;
     }
 
+    public String getDirectory() {
+        return path.substring(0, path.indexOf(name));
+    }
+
     @Override
     public String toString() {
         return getPath();
     }
 
     public InputStream getInputStream() {
+        URL systemResource = ClassLoader.getSystemResource(this.path);
         try {
-            return new FileInputStream(Paths.get("out/production/" + path).toFile());
+            Path path = Paths.get(systemResource.toURI());
+            return new FileInputStream(path.toFile());
+        } catch (NullPointerException e) {
+            System.err.println("Could not load " + this.path);
         } catch (FileNotFoundException e) {
+            System.out.println(Paths.get("/").toFile().getAbsolutePath());
+            e.printStackTrace();
+        } catch (URISyntaxException e) {
+            System.out.println(systemResource.toString());
             e.printStackTrace();
         }
         return null;
@@ -70,5 +85,12 @@ public class MyFile {
 
     public String getName() {
         return name;
+    }
+
+    // TODO: Implement constant time operation instead of this O(m) operation.
+    // Initialise the value in the beginning as this value is immutable
+    public String getExtension() {
+        String[] fileType = path.split("\\.");
+        return fileType[fileType.length - 1];
     }
 }
