@@ -1,5 +1,9 @@
 package mini.system.lwjgl;
 
+import mini.input.KeyInput;
+import mini.input.MouseInput;
+import mini.input.lwjgl.LwjglKeyInput;
+import mini.input.lwjgl.LwjglMouseInput;
 import org.lwjgl.LWJGLException;
 import org.lwjgl.Sys;
 import org.lwjgl.opengl.Display;
@@ -124,8 +128,8 @@ public abstract class LwjglAbstractDisplay extends LwjglContext implements Runna
             Display.sync(frameRateCap);
         }
 
-        // check input after we synchronize with framerate.
-        // this reduces input lag.
+        // check mini.input after we synchronize with framerate.
+        // this reduces mini.input lag.
         if (renderable.get()){
             Display.processMessages();
         }
@@ -174,6 +178,20 @@ public abstract class LwjglAbstractDisplay extends LwjglContext implements Runna
                 break;
         }
         deinitInThread();
+    }
+
+    public MouseInput getMouseInput() {
+        if (mouseInput == null){
+            mouseInput = new LwjglMouseInput(this);
+        }
+        return mouseInput;
+    }
+
+    public KeyInput getKeyInput() {
+        if (keyInput == null){
+            keyInput = new LwjglKeyInput(this);
+        }
+        return keyInput;
     }
 
     public void setAutoFlushFrames(boolean enabled){

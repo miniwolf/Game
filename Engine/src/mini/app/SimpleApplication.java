@@ -1,19 +1,13 @@
 package mini.app;
 
 import mini.input.FlyByCamera;
+import mini.input.KeyInput;
 import mini.input.controls.ActionListener;
-import mini.math.Vector3f;
-import mini.renderEngine.Camera;
+import mini.input.controls.KeyTrigger;
 import mini.renderEngine.RenderManager;
-import mini.renderEngine.Renderer;
-import mini.renderEngine.ViewPort;
-import mini.renderEngine.opengl.GLRenderer;
 import mini.renderEngine.queue.RenderQueue;
 import mini.scene.Node;
 import mini.scene.Spatial;
-import mini.system.ApplicationContext;
-import mini.system.ApplicationSystem;
-import mini.system.SystemListener;
 
 /**
  * <code>SimpleApplication</code> is the base class for all jME3 Applications.
@@ -110,6 +104,22 @@ public abstract class SimpleApplication extends LegacyApplication {
         guiNode.setCullHint(Spatial.CullHint.Never);
         viewPort.attachScene(rootNode);
         guiViewPort.attachScene(guiNode);
+
+        if (inputManager != null) {
+
+//            // We have to special-case the FlyCamAppState because too
+//            // many SimpleApplication subclasses expect it to exist in
+//            // simpleInit().  But at least it only gets initialized if
+//            // the app state is added.
+//            if (stateManager.getState(FlyCamAppState.class) != null) {
+//                flyCam = new FlyByCamera(cam);
+//                flyCam.setMoveSpeed(1f); // odd to set this here but it did it before
+//                stateManager.getState(FlyCamAppState.class).setCamera( flyCam );
+//            }
+
+            inputManager.addMapping(INPUT_MAPPING_EXIT, new KeyTrigger(KeyInput.KEY_ESCAPE));
+            inputManager.addListener(actionListener, INPUT_MAPPING_EXIT);
+        }
 
         // call user code
         simpleInitApp();

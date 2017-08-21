@@ -5,8 +5,14 @@ import mini.material.MatParam;
 import mini.material.MaterialDef;
 import mini.material.ShaderGenerationInfo;
 import mini.material.TechniqueDef;
-import mini.shaders.*;
-import mini.shaders.plugins.GLSLLoader;
+import mini.shaders.ShaderNode;
+import mini.shaders.ShaderNodeDefinition;
+import mini.shaders.ShaderNodeVariable;
+import mini.shaders.ShaderProgram;
+import mini.shaders.ShaderUtils;
+import mini.shaders.UniformBinding;
+import mini.shaders.VarType;
+import mini.shaders.VariableMapping;
 import mini.utils.blockparser.Statement;
 
 import java.io.IOException;

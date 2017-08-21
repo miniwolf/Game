@@ -1,5 +1,7 @@
 package mini.system.lwjgl;
 
+import mini.input.lwjgl.LwjglKeyInput;
+import mini.input.lwjgl.LwjglMouseInput;
 import mini.renderEngine.opengl.GLRenderer;
 import mini.system.ApplicationContext;
 import mini.system.NativeLibraryLoader;
@@ -24,13 +26,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * A LWJGL implementation of a graphics context.
  */
 public abstract class LwjglContext implements ApplicationContext {
-
-    protected static final String THREAD_NAME = "jME3 Main";
+    protected static final String THREAD_NAME = "miniEngine main";
     protected AtomicBoolean created = new AtomicBoolean(false);
     protected AtomicBoolean renderable = new AtomicBoolean(false);
     protected final Object createdLock = new Object();
 
     protected GLRenderer renderer;
+    protected LwjglKeyInput keyInput;
+    protected LwjglMouseInput mouseInput;
     protected Timer timer;
     protected SystemListener listener;
 
@@ -119,6 +122,15 @@ public abstract class LwjglContext implements ApplicationContext {
         ARBDebugOutput.glDebugMessageCallbackARB(new ARBDebugOutputCallback(new LwjglGLDebugOutputHandler()));
 //        renderer.setMainFrameBufferSrgb(settings.isGammaCorrection());
 //        renderer.setLinearizeSrgbImages(settings.isGammaCorrection());
+
+        // Init input
+        if (keyInput != null) {
+            keyInput.initialize();
+        }
+
+        if (mouseInput != null) {
+            mouseInput.initialize();
+        }
     }
 
     public void internalDestroy() {

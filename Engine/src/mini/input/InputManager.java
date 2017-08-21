@@ -109,7 +109,7 @@ public class InputManager implements RawInputListener {
         keys.setInputListener(this);
         mouse.setInputListener(this);
 
-        firstTime = keys.getInputTimeNanos();
+//        firstTime = keys.getInputTimeNanos();
     }
 
     private void invokeActions(int hash, boolean pressed) {
@@ -627,7 +627,10 @@ public class InputManager implements RawInputListener {
 
     private void processQueue() {
         int queueSize = inputQueue.size();
-        RawInputListener[] array = (RawInputListener[]) rawListeners.toArray();
+        RawInputListener[] array;
+        array = rawListeners.size() == 0 ? new RawInputListener[]{} :
+                (RawInputListener[]) rawListeners.toArray();
+
 
         for (RawInputListener listener : array) {
             listener.beginInput();
@@ -679,18 +682,16 @@ public class InputManager implements RawInputListener {
      * Updates the <code>InputManager</code>.
      * This will query current input devices and send
      * appropriate events to registered listeners.
-     *
-     * @param tpf Time per frame value.
      */
-    public void update(float tpf) {
-        frameTPF = tpf;
+    public void update() {
+//        frameTPF = tpf;
+//
+//        // Activate safemode if the TPF value is so small
+//        // that rounding errors are inevitable
+//        safeMode = tpf < 0.015f;
 
-        // Activate safemode if the TPF value is so small
-        // that rounding errors are inevitable
-        safeMode = tpf < 0.015f;
-
-        long currentTime = keys.getInputTimeNanos();
-        frameDelta = currentTime - lastUpdateTime;
+//        long currentTime = keys.getInputTimeNanos();
+//        frameDelta = currentTime - lastUpdateTime;
 
         eventsPermitted = true;
 
@@ -702,7 +703,7 @@ public class InputManager implements RawInputListener {
         processQueue();
         invokeUpdateActions();
 
-        lastLastUpdateTime = lastUpdateTime;
-        lastUpdateTime = currentTime;
+//        lastLastUpdateTime = lastUpdateTime;
+//        lastUpdateTime = currentTime;
     }
 }

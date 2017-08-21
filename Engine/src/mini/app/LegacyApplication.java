@@ -1,5 +1,8 @@
 package mini.app;
 
+import mini.input.InputManager;
+import mini.input.KeyInput;
+import mini.input.MouseInput;
 import mini.math.Vector3f;
 import mini.renderEngine.Camera;
 import mini.renderEngine.RenderManager;
@@ -38,12 +41,53 @@ public class LegacyApplication implements Application, SystemListener {
     protected boolean inputEnabled = true;
     protected float speed = 1f;
     protected boolean paused = false;
+    protected MouseInput mouseInput;
+    protected KeyInput keyInput;
+    protected InputManager inputManager;
 
+    /**
+     * Set the display settings to define the display created.
+     * <p>
+     * Examples of display parameters include display pixel width and height,
+     * color bit depth, z-buffer bits, anti-aliasing samples, and update frequency.
+     * If this method is called while the application is already running, then
+     * {@link #restart() } must be called to apply the settings to the display.
+     *
+     * @param settings The settings to set.
+     */
+    public void setSettings() {
+        // may need to create or destroy input based
+        // on settings change
+        if (inputEnabled) {
+            initInput();
+        } else {
+            destroyInput();
+        }
+    }
 
     private void initDisplay() {
         // aquire important objects
         // from the context
         renderer = context.getRenderer();
+    }
+
+    /**
+     * Initializes mouse and keyboard input. Also
+     * initializes joystick input if joysticks are enabled in the
+     * AppSettings.
+     */
+    private void initInput() {
+        mouseInput = context.getMouseInput();
+        if (mouseInput != null) {
+            mouseInput.initialize();
+        }
+
+        keyInput = context.getKeyInput();
+        if (keyInput != null) {
+            keyInput.initialize();
+        }
+
+        inputManager = new InputManager(mouseInput, keyInput);
     }
 
     /**
@@ -67,6 +111,13 @@ public class LegacyApplication implements Application, SystemListener {
         Camera guiCam = new Camera(1024, 768);
         guiViewPort = renderManager.createPostView("Gui Default", guiCam);
         guiViewPort.setClearFlags(false, false, false);
+    }
+
+    /**
+     * @return the {@link InputManager input manager}.
+     */
+    public InputManager getInputManager() {
+        return inputManager;
     }
 
     /**
@@ -98,9 +149,9 @@ public class LegacyApplication implements Application, SystemListener {
     }
 
     /**
-     * Starts the application in {@link Type#Display display} mode.
+     * Starts the application.
      *
-     * @see #start(mini.system.JmeContext.Type)
+     * @see #start()
      */
     public void start() {
         start(false);
@@ -228,6 +279,9 @@ public class LegacyApplication implements Application, SystemListener {
         initDisplay();
         initCamera();
 
+        if (inputEnabled) {
+            initInput();
+        }
         // user code here..
     }
 
@@ -240,7 +294,8 @@ public class LegacyApplication implements Application, SystemListener {
         // Display error message on screen if not in headless mode
         if (t != null) {
             ApplicationSystem.showErrorDialog(errMsg + "\n" + t.getClass().getSimpleName() +
-                                      (t.getMessage() != null ? ": " + t.getMessage() : ""));
+                                              (t.getMessage() != null ? ": " + t.getMessage() :
+                                               ""));
         } else {
             ApplicationSystem.showErrorDialog(errMsg);
         }
@@ -260,9 +315,21 @@ public class LegacyApplication implements Application, SystemListener {
      * Callback from ContextListener.
      */
     public void update() {
+        if (inputEnabled) {
+            inputManager.update();
+        }
     }
 
     protected void destroyInput() {
+        if (mouseInput != null) {
+            mouseInput.destroy();
+        }
+
+        if (keyInput != null) {
+            keyInput.destroy();
+        }
+
+        inputManager = null;
     }
 
     /**
