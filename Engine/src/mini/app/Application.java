@@ -6,12 +6,9 @@ import mini.renderEngine.Renderer;
 import mini.renderEngine.ViewPort;
 import mini.system.ApplicationContext;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
-
 /**
  * The <code>Application</code> interface represents the minimum exposed
- * capabilities of a concrete jME3 application.
+ * capabilities of a concrete application.
  */
 public interface Application {
     /**
@@ -25,7 +22,7 @@ public interface Application {
     Renderer getRenderer();
 
     /**
-     * @return The {@link JmeContext display context} for the application
+     * @return The {@link ApplicationContext display context} for the application
      */
     ApplicationContext getContext();
 

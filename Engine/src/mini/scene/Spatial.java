@@ -14,14 +14,9 @@ import mini.renderEngine.Camera;
 import mini.renderEngine.queue.RenderQueue;
 import mini.utils.TempVars;
 import mini.utils.clone.Cloner;
-import mini.utils.clone.IdentityCloneFunction;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Queue;
 
 /**
  * <code>Spatial</code> defines the base class for scene graph nodes. It
@@ -33,50 +28,67 @@ import java.util.Queue;
  */
 public abstract class Spatial implements Cloneable {
     /**
-     * Specifies how frustum culling should be handled by
-     * this spatial.
+     * <code>lookAt</code> is a convenience method for auto-setting the local
+     * rotation based on a position in world space and an up vector. It computes the rotation
+     * to transform the z-axis to point onto 'position' and the y-axis to 'up'.
+     * Unlike {@link Quaternion#lookAt(Vector3f, Vector3f) }
+     * this method takes a world position to look at and not a relative direction.
+     * <p>
+     * Note : 28/01/2013 this method has been fixed as it was not taking into account the parent rotation.
+     * This was resulting in improper rotation when the spatial had rotated parent nodes.
+     * This method is intended to work in world space, so no matter what parent graph the
+     * spatial has, it will look at the given position in world space.
+     *
+     * @param position where to look at in terms of world coordinates
+     * @param upVector a vector indicating the (local) up direction. (typically {0, 1, 0})
      */
-    public enum CullHint {
+    public void lookAt(Vector3f position, Vector3f upVector) {
+        Vector3f worldTranslation = getWorldTranslation();
 
-        /**
-         * Do whatever our parent does. If no parent, default to {@link #Dynamic}.
-         */
-        Inherit,
-        /**
-         * Do not draw if we are not at least partially within the view frustum
-         * of the camera. This is determined via the defined
-         * Camera planes whether or not this Spatial should be culled.
-         */
-        Dynamic,
-        /**
-         * Always cull this from the view, throwing away this object
-         * and any children from rendering commands.
-         */
-        Always,
-        /**
-         * Never cull this from view, always draw it.
-         * Note that we will still get culled if our parent is culled.
-         */
-        Never;
+        TempVars vars = TempVars.get();
+
+        Vector3f compVecA = vars.vect4;
+        compVecA.set(position).subtractLocal(worldTranslation);
+        getLocalRotation().lookAt(compVecA, upVector);
+        if (getParent() != null) {
+            Quaternion rot = vars.quat1;
+            rot = rot.set(parent.getWorldRotation()).inverseLocal().multLocal(getLocalRotation());
+            rot.normalizeLocal();
+            setLocalRotation(rot);
+        }
+        vars.release();
+        setTransformRefresh();
     }
 
     /**
-     * Specifies if this spatial should be batched
+     * @return A clone of this Spatial, the scene graph in its entirety
+     * is cloned and can be altered independently of the original scene graph.
+     * <p>
+     * Note that meshes of geometries are not cloned explicitly, they
+     * are shared if static, or specially cloned if animated.
+     * <p>
+     * All controls will be cloned using the Control.cloneForSpatial method
+     * on the clone.
+     * @see Mesh#cloneForAnim()
      */
-    public enum BatchHint {
+    @Override
+    public Spatial clone() {
+        // Setup the cloner for the type of cloning we want to do.
+        Cloner cloner = new Cloner();
 
-        /**
-         * Do whatever our parent does. If no parent, default to {@link #Always}.
-         */
-        Inherit,
-        /**
-         * This spatial will always be batched when attached to a BatchNode.
-         */
-        Always,
-        /**
-         * This spatial will never be batched when attached to a BatchNode.
-         */
-        Never;
+        // First, we definitely do not want to clone our own parent
+        cloner.setClonedValue(parent, null);
+
+        // Clone it!
+        Spatial clone = cloner.clone(this);
+
+        // Because we've nulled the parent out we need to make sure
+        // the transforms and stuff get refreshed.
+        clone.setTransformRefresh();
+        clone.setLightListRefresh();
+        clone.setMatParamOverrideRefresh();
+
+        return clone;
     }
 
     /**
@@ -475,37 +487,31 @@ public abstract class Spatial implements Cloneable {
     }
 
     /**
-     * <code>lookAt</code> is a convenience method for auto-setting the local
-     * rotation based on a position in world space and an up vector. It computes the rotation
-     * to transform the z-axis to point onto 'position' and the y-axis to 'up'.
-     * Unlike {@link Quaternion#lookAt(Vector3f, Vector3f) }
-     * this method takes a world position to look at and not a relative direction.
-     * <p>
-     * Note : 28/01/2013 this method has been fixed as it was not taking into account the parent rotation.
-     * This was resulting in improper rotation when the spatial had rotated parent nodes.
-     * This method is intended to work in world space, so no matter what parent graph the
-     * spatial has, it will look at the given position in world space.
-     *
-     * @param position where to look at in terms of world coordinates
-     * @param upVector a vector indicating the (local) up direction. (typically {0,
-     *                 1, 0} in jME.)
+     * Specifies how frustum culling should be handled by
+     * this spatial.
      */
-    public void lookAt(Vector3f position, Vector3f upVector) {
-        Vector3f worldTranslation = getWorldTranslation();
+    public enum CullHint {
 
-        TempVars vars = TempVars.get();
-
-        Vector3f compVecA = vars.vect4;
-        compVecA.set(position).subtractLocal(worldTranslation);
-        getLocalRotation().lookAt(compVecA, upVector);
-        if (getParent() != null) {
-            Quaternion rot = vars.quat1;
-            rot = rot.set(parent.getWorldRotation()).inverseLocal().multLocal(getLocalRotation());
-            rot.normalizeLocal();
-            setLocalRotation(rot);
-        }
-        vars.release();
-        setTransformRefresh();
+        /**
+         * Do whatever our parent does. If no parent, default to {@link #Dynamic}.
+         */
+        Inherit,
+        /**
+         * Do not draw if we are not at least partially within the view frustum
+         * of the camera. This is determined via the defined
+         * Camera planes whether or not this Spatial should be culled.
+         */
+        Dynamic,
+        /**
+         * Always cull this from the view, throwing away this object
+         * and any children from rendering commands.
+         */
+        Always,
+        /**
+         * Never cull this from view, always draw it.
+         * Note that we will still get culled if our parent is culled.
+         */
+        Never
     }
 
     /**
@@ -1080,67 +1086,28 @@ public abstract class Spatial implements Cloneable {
     public abstract int getTriangleCount();
 
     /**
-     * @return A clone of this Spatial, the scene graph in its entirety
-     * is cloned and can be altered independently of the original scene graph.
-     *
-     * Note that meshes of geometries are not cloned explicitly, they
-     * are shared if static, or specially cloned if animated.
-     *
-     * @see Mesh#cloneForAnim()
+     * Specifies if this spatial should be batched
      */
-    public Spatial clone( boolean cloneMaterial ) {
+    public enum BatchHint {
 
-        // Setup the cloner for the type of cloning we want to do.
-        Cloner cloner = new Cloner();
-
-        // First, we definitely do not want to clone our own parent
-        cloner.setClonedValue(parent, null);
-
-        // If we aren't cloning materials then we will make sure those
-        // aren't cloned also
-        if( !cloneMaterial ) {
-            cloner.setCloneFunction(Material.class, new IdentityCloneFunction<>());
-        }
-
-        // By default the meshes are not cloned.  The geometry
-        // may choose to selectively force them to be cloned but
-        // normally they will be shared
-        cloner.setCloneFunction(Mesh.class, new IdentityCloneFunction<>());
-
-        // Clone it!
-        Spatial clone = cloner.clone(this);
-
-        // Because we've nulled the parent out we need to make sure
-        // the transforms and stuff get refreshed.
-        clone.setTransformRefresh();
-        clone.setLightListRefresh();
-        clone.setMatParamOverrideRefresh();
-
-        return clone;
-    }
-
-    /**
-     * @return A clone of this Spatial, the scene graph in its entirety
-     * is cloned and can be altered independently of the original scene graph.
-     *
-     * Note that meshes of geometries are not cloned explicitly, they
-     * are shared if static, or specially cloned if animated.
-     *
-     * All controls will be cloned using the Control.cloneForSpatial method
-     * on the clone.
-     *
-     * @see Mesh#cloneForAnim()
-     */
-    @Override
-    public Spatial clone() {
-        return clone(true);
+        /**
+         * Do whatever our parent does. If no parent, default to {@link #Always}.
+         */
+        Inherit,
+        /**
+         * This spatial will always be batched when attached to a BatchNode.
+         */
+        Always,
+        /**
+         * This spatial will never be batched when attached to a BatchNode.
+         */
+        Never
     }
 
     /**
      * @return Similar to Spatial.clone() except will create a deep clone of all
      * geometries' meshes. Normally this method shouldn't be used. Instead, use
      * Spatial.clone()
-     *
      * @see Spatial#clone()
      */
     public Spatial deepClone() {

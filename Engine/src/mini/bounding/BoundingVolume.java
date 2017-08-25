@@ -28,12 +28,7 @@ public abstract class BoundingVolume implements Cloneable, Collidable {
         /**
          * {@link BoundingBox}.
          */
-        AABB, 
-        
-        /**
-         * Currently unsupported by jME3.
-         */
-        Capsule;
+        AABB
     }
 
     protected int checkPlane = 0;

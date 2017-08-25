@@ -1,9 +1,5 @@
 package mini.renderEngine;
 
-import mini.input.KeyboardKey;
-import mini.input.KeyboardListener;
-import mini.input.MouseButton;
-import mini.input.MouseListener;
 import mini.math.FastMath;
 import mini.math.Matrix4f;
 import mini.math.Plane;
@@ -13,12 +9,10 @@ import mini.math.Vector3f;
 import mini.math.Vector4f;
 import mini.utils.TempVars;
 
-import java.io.IOException;
-
 /**
  * <code>Camera</code> is a standalone, purely mathematical class for doing
  * camera-related computations.
- *
+ * <p>
  * <p>
  * Given input data such as location, orientation (direction, left, up),
  * and viewport settings, it can compute data necessary to render objects
@@ -61,6 +55,7 @@ public class Camera implements Cloneable {
          */
         Intersects
     }
+
     /**
      * LEFT_PLANE represents the left plane of the camera frustum.
      */
@@ -173,7 +168,9 @@ public class Camera implements Cloneable {
     protected Matrix4f viewMatrix = new Matrix4f();
     protected Matrix4f projectionMatrix = new Matrix4f();
     protected Matrix4f viewProjectionMatrix = new Matrix4f();
-    /** The camera's name. */
+    /**
+     * The camera's name.
+     */
     protected String name;
 
     /**
@@ -259,8 +256,7 @@ public class Camera implements Cloneable {
     /**
      * This method copies the settings of the given camera.
      *
-     * @param cam
-     *            the camera we copy the settings from
+     * @param cam the camera we copy the settings from
      */
     public void copyFrom(Camera cam) {
         location.set(cam.location);
@@ -309,19 +305,21 @@ public class Camera implements Cloneable {
     }
 
     /**
-     * This method sets the cameras name.
-     * @param name the cameras name
-     */
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    /**
      * This method returns the cameras name.
+     *
      * @return the cameras name
      */
     public String getName() {
         return name;
+    }
+
+    /**
+     * This method sets the cameras name.
+     *
+     * @param name the cameras name
+     */
+    public void setName(String name) {
+        this.name = name;
     }
 
     /**
@@ -335,11 +333,12 @@ public class Camera implements Cloneable {
      * <li><a href="http://aras-p.info/texts/obliqueortho.html">http://aras-p.info/texts/obliqueortho.html</a>
      * <li><a href="http://hacksoflife.blogspot.com/2008/12/every-now-and-then-i-come-across.html">http://hacksoflife.blogspot.com/2008/12/every-now-and-then-i-come-across.html</a>
      * </ul>
-     *
+     * <p>
      * Note that this will work properly only if it's called on each update, and be aware that it won't work properly with the sky bucket.
      * if you want to handle the sky bucket, look at how it's done in SimpleWaterProcessor.java
+     *
      * @param clipPlane the plane
-     * @param side the side the camera stands from the plane
+     * @param side      the side the camera stands from the plane
      */
     public void setClipPlane(Plane clipPlane, Plane.Side side) {
         float sideFactor = 1;
@@ -360,7 +359,9 @@ public class Camera implements Cloneable {
             Vector3f point = clipPlane.getNormal().mult(clipPlane.getConstant(), vars.vect1);
             Vector3f pp = ivm.mult(point, vars.vect2);
             Vector3f pn = ivm.multNormal(clipPlane.getNormal(), vars.vect3);
-            Vector4f clipPlaneV = vars.vect4f1.set(pn.x * sideFactor, pn.y * sideFactor, pn.z * sideFactor, -(pp.dot(pn)) * sideFactor);
+            Vector4f clipPlaneV = vars.vect4f1
+                    .set(pn.x * sideFactor, pn.y * sideFactor, pn.z * sideFactor,
+                         -(pp.dot(pn)) * sideFactor);
 
             Vector4f v = vars.vect4f2.set(0, 0, 0, 0);
 
@@ -369,7 +370,8 @@ public class Camera implements Cloneable {
             v.z = -1.0f;
             v.w = (1.0f + p.m22) / p.m23;
 
-            float dot = clipPlaneV.dot(v);//clipPlaneV.x * v.x + clipPlaneV.y * v.y + clipPlaneV.z * v.z + clipPlaneV.w * v.w;
+            float dot = clipPlaneV
+                    .dot(v);//clipPlaneV.x * v.x + clipPlaneV.y * v.y + clipPlaneV.z * v.z + clipPlaneV.w * v.w;
             Vector4f c = clipPlaneV.multLocal(2.0f / dot);
 
             p.m20 = c.x - p.m30;
@@ -393,9 +395,10 @@ public class Camera implements Cloneable {
      * <li><a href="http://hacksoflife.blogspot.com/2008/12/every-now-and-then-i-come-across.html">
      * http://hacksoflife.blogspot.com/2008/12/every-now-and-then-i-come-across.html</a></li>
      * </ul>
-     *
+     * <p>
      * Note that this will work properly only if it's called on each update, and be aware that it won't work properly with the sky bucket.
      * if you want to handle the sky bucket, look at how it's done in SimpleWaterProcessor.java
+     *
      * @param clipPlane the plane
      */
     public void setClipPlane(Plane clipPlane) {
@@ -407,10 +410,10 @@ public class Camera implements Cloneable {
      * associated {@link RenderManager} to notify the camera of changes to the
      * display dimensions.
      *
-     * @param width the new width of the display, in pixels
-     * @param height the new height of the display, in pixels
+     * @param width     the new width of the display, in pixels
+     * @param height    the new height of the display, in pixels
      * @param fixAspect if true, recompute the camera's frustum to preserve its
-     * prior aspect ratio
+     *                  prior aspect ratio
      */
     public void resize(int width, int height, boolean fixAspect) {
         this.width = width;
@@ -668,7 +671,6 @@ public class Camera implements Cloneable {
      * @param left      the left axis of the camera.
      * @param up        the up axis of the camera.
      * @param direction the direction the camera is facing.
-     *
      * @see Camera#setAxes(mini.math.Quaternion)
      */
     public void setAxes(Vector3f left, Vector3f up, Vector3f direction) {
@@ -705,7 +707,7 @@ public class Camera implements Cloneable {
      * @param top    the top plane.
      * @param bottom the bottom plane.
      * @see Camera#setFrustum(float, float, float, float,
-     *      float, float)
+     * float, float)
      */
     public void setFrustum(float near, float far, float left, float right,
                            float top, float bottom) {
@@ -759,7 +761,7 @@ public class Camera implements Cloneable {
      * @param up        the up axis of the camera.
      * @param direction the facing of the camera.
      * @see Camera#setFrame(mini.math.Vector3f,
-     *      mini.math.Vector3f, mini.math.Vector3f, mini.math.Vector3f)
+     * mini.math.Vector3f, mini.math.Vector3f, mini.math.Vector3f)
      */
     public void setFrame(Vector3f location, Vector3f left, Vector3f up,
                          Vector3f direction) {
@@ -778,7 +780,7 @@ public class Camera implements Cloneable {
      *
      * @param pos           where to look at in terms of world coordinates
      * @param worldUpVector a normalized vector indicating the up direction of the world.
-     *                      (typically {0, 1, 0} in jME.)
+     *                      (typically {0, 1, 0}.)
      */
     public void lookAt(Vector3f pos, Vector3f worldUpVector) {
         TempVars vars = TempVars.get();
@@ -814,10 +816,8 @@ public class Camera implements Cloneable {
     /**
      * <code>setFrame</code> sets the orientation and location of the camera.
      *
-     * @param location
-     *            the point position of the camera.
-     * @param axes
-     *            the orientation of the camera.
+     * @param location the point position of the camera.
+     * @param axes     the orientation of the camera.
      */
     public void setFrame(Vector3f location, Quaternion axes) {
         this.location = location;
@@ -955,6 +955,7 @@ public class Camera implements Cloneable {
     /**
      * Returns the pseudo distance from the given position to the near
      * plane of the camera. This is used for render queue sorting.
+     *
      * @param pos The position to compute a distance to.
      * @return Distance from the near plane to the point.
      */
@@ -1106,7 +1107,8 @@ public class Camera implements Cloneable {
             coeffTop[1] = 0;
         }
 
-        projectionMatrix.fromFrustum(frustumNear, frustumFar, frustumLeft, frustumRight, frustumTop, frustumBottom, parallelProjection);
+        projectionMatrix.fromFrustum(frustumNear, frustumFar, frustumLeft, frustumRight, frustumTop,
+                                     frustumBottom, parallelProjection);
 //        projectionMatrix.transposeLocal();
 
         // The frame is effected by the frustum values
@@ -1132,7 +1134,8 @@ public class Camera implements Cloneable {
         leftPlaneNormal.y = left.y * coeffLeft[0];
         leftPlaneNormal.z = left.z * coeffLeft[0];
         leftPlaneNormal.addLocal(direction.x * coeffLeft[1], direction.y
-                                                             * coeffLeft[1], direction.z * coeffLeft[1]);
+                                                             * coeffLeft[1],
+                                 direction.z * coeffLeft[1]);
         worldPlane[LEFT_PLANE].setConstant(location.dot(leftPlaneNormal));
 
         // right plane
@@ -1141,7 +1144,8 @@ public class Camera implements Cloneable {
         rightPlaneNormal.y = left.y * coeffRight[0];
         rightPlaneNormal.z = left.z * coeffRight[0];
         rightPlaneNormal.addLocal(direction.x * coeffRight[1], direction.y
-                                                               * coeffRight[1], direction.z * coeffRight[1]);
+                                                               * coeffRight[1],
+                                  direction.z * coeffRight[1]);
         worldPlane[RIGHT_PLANE].setConstant(location.dot(rightPlaneNormal));
 
         // bottom plane
@@ -1150,7 +1154,8 @@ public class Camera implements Cloneable {
         bottomPlaneNormal.y = up.y * coeffBottom[0];
         bottomPlaneNormal.z = up.z * coeffBottom[0];
         bottomPlaneNormal.addLocal(direction.x * coeffBottom[1], direction.y
-                                                                 * coeffBottom[1], direction.z * coeffBottom[1]);
+                                                                 * coeffBottom[1],
+                                   direction.z * coeffBottom[1]);
         worldPlane[BOTTOM_PLANE].setConstant(location.dot(bottomPlaneNormal));
 
         // top plane
@@ -1159,14 +1164,17 @@ public class Camera implements Cloneable {
         topPlaneNormal.y = up.y * coeffTop[0];
         topPlaneNormal.z = up.z * coeffTop[0];
         topPlaneNormal.addLocal(direction.x * coeffTop[1], direction.y
-                                                           * coeffTop[1], direction.z * coeffTop[1]);
+                                                           * coeffTop[1],
+                                direction.z * coeffTop[1]);
         worldPlane[TOP_PLANE].setConstant(location.dot(topPlaneNormal));
 
         if (isParallelProjection()) {
             worldPlane[LEFT_PLANE].setConstant(worldPlane[LEFT_PLANE].getConstant() + frustumLeft);
-            worldPlane[RIGHT_PLANE].setConstant(worldPlane[RIGHT_PLANE].getConstant() - frustumRight);
+            worldPlane[RIGHT_PLANE]
+                    .setConstant(worldPlane[RIGHT_PLANE].getConstant() - frustumRight);
             worldPlane[TOP_PLANE].setConstant(worldPlane[TOP_PLANE].getConstant() - frustumTop);
-            worldPlane[BOTTOM_PLANE].setConstant(worldPlane[BOTTOM_PLANE].getConstant() + frustumBottom);
+            worldPlane[BOTTOM_PLANE]
+                    .setConstant(worldPlane[BOTTOM_PLANE].getConstant() + frustumBottom);
         }
 
         // far plane
@@ -1209,6 +1217,7 @@ public class Camera implements Cloneable {
      * Note that the returned value is going non linearly from 0 to 1.
      * for more explanations on non linear z buffer see
      * http://www.sjbaker.org/steve/omniv/love_your_z_buffer.html
+     *
      * @param viewZPos the z value in view space.
      * @return the z value in projection space.
      */
@@ -1226,10 +1235,10 @@ public class Camera implements Cloneable {
      * This former value is also known as the Z buffer value or non linear depth buffer.
      * for more explanations on non linear z buffer see
      * http://www.sjbaker.org/steve/omniv/love_your_z_buffer.html
-     *
+     * <p>
      * To compute the projection space z from the view space z (distance from cam to object) @see Camera#getViewToProjectionZ
      *
-     * @param screenPos 2d coordinate in screen space
+     * @param screenPos      2d coordinate in screen space
      * @param projectionZPos non linear z value in projection space
      * @return the position in world space.
      */
@@ -1250,8 +1259,10 @@ public class Camera implements Cloneable {
         inverseMat.invertLocal();
 
         store.set(
-                (screenPosition.x / getWidth() - viewPortLeft) / (viewPortRight - viewPortLeft) * 2 - 1,
-                (screenPosition.y / getHeight() - viewPortBottom) / (viewPortTop - viewPortBottom) * 2 - 1,
+                (screenPosition.x / getWidth() - viewPortLeft) / (viewPortRight - viewPortLeft) * 2
+                - 1,
+                (screenPosition.y / getHeight() - viewPortBottom) / (viewPortTop - viewPortBottom)
+                * 2 - 1,
                 projectionZPos * 2 - 1);
 
         float w = inverseMat.multProj(store, store);
@@ -1292,8 +1303,10 @@ public class Camera implements Cloneable {
         float w = viewProjectionMatrix.multProj(worldPosition, store);
         store.divideLocal(w);
 
-        store.x = ((store.x + 1f) * (viewPortRight - viewPortLeft) / 2f + viewPortLeft) * getWidth();
-        store.y = ((store.y + 1f) * (viewPortTop - viewPortBottom) / 2f + viewPortBottom) * getHeight();
+        store.x = ((store.x + 1f) * (viewPortRight - viewPortLeft) / 2f + viewPortLeft)
+                  * getWidth();
+        store.y = ((store.y + 1f) * (viewPortTop - viewPortBottom) / 2f + viewPortBottom)
+                  * getHeight();
         store.z = (store.z + 1f) / 2f;
 
         return store;

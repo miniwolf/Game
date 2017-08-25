@@ -12,7 +12,11 @@ import mini.utils.MyFile;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Scanner;
 
 public class MTLLoader {
     private Scanner scan;
@@ -236,7 +240,7 @@ public class MTLLoader {
                     break;
             }
         } else if (cmd.equals("ke") || cmd.equals("ni")) {
-            // Ni: index of refraction - unsupported in jME
+            // Ni: index of refraction - unsupported
             // Ke: emission color
             return skipLine();
         } else {

@@ -17,6 +17,41 @@ import mini.asset.TextureKey;
  */
 public abstract class Texture implements Cloneable {
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final Texture other = (Texture) obj;
+
+        // NOTE: Since images are generally considered unique assets,
+        // using the image's equals() implementation is not necessary here
+        // (would be too slow)
+        return this.image == other.image && this.minificationFilter == other.minificationFilter
+               && this.magnificationFilter == other.magnificationFilter
+               && this.shadowCompareMode == other.shadowCompareMode
+               && this.anisotropicFilter == other.anisotropicFilter;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 5;
+        // NOTE: Since images are generally considered unique assets,
+        // using the image's hashCode() implementation is not neccessary here
+        // (would be too slow)
+        hash = 67 * hash + (this.image != null ? System.identityHashCode(this.image) : 0);
+        hash = 67 * hash + (this.minificationFilter != null ? this.minificationFilter.hashCode() :
+                            0);
+        hash = 67 * hash + (this.magnificationFilter != null ? this.magnificationFilter.hashCode() :
+                            0);
+        hash = 67 * hash + (this.shadowCompareMode != null ? this.shadowCompareMode.hashCode() : 0);
+        hash = 67 * hash + this.anisotropicFilter;
+        return hash;
+    }
+
     public enum Type {
 
         /**
@@ -38,7 +73,7 @@ public abstract class Texture implements Cloneable {
          * A set of 6 TwoDimensional textures arranged as faces of a cube facing
          * inwards.
          */
-        CubeMap;
+        CubeMap
     }
 
     public enum MinFilter {
@@ -103,7 +138,7 @@ public abstract class Texture implements Cloneable {
 
         private final boolean usesMipMapLevels;
 
-        private MinFilter(boolean usesMipMapLevels) {
+        MinFilter(boolean usesMipMapLevels) {
             this.usesMipMapLevels = usesMipMapLevels;
         }
 
@@ -130,99 +165,8 @@ public abstract class Texture implements Cloneable {
          * change from one texel to the next, instead of an abrupt jump as the
          * pixel center crosses the texel boundary. (GL equivalent: GL_LINEAR)
          */
-        Bilinear;
+        Bilinear
 
-    }
-
-    public enum WrapMode {
-        /**
-         * Only the fractional portion of the coordinate is considered.
-         */
-        Repeat,
-
-        /**
-         * Only the fractional portion of the coordinate is considered, but if
-         * the integer portion is odd, we'll use 1 - the fractional portion.
-         * (Introduced around OpenGL1.4) Falls back on Repeat if not supported.
-         */
-        MirroredRepeat,
-
-        /**
-         * coordinate will be clamped to [0,1]
-         *
-         * @deprecated Not supported by OpenGL 3
-         */
-        @Deprecated
-        Clamp,
-        /**
-         * mirrors and clamps the texture coordinate, where mirroring and
-         * clamping a value f computes:
-         * <code>mirrorClamp(f) = min(1, max(1/(2*N),
-         * abs(f)))</code> where N
-         * is the size of the one-, two-, or three-dimensional texture image in
-         * the direction of wrapping. (Introduced after OpenGL1.4) Falls back on
-         * Clamp if not supported.
-         *
-         * @deprecated Not supported by OpenGL 3
-         */
-        @Deprecated
-        MirrorClamp,
-
-        /**
-         * coordinate will be clamped to the range [-1/(2N), 1 + 1/(2N)] where N
-         * is the size of the texture in the direction of clamping. Falls back
-         * on Clamp if not supported.
-         *
-         * @deprecated Not supported by OpenGL 3 or OpenGL ES 2
-         */
-        @Deprecated
-        BorderClamp,
-        /**
-         * Wrap mode MIRROR_CLAMP_TO_BORDER_EXT mirrors and clamps to border the
-         * texture coordinate, where mirroring and clamping to border a value f
-         * computes:
-         * <code>mirrorClampToBorder(f) = min(1+1/(2*N), max(1/(2*N), abs(f)))</code>
-         * where N is the size of the one-, two-, or three-dimensional texture
-         * image in the direction of wrapping." (Introduced after OpenGL1.4)
-         * Falls back on BorderClamp if not supported.
-         *
-         * @deprecated Not supported by OpenGL 3
-         */
-        @Deprecated
-        MirrorBorderClamp,
-        /**
-         * coordinate will be clamped to the range [1/(2N), 1 - 1/(2N)] where N
-         * is the size of the texture in the direction of clamping. Falls back
-         * on Clamp if not supported.
-         */
-        EdgeClamp,
-
-        /**
-         * mirrors and clamps to edge the texture coordinate, where mirroring
-         * and clamping to edge a value f computes:
-         * <code>mirrorClampToEdge(f) = min(1-1/(2*N), max(1/(2*N), abs(f)))</code>
-         * where N is the size of the one-, two-, or three-dimensional texture
-         * image in the direction of wrapping. (Introduced after OpenGL1.4)
-         * Falls back on EdgeClamp if not supported.
-         *
-         * @deprecated Not supported by OpenGL 3
-         */
-        MirrorEdgeClamp;
-    }
-
-    public enum WrapAxis {
-        /**
-         * S wrapping (u or "horizontal" wrap)
-         */
-        S,
-        /**
-         * T wrapping (v or "vertical" wrap)
-         */
-        T,
-        /**
-         * R wrapping (w or "depth" wrap)
-         */
-        R;
     }
 
     /**
@@ -473,36 +417,94 @@ public abstract class Texture implements Cloneable {
         return sb.toString();
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final Texture other = (Texture) obj;
+    public enum WrapMode {
+        /**
+         * Only the fractional portion of the coordinate is considered.
+         */
+        Repeat,
 
-        // NOTE: Since images are generally considered unique assets in jME3,
-        // using the image's equals() implementation is not neccessary here
-        // (would be too slow)
-        return this.image == other.image && this.minificationFilter == other.minificationFilter
-                && this.magnificationFilter == other.magnificationFilter
-                && this.shadowCompareMode == other.shadowCompareMode
-                && this.anisotropicFilter == other.anisotropicFilter;
+        /**
+         * Only the fractional portion of the coordinate is considered, but if
+         * the integer portion is odd, we'll use 1 - the fractional portion.
+         * (Introduced around OpenGL1.4) Falls back on Repeat if not supported.
+         */
+        MirroredRepeat,
+
+        /**
+         * coordinate will be clamped to [0,1]
+         *
+         * @deprecated Not supported by OpenGL 3
+         */
+        @Deprecated
+        Clamp,
+        /**
+         * mirrors and clamps the texture coordinate, where mirroring and
+         * clamping a value f computes:
+         * <code>mirrorClamp(f) = min(1, max(1/(2*N),
+         * abs(f)))</code> where N
+         * is the size of the one-, two-, or three-dimensional texture image in
+         * the direction of wrapping. (Introduced after OpenGL1.4) Falls back on
+         * Clamp if not supported.
+         *
+         * @deprecated Not supported by OpenGL 3
+         */
+        @Deprecated
+        MirrorClamp,
+
+        /**
+         * coordinate will be clamped to the range [-1/(2N), 1 + 1/(2N)] where N
+         * is the size of the texture in the direction of clamping. Falls back
+         * on Clamp if not supported.
+         *
+         * @deprecated Not supported by OpenGL 3 or OpenGL ES 2
+         */
+        @Deprecated
+        BorderClamp,
+        /**
+         * Wrap mode MIRROR_CLAMP_TO_BORDER_EXT mirrors and clamps to border the
+         * texture coordinate, where mirroring and clamping to border a value f
+         * computes:
+         * <code>mirrorClampToBorder(f) = min(1+1/(2*N), max(1/(2*N), abs(f)))</code>
+         * where N is the size of the one-, two-, or three-dimensional texture
+         * image in the direction of wrapping." (Introduced after OpenGL1.4)
+         * Falls back on BorderClamp if not supported.
+         *
+         * @deprecated Not supported by OpenGL 3
+         */
+        @Deprecated
+        MirrorBorderClamp,
+        /**
+         * coordinate will be clamped to the range [1/(2N), 1 - 1/(2N)] where N
+         * is the size of the texture in the direction of clamping. Falls back
+         * on Clamp if not supported.
+         */
+        EdgeClamp,
+
+        /**
+         * mirrors and clamps to edge the texture coordinate, where mirroring
+         * and clamping to edge a value f computes:
+         * <code>mirrorClampToEdge(f) = min(1-1/(2*N), max(1/(2*N), abs(f)))</code>
+         * where N is the size of the one-, two-, or three-dimensional texture
+         * image in the direction of wrapping. (Introduced after OpenGL1.4)
+         * Falls back on EdgeClamp if not supported.
+         *
+         * @deprecated Not supported by OpenGL 3
+         */
+        MirrorEdgeClamp
     }
 
-    @Override
-    public int hashCode() {
-        int hash = 5;
-        // NOTE: Since images are generally considered unique assets in jME3,
-        // using the image's hashCode() implementation is not neccessary here
-        // (would be too slow)
-        hash = 67 * hash + (this.image != null ? System.identityHashCode(this.image) : 0);
-        hash = 67 * hash + (this.minificationFilter != null ? this.minificationFilter.hashCode() : 0);
-        hash = 67 * hash + (this.magnificationFilter != null ? this.magnificationFilter.hashCode() : 0);
-        hash = 67 * hash + (this.shadowCompareMode != null ? this.shadowCompareMode.hashCode() : 0);
-        hash = 67 * hash + this.anisotropicFilter;
-        return hash;
+    public enum WrapAxis {
+        /**
+         * S wrapping (u or "horizontal" wrap)
+         */
+        S,
+        /**
+         * T wrapping (v or "vertical" wrap)
+         */
+        T,
+        /**
+         * R wrapping (w or "depth" wrap)
+         */
+        R
     }
 }

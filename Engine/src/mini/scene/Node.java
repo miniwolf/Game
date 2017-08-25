@@ -1,12 +1,9 @@
 package mini.scene;
 
 import mini.material.Material;
-import mini.utils.clone.Cloner;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
 
 /**
  * <code>Node</code> defines an internal node of a scene graph. The internal
@@ -499,7 +496,7 @@ public class Node extends Spatial {
 
     @Override
     public Node clone(boolean cloneMaterials) {
-        Node nodeClone = (Node) super.clone(cloneMaterials);
+        Node nodeClone = (Node) super.clone();
 //        nodeClone.children = new ArrayList<Spatial>();
 //        for (Spatial child : children){
 //            Spatial childClone = child.clone();

@@ -10,7 +10,7 @@ import mini.scene.Node;
 import mini.scene.Spatial;
 
 /**
- * <code>SimpleApplication</code> is the base class for all jME3 Applications.
+ * <code>SimpleApplication</code> is the base class for all Applications.
  * <code>SimpleApplication</code> will display a statistics view
  * using the {@link mini.app.StatsAppState} AppState. It will display
  * the current frames-per-second value on-screen in addition to the statistics.

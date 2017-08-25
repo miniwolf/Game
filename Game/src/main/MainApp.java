@@ -1,6 +1,5 @@
 package main;
 
-import loaders.LoaderSettings;
 import loaders.SceneLoader;
 import loaders.SceneLoaderFactory;
 import mini.input.Keyboard;
@@ -9,7 +8,6 @@ import mini.input.KeyboardListener;
 import mini.input.Mouse;
 import mini.input.MouseButton;
 import mini.input.MouseListener;
-import mini.renderEngine.RenderEngine;
 
 public class MainApp {
     public static void main(String[] args) {

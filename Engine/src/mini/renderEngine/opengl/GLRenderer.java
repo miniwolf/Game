@@ -1,9 +1,17 @@
 package mini.renderEngine.opengl;
 
 import mini.material.RenderState;
-import mini.math.*;
-import mini.renderEngine.*;
-import mini.scene.Geometry;
+import mini.math.ColorRGBA;
+import mini.math.FastMath;
+import mini.math.Quaternion;
+import mini.math.Vector2f;
+import mini.math.Vector3f;
+import mini.math.Vector4f;
+import mini.renderEngine.Caps;
+import mini.renderEngine.IDList;
+import mini.renderEngine.Limits;
+import mini.renderEngine.RenderContext;
+import mini.renderEngine.Renderer;
 import mini.scene.Mesh;
 import mini.scene.VertexBuffer;
 import mini.shaders.Attribute;
@@ -17,9 +25,35 @@ import mini.textures.Texture;
 import mini.textures.image.LastTextureState;
 import mini.utils.BufferUtils;
 import mini.utils.MipMapGenerator;
-import org.lwjgl.opengl.*;
+import org.lwjgl.opengl.AMDSeamlessCubemapPerTexture;
+import org.lwjgl.opengl.ARBDrawBuffers;
+import org.lwjgl.opengl.ARBFramebufferObject;
+import org.lwjgl.opengl.ARBGetProgramBinary;
+import org.lwjgl.opengl.ARBMultisample;
+import org.lwjgl.opengl.ARBTextureMultisample;
+import org.lwjgl.opengl.ARBVertexArrayObject;
+import org.lwjgl.opengl.EXTFramebufferBlit;
+import org.lwjgl.opengl.EXTFramebufferMultisample;
+import org.lwjgl.opengl.EXTFramebufferObject;
+import org.lwjgl.opengl.EXTTextureFilterAnisotropic;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
+import org.lwjgl.opengl.GL13;
+import org.lwjgl.opengl.GL14;
+import org.lwjgl.opengl.GL15;
+import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL30;
+import org.lwjgl.opengl.GL31;
+import org.lwjgl.opengl.GL32;
+import org.lwjgl.opengl.GL33;
+import org.lwjgl.opengl.GL40;
+import org.lwjgl.opengl.GL41;
 
-import java.nio.*;
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
+import java.nio.ShortBuffer;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.EnumSet;
@@ -155,7 +189,7 @@ public final class GLRenderer implements Renderer {
                 if (glslVer < 400) {
                     break;
                 }
-                // so that future OpenGL revisions wont break jme3
+                // so that future OpenGL revisions wont break
                 // fall through intentional
             case 450:
                 caps.add(Caps.GLSL450);
