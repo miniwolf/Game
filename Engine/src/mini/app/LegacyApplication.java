@@ -11,7 +11,6 @@ import mini.renderEngine.ViewPort;
 import mini.system.ApplicationContext;
 import mini.system.ApplicationSystem;
 import mini.system.SystemListener;
-import scala.App;
 
 import java.net.MalformedURLException;
 import java.net.URL;

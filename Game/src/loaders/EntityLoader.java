@@ -14,7 +14,7 @@ public class EntityLoader {
         this.skinLoader = skinLoader;
         this.configsLoader = configsLoader;
     }
-
+/*
     protected Node loadEntity(MyFile entityFile) {
         Node entity = modelLoader.loadModel(new MyFile(entityFile, LoaderSettings.MODEL_FILE));
         Configs configs = configsLoader
@@ -23,7 +23,7 @@ public class EntityLoader {
         return entity;
 
     }
-
+*/
 //    private Material loadSkin(MyFile entityFile, Configs configs) {
 //        Material material;
 //        MyFile diffuseFile = new MyFile(entityFile, LoaderSettings.DIFFUSE_FILE);

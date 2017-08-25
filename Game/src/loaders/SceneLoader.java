@@ -40,14 +40,14 @@ public class SceneLoader {
 //        addTerrains(scene, terrainFiles);
         return scene;
     }
-
+/*
     private void addEntities(Scene scene, MyFile[] entityFiles) {
         for (MyFile file : entityFiles) {
             Node entity = entityLoader.loadEntity(file);
             //scene.(entity);
         }
     }
-
+*/
 //    private void addShinyEntities(Scene scene, MyFile[] entityFiles) {
 //        for (MyFile file : entityFiles) {
 //            Node entity = entityLoader.loadEntity(file);
