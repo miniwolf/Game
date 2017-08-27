@@ -1,4 +1,3 @@
-import mini.app.Application;
 import mini.app.SimpleApplication;
 import mini.asset.MaterialKey;
 import mini.asset.ModelKey;
@@ -9,11 +8,9 @@ import mini.material.plugins.MiniLoader;
 import mini.math.ColorRGBA;
 import mini.math.Quaternion;
 import mini.math.Vector3f;
-import mini.objConverter.ObjFileLoader;
 import mini.scene.Geometry;
 import mini.scene.plugins.OBJLoader;
 import mini.scene.shape.Sphere;
-import mini.utils.MyFile;
 import mini.utils.TangentBinormalGenerator;
 
 import java.io.IOException;

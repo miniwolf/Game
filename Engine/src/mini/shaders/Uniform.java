@@ -8,7 +8,6 @@ import mini.math.Vector2f;
 import mini.math.Vector3f;
 import mini.math.Vector4f;
 import mini.utils.BufferUtils;
-import org.lwjgl.opengl.GL20;
 
 import java.nio.Buffer;
 import java.nio.FloatBuffer;

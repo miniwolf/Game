@@ -193,11 +193,7 @@ public final class Quaternion implements Cloneable, java.io.Serializable {
      * @return true if this Quaternion is {0,0,0,1}
      */
     public boolean isIdentity() {
-        if (x == 0 && y == 0 && z == 0 && w == 1) {
-            return true;
-        } else {
-            return false;
-        }
+        return x == 0 && y == 0 && z == 0 && w == 1;
     }
 
     /**
@@ -1177,10 +1173,7 @@ public final class Quaternion implements Cloneable, java.io.Serializable {
         if (Float.compare(z, comp.z) != 0) {
             return false;
         }
-        if (Float.compare(w, comp.w) != 0) {
-            return false;
-        }
-        return true;
+        return Float.compare(w, comp.w) == 0;
     }
 
     /**

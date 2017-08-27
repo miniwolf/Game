@@ -36,7 +36,6 @@ public class TempVars {
      * the current instance and  then the index is decremented.
      */
     private static class TempVarsStack {
-
         int index = 0;
         TempVars[] tempVars = new TempVars[STACK_SIZE];
     }
@@ -46,27 +45,25 @@ public class TempVars {
      * This ensures each thread has a single TempVarsStack that is
      * used only in method calls in that thread.
      */
-    private static final ThreadLocal<TempVarsStack> varsLocal = new ThreadLocal<TempVarsStack>() {
+    private static final ThreadLocal<TempVarsStack> varsLocal =
+            ThreadLocal.withInitial(TempVarsStack::new);
 
-        @Override
-        public TempVarsStack initialValue() {
-            return new TempVarsStack();
-        }
-    };
     /**
      * This instance of TempVars has been retrieved but not released yet.
      */
     private boolean isUsed = false;
 
+    /**
+     * Used for serialization.
+     */
     private TempVars() {
     }
 
     /**
      * Acquire an instance of the TempVar class.
-     * You have to release the instance after use by calling the
-     * release() method.
-     * If more than STACK_SIZE (currently 5) instances are requested
-     * in a single thread then an ArrayIndexOutOfBoundsException will be thrown.
+     * You have to release the instance after use by calling the release() method.
+     * If more than STACK_SIZE (currently 5) instances are requested in a single thread then an
+     * ArrayIndexOutOfBoundsException will be thrown.
      *
      * @return A TempVar instance
      */

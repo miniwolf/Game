@@ -1,7 +1,5 @@
 package mini.system;
 
-import mini.app.Application;
-
 public class ApplicationSystem {
     private static ApplicationSystemDelegate systemDelegate;
 

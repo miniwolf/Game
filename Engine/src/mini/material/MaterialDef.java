@@ -16,7 +16,7 @@ import java.util.Map;
  */
 public class MaterialDef {
     private Map<String, MatParam> matParams = new HashMap<>();
-    private Map<String, List<TechniqueDef>> techniques = new HashMap<>();;
+    private Map<String, List<TechniqueDef>> techniques = new HashMap<>();
     private String name;
     private String assetName;
 
@@ -25,7 +25,7 @@ public class MaterialDef {
      *
      * @param name The debug name of the material definition
      */
-    public MaterialDef(String name){
+    public MaterialDef(String name) {
         this.name = name;
     }
 
@@ -52,10 +52,9 @@ public class MaterialDef {
      * Returns the material parameter with the given name.
      *
      * @param name The name of the parameter to retrieve
-     *
      * @return The material parameter, or null if it does not exist.
      */
-    public MatParam getMaterialParam(String name){
+    public MatParam getMaterialParam(String name) {
         return matParams.get(name);
     }
 
@@ -68,7 +67,7 @@ public class MaterialDef {
      *
      * @return All material parameters declared in this definition.
      */
-    public Collection<MatParam> getMaterialParams(){
+    public Collection<MatParam> getMaterialParams() {
         return matParams.values();
     }
 
@@ -77,15 +76,15 @@ public class MaterialDef {
      *
      * @return debug name of the material definition.
      */
-    public String getName(){
+    public String getName() {
         return name;
     }
 
     /**
      * Adds a new material parameter.
      *
-     * @param type Type of the parameter
-     * @param name Name of the parameter
+     * @param type  Type of the parameter
+     * @param name  Name of the parameter
      * @param value Default value of the parameter
      */
     public void addMaterialParam(VarType type, String name, Object value) {
@@ -98,11 +97,8 @@ public class MaterialDef {
      * @param technique The technique definition to add.
      */
     public void addTechniqueDef(TechniqueDef technique) {
-        List<TechniqueDef> list = techniques.get(technique.getName());
-        if (list == null) {
-            list = new ArrayList<>();
-            techniques.put(technique.getName(), list);
-        }
+        List<TechniqueDef> list = techniques
+                .computeIfAbsent(technique.getName(), k -> new ArrayList<>());
         list.add(technique);
     }
 
@@ -110,7 +106,6 @@ public class MaterialDef {
      * Returns technique definitions with the given name.
      *
      * @param name The name of the technique definitions to find
-     *
      * @return The technique definitions, or null if cannot be found.
      */
     public List<TechniqueDef> getTechniqueDefs(String name) {
@@ -120,10 +115,10 @@ public class MaterialDef {
     /**
      * Adds a new material parameter.
      *
-     * @param type Type of the parameter
-     * @param name Name of the parameter
-     * @param value Default value of the parameter
-     * @param ffBinding Fixed function binding for the parameter
+     * @param type       Type of the parameter
+     * @param name       Name of the parameter
+     * @param value      Default value of the parameter
+     * @param ffBinding  Fixed function binding for the parameter
      * @param colorSpace the color space of the texture required by thiis texture param
      * @see ColorSpace
      */

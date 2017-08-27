@@ -116,16 +116,21 @@ public final class DefineList {
 
     @Override
     public boolean equals(Object other) {
-        DefineList o = (DefineList) other;
-        if (isSet == o.isSet) {
-            for (int i = 0; i < values.length; i++) {
-                if (values[i] != o.values[i]) {
-                    return false;
-                }
-            }
-            return true;
+        if (!(other instanceof DefineList)) {
+            return false;
         }
-        return false;
+
+        DefineList o = (DefineList) other;
+        if (isSet != o.isSet) {
+            return false;
+        }
+
+        for (int i = 0; i < values.length; i++) {
+            if (values[i] != o.values[i]) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public DefineList deepClone() {

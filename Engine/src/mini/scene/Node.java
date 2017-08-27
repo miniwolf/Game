@@ -494,7 +494,6 @@ public class Node extends Spatial {
         }
     }
 
-    @Override
     public Node clone(boolean cloneMaterials) {
         Node nodeClone = (Node) super.clone();
 //        nodeClone.children = new ArrayList<Spatial>();

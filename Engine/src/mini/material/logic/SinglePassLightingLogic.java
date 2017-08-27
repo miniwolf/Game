@@ -12,8 +12,6 @@ import mini.math.Vector4f;
 import mini.renderEngine.Caps;
 import mini.renderEngine.RenderManager;
 import mini.renderEngine.Renderer;
-import mini.renderEngine.opengl.GLDebug;
-import mini.renderEngine.opengl.GLRenderer;
 import mini.scene.Geometry;
 import mini.shaders.DefineList;
 import mini.shaders.ShaderProgram;
@@ -21,7 +19,7 @@ import mini.shaders.Uniform;
 import mini.shaders.VarType;
 import mini.utils.TempVars;
 
-import java.util.EnumSet;
+import java.util.Set;
 
 public final class SinglePassLightingLogic extends DefaultTechniqueDefLogic {
 
@@ -46,7 +44,7 @@ public final class SinglePassLightingLogic extends DefaultTechniqueDefLogic {
     }
 
     @Override
-    public ShaderProgram makeCurrent(RenderManager renderManager, EnumSet<Caps> rendererCaps,
+    public ShaderProgram makeCurrent(RenderManager renderManager, Set<Caps> rendererCaps,
                                      LightList lights, DefineList defines) {
         defines.set(nbLightsDefineId, renderManager.getSinglePassLightBatchSize() * 3);
         defines.set(singlePassLightingDefineId, true);

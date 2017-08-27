@@ -31,13 +31,7 @@ public class TransparentComparator implements GeometryComparator {
 
         Vector3f camPosition = cam.getLocation();
         Vector3f viewVector = cam.getDirection();
-        Vector3f spatPosition = null;
-
-//        if (spat.getWorldBound() != null){
-//            spatPosition = spat.getWorldBound().getCenter();
-//        }else{
-        spatPosition = spat.getWorldTranslation();
-//        }
+        Vector3f spatPosition = spat.getWorldTranslation();
 
         spatPosition.subtract(camPosition, tempVec);
         spat.queueDistance = tempVec.dot(tempVec);
@@ -61,12 +55,6 @@ public class TransparentComparator implements GeometryComparator {
         float d1 = distanceToCam(o1);
         float d2 = distanceToCam(o2);
 
-        if (d1 == d2) {
-            return 0;
-        } else if (d1 < d2) {
-            return 1;
-        } else {
-            return -1;
-        }
+        return Float.compare(d2, d1);
     }
 }

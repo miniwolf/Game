@@ -33,8 +33,7 @@ public final class ReflectionAllocator implements BufferAllocator {
         Class<?> clazz = bb.getClass();
         try {
             freeMethod = clazz.getMethod("free");
-        } catch (NoSuchMethodException ex) {
-        } catch (SecurityException ex) {
+        } catch (NoSuchMethodException | SecurityException ignored) {
         }
     }
 
@@ -44,12 +43,8 @@ public final class ReflectionAllocator implements BufferAllocator {
             method.setAccessible(
                     true);// according to the Java documentation, by default, a reflected object is not accessible
             return method;
-        } catch (NoSuchMethodException ex) {
+        } catch (NoSuchMethodException | SecurityException | ClassNotFoundException ex) {
             return null; // the method was not found
-        } catch (SecurityException ex) {
-            return null; // setAccessible not allowed by security policy
-        } catch (ClassNotFoundException ex) {
-            return null; // the direct buffer implementation was not found
         } catch (Throwable t) {
             if (t.getClass().getName().equals("java.lang.reflect.InaccessibleObjectException")) {
                 return null;// the class is in an unexported module
@@ -134,14 +129,8 @@ public final class ReflectionAllocator implements BufferAllocator {
                     }
                 }
             }
-        } catch (IllegalAccessException ex) {
-            Logger.getLogger(BufferUtils.class.getName()).log(Level.SEVERE, "{0}", ex);
-        } catch (IllegalArgumentException ex) {
-            Logger.getLogger(BufferUtils.class.getName()).log(Level.SEVERE, "{0}", ex);
-        } catch (InvocationTargetException ex) {
-            Logger.getLogger(BufferUtils.class.getName()).log(Level.SEVERE, "{0}", ex);
-        } catch (SecurityException ex) {
-            Logger.getLogger(BufferUtils.class.getName()).log(Level.SEVERE, "{0}", ex);
+        } catch (IllegalAccessException | IllegalArgumentException | SecurityException | InvocationTargetException ex) {
+            System.err.println("BufferUtils: " + ex.getMessage());
         }
     }
 

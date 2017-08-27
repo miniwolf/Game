@@ -35,14 +35,11 @@ final class NativeLibrary {
 
         @Override
         public boolean equals(Object obj) {
+            if (!(obj instanceof Key)) {
+                return false;
+            }
             final Key other = (Key) obj;
-            if (!this.name.equals(other.name)) {
-                return false;
-            }
-            if (this.platform != other.platform) {
-                return false;
-            }
-            return true;
+            return this.name.equals(other.name) && this.platform == other.platform;
         }
     }
 

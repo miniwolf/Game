@@ -29,10 +29,10 @@ public class ShaderNodeVariable implements Cloneable {
     /**
      * creates a ShaderNodeVariable
      *
-     * @param type the glsl type of the variable
-     * @param nameSpace the nameSpace (can be the name of the shaderNode or
-     * Global,Attr,MatParam,WorldParam)
-     * @param name the name of the variable
+     * @param type         the glsl type of the variable
+     * @param nameSpace    the nameSpace (can be the name of the shaderNode or
+     *                     Global,Attr,MatParam,WorldParam)
+     * @param name         the name of the variable
      * @param multiplicity the number of element if this variable is an array. Can be an Int of a declared material parameter
      */
     public ShaderNodeVariable(String type, String nameSpace, String name, String multiplicity) {
@@ -41,7 +41,6 @@ public class ShaderNodeVariable implements Cloneable {
         this.type = type;
         this.multiplicity = multiplicity;
     }
-
 
     /**
      * creates a ShaderNodeVariable
@@ -53,7 +52,8 @@ public class ShaderNodeVariable implements Cloneable {
      * @param multiplicity the number of element if this variable is an array. Can be an Int of a declared material parameter
      * @param prefix       the variable prefix to append at generation times. This is mostly to add the g_ and m_ for uniforms
      */
-    public ShaderNodeVariable(String type, String nameSpace, String name, String multiplicity, String prefix) {
+    public ShaderNodeVariable(String type, String nameSpace, String name, String multiplicity,
+                              String prefix) {
         this(type, nameSpace, name, multiplicity);
         this.prefix = prefix;
     }
@@ -61,10 +61,10 @@ public class ShaderNodeVariable implements Cloneable {
     /**
      * creates a ShaderNodeVariable
      *
-     * @param type the glsl type of the variable
+     * @param type      the glsl type of the variable
      * @param nameSpace the nameSpace (can be the name of the shaderNode or
-     * Global,Attr,MatParam,WorldParam)
-     * @param name the name of the variable
+     *                  Global,Attr,MatParam,WorldParam)
+     * @param name      the name of the variable
      */
     public ShaderNodeVariable(String type, String nameSpace, String name) {
         this.name = name;
@@ -91,7 +91,6 @@ public class ShaderNodeVariable implements Cloneable {
     }
 
     /**
-     *
      * @return the glsl type
      */
     public String getType() {
@@ -108,7 +107,6 @@ public class ShaderNodeVariable implements Cloneable {
     }
 
     /**
-     *
      * @return the name space (can be the name of the shaderNode or
      * Global,Attr,MatParam,WorldParam)
      */
@@ -145,12 +143,12 @@ public class ShaderNodeVariable implements Cloneable {
     @Override
     public int hashCode() {
         int hash = 7;
-        hash = 29 * hash + (name != null?name.hashCode():0);
-        hash = 29 * hash + (type != null?type.hashCode():0);
+        hash = 29 * hash + (name != null ? name.hashCode() : 0);
+        hash = 29 * hash + (type != null ? type.hashCode() : 0);
         hash = 29 * hash + (prefix != null ? prefix.hashCode() : 0);
-        hash = 29 * hash + (nameSpace != null?nameSpace.hashCode():0);
-        hash = 29 * hash + (condition != null?condition.hashCode():0);
-        hash = 29 * hash + (multiplicity != null?multiplicity.hashCode():0);
+        hash = 29 * hash + (nameSpace != null ? nameSpace.hashCode() : 0);
+        hash = 29 * hash + (condition != null ? condition.hashCode() : 0);
+        hash = 29 * hash + (multiplicity != null ? multiplicity.hashCode() : 0);
         return hash;
     }
 
@@ -163,29 +161,19 @@ public class ShaderNodeVariable implements Cloneable {
             return false;
         }
         final ShaderNodeVariable other = (ShaderNodeVariable) obj;
-        if ((this.name == null) ? (other.name != null) : !this.name.equals(other.name)) {
-            return false;
-        }
-        if ((this.type == null) ? (other.type != null) : !this.type.equals(other.type)) {
-            return false;
-        }
-        if ((this.prefix == null) ? (other.prefix != null) : !this.prefix.equals(other.prefix)) {
-            return false;
-        }
-        if ((this.nameSpace == null) ? (other.nameSpace != null) : !this.nameSpace.equals(other.nameSpace)) {
-            return false;
-        }
-        if ((this.condition == null) ? (other.condition != null) : !this.condition.equals(other.condition)) {
-            return false;
-        }
-        if ((this.multiplicity == null) ? (other.multiplicity != null) : !this.multiplicity.equals(other.multiplicity)) {
-            return false;
-        }
-        return true;
+        return ((this.name == null) ? (other.name == null) : this.name.equals(other.name))
+               && ((this.type == null) ? (other.type == null) : this.type.equals(other.type))
+               && ((this.prefix == null) ? (other.prefix == null) :
+                   this.prefix.equals(other.prefix))
+               && ((this.nameSpace == null) ? (other.nameSpace == null) :
+                   this.nameSpace.equals(other.nameSpace))
+               && ((this.condition == null) ? (other.condition == null) :
+                   this.condition.equals(other.condition))
+               && ((this.multiplicity == null) ? (other.multiplicity == null) :
+                   this.multiplicity.equals(other.multiplicity));
     }
 
     /**
-     *
      * @return the condition for this variable to be declared
      */
     public String getCondition() {
@@ -207,7 +195,6 @@ public class ShaderNodeVariable implements Cloneable {
     }
 
     /**
-     *
      * @return true if this variable is a shader output
      */
     public boolean isShaderOutput() {
@@ -224,7 +211,6 @@ public class ShaderNodeVariable implements Cloneable {
     }
 
     /**
-     *
      * @return the number of elements if this variable is an array
      */
     public String getMultiplicity() {
@@ -234,6 +220,7 @@ public class ShaderNodeVariable implements Cloneable {
     /**
      * sets the number of elements of this variable making it an array
      * this value can be a number of can be a define
+     *
      * @param multiplicity
      */
     public void setMultiplicity(String multiplicity) {

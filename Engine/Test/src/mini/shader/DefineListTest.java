@@ -145,21 +145,21 @@ public class DefineListTest {
             dl.set(FLOAT_VAR, Float.NaN);
             generateSource(dl);
             assert false;
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException ignored) {
         }
 
         try {
             dl.set(FLOAT_VAR, Float.POSITIVE_INFINITY);
             generateSource(dl);
             assert false;
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException ignored) {
         }
 
         try {
             dl.set(FLOAT_VAR, Float.NEGATIVE_INFINITY);
             generateSource(dl);
             assert false;
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException ignored) {
         }
     }
 

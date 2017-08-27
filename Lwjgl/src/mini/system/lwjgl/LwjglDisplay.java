@@ -1,8 +1,13 @@
 package mini.system.lwjgl;
 
 import org.lwjgl.LWJGLException;
-import org.lwjgl.opengl.*;
+import org.lwjgl.opengl.ARBMultisample;
+import org.lwjgl.opengl.ContextAttribs;
+import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GLContext;
+import org.lwjgl.opengl.PixelFormat;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -103,7 +108,7 @@ public class LwjglDisplay extends LwjglAbstractDisplay {
 
     @Override
     public void runLoop() {
-        // This method is overriden to do restart
+        // This method is overridden to do restart
         if (needRestart.getAndSet(false)) {
             try {
                 createContext();
@@ -162,7 +167,7 @@ public class LwjglDisplay extends LwjglAbstractDisplay {
         for (int i = 0; i < image.getHeight(); i++) {
             for (int j = 0; j < image.getWidth(); j++) {
                 int colorSpace = image.getRGB(j, i);
-                imageBuffer[counter + 0] = (byte) ((colorSpace << 8) >> 24);
+                imageBuffer[counter] = (byte) ((colorSpace << 8) >> 24);
                 imageBuffer[counter + 1] = (byte) ((colorSpace << 16) >> 24);
                 imageBuffer[counter + 2] = (byte) ((colorSpace << 24) >> 24);
                 imageBuffer[counter + 3] = (byte) (colorSpace >> 24);

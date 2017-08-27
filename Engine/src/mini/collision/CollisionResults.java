@@ -44,7 +44,7 @@ public class CollisionResults implements Iterable<CollisionResult> {
 
     public void addCollision(CollisionResult result){
         if (results == null) {
-            results = new ArrayList<CollisionResult>();
+            results = new ArrayList<>();
         }
         results.add(result);
         sorted = false;

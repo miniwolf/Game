@@ -1,11 +1,13 @@
 package mini.material;
 
 import mini.asset.TextureKey;
-import mini.math.*;
+import mini.math.ColorRGBA;
+import mini.math.Quaternion;
+import mini.math.Vector2f;
+import mini.math.Vector3f;
+import mini.math.Vector4f;
 import mini.shaders.VarType;
 import mini.textures.Texture;
-
-import java.io.IOException;
 
 /**
  * Describes a material parameter. This is used for both defining a name and type
@@ -98,7 +100,6 @@ public class MatParam implements Cloneable {
         this.value = value;
     }
 
-
     /**
      * Returns the material parameter value as it would appear in a J3M
      * file. E.g.<br/>
@@ -188,15 +189,15 @@ When arrays can be inserted in J3M files
                 if (value instanceof Vector4f) {
                     Vector4f v4 = (Vector4f) value;
                     return v4.getX() + " " + v4.getY() + " "
-                            + v4.getZ() + " " + v4.getW();
+                           + v4.getZ() + " " + v4.getW();
                 } else if (value instanceof ColorRGBA) {
                     ColorRGBA color = (ColorRGBA) value;
                     return color.getRed() + " " + color.getGreen() + " "
-                            + color.getBlue() + " " + color.getAlpha();
+                           + color.getBlue() + " " + color.getAlpha();
                 } else if (value instanceof Quaternion) {
                     Quaternion quat = (Quaternion) value;
                     return quat.getX() + " " + quat.getY() + " "
-                            + quat.getZ() + " " + quat.getW();
+                           + quat.getZ() + " " + quat.getW();
                 } else {
                     throw new UnsupportedOperationException("Unexpected Vector4 type: " + value);
                 }
@@ -260,8 +261,7 @@ When arrays can be inserted in J3M files
     @Override
     public MatParam clone() {
         try {
-            MatParam param = (MatParam) super.clone();
-            return param;
+            return (MatParam) super.clone();
         } catch (CloneNotSupportedException ex) {
             throw new AssertionError();
         }
@@ -276,16 +276,10 @@ When arrays can be inserted in J3M files
             return false;
         }
         final MatParam other = (MatParam) obj;
-        if (this.type != other.type) {
-            return false;
-        }
-        if ((this.name == null) ? (other.name != null) : !this.name.equals(other.name)) {
-            return false;
-        }
-        if (this.value != other.value && (this.value == null || !this.value.equals(other.value))) {
-            return false;
-        }
-        return true;
+        return this.type == other.type
+               && ((this.name == null) ? (other.name == null) : this.name.equals(other.name))
+               && (this.value == other.value || (this.value != null && this.value
+                .equals(other.value)));
     }
 
     @Override

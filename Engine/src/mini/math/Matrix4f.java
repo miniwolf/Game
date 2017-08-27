@@ -621,11 +621,16 @@ public final class Matrix4f implements Cloneable, java.io.Serializable {
         }
     }
 
-    public Matrix4f transpose() {
-        float[] tmp = new float[16];
-        get(tmp, true);
-        Matrix4f mat = new Matrix4f(tmp);
-        return mat;
+    static boolean equalIdentity(Matrix4f mat) {
+        return !(Math.abs(mat.m00 - 1) > 1e-4) && !(Math.abs(mat.m11 - 1) > 1e-4) &&
+               !(Math.abs(mat.m22 - 1) > 1e-4) && !(Math.abs(mat.m33 - 1) > 1e-4) &&
+               !(Math.abs(mat.m01) > 1e-4) && !(Math.abs(mat.m02) > 1e-4) &&
+               !(Math.abs(mat.m03) > 1e-4) && !(Math.abs(mat.m10) > 1e-4) &&
+               !(Math.abs(mat.m12) > 1e-4) && !(Math.abs(mat.m13) > 1e-4) &&
+               !(Math.abs(mat.m20) > 1e-4) && !(Math.abs(mat.m21) > 1e-4) &&
+               !(Math.abs(mat.m23) > 1e-4) && !(Math.abs(mat.m30) > 1e-4) &&
+               !(Math.abs(mat.m31) > 1e-4) && !(Math.abs(mat.m32) > 1e-4);
+
     }
 
     /**
@@ -1553,26 +1558,10 @@ public final class Matrix4f implements Cloneable, java.io.Serializable {
         return store;
     }
 
-    /**
-     * <code>determinant</code> generates the determinate of this matrix.
-     *
-     * @return the determinate
-     */
-    public float determinant() {
-        float fA0 = m00 * m11 - m01 * m10;
-        float fA1 = m00 * m12 - m02 * m10;
-        float fA2 = m00 * m13 - m03 * m10;
-        float fA3 = m01 * m12 - m02 * m11;
-        float fA4 = m01 * m13 - m03 * m11;
-        float fA5 = m02 * m13 - m03 * m12;
-        float fB0 = m20 * m31 - m21 * m30;
-        float fB1 = m20 * m32 - m22 * m30;
-        float fB2 = m20 * m33 - m23 * m30;
-        float fB3 = m21 * m32 - m22 * m31;
-        float fB4 = m21 * m33 - m23 * m31;
-        float fB5 = m22 * m33 - m23 * m32;
-        float fDet = fA0 * fB5 - fA1 * fB4 + fA2 * fB3 + fA3 * fB2 - fA4 * fB1 + fA5 * fB0;
-        return fDet;
+    public Matrix4f transpose() {
+        float[] tmp = new float[16];
+        get(tmp, true);
+        return new Matrix4f(tmp);
     }
 
     /**
@@ -1953,56 +1942,24 @@ public final class Matrix4f implements Cloneable, java.io.Serializable {
     }
 
     /**
-     * <code>toString</code> returns the string representation of this object.
-     * It is in a format of a 4x4 matrix. For example, an identity matrix would
-     * be represented by the following string. com.jme.mini.math.Matrix3f <br>[<br>
-     * 1.0  0.0  0.0  0.0 <br>
-     * 0.0  1.0  0.0  0.0 <br>
-     * 0.0  0.0  1.0  0.0 <br>
-     * 0.0  0.0  0.0  1.0 <br>]<br>
+     * <code>determinant</code> generates the determinate of this matrix.
      *
-     * @return the string representation of this object.
+     * @return the determinate
      */
-    @Override
-    public String toString() {
-        StringBuilder result = new StringBuilder("Matrix4f\n[\n");
-        result.append(" ");
-        result.append(m00);
-        result.append("  ");
-        result.append(m01);
-        result.append("  ");
-        result.append(m02);
-        result.append("  ");
-        result.append(m03);
-        result.append(" \n");
-        result.append(" ");
-        result.append(m10);
-        result.append("  ");
-        result.append(m11);
-        result.append("  ");
-        result.append(m12);
-        result.append("  ");
-        result.append(m13);
-        result.append(" \n");
-        result.append(" ");
-        result.append(m20);
-        result.append("  ");
-        result.append(m21);
-        result.append("  ");
-        result.append(m22);
-        result.append("  ");
-        result.append(m23);
-        result.append(" \n");
-        result.append(" ");
-        result.append(m30);
-        result.append("  ");
-        result.append(m31);
-        result.append("  ");
-        result.append(m32);
-        result.append("  ");
-        result.append(m33);
-        result.append(" \n]");
-        return result.toString();
+    public float determinant() {
+        float fA0 = m00 * m11 - m01 * m10;
+        float fA1 = m00 * m12 - m02 * m10;
+        float fA2 = m00 * m13 - m03 * m10;
+        float fA3 = m01 * m12 - m02 * m11;
+        float fA4 = m01 * m13 - m03 * m11;
+        float fA5 = m02 * m13 - m03 * m12;
+        float fB0 = m20 * m31 - m21 * m30;
+        float fB1 = m20 * m32 - m22 * m30;
+        float fB2 = m20 * m33 - m23 * m30;
+        float fB3 = m21 * m32 - m22 * m31;
+        float fB4 = m21 * m33 - m23 * m31;
+        float fB5 = m22 * m33 - m23 * m32;
+        return fA0 * fB5 - fA1 * fB4 + fA2 * fB3 + fA3 * fB2 - fA4 * fB1 + fA5 * fB0;
     }
 
     /**
@@ -2040,75 +1997,23 @@ public final class Matrix4f implements Cloneable, java.io.Serializable {
     }
 
     /**
-     * are these two matrices the same? they are is they both have the same mXX values.
+     * <code>toString</code> returns the string representation of this object.
+     * It is in a format of a 4x4 matrix. For example, an identity matrix would
+     * be represented by the following string. com.jme.mini.math.Matrix3f <br>[<br>
+     * 1.0  0.0  0.0  0.0 <br>
+     * 0.0  1.0  0.0  0.0 <br>
+     * 0.0  0.0  1.0  0.0 <br>
+     * 0.0  0.0  0.0  1.0 <br>]<br>
      *
-     * @param o the object to compare for equality
-     * @return true if they are equal
+     * @return the string representation of this object.
      */
     @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof Matrix4f) || o == null) {
-            return false;
-        }
-
-        if (this == o) {
-            return true;
-        }
-
-        Matrix4f comp = (Matrix4f) o;
-        if (Float.compare(m00, comp.m00) != 0) {
-            return false;
-        }
-        if (Float.compare(m01, comp.m01) != 0) {
-            return false;
-        }
-        if (Float.compare(m02, comp.m02) != 0) {
-            return false;
-        }
-        if (Float.compare(m03, comp.m03) != 0) {
-            return false;
-        }
-
-        if (Float.compare(m10, comp.m10) != 0) {
-            return false;
-        }
-        if (Float.compare(m11, comp.m11) != 0) {
-            return false;
-        }
-        if (Float.compare(m12, comp.m12) != 0) {
-            return false;
-        }
-        if (Float.compare(m13, comp.m13) != 0) {
-            return false;
-        }
-
-        if (Float.compare(m20, comp.m20) != 0) {
-            return false;
-        }
-        if (Float.compare(m21, comp.m21) != 0) {
-            return false;
-        }
-        if (Float.compare(m22, comp.m22) != 0) {
-            return false;
-        }
-        if (Float.compare(m23, comp.m23) != 0) {
-            return false;
-        }
-
-        if (Float.compare(m30, comp.m30) != 0) {
-            return false;
-        }
-        if (Float.compare(m31, comp.m31) != 0) {
-            return false;
-        }
-        if (Float.compare(m32, comp.m32) != 0) {
-            return false;
-        }
-        if (Float.compare(m33, comp.m33) != 0) {
-            return false;
-        }
-
-        return true;
+    public String toString() {
+        return "Matrix4f\n[\n"
+               + " " + m00 + "  " + m01 + "  " + m02 + "  " + m03 + " \n"
+               + " " + m10 + "  " + m11 + "  " + m12 + "  " + m13 + " \n"
+               + " " + m20 + "  " + m21 + "  " + m22 + "  " + m23 + " \n"
+               + " " + m30 + "  " + m31 + "  " + m32 + "  " + m33 + " \n]";
     }
 
     /**
@@ -2141,61 +2046,32 @@ public final class Matrix4f implements Cloneable, java.io.Serializable {
         m32 *= scale.getZ();
     }
 
-    static boolean equalIdentity(Matrix4f mat) {
-        if (Math.abs(mat.m00 - 1) > 1e-4) {
-            return false;
-        }
-        if (Math.abs(mat.m11 - 1) > 1e-4) {
-            return false;
-        }
-        if (Math.abs(mat.m22 - 1) > 1e-4) {
-            return false;
-        }
-        if (Math.abs(mat.m33 - 1) > 1e-4) {
-            return false;
-        }
-
-        if (Math.abs(mat.m01) > 1e-4) {
-            return false;
-        }
-        if (Math.abs(mat.m02) > 1e-4) {
-            return false;
-        }
-        if (Math.abs(mat.m03) > 1e-4) {
+    /**
+     * are these two matrices the same? they are is they both have the same mXX values.
+     *
+     * @param o the object to compare for equality
+     * @return true if they are equal
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || !(o instanceof Matrix4f)) {
             return false;
         }
 
-        if (Math.abs(mat.m10) > 1e-4) {
-            return false;
-        }
-        if (Math.abs(mat.m12) > 1e-4) {
-            return false;
-        }
-        if (Math.abs(mat.m13) > 1e-4) {
-            return false;
+        if (this == o) {
+            return true;
         }
 
-        if (Math.abs(mat.m20) > 1e-4) {
-            return false;
-        }
-        if (Math.abs(mat.m21) > 1e-4) {
-            return false;
-        }
-        if (Math.abs(mat.m23) > 1e-4) {
-            return false;
-        }
+        Matrix4f comp = (Matrix4f) o;
+        return Float.compare(m00, comp.m00) == 0 && Float.compare(m01, comp.m01) == 0
+               && Float.compare(m02, comp.m02) == 0 && Float.compare(m03, comp.m03) == 0
+               && Float.compare(m10, comp.m10) == 0 && Float.compare(m11, comp.m11) == 0
+               && Float.compare(m12, comp.m12) == 0 && Float.compare(m13, comp.m13) == 0
+               && Float.compare(m20, comp.m20) == 0 && Float.compare(m21, comp.m21) == 0
+               && Float.compare(m22, comp.m22) == 0 && Float.compare(m23, comp.m23) == 0
+               && Float.compare(m30, comp.m30) == 0 && Float.compare(m31, comp.m31) == 0
+               && Float.compare(m32, comp.m32) == 0 && Float.compare(m33, comp.m33) == 0;
 
-        if (Math.abs(mat.m30) > 1e-4) {
-            return false;
-        }
-        if (Math.abs(mat.m31) > 1e-4) {
-            return false;
-        }
-        if (Math.abs(mat.m32) > 1e-4) {
-            return false;
-        }
-
-        return true;
     }
 
     // XXX: This tests more solid than converting the q to a matrix and multiplying... why?

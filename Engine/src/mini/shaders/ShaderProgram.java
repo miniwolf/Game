@@ -3,7 +3,6 @@ package mini.shaders;
 import mini.renderEngine.opengl.GLRenderer;
 import mini.scene.VertexBuffer;
 import mini.utils.NativeObject;
-import org.lwjgl.opengl.GL20;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -205,7 +204,7 @@ public class ShaderProgram extends NativeObject {
      */
     public void resetLocations() {
         if (uniforms != null) {
-            // NOTE: Shader sources will be reset seperately from the shader itself.
+            // NOTE: Shader sources will be reset separately from the shader itself.
             for (Uniform uniform : uniforms.values()) {
                 uniform.reset(); // fixes issue with re-initialization
             }

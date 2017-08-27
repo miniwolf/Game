@@ -231,8 +231,7 @@ public class Cloner {
     protected <T> T arrayClone(T object) {
         // Java doesn't support the cloning of arrays through reflection unless
         // you open access to Object's protected clone array... which requires
-        // elevated privileges.  So we will do a work-around that is slightly less
-        // elegant.
+        // elevated privileges. So we will do a work-around that is slightly less elegant.
         // This should be 100% allowed without a case but Java generics
         // is not that smart
         Class<T> type = objectClass(object);

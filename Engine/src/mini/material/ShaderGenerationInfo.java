@@ -2,7 +2,6 @@ package mini.material;
 
 import mini.shaders.ShaderNodeVariable;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 

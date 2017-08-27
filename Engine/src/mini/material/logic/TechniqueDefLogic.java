@@ -12,7 +12,7 @@ import mini.shaders.Uniform;
 import mini.shaders.UniformBinding;
 import mini.textures.Texture;
 
-import java.util.EnumSet;
+import java.util.Set;
 
 /**
  * <code>TechniqueDefLogic</code> is used to customize how
@@ -39,7 +39,8 @@ public interface TechniqueDefLogic {
      *
      * @return The shader to use for rendering.
      */
-    ShaderProgram makeCurrent(RenderManager renderManager, EnumSet<Caps> rendererCaps, LightList lights, DefineList defines);
+    ShaderProgram makeCurrent(RenderManager renderManager, Set<Caps> rendererCaps, LightList lights,
+                              DefineList defines);
 
     /**
      * Requests that the <code>TechniqueDefLogic</code> renders the given geometry.

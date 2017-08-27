@@ -778,13 +778,7 @@ public abstract class Spatial implements Cloneable {
      * @return true if the ancestor is found, false otherwise.
      */
     public boolean hasAncestor(Node ancestor) {
-        if (parent == null) {
-            return false;
-        } else if (parent.equals(ancestor)) {
-            return true;
-        } else {
-            return parent.hasAncestor(ancestor);
-        }
+        return parent != null && (parent.equals(ancestor) || parent.hasAncestor(ancestor));
     }
 
     /**

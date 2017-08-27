@@ -250,18 +250,8 @@ public final class Vector2f implements Cloneable, java.io.Serializable {
      * @return true or false as stated above.
      */
     public static boolean isValidVector(Vector2f vector) {
-        if (vector == null) {
-            return false;
-        }
-        if (Float.isNaN(vector.x) ||
-            Float.isNaN(vector.y)) {
-            return false;
-        }
-        if (Float.isInfinite(vector.x) ||
-            Float.isInfinite(vector.y)) {
-            return false;
-        }
-        return true;
+        return vector != null && !Float.isNaN(vector.x) && !Float.isNaN(vector.y) && !Float
+                .isInfinite(vector.x) && !Float.isInfinite(vector.y);
     }
 
     /**
@@ -543,8 +533,7 @@ public final class Vector2f implements Cloneable, java.io.Serializable {
      */
     public float smallestAngleBetween(Vector2f otherVector) {
         float dotProduct = dot(otherVector);
-        float angle = FastMath.acos(dotProduct);
-        return angle;
+        return FastMath.acos(dotProduct);
     }
 
     /**
@@ -557,9 +546,7 @@ public final class Vector2f implements Cloneable, java.io.Serializable {
      * @return the angle in radians.
      */
     public float angleBetween(Vector2f otherVector) {
-        float angle = FastMath.atan2(otherVector.y, otherVector.x)
-                      - FastMath.atan2(y, x);
-        return angle;
+        return FastMath.atan2(otherVector.y, otherVector.x) - FastMath.atan2(y, x);
     }
 
     public float getX() {
@@ -655,13 +642,7 @@ public final class Vector2f implements Cloneable, java.io.Serializable {
         }
 
         Vector2f comp = (Vector2f) o;
-        if (Float.compare(x, comp.x) != 0) {
-            return false;
-        }
-        if (Float.compare(y, comp.y) != 0) {
-            return false;
-        }
-        return true;
+        return Float.compare(x, comp.x) == 0 && Float.compare(y, comp.y) == 0;
     }
 
     /**

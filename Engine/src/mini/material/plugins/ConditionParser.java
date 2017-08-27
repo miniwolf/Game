@@ -51,7 +51,7 @@ public class ConditionParser {
      * @return the list of defines
      */
     public List<String> extractDefines(String expression) {
-        List<String> defines = new ArrayList<String>();
+        List<String> defines = new ArrayList<>();
         expression = expression.replaceAll("#ifdef", "").replaceAll("#if", "")
                                .replaceAll("defined", "");
         Pattern pattern = Pattern.compile("(\\w+)");

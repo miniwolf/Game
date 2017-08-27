@@ -10,7 +10,6 @@ import mini.shaders.ShaderProgram;
 import mini.shaders.UniformBinding;
 import mini.shaders.VarType;
 import mini.shaders.plugins.GLSLLoader;
-import mini.utils.MyFile;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -19,6 +18,8 @@ import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by miniwolf on 30-04-2017.
@@ -456,7 +457,7 @@ public class TechniqueDef implements Cloneable {
         return new DefineList(defineNames.size());
     }
 
-    private ShaderProgram loadShader(EnumSet<Caps> rendererCaps, DefineList defines) {
+    private ShaderProgram loadShader(Set<Caps> rendererCaps, DefineList defines) {
         StringBuilder sb = new StringBuilder();
         sb.append(shaderPrologue);
         defines.generateSource(sb, defineNames, defineTypes);
@@ -495,7 +496,7 @@ public class TechniqueDef implements Cloneable {
         return shader;
     }
 
-    public ShaderProgram getShader(EnumSet<Caps> rendererCaps, DefineList defines) {
+    public ShaderProgram getShader(Set<Caps> rendererCaps, DefineList defines) {
         ShaderProgram shader = definesToShaderMap.get(defines);
         if (shader == null) {
             shader = loadShader(rendererCaps, defines);
@@ -510,8 +511,8 @@ public class TechniqueDef implements Cloneable {
      * @param shaderNames     EnumMap containing all shader names for this stage
      * @param shaderLanguages EnumMap containing all shader languages for this stage
      */
-    public void setShaderFile(EnumMap<ShaderProgram.ShaderType, String> shaderNames,
-                              EnumMap<ShaderProgram.ShaderType, String> shaderLanguages) {
+    public void setShaderFile(Map<ShaderProgram.ShaderType, String> shaderNames,
+                              Map<ShaderProgram.ShaderType, String> shaderLanguages) {
         requiredCaps.clear();
 
         weight = 0;

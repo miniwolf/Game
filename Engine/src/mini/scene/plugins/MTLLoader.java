@@ -34,8 +34,6 @@ public class MTLLoader {
     private String matName;
     protected float alpha = 1;
     private boolean transparent = false;
-    private boolean disallowAmbient = false;
-    private boolean disallowSpecular = false;
 
     public void reset() {
         scan = null;
@@ -60,7 +58,7 @@ public class MTLLoader {
 
     private boolean skipLine() {
         try {
-            scan.skip(".*\r{0,1}\n");
+            scan.skip(".*\r?\n");
             return true;
         } catch (NoSuchElementException ex) {
             // EOF
@@ -73,8 +71,6 @@ public class MTLLoader {
         diffuse.set(ColorRGBA.LightGray);
         specular.set(ColorRGBA.Black);
         shininess = 16;
-        disallowAmbient = false;
-        disallowSpecular = false;
         shadeless = false;
         transparent = false;
         matName = null;
@@ -223,7 +219,6 @@ public class MTLLoader {
                     shadeless = true;
                     break;
                 case 1:
-                    disallowSpecular = true;
                     break;
                 case 2:
                 case 3:

@@ -41,16 +41,13 @@ import static mini.system.Platform.MacOSX64;
  * NativeLibraryLoader.loadNativeLibrary("mystuff", true);
  * </pre></code>
  * It will load the right library automatically based on the platform.
- *
- * @author Kirill Vainer
  */
 public final class NativeLibraryLoader {
     private static final byte[] buf = new byte[1024 * 100];
     private static File extractionFolderOverride = null;
     private static File extractionFolder = null;
 
-    private static final HashMap<NativeLibrary.Key, NativeLibrary> nativeLibraryMap
-            = new HashMap<NativeLibrary.Key, NativeLibrary>();
+    private static final Map<NativeLibrary.Key, NativeLibrary> nativeLibraryMap = new HashMap<>();
 
     /**
      * Register a new known library.
@@ -260,8 +257,7 @@ public final class NativeLibraryLoader {
             }
 
             conn = url.openConnection();
-            int hash = classpath.hashCode() ^ (int) conn.getLastModified();
-            return hash;
+            return classpath.hashCode() ^ (int) conn.getLastModified();
         } catch (IOException ex) {
             throw new UnsupportedOperationException(ex);
         } finally {
@@ -269,7 +265,7 @@ public final class NativeLibraryLoader {
                 try {
                     conn.getInputStream().close();
                     conn.getOutputStream().close();
-                } catch (IOException ex) {
+                } catch (IOException ignored) {
                 }
             }
         }
@@ -425,13 +421,13 @@ public final class NativeLibraryLoader {
             if (in != null) {
                 try {
                     in.close();
-                } catch (IOException ex) {
+                } catch (IOException ignored) {
                 }
             }
             if (out != null) {
                 try {
                     out.close();
-                } catch (IOException ex) {
+                } catch (IOException ignored) {
                 }
             }
         }
@@ -596,13 +592,13 @@ public final class NativeLibraryLoader {
             if (in != null) {
                 try {
                     in.close();
-                } catch (IOException ex) {
+                } catch (IOException ignored) {
                 }
             }
             if (out != null) {
                 try {
                     out.close();
-                } catch (IOException ex) {
+                } catch (IOException ignored) {
                 }
             }
         }

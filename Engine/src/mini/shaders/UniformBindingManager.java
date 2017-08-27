@@ -7,9 +7,7 @@ import mini.math.Vector2f;
 import mini.math.Vector3f;
 import mini.math.Vector4f;
 import mini.renderEngine.Camera;
-import mini.scene.Geometry;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**

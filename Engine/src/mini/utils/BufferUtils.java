@@ -196,8 +196,7 @@ public final class BufferUtils {
      * @return the requested new FloatBuffer
      */
     public static FloatBuffer createVector3Buffer(int vertices) {
-        FloatBuffer vBuff = createFloatBuffer(3 * vertices);
-        return vBuff;
+        return createFloatBuffer(3 * vertices);
     }
 
     /**
@@ -454,8 +453,7 @@ public final class BufferUtils {
      * @return the requested new FloatBuffer
      */
     public static FloatBuffer createVector2Buffer(int vertices) {
-        FloatBuffer vBuff = createFloatBuffer(2 * vertices);
-        return vBuff;
+        return createFloatBuffer(2 * vertices);
     }
 
     /**

@@ -2,10 +2,8 @@ package mini.textures;
 
 import mini.textures.image.ColorSpace;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Describes a cubemap texture.
@@ -19,8 +17,6 @@ import java.util.List;
  * 3 => Negative Y (-y)<br/>
  * 4 => Positive Z (+z)<br/>
  * 5 => Negative Z (-z)<br/>
- *
- * @author Joshua Slack
  */
 public class TextureCubeMap extends Texture {
 
@@ -28,13 +24,15 @@ public class TextureCubeMap extends Texture {
     private WrapMode wrapT = WrapMode.EdgeClamp;
     private WrapMode wrapR = WrapMode.EdgeClamp;
 
-    /**
-     * Face of the Cubemap as described by its directional offset from the
-     * origin.
-     */
-    public enum Face {
-
-        PositiveX, NegativeX, PositiveY, NegativeY, PositiveZ, NegativeZ;
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof TextureCubeMap)) {
+            return false;
+        }
+        TextureCubeMap that = (TextureCubeMap) other;
+        return this.getWrap(WrapAxis.S) == that.getWrap(WrapAxis.S)
+               && this.getWrap(WrapAxis.T) == that.getWrap(WrapAxis.T)
+               && this.getWrap(WrapAxis.R) == that.getWrap(WrapAxis.R) && super.equals(other);
     }
 
     public TextureCubeMap() {
@@ -126,22 +124,12 @@ public class TextureCubeMap extends Texture {
         return Type.CubeMap;
     }
 
-    @Override
-    public boolean equals(Object other) {
-        if (!(other instanceof TextureCubeMap)) {
-            return false;
-        }
-        TextureCubeMap that = (TextureCubeMap) other;
-        if (this.getWrap(WrapAxis.S) != that.getWrap(WrapAxis.S)) {
-            return false;
-        }
-        if (this.getWrap(WrapAxis.T) != that.getWrap(WrapAxis.T)) {
-            return false;
-        }
-        if (this.getWrap(WrapAxis.R) != that.getWrap(WrapAxis.R)) {
-            return false;
-        }
-        return super.equals(other);
+    /**
+     * Face of the Cubemap as described by its directional offset from the
+     * origin.
+     */
+    public enum Face {
+        PositiveX, NegativeX, PositiveY, NegativeY, PositiveZ, NegativeZ
     }
 
     @Override
