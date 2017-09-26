@@ -50,4 +50,9 @@ public enum VarType {
     public String getGlslType() {
         return glslType;
     }
+
+    public boolean isMultiData() {
+        return multiData;
+    }
+
 }

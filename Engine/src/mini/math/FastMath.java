@@ -273,7 +273,7 @@ final public class FastMath {
         c3 = 2 * T * p0 + (T - 3) * p1 + (3 - 2 * T) * p2 + -T * p3;
         c4 = -T * p0 + (2 - T) * p1 + (T - 2) * p2 + T * p3;
 
-        return (float) (((c4 * u + c3) * u + c2) * u + c1);
+        return ((c4 * u + c3) * u + c2) * u + c1;
     }
 
     /**
@@ -698,13 +698,7 @@ final public class FastMath {
      * @return The integer's sign.
      */
     public static int sign(int iValue) {
-        if (iValue > 0) {
-            return 1;
-        }
-        if (iValue < 0) {
-            return -1;
-        }
-        return 0;
+        return Integer.compare(iValue, 0);
     }
 
     /**
@@ -1001,11 +995,7 @@ final public class FastMath {
      * @return True if a and b are approximately equal, false otherwise.
      */
     public static boolean approximateEquals(float a, float b) {
-        if (a == b) {
-            return true;
-        } else {
-            return (abs(a - b) / Math.max(abs(a), abs(b))) <= 0.00001f;
-        }
+        return a == b || (abs(a - b) / Math.max(abs(a), abs(b))) <= 0.00001f;
     }
 
     /**

@@ -9,7 +9,6 @@ import mini.textures.Texture;
 import mini.textures.plugins.AWTLoader;
 
 public class TestColoredTexture extends SimpleApplication {
-    private Material mat;
 
     public static void main(String[] args) {
         System.setProperty("org.lwjgl.librarypath",
@@ -24,7 +23,7 @@ public class TestColoredTexture extends SimpleApplication {
         Geometry quad = new Geometry("Quad", quadMesh);
         quad.setQueueBucket(RenderQueue.Bucket.Gui);
 
-        mat = new Material("MatDefs/Misc/Unshaded.minid");
+        Material mat = new Material("MatDefs/Misc/Unshaded.minid");
         mat.setTexture("ColorMap",
                        (Texture) AWTLoader.load(new TextureKey("Textures/Terrain/Pond/Pond.jpg")));
         quad.setMaterial(mat);

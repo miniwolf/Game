@@ -9,9 +9,9 @@ import mini.shaders.DefineList;
 import mini.shaders.ShaderProgram;
 import mini.shaders.VarType;
 
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by miniwolf on 30-04-2017.
@@ -90,7 +90,7 @@ public class Technique {
      */
     ShaderProgram makeCurrent(RenderManager renderManager, List<MatParamOverride> worldOverrides,
                               List<MatParamOverride> forcedOverrides, LightList lights,
-                              EnumSet<Caps> rendererCaps) {
+                              Set<Caps> rendererCaps) {
         TechniqueDefLogic logic = def.getLogic();
 
         dynamicDefines.clear();

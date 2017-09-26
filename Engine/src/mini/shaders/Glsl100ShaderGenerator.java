@@ -1,12 +1,10 @@
 package mini.shaders;
 
-import mini.asset.AssetKey;
 import mini.asset.ShaderNodeDefinitionKey;
 import mini.material.ShaderGenerationInfo;
 import mini.material.TechniqueDef;
 import mini.material.plugins.ConditionParser;
 import mini.shaders.plugins.GLSLLoader;
-import mini.utils.MyFile;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -395,7 +393,7 @@ public class Glsl100ShaderGenerator {
         comment(source, shaderNode, "Begin");
         startCondition(shaderNode.getCondition(), source);
 
-        List<String> declaredInputs = new ArrayList<String>();
+        List<String> declaredInputs = new ArrayList<>();
         for (VariableMapping mapping : shaderNode.getInputMapping()) {
 
             //Variables fed with a sampler matparam or world param are replaced by the matparam itself

@@ -46,7 +46,7 @@ public class OpaqueComparator implements GeometryComparator {
             float d1 = distanceToCam(o1);
             float d2 = distanceToCam(o2);
 
-            return d1 == d2 ? 0 : d1 < d2 ? -1 : 1;
+            return Float.compare(d1, d2);
         } else {
             return compareResult;
         }

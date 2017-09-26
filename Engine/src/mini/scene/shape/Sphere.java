@@ -33,13 +33,15 @@ public class Sphere extends Mesh {
          */
         Polar
     }
+
     private int vertCount;
-    private int triCount;
     private int zSamples;
     private int radialSamples;
     private boolean useEvenSlices;
     private boolean interior;
-    /** the distance from the center point each point falls on */
+    /**
+     * the distance from the center point each point falls on
+     */
     public float radius;
     private TextureMode textureMode = TextureMode.Original;
 
@@ -54,12 +56,9 @@ public class Sphere extends Mesh {
      * Both zSamples and radialSamples increase the quality of the generated
      * sphere.
      *
-     * @param zSamples
-     *            The number of samples along the Z.
-     * @param radialSamples
-     *            The number of samples along the radial.
-     * @param radius
-     *            The radius of the sphere.
+     * @param zSamples      The number of samples along the Z.
+     * @param radialSamples The number of samples along the radial.
+     * @param radius        The radius of the sphere.
      */
     public Sphere(int zSamples, int radialSamples, float radius) {
         this(zSamples, radialSamples, radius, false, false);
@@ -68,18 +67,14 @@ public class Sphere extends Mesh {
     /**
      * Constructs a sphere. Additional arg to evenly space latitudinal slices
      *
-     * @param zSamples
-     *            The number of samples along the Z.
-     * @param radialSamples
-     *            The number of samples along the radial.
-     * @param radius
-     *            The radius of the sphere.
-     * @param useEvenSlices
-     *            Slice sphere evenly along the Z axis
-     * @param interior
-     *            Not yet documented
+     * @param zSamples      The number of samples along the Z.
+     * @param radialSamples The number of samples along the radial.
+     * @param radius        The radius of the sphere.
+     * @param useEvenSlices Slice sphere evenly along the Z axis
+     * @param interior      Not yet documented
      */
-    public Sphere(int zSamples, int radialSamples, float radius, boolean useEvenSlices, boolean interior) {
+    public Sphere(int zSamples, int radialSamples, float radius, boolean useEvenSlices,
+                  boolean interior) {
         updateGeometry(zSamples, radialSamples, radius, useEvenSlices, interior);
     }
 
@@ -243,8 +238,6 @@ public class Sphere extends Mesh {
             texBuf.put(0.5f).put(0.0f);
         }
 
-        i++;
-
         // north pole
         posBuf.put(0).put(0).put(radius);
 
@@ -268,7 +261,7 @@ public class Sphere extends Mesh {
      */
     private void setIndexData() {
         // allocate connectivity
-        triCount = 2 * (zSamples - 2) * radialSamples;
+        int triCount = 2 * (zSamples - 2) * radialSamples;
         ShortBuffer idxBuf = BufferUtils.createShortBuffer(3 * triCount);
         setBuffer(VertexBuffer.Type.Index, 3, idxBuf);
 
@@ -328,8 +321,7 @@ public class Sphere extends Mesh {
     }
 
     /**
-     * @param textureMode
-     *            The textureMode to set.
+     * @param textureMode The textureMode to set.
      */
     public void setTextureMode(TextureMode textureMode) {
         this.textureMode = textureMode;
@@ -339,9 +331,9 @@ public class Sphere extends Mesh {
     /**
      * Changes the information of the sphere into the given values.
      *
-     * @param zSamples the number of zSamples of the sphere.
+     * @param zSamples      the number of zSamples of the sphere.
      * @param radialSamples the number of radial samples of the sphere.
-     * @param radius the radius of the sphere.
+     * @param radius        the radius of the sphere.
      */
     public void updateGeometry(int zSamples, int radialSamples, float radius) {
         if (zSamples < 3) {
@@ -350,7 +342,8 @@ public class Sphere extends Mesh {
         updateGeometry(zSamples, radialSamples, radius, false, false);
     }
 
-    public void updateGeometry(int zSamples, int radialSamples, float radius, boolean useEvenSlices, boolean interior) {
+    public void updateGeometry(int zSamples, int radialSamples, float radius, boolean useEvenSlices,
+                               boolean interior) {
         if (zSamples < 3) {
             throw new IllegalArgumentException("zSamples cannot be smaller than 3");
         }

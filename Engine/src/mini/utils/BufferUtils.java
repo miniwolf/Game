@@ -1,37 +1,10 @@
-/*
- * Copyright (c) 2009-2012 jMonkeyEngine
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are
- * met:
- *
- * * Redistributions of source code must retain the above copyright
- *   notice, this list of conditions and the following disclaimer.
- *
- * * Redistributions in binary form must reproduce the above copyright
- *   notice, this list of conditions and the following disclaimer in the
- *   documentation and/or other materials provided with the distribution.
- *
- * * Neither the name of 'jMonkeyEngine' nor the names of its contributors
- *   may be used to endorse or promote products derived from this software
- *   without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
- * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
- * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
 package mini.utils;
 
-import mini.math.*;
+import mini.math.ColorRGBA;
+import mini.math.Quaternion;
+import mini.math.Vector2f;
+import mini.math.Vector3f;
+import mini.math.Vector4f;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.PhantomReference;
@@ -50,9 +23,6 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * <code>BufferUtils</code> is a helper class for generating nio buffers from
  * jME data classes such as Vectors and ColorRGBA.
- *
- * @author Joshua Slack
- * @version $Id: BufferUtils.java,v 1.16 2007/10/29 16:56:18 nca Exp $
  */
 public final class BufferUtils {
     /**
@@ -61,9 +31,9 @@ public final class BufferUtils {
     private static final BufferAllocator allocator = BufferAllocatorFactory.create();
 
     private static boolean trackDirectMemory = false;
-    private static ReferenceQueue<Buffer> removeCollected = new ReferenceQueue<Buffer>();
+    private static ReferenceQueue<Buffer> removeCollected = new ReferenceQueue<>();
     private static ConcurrentHashMap<BufferInfo, BufferInfo> trackedBuffers
-            = new ConcurrentHashMap<BufferInfo, BufferInfo>();
+            = new ConcurrentHashMap<>();
     static ClearReferences cleanupthread;
 
     /**
@@ -226,8 +196,7 @@ public final class BufferUtils {
      * @return the requested new FloatBuffer
      */
     public static FloatBuffer createVector3Buffer(int vertices) {
-        FloatBuffer vBuff = createFloatBuffer(3 * vertices);
-        return vBuff;
+        return createFloatBuffer(3 * vertices);
     }
 
     /**
@@ -253,12 +222,9 @@ public final class BufferUtils {
      * Sets the data contained in the given color into the FloatBuffer at the
      * specified index.
      *
-     * @param color
-     *            the data to insert
-     * @param buf
-     *            the buffer to insert into
-     * @param index
-     *            the postion to place the data; in terms of colors not floats
+     * @param color the data to insert
+     * @param buf   the buffer to insert into
+     * @param index the postion to place the data; in terms of colors not floats
      */
     public static void setInBuffer(ColorRGBA color, FloatBuffer buf, int index) {
         buf.position(index * 4);
@@ -487,8 +453,7 @@ public final class BufferUtils {
      * @return the requested new FloatBuffer
      */
     public static FloatBuffer createVector2Buffer(int vertices) {
-        FloatBuffer vBuff = createFloatBuffer(2 * vertices);
-        return vBuff;
+        return createFloatBuffer(2 * vertices);
     }
 
     /**
@@ -1188,22 +1153,22 @@ public final class BufferUtils {
      */
     private static boolean isDirect(Buffer buf) {
         if (buf instanceof FloatBuffer) {
-            return ((FloatBuffer) buf).isDirect();
+            return buf.isDirect();
         }
         if (buf instanceof IntBuffer) {
-            return ((IntBuffer) buf).isDirect();
+            return buf.isDirect();
         }
         if (buf instanceof ShortBuffer) {
-            return ((ShortBuffer) buf).isDirect();
+            return buf.isDirect();
         }
         if (buf instanceof ByteBuffer) {
-            return ((ByteBuffer) buf).isDirect();
+            return buf.isDirect();
         }
         if (buf instanceof DoubleBuffer) {
-            return ((DoubleBuffer) buf).isDirect();
+            return buf.isDirect();
         }
         if (buf instanceof LongBuffer) {
-            return ((LongBuffer) buf).isDirect();
+            return buf.isDirect();
         }
         throw new UnsupportedOperationException(
                 " BufferUtils.isDirect was called on " + buf.getClass().getName());

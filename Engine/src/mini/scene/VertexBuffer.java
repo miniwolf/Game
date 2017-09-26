@@ -12,7 +12,6 @@ import java.nio.ShortBuffer;
  * Created by miniwolf on 15-04-2017.
  */
 public class VertexBuffer extends NativeObject {
-    private boolean updateNeeded;
     private boolean normalized = false;
     private int id = -1;
     private int stride = 0;

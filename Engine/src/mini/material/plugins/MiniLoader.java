@@ -14,7 +14,6 @@ import mini.material.logic.SinglePassLightingLogic;
 import mini.math.ColorRGBA;
 import mini.math.Vector2f;
 import mini.math.Vector3f;
-import mini.renderEngine.queue.RenderQueue;
 import mini.shaders.DefineList;
 import mini.shaders.ShaderProgram;
 import mini.shaders.VarType;
@@ -32,14 +31,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class MiniLoader {
     // private ErrorLogger errors;
     private ShaderNodeLoaderDelegate nodesLoaderDelegate;
-    boolean isUseNodes = false;
-    int langSize = 0;
+    private boolean isUseNodes = false;
+    private int langSize = 0;
 
     private AssetKey key;
 
@@ -47,15 +47,15 @@ public class MiniLoader {
     private Material material;
     private TechniqueDef technique;
     private RenderState renderState;
-    private ArrayList<String> presetDefines = new ArrayList<String>();
+    private List<String> presetDefines = new ArrayList<>();
 
     private List<EnumMap<ShaderProgram.ShaderType, String>> shaderLanguages;
-    private EnumMap<ShaderProgram.ShaderType, String> shaderNames;
+    private Map<ShaderProgram.ShaderType, String> shaderNames;
 
     private static final String whitespacePattern = "\\p{javaWhitespace}+";
 
     public MiniLoader() {
-        shaderLanguages = new ArrayList<>();// EnumMap<>(Shader.ShaderType.class);
+        shaderLanguages = new ArrayList<>();
         shaderNames = new EnumMap<>(ShaderProgram.ShaderType.class);
     }
 
@@ -125,7 +125,7 @@ public class MiniLoader {
     }
 
     private List<String> tokenizeTextureValue(final String value) {
-        final List<String> matchList = new ArrayList<String>();
+        final List<String> matchList = new ArrayList<>();
         final Pattern regex = Pattern.compile("[^\\s\"']+|\"([^\"]*)\"|'([^']*)'");
         final Matcher regexMatcher = regex.matcher(value.trim());
 
@@ -350,15 +350,13 @@ public class MiniLoader {
         String[] split = statement.split(":");
 
         // Parse default val
-        if (split.length == 1) {
-            // Doesn't contain default value
-        } else {
+        if (split.length != 1) {
             if (split.length != 2) {
                 throw new IOException("Parameter statement syntax incorrect");
             }
             statement = split[0].trim();
             defaultVal = split[1].trim();
-        }
+        } // else Doesn't contain default value
 
         if (statement.endsWith("-LINEAR")) {
             colorSpace = ColorSpace.Linear;
@@ -369,9 +367,6 @@ public class MiniLoader {
         int startParen = statement.indexOf("(");
         if (startParen != -1) {
             // get content inside parentheses
-            int endParen = statement.indexOf(")", startParen);
-            String bindingStr = statement.substring(startParen + 1, endParen).trim();
-            // don't care about bindingStr
             statement = statement.substring(0, startParen);
         }
 
@@ -403,7 +398,7 @@ public class MiniLoader {
     }
 
     private void readValueParam(String statement) throws IOException {
-        // Use limit=1 incase filename contains colons
+        // Use limit=1 in case filename contains colons
         String[] split = statement.split(":", 2);
         if (split.length != 2) {
             throw new IOException("Value parameter statement syntax incorrect");
@@ -448,36 +443,50 @@ public class MiniLoader {
 
     private void readRenderStateStatement(Statement statement) throws IOException {
         String[] split = statement.getLine().split(whitespacePattern);
-        if (split[0].equals("Wireframe")) {
-            renderState.setWireframe(parseBoolean(split[1]));
-        } else if (split[0].equals("FaceCull")) {
-            renderState.setFaceCullMode(RenderState.FaceCullMode.valueOf(split[1]));
-        } else if (split[0].equals("DepthWrite")) {
-            renderState.setDepthWrite(parseBoolean(split[1]));
-        } else if (split[0].equals("DepthTest")) {
-            renderState.setDepthTest(parseBoolean(split[1]));
-        } else if (split[0].equals("Blend")) {
-            renderState.setBlendMode(RenderState.BlendMode.valueOf(split[1]));
-        } else if (split[0].equals("BlendEquation")) {
-            renderState.setBlendEquation(RenderState.BlendEquation.valueOf(split[1]));
-        } else if (split[0].equals("BlendEquationAlpha")) {
-            renderState.setBlendEquationAlpha(RenderState.BlendEquationAlpha.valueOf(split[1]));
-        } else if (split[0].equals("AlphaTestFalloff")) {
-            // Ignore for backwards compatbility
-        } else if (split[0].equals("PolyOffset")) {
-            float factor = Float.parseFloat(split[1]);
-            float units = Float.parseFloat(split[2]);
-            renderState.setPolyOffset(factor, units);
-        } else if (split[0].equals("ColorWrite")) {
-            renderState.setColorWrite(parseBoolean(split[1]));
-        } else if (split[0].equals("PointSprite")) {
-            // Ignore for backwards compatbility
-        } else if (split[0].equals("DepthFunc")) {
-            renderState.setDepthFunc(RenderState.TestFunction.valueOf(split[1]));
-        } else if (split[0].equals("LineWidth")) {
-            renderState.setLineWidth(Float.parseFloat(split[1]));
-        } else {
-            throw new MatParseException(null, split[0], statement);
+        switch (split[0]) {
+            case "Wireframe":
+                renderState.setWireframe(parseBoolean(split[1]));
+                break;
+            case "FaceCull":
+                renderState.setFaceCullMode(RenderState.FaceCullMode.valueOf(split[1]));
+                break;
+            case "DepthWrite":
+                renderState.setDepthWrite(parseBoolean(split[1]));
+                break;
+            case "DepthTest":
+                renderState.setDepthTest(parseBoolean(split[1]));
+                break;
+            case "Blend":
+                renderState.setBlendMode(RenderState.BlendMode.valueOf(split[1]));
+                break;
+            case "BlendEquation":
+                renderState.setBlendEquation(RenderState.BlendEquation.valueOf(split[1]));
+                break;
+            case "BlendEquationAlpha":
+                renderState.setBlendEquationAlpha(RenderState.BlendEquationAlpha.valueOf(split[1]));
+                break;
+            case "AlphaTestFalloff":
+                // Ignore for backwards compatibility
+                break;
+            case "PolyOffset":
+                float factor = Float.parseFloat(split[1]);
+                float units = Float.parseFloat(split[2]);
+                renderState.setPolyOffset(factor, units);
+                break;
+            case "ColorWrite":
+                renderState.setColorWrite(parseBoolean(split[1]));
+                break;
+            case "PointSprite":
+                // Ignore for backwards compatibility
+                break;
+            case "DepthFunc":
+                renderState.setDepthFunc(RenderState.TestFunction.valueOf(split[1]));
+                break;
+            case "LineWidth":
+                renderState.setLineWidth(Float.parseFloat(split[1]));
+                break;
+            default:
+                throw new MatParseException(null, split[0], statement);
         }
     }
 
@@ -539,46 +548,59 @@ public class MiniLoader {
     }
 
     private void readTechniqueStatement(Statement statement) throws IOException {
-        String[] split = statement.getLine().split("[ \\{]");
-        if (split[0].equals("VertexShader") ||
-            split[0].equals("FragmentShader") ||
-            split[0].equals("GeometryShader") ||
-            split[0].equals("TessellationControlShader") ||
-            split[0].equals("TessellationEvaluationShader")) {
-            readShaderStatement(statement.getLine());
-        } else if (split[0].equals("LightMode")) {
-            readLightMode(statement.getLine());
-        } else if (split[0].equals("LightSpace")) {
-            readLightSpace(statement.getLine());
-        } else if (split[0].equals("ShadowMode")) {
-            readShadowMode(statement.getLine());
-        } else if (split[0].equals("WorldParameters")) {
-            readWorldParams(statement.getContents());
-        } else if (split[0].equals("RenderState")) {
-            readRenderState(statement.getContents());
-        } else if (split[0].equals("ForcedRenderState")) {
-            readForcedRenderState(statement.getContents());
-        } else if (split[0].equals("Defines")) {
-            readDefines(statement.getContents());
-        } else if (split[0].equals("ShaderNodesDefinitions")) {
-            initNodesLoader();
-            if (isUseNodes) {
-                nodesLoaderDelegate.readNodesDefinitions(statement.getContents());
-            }
-        } else if (split[0].equals("VertexShaderNodes")) {
-            initNodesLoader();
-            if (isUseNodes) {
-                nodesLoaderDelegate.readVertexShaderNodes(statement.getContents());
-            }
-        } else if (split[0].equals("FragmentShaderNodes")) {
-            initNodesLoader();
-            if (isUseNodes) {
-                nodesLoaderDelegate.readFragmentShaderNodes(statement.getContents());
-            }
-        } else if (split[0].equals("NoRender")) {
-            technique.setNoRender(true);
-        } else {
-            throw new MatParseException(null, split[0], statement);
+        String[] split = statement.getLine().split("[ {]");
+        switch (split[0]) {
+            case "VertexShader":
+            case "FragmentShader":
+            case "GeometryShader":
+            case "TessellationControlShader":
+            case "TessellationEvaluationShader":
+                readShaderStatement(statement.getLine());
+                break;
+            case "LightMode":
+                readLightMode(statement.getLine());
+                break;
+            case "LightSpace":
+                readLightSpace(statement.getLine());
+                break;
+            case "ShadowMode":
+                readShadowMode(statement.getLine());
+                break;
+            case "WorldParameters":
+                readWorldParams(statement.getContents());
+                break;
+            case "RenderState":
+                readRenderState(statement.getContents());
+                break;
+            case "ForcedRenderState":
+                readForcedRenderState(statement.getContents());
+                break;
+            case "Defines":
+                readDefines(statement.getContents());
+                break;
+            case "ShaderNodesDefinitions":
+                initNodesLoader();
+                if (isUseNodes) {
+                    nodesLoaderDelegate.readNodesDefinitions(statement.getContents());
+                }
+                break;
+            case "VertexShaderNodes":
+                initNodesLoader();
+                if (isUseNodes) {
+                    nodesLoaderDelegate.readVertexShaderNodes(statement.getContents());
+                }
+                break;
+            case "FragmentShaderNodes":
+                initNodesLoader();
+                if (isUseNodes) {
+                    nodesLoaderDelegate.readFragmentShaderNodes(statement.getContents());
+                }
+                break;
+            case "NoRender":
+                technique.setNoRender(true);
+                break;
+            default:
+                throw new MatParseException(null, split[0], statement);
         }
     }
 
@@ -704,7 +726,7 @@ public class MiniLoader {
             throw new IOException("Too many roots in J3M/J3MD file");
         }
 
-        boolean extending = false;
+        boolean extending;
         Statement materialStat = roots.get(0);
         String materialName = materialStat.getLine();
         if (materialName.startsWith("MaterialDef")) {
@@ -752,7 +774,7 @@ public class MiniLoader {
         }
 
         for (Statement statement : materialStat.getContents()) {
-            split = statement.getLine().split("[ \\{]");
+            split = statement.getLine().split("[ {]");
             String statType = split[0];
             if (extending) {
                 switch (statType) {

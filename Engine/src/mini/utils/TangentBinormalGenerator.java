@@ -4,12 +4,23 @@ import mini.math.ColorRGBA;
 import mini.math.FastMath;
 import mini.math.Vector2f;
 import mini.math.Vector3f;
-import mini.scene.*;
+import mini.scene.Geometry;
+import mini.scene.Mesh;
+import mini.scene.Node;
+import mini.scene.Spatial;
+import mini.scene.VertexBuffer;
 import mini.scene.mesh.IndexBuffer;
 
-import java.nio.*;
-import java.util.*;
-import java.util.concurrent.Future;
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
+import java.nio.DoubleBuffer;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
+import java.nio.ShortBuffer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static mini.utils.BufferUtils.destroyDirectBuffer;
 import static mini.utils.BufferUtils.populateFromBuffer;
@@ -29,26 +40,131 @@ public class TangentBinormalGenerator {
         setToleranceAngle(45);
     }
 
-
-    private static class VertexInfo {
-        public final Vector3f position;
-        public final Vector3f normal;
-        public final Vector2f texCoord;
-        public final ArrayList<Integer> indices = new ArrayList<Integer>();
-
-        public VertexInfo(Vector3f position, Vector3f normal, Vector2f texCoord) {
-            this.position = position;
-            this.normal = normal;
-            this.texCoord = texCoord;
+    private static List<VertexData> initVertexData(int size) {
+        List<VertexData> vertices = new ArrayList<>(size);
+        for (int i = 0; i < size; i++) {
+            vertices.add(new VertexData());
         }
+        return vertices;
     }
 
-    /** Collects all the triangle data for one vertex.
-     */
-    private static class VertexData {
-        public final ArrayList<TriangleData> triangles = new ArrayList<TriangleData>();
+    //Don't remove splitmirorred boolean,It's not used right now, but i intend to
+    //make this method also split vertice with rotated tangent space and I'll
+    //add another splitRotated boolean
+    private static List<VertexData> splitVertices(Mesh mesh, List<VertexData> vertexData,
+                                                  boolean splitMirorred) {
+        int nbVertices = mesh.getBuffer(VertexBuffer.Type.Position).getNumElements();
+        List<VertexData> newVertices = new ArrayList<>();
+        Map<Integer, Integer> indiceMap = new HashMap<>();
+        FloatBuffer normalBuffer = mesh.getFloatBuffer(VertexBuffer.Type.Normal);
 
-        public VertexData() { }
+        for (int i = 0; i < vertexData.size(); i++) {
+            List<TriangleData> triangles = vertexData.get(i).triangles;
+            Vector3f givenNormal = new Vector3f();
+            populateFromBuffer(givenNormal, normalBuffer, i);
+
+            ArrayList<TriangleData> trianglesUp = new ArrayList<>();
+            ArrayList<TriangleData> trianglesDown = new ArrayList<>();
+            for (TriangleData triangleData : triangles) {
+                if (parity(givenNormal, triangleData.normal) > 0) {
+                    trianglesUp.add(triangleData);
+                } else {
+                    trianglesDown.add(triangleData);
+                }
+            }
+
+            //if the vertex has triangles with opposite parity it has to be split
+            if (!trianglesUp.isEmpty() && !trianglesDown.isEmpty()) {
+                System.err.println("Splitting vertex " + i);
+                //assigning triangle with the same parity to the original vertex
+                vertexData.get(i).triangles.clear();
+                vertexData.get(i).triangles.addAll(trianglesUp);
+
+                //creating a new vertex
+                VertexData newVert = new VertexData();
+                //assigning triangles with opposite parity to it
+                newVert.triangles.addAll(trianglesDown);
+
+                newVertices.add(newVert);
+                //keep vertex index to fix the index buffers later
+                indiceMap.put(nbVertices, i);
+                for (TriangleData tri : newVert.triangles) {
+                    for (int j = 0; j < tri.index.length; j++) {
+                        if (tri.index[j] == i) {
+                            tri.index[j] = nbVertices;
+                        }
+                    }
+                }
+                nbVertices++;
+
+            }
+
+        }
+
+        if (!newVertices.isEmpty()) {
+
+            //we have new vertices, we need to update the mesh's buffers.
+            for (VertexBuffer.Type type : VertexBuffer.Type.values()) {
+                //skip tangent buffer as we're gonna overwrite it later
+                if (type
+                    == VertexBuffer.Type.Tangent /*|| type == VertexBuffer.Type.BindPoseTangent*/) {
+                    continue;
+                }
+                VertexBuffer vb = mesh.getBuffer(type);
+                //Some buffer (hardware skinning ones) can be there but not
+                //initialized, they must be skipped.
+                //They'll be initialized when Hardware Skinning is engaged
+                if (vb == null || vb.getNumComponents() == 0) {
+                    continue;
+                }
+
+                Buffer buffer = vb.getData();
+                //IndexBuffer has special treatement, only swapping the vertex indices is needed
+                if (type == VertexBuffer.Type.Index) {
+                    boolean isShortBuffer = vb.getFormat() == VertexBuffer.Format.UnsignedShort;
+                    for (VertexData vertex : newVertices) {
+                        for (TriangleData tri : vertex.triangles) {
+                            for (int i = 0; i < tri.index.length; i++) {
+                                if (isShortBuffer) {
+                                    ((ShortBuffer) buffer)
+                                            .put(tri.triangleOffset + i, (short) tri.index[i]);
+                                } else {
+                                    ((IntBuffer) buffer).put(tri.triangleOffset + i, tri.index[i]);
+                                }
+                            }
+                        }
+                    }
+                    vb.setUpdateNeeded();
+                } else {
+                    //copy the buffer in a bigger one and append nex vertices to the end
+                    Buffer newVerts = VertexBuffer
+                            .createBuffer(vb.getFormat(), vb.getNumComponents(), nbVertices);
+                    if (buffer != null) {
+                        buffer.rewind();
+                        bulkPut(vb.getFormat(), newVerts, buffer);
+
+                        int index = vertexData.size();
+                        newVerts.position(vertexData.size() * vb.getNumComponents());
+                        for (int j = 0; j < newVertices.size(); j++) {
+                            int oldInd = indiceMap.get(index);
+                            for (int i = 0; i < vb.getNumComponents(); i++) {
+                                putValue(vb.getFormat(), newVerts, buffer,
+                                         oldInd * vb.getNumComponents() + i);
+                            }
+                            index++;
+                        }
+                        vb.updateData(newVerts);
+                        //destroy previous buffer as it's no longer needed
+                        destroyDirectBuffer(buffer);
+                    }
+                }
+            }
+            vertexData.addAll(newVertices);
+
+            mesh.updateCounts();
+        }
+
+        return vertexData;
     }
 
     /** Keeps track of tangent, binormal, and normal for one triangle.
@@ -70,12 +186,48 @@ public class TangentBinormalGenerator {
         }
     }
 
-    private static List<VertexData> initVertexData(int size) {
-        List<VertexData> vertices = new ArrayList<VertexData>(size);
+    private static List<VertexInfo> linkVertices(Mesh mesh, boolean splitMirrored) {
+        List<VertexInfo> vertexMap = new ArrayList<>();
+
+        FloatBuffer vertexBuffer = mesh.getFloatBuffer(VertexBuffer.Type.Position);
+        FloatBuffer normalBuffer = mesh.getFloatBuffer(VertexBuffer.Type.Normal);
+        FloatBuffer texcoordBuffer = mesh.getFloatBuffer(VertexBuffer.Type.TexCoord);
+
+        Vector3f position = new Vector3f();
+        Vector3f normal = new Vector3f();
+        Vector2f texCoord = new Vector2f();
+
+        final int size = vertexBuffer.limit() / 3;
         for (int i = 0; i < size; i++) {
-            vertices.add(new VertexData());
+
+            populateFromBuffer(position, vertexBuffer, i);
+            populateFromBuffer(normal, normalBuffer, i);
+            populateFromBuffer(texCoord, texcoordBuffer, i);
+
+            boolean found = false;
+            //Nehon 07/07/2013
+            //Removed this part, joining splitted vertice to compute tangent space makes no sense to me
+            //separate vertice should have separate tangent space
+            if (!splitMirrored) {
+                for (VertexInfo vertexInfo : vertexMap) {
+                    if (approxEqual(vertexInfo.position, position) &&
+                        approxEqual(vertexInfo.normal, normal) &&
+                        approxEqual(vertexInfo.texCoord, texCoord)) {
+                        vertexInfo.indices.add(i);
+                        found = true;
+                        break;
+                    }
+                }
+            }
+            if (!found) {
+                VertexInfo vertexInfo = new VertexInfo(position.clone(), normal.clone(),
+                                                       texCoord.clone());
+                vertexInfo.indices.add(i);
+                vertexMap.add(vertexInfo);
+            }
         }
-        return vertices;
+
+        return vertexMap;
     }
 
     public static void generate(Mesh mesh) {
@@ -179,115 +331,177 @@ public class TangentBinormalGenerator {
         return vertices;
     }
 
-    //Don't remove splitmirorred boolean,It's not used right now, but i intend to
-    //make this method also split vertice with rotated tangent space and I'll
-    //add another splitRotated boolean
-    private static List<VertexData> splitVertices(Mesh mesh, List<VertexData> vertexData, boolean splitMirorred) {
-        int nbVertices = mesh.getBuffer(VertexBuffer.Type.Position).getNumElements();
-        List<VertexData> newVertices = new ArrayList<>();
-        Map<Integer, Integer> indiceMap = new HashMap<>();
-        FloatBuffer normalBuffer = mesh.getFloatBuffer(VertexBuffer.Type.Normal);
+    private static void processTriangleData(Mesh mesh, List<VertexData> vertices,
+                                            boolean approxTangent, boolean splitMirrored) {
+        List<VertexInfo> vertexMap = linkVertices(mesh, splitMirrored);
 
-        for (int i = 0; i < vertexData.size(); i++) {
-            ArrayList<TriangleData> triangles = vertexData.get(i).triangles;
-            Vector3f givenNormal = new Vector3f();
-            populateFromBuffer(givenNormal, normalBuffer, i);
+        FloatBuffer tangents = BufferUtils.createFloatBuffer(vertices.size() * 4);
 
-            ArrayList<TriangleData> trianglesUp = new ArrayList<>();
-            ArrayList<TriangleData> trianglesDown = new ArrayList<>();
-            for (TriangleData triangleData : triangles) {
-                if (parity(givenNormal, triangleData.normal) > 0) {
-                    trianglesUp.add(triangleData);
+        ColorRGBA[] cols = null;
+        if (debug) {
+            cols = new ColorRGBA[vertices.size()];
+        }
+
+        Vector3f tangent = new Vector3f();
+        Vector3f binormal = new Vector3f();
+        //Vector3f normal = new Vector3f();
+        Vector3f givenNormal = new Vector3f();
+
+        Vector3f tangentUnit = new Vector3f();
+        Vector3f binormalUnit = new Vector3f();
+
+        for (VertexInfo vertexInfo : vertexMap) {
+            float wCoord = -1;
+
+            givenNormal.set(vertexInfo.normal);
+            givenNormal.normalizeLocal();
+
+            TriangleData firstTriangle = vertices.get(vertexInfo.indices.get(0)).triangles.get(0);
+
+            // check tangent and binormal consistency
+            tangent.set(firstTriangle.tangent);
+            tangent.normalizeLocal();
+            binormal.set(firstTriangle.binormal);
+            binormal.normalizeLocal();
+
+            for (int i : vertexInfo.indices) {
+                List<TriangleData> triangles = vertices.get(i).triangles;
+
+                for (TriangleData triangleData : triangles) {
+                    tangentUnit.set(triangleData.tangent);
+                    tangentUnit.normalizeLocal();
+                    if (tangent.dot(tangentUnit) < toleranceDot) {
+                        System.err.println("Angle between tangents exceeds tolerance "
+                                           + "for vertex " + i);
+                        break;
+                    }
+
+                    if (!approxTangent) {
+                        binormalUnit.set(triangleData.binormal);
+                        binormalUnit.normalizeLocal();
+                        if (binormal.dot(binormalUnit) < toleranceDot) {
+                            System.err.println("Angle between binormals exceeds tolerance "
+                                               + "for vertex " + i);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // find average tangent
+            tangent.set(0, 0, 0);
+            binormal.set(0, 0, 0);
+
+            int triangleCount = 0;
+            for (int i : vertexInfo.indices) {
+                List<TriangleData> triangles = vertices.get(i).triangles;
+                triangleCount += triangles.size();
+                if (debug) {
+                    cols[i] = ColorRGBA.White;
+                }
+
+                for (TriangleData triangleData : triangles) {
+                    tangent.addLocal(triangleData.tangent);
+                    binormal.addLocal(triangleData.binormal);
+
+                }
+            }
+
+            int blameVertex = vertexInfo.indices.get(0);
+
+            if (tangent.length() < ZERO_TOLERANCE) {
+                System.err.println("Shared tangent is zero for vertex " + blameVertex);
+                // attempt to fix from binormal
+                if (binormal.length() >= ZERO_TOLERANCE) {
+                    binormal.cross(givenNormal, tangent);
+                    tangent.normalizeLocal();
+                } // if all fails use the tangent from the first triangle
+                else {
+                    tangent.set(firstTriangle.tangent);
+                }
+            } else {
+                tangent.divideLocal(triangleCount);
+            }
+
+            tangentUnit.set(tangent);
+            tangentUnit.normalizeLocal();
+            if (Math.abs(Math.abs(tangentUnit.dot(givenNormal)) - 1)
+                < ZERO_TOLERANCE) {
+                System.err.println("Normal and tangent are parallel for vertex " + blameVertex);
+            }
+
+            if (!approxTangent) {
+                if (binormal.length() < ZERO_TOLERANCE) {
+                    System.err.println("Shared binormal is zero for vertex " + blameVertex);
+                    // attempt to fix from tangent
+                    if (tangent.length() >= ZERO_TOLERANCE) {
+                        givenNormal.cross(tangent, binormal);
+                        binormal.normalizeLocal();
+                    } // if all fails use the binormal from the first triangle
+                    else {
+                        binormal.set(firstTriangle.binormal);
+                    }
                 } else {
-                    trianglesDown.add(triangleData);
+                    binormal.divideLocal(triangleCount);
+                }
+
+                binormalUnit.set(binormal);
+                binormalUnit.normalizeLocal();
+                if (Math.abs(Math.abs(binormalUnit.dot(givenNormal)) - 1)
+                    < ZERO_TOLERANCE) {
+                    System.err
+                            .println("Normal and binormal are parallel for vertex " + blameVertex);
+                }
+
+                if (Math.abs(Math.abs(binormalUnit.dot(tangentUnit)) - 1)
+                    < ZERO_TOLERANCE) {
+                    System.err
+                            .println("Tangent and binormal are parallel for vertex " + blameVertex);
                 }
             }
 
-            //if the vertex has triangles with opposite parity it has to be split
-            if(!trianglesUp.isEmpty() && !trianglesDown.isEmpty()){
-                System.err.println("Splitting vertex " + i);
-                //assigning triangle with the same parity to the original vertex
-                vertexData.get(i).triangles.clear();
-                vertexData.get(i).triangles.addAll(trianglesUp);
+            Vector3f finalTangent = new Vector3f();
+            Vector3f tmp = new Vector3f();
+            for (int i : vertexInfo.indices) {
+                if (approxTangent) {
+                    // Gram-Schmidt orthogonalize
+                    finalTangent.set(tangent).subtractLocal(
+                            tmp.set(givenNormal).multLocal(givenNormal.dot(tangent)));
+                    finalTangent.normalizeLocal();
 
-                //creating a new vertex
-                VertexData newVert = new VertexData();
-                //assigning triangles with opposite parity to it
-                newVert.triangles.addAll(trianglesDown);
+                    wCoord = tmp.set(givenNormal).crossLocal(tangent).dot(binormal) < 0f ? -1f : 1f;
 
-                newVertices.add(newVert);
-                //keep vertex index to fix the index buffers later
-                indiceMap.put(nbVertices, i);
-                for (TriangleData tri : newVert.triangles) {
-                    for (int j = 0; j < tri.index.length; j++) {
-                        if(tri.index[j] == i){
-                            tri.index[j] = nbVertices;
-                        }
-                    }
+                    tangents.put((i * 4), finalTangent.x);
+                    tangents.put((i * 4) + 1, finalTangent.y);
+                    tangents.put((i * 4) + 2, finalTangent.z);
+                    tangents.put((i * 4) + 3, wCoord);
+                } else {
+                    tangents.put((i * 4), tangent.x);
+                    tangents.put((i * 4) + 1, tangent.y);
+                    tangents.put((i * 4) + 2, tangent.z);
+                    tangents.put((i * 4) + 3, wCoord);
+
+                    //setInBuffer(binormal, binormals, i);
                 }
-                nbVertices++;
-
             }
-
-
         }
+        tangents.limit(tangents.capacity());
+        // If the model already had a tangent buffer, replace it with the regenerated one
+        mesh.clearBuffer(VertexBuffer.Type.Tangent);
+        mesh.setBuffer(VertexBuffer.Type.Tangent, 4, tangents);
 
-        if(!newVertices.isEmpty()){
+//        if(mesh.isAnimated()){
+//            mesh.clearBuffer(Type.BindPoseNormal);
+//            mesh.clearBuffer(Type.BindPosePosition);
+//            mesh.clearBuffer(Type.BindPoseTangent);
+//            mesh.generateBindPose(true);
+//        }
 
-            //we have new vertices, we need to update the mesh's buffers.
-            for (VertexBuffer.Type type : VertexBuffer.Type.values()) {
-                //skip tangent buffer as we're gonna overwrite it later
-                if(type == VertexBuffer.Type.Tangent /*|| type == VertexBuffer.Type.BindPoseTangent*/) continue;
-                VertexBuffer vb = mesh.getBuffer(type);
-                //Some buffer (hardware skinning ones) can be there but not
-                //initialized, they must be skipped.
-                //They'll be initialized when Hardware Skinning is engaged
-                if(vb==null || vb.getNumComponents() == 0) continue;
-
-                Buffer buffer = vb.getData();
-                //IndexBuffer has special treatement, only swapping the vertex indices is needed
-                if(type == VertexBuffer.Type.Index){
-                    boolean isShortBuffer = vb.getFormat() == VertexBuffer.Format.UnsignedShort;
-                    for (VertexData vertex : newVertices) {
-                        for (TriangleData tri : vertex.triangles) {
-                            for (int i = 0; i < tri.index.length; i++) {
-                                if (isShortBuffer) {
-                                    ((ShortBuffer) buffer).put(tri.triangleOffset + i, (short) tri.index[i]);
-                                } else {
-                                    ((IntBuffer) buffer).put(tri.triangleOffset + i, tri.index[i]);
-                                }
-                            }
-                        }
-                    }
-                    vb.setUpdateNeeded();
-                }else{
-                    //copy the buffer in a bigger one and append nex vertices to the end
-                    Buffer newVerts = VertexBuffer.createBuffer(vb.getFormat(), vb.getNumComponents(), nbVertices);
-                    if (buffer != null) {
-                        buffer.rewind();
-                        bulkPut(vb.getFormat(), newVerts,buffer);
-
-                        int index = vertexData.size();
-                        newVerts.position(vertexData.size() * vb.getNumComponents());
-                        for (int j = 0; j < newVertices.size(); j++) {
-                            int oldInd = indiceMap.get(index) ;
-                            for (int i = 0; i < vb.getNumComponents(); i++) {
-                                putValue(vb.getFormat(), newVerts, buffer, oldInd* vb.getNumComponents() + i);
-                            }
-                            index++;
-                        }
-                        vb.updateData(newVerts);
-                        //destroy previous buffer as it's no longer needed
-                        destroyDirectBuffer(buffer);
-                    }
-                }
-            }
-            vertexData.addAll(newVertices);
-
-            mesh.updateCounts();
+        if (debug) {
+            writeColorBuffer(vertices, cols, mesh);
         }
-
-        return vertexData;
+//        mesh.updateBound();
+        mesh.updateCounts();
     }
 
     private static void bulkPut(VertexBuffer.Format format, Buffer buf1, Buffer buf2) {
@@ -537,220 +751,27 @@ public class TangentBinormalGenerator {
                 (FastMath.abs(u.y - v.y) < tolerance);
     }
 
-    private static ArrayList<VertexInfo> linkVertices(Mesh mesh, boolean splitMirrored) {
-        ArrayList<VertexInfo> vertexMap = new ArrayList<VertexInfo>();
+    private static class VertexInfo {
+        public final Vector3f position;
+        public final Vector3f normal;
+        public final Vector2f texCoord;
+        public final List<Integer> indices = new ArrayList<>();
 
-        FloatBuffer vertexBuffer = mesh.getFloatBuffer(VertexBuffer.Type.Position);
-        FloatBuffer normalBuffer = mesh.getFloatBuffer(VertexBuffer.Type.Normal);
-        FloatBuffer texcoordBuffer = mesh.getFloatBuffer(VertexBuffer.Type.TexCoord);
-
-        Vector3f position = new Vector3f();
-        Vector3f normal = new Vector3f();
-        Vector2f texCoord = new Vector2f();
-
-        final int size = vertexBuffer.limit() / 3;
-        for (int i = 0; i < size; i++) {
-
-            populateFromBuffer(position, vertexBuffer, i);
-            populateFromBuffer(normal, normalBuffer, i);
-            populateFromBuffer(texCoord, texcoordBuffer, i);
-
-            boolean found = false;
-            //Nehon 07/07/2013
-            //Removed this part, joining splitted vertice to compute tangent space makes no sense to me
-            //separate vertice should have separate tangent space
-            if(!splitMirrored){
-                for (VertexInfo vertexInfo : vertexMap) {
-                    if (approxEqual(vertexInfo.position, position) &&
-                            approxEqual(vertexInfo.normal, normal) &&
-                            approxEqual(vertexInfo.texCoord, texCoord)) {
-                        vertexInfo.indices.add(i);
-                        found = true;
-                        break;
-                    }
-                }
-            }
-            if (!found) {
-                VertexInfo vertexInfo = new VertexInfo(position.clone(), normal.clone(), texCoord.clone());
-                vertexInfo.indices.add(i);
-                vertexMap.add(vertexInfo);
-            }
+        public VertexInfo(Vector3f position, Vector3f normal, Vector2f texCoord) {
+            this.position = position;
+            this.normal = normal;
+            this.texCoord = texCoord;
         }
-
-        return vertexMap;
     }
 
-    private static void processTriangleData(Mesh mesh, List<VertexData> vertices,
-                                            boolean approxTangent, boolean splitMirrored) {
-        ArrayList<VertexInfo> vertexMap = linkVertices(mesh,splitMirrored);
+    /**
+     * Collects all the triangle data for one vertex.
+     */
+    private static class VertexData {
+        public final List<TriangleData> triangles = new ArrayList<>();
 
-        FloatBuffer tangents = BufferUtils.createFloatBuffer(vertices.size() * 4);
-
-        ColorRGBA[] cols = null;
-        if (debug) {
-            cols = new ColorRGBA[vertices.size()];
+        public VertexData() {
         }
-
-        Vector3f tangent = new Vector3f();
-        Vector3f binormal = new Vector3f();
-        //Vector3f normal = new Vector3f();
-        Vector3f givenNormal = new Vector3f();
-
-        Vector3f tangentUnit = new Vector3f();
-        Vector3f binormalUnit = new Vector3f();
-
-        for (VertexInfo vertexInfo : vertexMap) {
-            float wCoord = -1;
-
-            givenNormal.set(vertexInfo.normal);
-            givenNormal.normalizeLocal();
-
-            TriangleData firstTriangle = vertices.get(vertexInfo.indices.get(0)).triangles.get(0);
-
-            // check tangent and binormal consistency
-            tangent.set(firstTriangle.tangent);
-            tangent.normalizeLocal();
-            binormal.set(firstTriangle.binormal);
-            binormal.normalizeLocal();
-
-            for (int i : vertexInfo.indices) {
-                ArrayList<TriangleData> triangles = vertices.get(i).triangles;
-
-                for (TriangleData triangleData : triangles) {
-                    tangentUnit.set(triangleData.tangent);
-                    tangentUnit.normalizeLocal();
-                    if (tangent.dot(tangentUnit) < toleranceDot) {
-                        System.err.println("Angle between tangents exceeds tolerance "
-                                + "for vertex " + i);
-                        break;
-                    }
-
-                    if (!approxTangent) {
-                        binormalUnit.set(triangleData.binormal);
-                        binormalUnit.normalizeLocal();
-                        if (binormal.dot(binormalUnit) < toleranceDot) {
-                            System.err.println("Angle between binormals exceeds tolerance "
-                                    + "for vertex " + i);
-                            break;
-                        }
-                    }
-                }
-            }
-
-
-            // find average tangent
-            tangent.set(0, 0, 0);
-            binormal.set(0, 0, 0);
-
-            int triangleCount = 0;
-            for (int i : vertexInfo.indices) {
-                ArrayList<TriangleData> triangles = vertices.get(i).triangles;
-                triangleCount += triangles.size();
-                if (debug) {
-                    cols[i] = ColorRGBA.White;
-                }
-
-                for (TriangleData triangleData : triangles) {
-                    tangent.addLocal(triangleData.tangent);
-                    binormal.addLocal(triangleData.binormal);
-
-                }
-            }
-
-
-            int blameVertex = vertexInfo.indices.get(0);
-
-            if (tangent.length() < ZERO_TOLERANCE) {
-                System.err.println("Shared tangent is zero for vertex " + blameVertex);
-                // attempt to fix from binormal
-                if (binormal.length() >= ZERO_TOLERANCE) {
-                    binormal.cross(givenNormal, tangent);
-                    tangent.normalizeLocal();
-                } // if all fails use the tangent from the first triangle
-                else {
-                    tangent.set(firstTriangle.tangent);
-                }
-            } else {
-                tangent.divideLocal(triangleCount);
-            }
-
-            tangentUnit.set(tangent);
-            tangentUnit.normalizeLocal();
-            if (Math.abs(Math.abs(tangentUnit.dot(givenNormal)) - 1)
-                    < ZERO_TOLERANCE) {
-                System.err.println("Normal and tangent are parallel for vertex " + blameVertex);
-            }
-
-
-            if (!approxTangent) {
-                if (binormal.length() < ZERO_TOLERANCE) {
-                    System.err.println("Shared binormal is zero for vertex " + blameVertex);
-                    // attempt to fix from tangent
-                    if (tangent.length() >= ZERO_TOLERANCE) {
-                        givenNormal.cross(tangent, binormal);
-                        binormal.normalizeLocal();
-                    } // if all fails use the binormal from the first triangle
-                    else {
-                        binormal.set(firstTriangle.binormal);
-                    }
-                } else {
-                    binormal.divideLocal(triangleCount);
-                }
-
-                binormalUnit.set(binormal);
-                binormalUnit.normalizeLocal();
-                if (Math.abs(Math.abs(binormalUnit.dot(givenNormal)) - 1)
-                        < ZERO_TOLERANCE) {
-                    System.err.println("Normal and binormal are parallel for vertex " + blameVertex);
-                }
-
-                if (Math.abs(Math.abs(binormalUnit.dot(tangentUnit)) - 1)
-                        < ZERO_TOLERANCE) {
-                    System.err.println("Tangent and binormal are parallel for vertex " + blameVertex);
-                }
-            }
-
-            Vector3f finalTangent = new Vector3f();
-            Vector3f tmp = new Vector3f();
-            for (int i : vertexInfo.indices) {
-                if (approxTangent) {
-                    // Gram-Schmidt orthogonalize
-                    finalTangent.set(tangent).subtractLocal(tmp.set(givenNormal).multLocal(givenNormal.dot(tangent)));
-                    finalTangent.normalizeLocal();
-
-                    wCoord = tmp.set(givenNormal).crossLocal(tangent).dot(binormal) < 0f ? -1f : 1f;
-
-                    tangents.put((i * 4), finalTangent.x);
-                    tangents.put((i * 4) + 1, finalTangent.y);
-                    tangents.put((i * 4) + 2, finalTangent.z);
-                    tangents.put((i * 4) + 3, wCoord);
-                } else {
-                    tangents.put((i * 4), tangent.x);
-                    tangents.put((i * 4) + 1, tangent.y);
-                    tangents.put((i * 4) + 2, tangent.z);
-                    tangents.put((i * 4) + 3, wCoord);
-
-                    //setInBuffer(binormal, binormals, i);
-                }
-            }
-        }
-        tangents.limit(tangents.capacity());
-        // If the model already had a tangent buffer, replace it with the regenerated one
-        mesh.clearBuffer(VertexBuffer.Type.Tangent);
-        mesh.setBuffer(VertexBuffer.Type.Tangent, 4, tangents);
-
-//        if(mesh.isAnimated()){
-//            mesh.clearBuffer(Type.BindPoseNormal);
-//            mesh.clearBuffer(Type.BindPosePosition);
-//            mesh.clearBuffer(Type.BindPoseTangent);
-//            mesh.generateBindPose(true);
-//        }
-
-        if (debug) {
-            writeColorBuffer( vertices, cols, mesh);
-        }
-//        mesh.updateBound();
-        mesh.updateCounts();
     }
 
     private static void writeColorBuffer(List<VertexData> vertices, ColorRGBA[] cols, Mesh mesh) {

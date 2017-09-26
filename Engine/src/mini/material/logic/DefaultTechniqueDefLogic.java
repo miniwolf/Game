@@ -8,12 +8,11 @@ import mini.math.ColorRGBA;
 import mini.renderEngine.Caps;
 import mini.renderEngine.RenderManager;
 import mini.renderEngine.Renderer;
-import mini.renderEngine.opengl.GLRenderer;
 import mini.scene.Geometry;
 import mini.shaders.DefineList;
 import mini.shaders.ShaderProgram;
 
-import java.util.EnumSet;
+import java.util.Set;
 
 /**
  * @author miniwolf
@@ -46,7 +45,7 @@ public class DefaultTechniqueDefLogic implements TechniqueDefLogic {
     }
 
     @Override
-    public ShaderProgram makeCurrent(RenderManager renderManager, EnumSet<Caps> rendererCaps,
+    public ShaderProgram makeCurrent(RenderManager renderManager, Set<Caps> rendererCaps,
                                      LightList lights, DefineList defines) {
         return techniqueDef.getShader(rendererCaps, defines);
     }

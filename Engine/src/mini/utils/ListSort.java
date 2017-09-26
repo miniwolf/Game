@@ -1,72 +1,36 @@
-/*
- * Copyright (c) 2009-2012 jMonkeyEngine
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are
- * met:
- *
- * * Redistributions of source code must retain the above copyright
- *   notice, this list of conditions and the following disclaimer.
- *
- * * Redistributions in binary form must reproduce the above copyright
- *   notice, this list of conditions and the following disclaimer in the
- *   documentation and/or other materials provided with the distribution.
- *
- * * Neither the name of 'jMonkeyEngine' nor the names of its contributors
- *   may be used to endorse or promote products derived from this software
- *   without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
- * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
- * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
 package mini.utils;
 
 import java.util.Comparator;
 
 /**
  * Fast, stable sort used to sort geometries
- *
+ * <p>
  * It's adapted from Tim Peters's work on list sorting for Python. More details
  * here http://svn.python.org/projects/python/trunk/Objects/listsort.txt
- *
+ * <p>
  * here is the C code from which this class is based
  * http://svn.python.org/projects/python/trunk/Objects/listobject.c
- *
+ * <p>
  * This class was also greatly inspired from java 7 TimSort by Josh Blosh with the
  * difference that the temporary necessary memory space are allocated as the
  * geometry list grows and reused all along the application execution.
- *
+ * <p>
  * Usage : ListSort has to be instanciated and kept with the geometry list ( or
  * w/e it may have to sort) Then the allocate method has to be called to
  * allocate necessary tmp space needed for the sort. This should be called once
  * for optimal performance, but can be called several times if the length of the
  * list changes
- *
+ * <p>
  * Disclaimer : I was intrigued by the use of val >>> 1 in java 7 Timsort class
  * instead of val / 2 (integer division). Micro benching revealed that val >>> 1
  * is twice faster than val / 2 in java 6 and has similar perf in java 7. The
  * following code uses val >>> 1 when ever a value needs to be divided by 2 and
  * rounded to its floor
- *
- *
- * @author Nehon
  */
 public class ListSort<T> {
-
     /**
      * Threshold for binary sort vs merge. Original algorithm use 64, java7
-     * TimSort uses 32 and I used 128, see this post for explanations :
-     * http://hub.jmonkeyengine.org/groups/development-discussion-jme3/forum/topic/i-got-that-sorted-out-huhuhu/
+     * TimSort uses 32 and I used 128.
      */
     private static final int MIN_SIZE = 128;
     private T[] array;
@@ -185,8 +149,45 @@ public class ListSort<T> {
     }
 
     /**
+     * Reverse an array from firstId to lastId
+     *
+     * @param array   the array to reverse
+     * @param firstId the index where to start to reverse
+     * @param lastId  the index where to stop to reverse
+     */
+    private static void reverseArray(Object[] array, int firstId, int lastId) {
+        lastId--;
+        while (firstId < lastId) {
+            Object o = array[firstId];
+            array[firstId] = array[lastId];
+            array[lastId] = o;
+            firstId++;
+            lastId--;
+        }
+    }
+
+    /*
+     * test case
+     */
+    public static void main(String[] argv) {
+        Integer[] arr = new Integer[]{5, 6, 2, 9, 10, 11, 12, 8, 3, 12, 3, 7, 12, 32, 458, 12, 5, 3,
+                                      78, 45, 12, 32, 58, 45, 65, 45, 98, 45, 65, 2, 3, 47, 21, 35};
+        ListSort ls = new ListSort();
+        ls.allocateStack(34);
+        ls.sort(arr, (Comparator<Integer>) (o1, o2) -> {
+            int x = o1 - o2;
+            return Integer.compare(x, 0);
+        });
+        for (Integer integer : arr) {
+            System.err.print(integer + ",");
+        }
+        System.err.println();
+    }
+
+    /**
      * Sort the given array given the comparator
-     * @param array the array to sort
+     *
+     * @param array      the array to sort
      * @param comparator the comparator to compare elements of the array
      */
     public void sort(T[] array, Comparator<T> comparator) {
@@ -246,20 +247,20 @@ public class ListSort<T> {
      * Return the length of the run beginning at lastId, in the slice [lastId,
      * lastId]. firstId &lt; lastId is required on entry. "A run" is the longest
      * ascending sequence, with
-     *
+     * <p>
      * array[0] <= array[1] <= array[2] <= ...
-     *
+     * <p>
      * or the longest descending sequence, with
-     *
+     * <p>
      * array[0] > array[1] > array[2] > ...
-     *
+     * <p>
      * The original algorithm is returning a "descending" boolean that allow the
      * caller to reverse the array. Here for simplicity we reverse the array
      * when the run is descending
      *
-     * @param array the array to search for run length
-     * @param firstId index of the first element of the run
-     * @param lastId index+1 of the last element of the run
+     * @param array      the array to search for run length
+     * @param firstId    index of the first element of the run
+     * @param lastId     index+1 of the last element of the run
      * @param comparator the comparator
      * @return the length of the run beginning at the specified position in the
      * specified array
@@ -271,11 +272,13 @@ public class ListSort<T> {
         if (runEnd < lastId) {
             // if the range is > 1 we search for the end index of the run
             if (comparator.compare(array[runEnd++], array[firstId]) >= 0) {
-                while (runEnd < lastId && comparator.compare(array[runEnd], array[runEnd - 1]) >= 0) {
+                while (runEnd < lastId
+                       && comparator.compare(array[runEnd], array[runEnd - 1]) >= 0) {
                     runEnd++;
                 }
             } else {
-                while (runEnd < lastId && comparator.compare(array[runEnd], array[runEnd - 1]) < 0) {
+                while (runEnd < lastId
+                       && comparator.compare(array[runEnd], array[runEnd - 1]) < 0) {
                     runEnd++;
                 }
                 // the run's order is descending, it has to be reversed
@@ -298,11 +301,11 @@ public class ListSort<T> {
      * start <= lastId, and that [firstId, start) is already sorted (pass start
      * == firstId if you don't know!).
      *
-     * @param array the array to sort
-     * @param firstId the index of the first element to sort
-     * @param lastId the index+ of the last element to sort
-     * @param start the index of the element to start sorting range
-     * [firstId,satrt]is assumed to be already sorted
+     * @param array      the array to sort
+     * @param firstId    the index of the first element to sort
+     * @param lastId     the index+ of the last element to sort
+     * @param start      the index of the element to start sorting range
+     *                   [firstId,satrt]is assumed to be already sorted
      * @param comparator the comparator
      */
     private void binaryInsertionSort(T[] array, int firstId, int lastId, int start,
@@ -356,58 +359,6 @@ public class ListSort<T> {
             }
             array[left] = pivot;
             start++;
-        }
-    }
-
-    /**
-     * returns the minimum run length for merging
-     *
-     * see http://svn.python.org/projects/python/trunk/Objects/listobject.c
-     * almost exact copy of merge_compute_minrun function
-     *
-     * If n &lt; MIN_SIZE, return n (it's too small to bother with fancy stuff).
-     * Else if n is an exact power of 2, return MIN_SIZE / 2. Else return an int
-     * k, MIN_SIZE / 2 &lt;= k &lt;= MIN_SIZE , such that n/k is close to, but
-     * strictly less than, an exact power of 2.
-     *
-     * @param n length of the array
-     * @return the minimum run length for
-     */
-    private int mergeComputeMinRun(int n) {
-        int r = 0;      /* becomes 1 if any 1 bits are shifted off */
-        while (n >= MIN_SIZE) {
-            r |= (n & 1);
-            n >>= 1;
-        }
-        return n + r;
-    }
-
-    /**
-     * Examine the stack of runs waiting to be merged, merging adjacent runs
-     * until the stack invariants are re-established:
-     *
-     * 1. len[-3] > len[-2] + len[-1] 2. len[-2] > len[-1]
-     *
-     * See http://svn.python.org/projects/python/trunk/Objects/listobject.c very
-     * similar to merge_collapse
-     *
-     * see http://svn.python.org/projects/python/trunk/Objects/listsort.txt
-     * search for The Merge Pattern
-     */
-    private void mergeCollapse() {
-        while (nbRuns > 1) {
-            int n = nbRuns - 2;
-            //searching for runs to merge from the end of the stack
-            if (n > 0 && runsLength[n - 1] <= runsLength[n] + runsLength[n + 1]) {
-                if (runsLength[n - 1] < runsLength[n + 1]) {
-                    n--;
-                }
-                mergeRuns(n);
-            } else if (runsLength[n] <= runsLength[n + 1]) {
-                mergeRuns(n);
-            } else {
-                break;
-            }
         }
     }
 
@@ -478,24 +429,75 @@ public class ListSort<T> {
     }
 
     /**
+     * returns the minimum run length for merging
+     * <p>
+     * see http://svn.python.org/projects/python/trunk/Objects/listobject.c
+     * almost exact copy of merge_compute_minrun function
+     * <p>
+     * If n &lt; MIN_SIZE, return n (it's too small to bother with fancy stuff).
+     * Else if n is an exact power of 2, return MIN_SIZE / 2. Else return an int
+     * k, MIN_SIZE / 2 &lt;= k &lt;= MIN_SIZE , such that n/k is close to, but
+     * strictly less than, an exact power of 2.
      *
+     * @param n length of the array
+     * @return the minimum run length for
+     */
+    private int mergeComputeMinRun(int n) {
+        int r = 0;      /* becomes 1 if any 1 bits are shifted off */
+        while (n >= MIN_SIZE) {
+            r |= (n & 1);
+            n >>= 1;
+        }
+        return n + r;
+    }
+
+    /**
+     * Examine the stack of runs waiting to be merged, merging adjacent runs
+     * until the stack invariants are re-established:
+     * <p>
+     * 1. len[-3] > len[-2] + len[-1] 2. len[-2] > len[-1]
+     * <p>
+     * See http://svn.python.org/projects/python/trunk/Objects/listobject.c very
+     * similar to merge_collapse
+     * <p>
+     * see http://svn.python.org/projects/python/trunk/Objects/listsort.txt
+     * search for The Merge Pattern
+     */
+    private void mergeCollapse() {
+        while (nbRuns > 1) {
+            int n = nbRuns - 2;
+            //searching for runs to merge from the end of the stack
+            if (n > 0 && runsLength[n - 1] <= runsLength[n] + runsLength[n + 1]) {
+                if (runsLength[n - 1] < runsLength[n + 1]) {
+                    n--;
+                }
+                mergeRuns(n);
+            } else if (runsLength[n] <= runsLength[n + 1]) {
+                mergeRuns(n);
+            } else {
+                break;
+            }
+        }
+    }
+
+    /**
      * Locate the proper position of key in an array; if the array contains an
      * element equal to key, return the position immediately to the left of the
      * leftmost equal element. [gallopRight() does the same except returns the
      * position to the right of the rightmost equal element (if any).]
      *
-     * @param key the key to search
-     * @param array is a sorted array with n elements, starting at array[0]. n
-     * must be > 0.
-     * @param idx the index to start
-     * @param length the length of the run
-     * @param hint is an index at which to begin the search, 0 <= hint < n. The
-     * closer hint is to the final result, the faster this runs.
+     * @param key        the key to search
+     * @param array      is a sorted array with n elements, starting at array[0]. n
+     *                   must be > 0.
+     * @param idx        the index to start
+     * @param length     the length of the run
+     * @param hint       is an index at which to begin the search, 0 <= hint < n. The
+     *                   closer hint is to the final result, the faster this runs.
      * @param comparator the comparator used to order the range, and to search
      * @return is the int k in 0..n such that
-     *
+     * <p>
      * array[k-1] < key <= array[k]
-     *
+     * <p>
      * pretending that *(a-1) is minus infinity and array[n] is plus infinity.
      * IOW, key belongs at index k; or, IOW, the first k elements of a should
      * precede key, and the last n-k should follow key.
@@ -575,18 +577,18 @@ public class ListSort<T> {
      * Exactly like gallopLeft(), except that if key already exists in
      * array[0:n], finds the position immediately to the right of the rightmost
      * equal value.
-     *
+     * <p>
      * The code duplication is massive, but this is enough different given that
      * we're sticking to "<" comparisons that it's much harder to follow if
      * written as one routine with yet another "left or right?" flag.
      *
-     * @param key the key to search
-     * @param array is a sorted array with n elements, starting at array[0]. n
-     * must be > 0.
-     * @param idx the index to start
-     * @param length the length of the run
-     * @param hint is an index at which to begin the search, 0 <= hint < n. The
-     * closer hint is to the final result, the faster this runs.
+     * @param key        the key to search
+     * @param array      is a sorted array with n elements, starting at array[0]. n
+     *                   must be > 0.
+     * @param idx        the index to start
+     * @param length     the length of the run
+     * @param hint       is an index at which to begin the search, 0 <= hint < n. The
+     *                   closer hint is to the final result, the faster this runs.
      * @param comparator the comparator used to order the range, and to search
      * @return value is the int k in 0..n such that array[k-1] <= key < array[k]
      */
@@ -660,6 +662,53 @@ public class ListSort<T> {
         }
         return offset;
     }
+
+    /**
+     * Merge the lenA elements starting at idxA with the lenB elements starting
+     * at idxB in a stable way, in-place. lenA and lenBb must be > 0, and idxA +
+     * lenAa == idxB. Must also have that array[idxB] < array[idxA], that
+     * array[idxA + Len1 - 1] belongs at the end of the merge, and should have
+     * lenA >= lenB. See listsort.txt for more info.
+     *
+     * @param idxA index of first element in run A
+     * @param lenA length of run A
+     * @param idxB index of first element in run B
+     * @param lenB length of run B
+     */
+    private void mergeHigh(int idxA, int lenA, int idxB, int lenB) {
+
+        lengthA = lenA;
+        lengthB = lenB;
+        iterA = idxA + lengthA - 1;
+        iterB = lengthB - 1;
+        dest = idxB + lengthB - 1;
+        Comparator<T> comp = this.comparator;
+
+        T[] arr = this.array;
+        T[] tempArray = tmpArray;
+        System.arraycopy(arr, idxB, tempArray, 0, lengthB);
+
+        arr[dest] = arr[iterA];
+        dest--;
+        iterA--;
+        innerMergeHigh(comp, tempArray, arr, idxA);
+        //minGallop shouldn't be < 1;
+        minGallop = minGallop < 1 ? 1 : minGallop;
+
+        if (lengthB == 1) {//CopyA label
+            dest -= lengthA;
+            iterA -= lengthA;
+            System.arraycopy(arr, iterA + 1, arr, dest + 1, lengthA);
+            // The first element of run B belongs at the front of the merge.
+            arr[dest] = tempArray[iterB];
+        } else if (lengthB == 0) {
+            throw new UnsupportedOperationException("Compare function result changed! " +
+                                                    "Make sure you do not modify the scene from another thread!");
+        } else {//Fail label
+            System.arraycopy(tempArray, 0, arr, dest - (lengthB - 1), lengthB);
+        }
+    }
+
     /**
      * Merge the lenA elements starting at idxA with the lenB elements starting
      * at idxB in a stable way, in-place. lenA and lenB must be > 0, and idxA +
@@ -681,7 +730,6 @@ public class ListSort<T> {
         dest = idxA;      // Indexes int a
         Comparator<T> comp = this.comparator;
 
-
         T[] arr = this.array;
         T[] tempArray = tmpArray;
         System.arraycopy(arr, idxA, tempArray, 0, lengthA);
@@ -698,7 +746,7 @@ public class ListSort<T> {
             System.arraycopy(arr, iterB, arr, dest, lengthB);
             // The last element of run A belongs at the end of the merge.
             arr[dest + lengthB] = tempArray[iterA];
-        } else if(lengthA == 0){
+        } else if (lengthA == 0) {
             throw new UnsupportedOperationException("Compare function result changed! " +
                                                     "Make sure you do not modify the scene from"
                                                     + " another thread and that the comparisons are not based"
@@ -711,8 +759,9 @@ public class ListSort<T> {
     /**
      * Attempt to unroll "goto" style original implementation.
      * this method uses and change temp attributes of the class
-     * @param comp comparator
-     * @param arr the array
+     *
+     * @param comp      comparator
+     * @param arr       the array
      * @param tempArray the temp array
      */
     public void innerMergeLow(Comparator<T> comp, T[] arr, T[] tempArray) {
@@ -773,7 +822,7 @@ public class ListSort<T> {
                     * that it is.
                     * a propper error will be thrown in mergeLow if lengthA == 0
                     */
-                    if (lengthA <= 1){
+                    if (lengthA <= 1) {
                         return;
                     }
                 }
@@ -813,59 +862,13 @@ public class ListSort<T> {
     }
 
     /**
-     * Merge the lenA elements starting at idxA with the lenB elements starting
-     * at idxB in a stable way, in-place. lenA and lenBb must be > 0, and idxA +
-     * lenAa == idxB. Must also have that array[idxB] < array[idxA], that
-     * array[idxA + Len1 - 1] belongs at the end of the merge, and should have
-     * lenA >= lenB. See listsort.txt for more info.
-     *
-     * @param idxA index of first element in run A
-     * @param lenA length of run A
-     * @param idxB index of first element in run B
-     * @param lenB length of run B
-     */
-    private void mergeHigh(int idxA, int lenA, int idxB, int lenB) {
-
-
-        lengthA = lenA;
-        lengthB = lenB;
-        iterA = idxA + lengthA - 1;
-        iterB = lengthB - 1;
-        dest = idxB + lengthB - 1;
-        Comparator<T> comp = this.comparator;
-
-        T[] arr = this.array;
-        T[] tempArray = tmpArray;
-        System.arraycopy(arr, idxB, tempArray, 0, lengthB);
-
-        arr[dest] = arr[iterA];
-        dest--;
-        iterA--;
-        innerMergeHigh(comp, tempArray, arr, idxA);
-        //minGallop shouldn't be < 1;
-        minGallop = minGallop < 1 ? 1 : minGallop;
-
-        if (lengthB == 1) {//CopyA label
-            dest -= lengthA;
-            iterA -= lengthA;
-            System.arraycopy(arr, iterA + 1, arr, dest + 1, lengthA);
-            // The first element of run B belongs at the front of the merge.
-            arr[dest] = tempArray[iterB];
-        } else if (lengthB == 0) {
-            throw new UnsupportedOperationException("Compare function result changed! " +
-                                                    "Make sure you do not modify the scene from another thread!");
-        } else {//Fail label
-            System.arraycopy(tempArray, 0, arr, dest - (lengthB - 1), lengthB);
-        }
-    }
-
-    /**
      * Attempt to unroll "goto" style original implementation.
      * this method uses and change temp attributes of the class
-     * @param comp comparator
-     * @param arr the array
+     *
+     * @param comp      comparator
+     * @param arr       the array
      * @param tempArray the temp array
-     * @param idxA the index of the first element of run A
+     * @param idxA      the index of the first element of run A
      */
     public void innerMergeHigh(Comparator<T> comp, T[] tempArray, T[] arr, int idxA) {
         lengthA--;
@@ -892,7 +895,7 @@ public class ListSort<T> {
                     iterA--;
                     aWins++;
                     bWins = 0;
-                    lengthA --;
+                    lengthA--;
                     if (lengthA == 0) {
                         return;
                     }
@@ -915,7 +918,8 @@ public class ListSort<T> {
              * neither run appears to be winning consistently anymore.
              */
             do {
-                aWins = lengthA - gallopRight(tempArray[iterB], arr, idxA, lengthA, lengthA - 1, comp);
+                aWins = lengthA - gallopRight(tempArray[iterB], arr, idxA, lengthA, lengthA - 1,
+                                              comp);
                 if (aWins != 0) {
                     dest -= aWins;
                     iterA -= aWins;
@@ -944,7 +948,7 @@ public class ListSort<T> {
                     * that it is.
                     * a propper error will be thrown in mergeLow if lengthB == 0
                     */
-                    if (lengthB <= 1){
+                    if (lengthB <= 1) {
                         return;
                     }
                 }
@@ -966,50 +970,11 @@ public class ListSort<T> {
     }
 
     /**
-     * Reverse an array from firstId to lastId
-     *
-     * @param array the array to reverse
-     * @param firstId the index where to start to reverse
-     * @param lastId the index where to stop to reverse
-     */
-    private static void reverseArray(Object[] array, int firstId, int lastId) {
-        lastId--;
-        while (firstId < lastId) {
-            Object o = array[firstId];
-            array[firstId] = array[lastId];
-            array[lastId] = o;
-            firstId++;
-            lastId--;
-        }
-    }
-
-    /**
      * return the useful length of the array being sorted
+     *
      * @return the length pass to the last allocateStack method
      */
     public int getLength() {
         return length;
     }
-
-    /*
-     * test case
-     */
-    public static void main(String[] argv) {
-        Integer[] arr = new Integer[]{5, 6, 2, 9, 10, 11, 12, 8, 3, 12, 3, 7, 12, 32, 458, 12, 5, 3, 78, 45, 12, 32, 58, 45, 65, 45, 98, 45, 65, 2, 3, 47, 21, 35};
-        ListSort ls = new ListSort();
-        ls.allocateStack(34);
-        ls.sort(arr, new Comparator<Integer>() {
-            public int compare(Integer o1, Integer o2) {
-                int x = o1 - o2;
-                return (x == 0) ? 0 : (x > 0) ? 1 : -1;
-            }
-        });
-        for (Integer integer : arr) {
-            System.err.print(integer + ",");
-        }
-        System.err.println();
-    }
-
-
-
 }

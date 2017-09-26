@@ -21,7 +21,7 @@ public class ShaderVariable {
     /**
      * True if the shader value was changed.
      */
-    protected boolean updateNeeded = true;;
+    protected boolean updateNeeded = true;
 
     public void setLocation(int location){
         this.location = location;

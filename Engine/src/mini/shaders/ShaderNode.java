@@ -1,6 +1,5 @@
 package mini.shaders;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -153,12 +152,12 @@ public class ShaderNode implements Cloneable {
 
         clone.inputMapping = new ArrayList<>();
         for (VariableMapping variableMapping : inputMapping) {
-            clone.inputMapping.add((VariableMapping) variableMapping.clone());
+            clone.inputMapping.add(variableMapping.clone());
         }
 
         clone.outputMapping = new ArrayList<>();
         for (VariableMapping variableMapping : outputMapping) {
-            clone.outputMapping.add((VariableMapping) variableMapping.clone());
+            clone.outputMapping.add(variableMapping.clone());
         }
 
         return clone;

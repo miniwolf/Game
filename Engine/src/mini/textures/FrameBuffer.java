@@ -5,7 +5,6 @@ import mini.renderEngine.Caps;
 import mini.renderEngine.opengl.GLRenderer;
 import mini.utils.NativeObject;
 
-import java.lang.annotation.Native;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,13 +46,12 @@ public class FrameBuffer extends NativeObject {
     public static final int SLOT_DEPTH = -100;
     public static final int SLOT_DEPTH_STENCIL = -101;
 
-    boolean updateNeeded = false;
     private int id = -1;
     private int width = 0;
     private int height = 0;
     private int colorBufIndex = 0;
     private int samples = 1;
-    private List<RenderBuffer> colorBufs = new ArrayList<>();
+    private List<RenderBuffer> colorBufs = new ArrayList<>(); // TODO: Make sure this is not needed
     private RenderBuffer depthBuf = null;
     private boolean srgb;
 

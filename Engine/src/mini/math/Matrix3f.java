@@ -1032,17 +1032,13 @@ public final class Matrix3f implements Cloneable, java.io.Serializable {
         return store;
     }
 
-    /**
-     * <code>determinant</code> generates the determinant of this matrix.
-     *
-     * @return the determinant
-     */
-    public float determinant() {
-        float fCo00 = m11 * m22 - m12 * m21;
-        float fCo10 = m12 * m20 - m10 * m22;
-        float fCo20 = m10 * m21 - m11 * m20;
-        float fDet = m00 * fCo00 + m01 * fCo10 + m02 * fCo20;
-        return fDet;
+    static boolean equalIdentity(Matrix3f mat) {
+        return !(Math.abs(mat.m00 - 1) > 1e-4) && !(Math.abs(mat.m11 - 1) > 1e-4) &&
+               !(Math.abs(mat.m22 - 1) > 1e-4) && !(Math.abs(mat.m01) > 1e-4) &&
+               !(Math.abs(mat.m02) > 1e-4) && !(Math.abs(mat.m10) > 1e-4) &&
+               !(Math.abs(mat.m12) > 1e-4) && !(Math.abs(mat.m20) > 1e-4) &&
+               !(Math.abs(mat.m21) > 1e-4);
+
     }
 
     /**
@@ -1068,50 +1064,24 @@ public final class Matrix3f implements Cloneable, java.io.Serializable {
     }
 
     /**
+     * <code>determinant</code> generates the determinant of this matrix.
+     *
+     * @return the determinant
+     */
+    public float determinant() {
+        float fCo00 = m11 * m22 - m12 * m21;
+        float fCo10 = m12 * m20 - m10 * m22;
+        float fCo20 = m10 * m21 - m11 * m20;
+        return m00 * fCo00 + m01 * fCo10 + m02 * fCo20;
+    }
+
+    /**
      * <code>transposeNew</code> returns a transposed version of this matrix.
      *
      * @return The new Matrix3f object.
      */
     public Matrix3f transposeNew() {
-        Matrix3f ret = new Matrix3f(m00, m10, m20, m01, m11, m21, m02, m12, m22);
-        return ret;
-    }
-
-    /**
-     * <code>toString</code> returns the string representation of this object.
-     * It is in a format of a 3x3 matrix. For example, an identity matrix would
-     * be represented by the following string. com.jme.mini.math.Matrix3f <br>[<br>
-     * 1.0  0.0  0.0 <br>
-     * 0.0  1.0  0.0 <br>
-     * 0.0  0.0  1.0 <br>]<br>
-     *
-     * @return the string representation of this object.
-     */
-    @Override
-    public String toString() {
-        StringBuilder result = new StringBuilder("Matrix3f\n[\n");
-        result.append(" ");
-        result.append(m00);
-        result.append("  ");
-        result.append(m01);
-        result.append("  ");
-        result.append(m02);
-        result.append(" \n");
-        result.append(" ");
-        result.append(m10);
-        result.append("  ");
-        result.append(m11);
-        result.append("  ");
-        result.append(m12);
-        result.append(" \n");
-        result.append(" ");
-        result.append(m20);
-        result.append("  ");
-        result.append(m21);
-        result.append("  ");
-        result.append(m22);
-        result.append(" \n]");
-        return result.toString();
+        return new Matrix3f(m00, m10, m20, m01, m11, m21, m02, m12, m22);
     }
 
     /**
@@ -1141,53 +1111,21 @@ public final class Matrix3f implements Cloneable, java.io.Serializable {
     }
 
     /**
-     * are these two matrices the same? they are is they both have the same mXX values.
+     * <code>toString</code> returns the string representation of this object.
+     * It is in a format of a 3x3 matrix. For example, an identity matrix would
+     * be represented by the following string. com.jme.mini.math.Matrix3f <br>[<br>
+     * 1.0  0.0  0.0 <br>
+     * 0.0  1.0  0.0 <br>
+     * 0.0  0.0  1.0 <br>]<br>
      *
-     * @param o the object to compare for equality
-     * @return true if they are equal
+     * @return the string representation of this object.
      */
     @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof Matrix3f) || o == null) {
-            return false;
-        }
-
-        if (this == o) {
-            return true;
-        }
-
-        Matrix3f comp = (Matrix3f) o;
-        if (Float.compare(m00, comp.m00) != 0) {
-            return false;
-        }
-        if (Float.compare(m01, comp.m01) != 0) {
-            return false;
-        }
-        if (Float.compare(m02, comp.m02) != 0) {
-            return false;
-        }
-
-        if (Float.compare(m10, comp.m10) != 0) {
-            return false;
-        }
-        if (Float.compare(m11, comp.m11) != 0) {
-            return false;
-        }
-        if (Float.compare(m12, comp.m12) != 0) {
-            return false;
-        }
-
-        if (Float.compare(m20, comp.m20) != 0) {
-            return false;
-        }
-        if (Float.compare(m21, comp.m21) != 0) {
-            return false;
-        }
-        if (Float.compare(m22, comp.m22) != 0) {
-            return false;
-        }
-
-        return true;
+    public String toString() {
+        return "Matrix3f\n[\n"
+               + " " + m00 + "  " + m01 + "  " + m02 + " \n"
+               + " " + m10 + "  " + m11 + "  " + m12 + " \n"
+               + " " + m20 + "  " + m21 + "  " + m22 + " \n]";
     }
 
     /**
@@ -1297,39 +1235,29 @@ public final class Matrix3f implements Cloneable, java.io.Serializable {
         m22 *= scale.z;
     }
 
-    static boolean equalIdentity(Matrix3f mat) {
-        if (Math.abs(mat.m00 - 1) > 1e-4) {
-            return false;
-        }
-        if (Math.abs(mat.m11 - 1) > 1e-4) {
-            return false;
-        }
-        if (Math.abs(mat.m22 - 1) > 1e-4) {
-            return false;
-        }
-
-        if (Math.abs(mat.m01) > 1e-4) {
-            return false;
-        }
-        if (Math.abs(mat.m02) > 1e-4) {
+    /**
+     * are these two matrices the same? they are is they both have the same mXX values.
+     *
+     * @param o the object to compare for equality
+     * @return true if they are equal
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || !(o instanceof Matrix3f)) {
             return false;
         }
 
-        if (Math.abs(mat.m10) > 1e-4) {
-            return false;
-        }
-        if (Math.abs(mat.m12) > 1e-4) {
-            return false;
+        if (this == o) {
+            return true;
         }
 
-        if (Math.abs(mat.m20) > 1e-4) {
-            return false;
-        }
-        if (Math.abs(mat.m21) > 1e-4) {
-            return false;
-        }
+        Matrix3f comp = (Matrix3f) o;
+        return Float.compare(m00, comp.m00) == 0 && Float.compare(m01, comp.m01) == 0
+               && Float.compare(m02, comp.m02) == 0 && Float.compare(m10, comp.m10) == 0
+               && Float.compare(m11, comp.m11) == 0 && Float.compare(m12, comp.m12) == 0
+               && Float.compare(m20, comp.m20) == 0 && Float.compare(m21, comp.m21) == 0
+               && Float.compare(m22, comp.m22) == 0;
 
-        return true;
     }
 
     @Override

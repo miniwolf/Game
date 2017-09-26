@@ -2,13 +2,8 @@ package mini.scene;
 
 import mini.material.Material;
 import mini.math.Matrix4f;
-import mini.openglObjects.VAO;
 import mini.renderEngine.Camera;
 import mini.utils.TempVars;
-import mini.utils.clone.Cloner;
-
-import java.io.IOException;
-import java.util.Queue;
 
 /**
  * <code>Geometry</code> defines a leaf node of the scene graph. The leaf node
@@ -361,20 +356,8 @@ public class Geometry extends Spatial {
      * and normals are deep copied.
      */
     @Override
-    public Geometry clone(boolean cloneMaterial) {
-        return (Geometry)super.clone(cloneMaterial);
-    }
-
-    /**
-     * This version of clone is a shallow clone, in other words, the
-     * same mesh is referenced as the original geometry.
-     * Exception: if the mesh is marked as being a software
-     * animated mesh, (bind pose is set) then the positions
-     * and normals are deep copied.
-     */
-    @Override
     public Geometry clone() {
-        return clone(true);
+        return (Geometry) super.clone();
     }
 
     /**

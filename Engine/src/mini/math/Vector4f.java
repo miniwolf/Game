@@ -707,16 +707,16 @@ public final class Vector4f implements Cloneable, java.io.Serializable {
     }
 
     /**
-     * <code>angleBetween</code> returns (in radians) the angle between two vectors.
-     * It is assumed that both this vector and the given vector are unit vectors (iow, normalized).
+     * Check a vector... if it is null or its floats are NaN or infinite,
+     * return false.  Else return true.
      *
-     * @param otherVector a unit vector to find the angle against
-     * @return the angle in radians.
+     * @param vector the vector to check
+     * @return true or false as stated above.
      */
-    public float angleBetween(Vector4f otherVector) {
-        float dotProduct = dot(otherVector);
-        float angle = FastMath.acos(dotProduct);
-        return angle;
+    public static boolean isValidVector(Vector4f vector) {
+        return vector != null && !Float.isNaN(vector.x) && !Float.isNaN(vector.y) && !Float
+                .isNaN(vector.z) && !Float.isNaN(vector.w) && !Float.isInfinite(vector.x) && !Float
+                .isInfinite(vector.y) && !Float.isInfinite(vector.z) && !Float.isInfinite(vector.w);
     }
 
     /**
@@ -753,29 +753,15 @@ public final class Vector4f implements Cloneable, java.io.Serializable {
     }
 
     /**
-     * Check a vector... if it is null or its floats are NaN or infinite,
-     * return false.  Else return true.
+     * <code>angleBetween</code> returns (in radians) the angle between two vectors.
+     * It is assumed that both this vector and the given vector are unit vectors (iow, normalized).
      *
-     * @param vector the vector to check
-     * @return true or false as stated above.
+     * @param otherVector a unit vector to find the angle against
+     * @return the angle in radians.
      */
-    public static boolean isValidVector(Vector4f vector) {
-        if (vector == null) {
-            return false;
-        }
-        if (Float.isNaN(vector.x) ||
-            Float.isNaN(vector.y) ||
-            Float.isNaN(vector.z) ||
-            Float.isNaN(vector.w)) {
-            return false;
-        }
-        if (Float.isInfinite(vector.x) ||
-            Float.isInfinite(vector.y) ||
-            Float.isInfinite(vector.z) ||
-            Float.isInfinite(vector.w)) {
-            return false;
-        }
-        return true;
+    public float angleBetween(Vector4f otherVector) {
+        float dotProduct = dot(otherVector);
+        return FastMath.acos(dotProduct);
     }
 
     @Override
@@ -822,19 +808,8 @@ public final class Vector4f implements Cloneable, java.io.Serializable {
         }
 
         Vector4f comp = (Vector4f) o;
-        if (Float.compare(x, comp.x) != 0) {
-            return false;
-        }
-        if (Float.compare(y, comp.y) != 0) {
-            return false;
-        }
-        if (Float.compare(z, comp.z) != 0) {
-            return false;
-        }
-        if (Float.compare(w, comp.w) != 0) {
-            return false;
-        }
-        return true;
+        return Float.compare(x, comp.x) == 0 && Float.compare(y, comp.y) == 0
+               && Float.compare(z, comp.z) == 0 && Float.compare(w, comp.w) == 0;
     }
 
     /**

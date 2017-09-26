@@ -3,7 +3,6 @@ package mini.renderEngine;
 import mini.material.RenderState;
 import mini.math.ColorRGBA;
 import mini.renderEngine.opengl.GLRenderer;
-import mini.scene.Geometry;
 import mini.scene.Mesh;
 import mini.scene.VertexBuffer;
 import mini.shaders.ShaderProgram;

@@ -1,58 +1,19 @@
-/*
- * Copyright (c) 2016 jMonkeyEngine
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are
- * met:
- *
- * * Redistributions of source code must retain the above copyright
- *   notice, this list of conditions and the following disclaimer.
- *
- * * Redistributions in binary form must reproduce the above copyright
- *   notice, this list of conditions and the following disclaimer in the
- *   documentation and/or other materials provided with the distribution.
- *
- * * Neither the name of 'jMonkeyEngine' nor the names of its contributors
- *   may be used to endorse or promote products derived from this software
- *   without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
- * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
- * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
 package mini.utils.clone;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
 import java.util.IdentityHashMap;
-import java.util.logging.Logger;
-import java.util.logging.Level;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * A deep clone utility that provides similar object-graph-preserving
  * qualities to typical serialization schemes.  An internal registry
  * of cloned objects is kept to be used by other objects in the deep
  * clone process that implement JmeCloneable.
- * <p>
- * <p>By default, objects that do not implement JmeCloneable will
- * be treated like normal Java Cloneable objects.  If the object does
- * not implement the JmeCloneable or the regular JDK Cloneable interfaces
- * AND has no special handling defined then an IllegalArgumentException
- * will be thrown.</p>
- * <p>
  * <p>Enhanced object cloning is done in a two step process.  First,
  * the object is cloned using the normal Java clone() method and stored
  * in the clone registry.  After that, if it implements JmeCloneable then
@@ -93,8 +54,6 @@ import java.util.concurrent.ConcurrentHashMap;
  *  Foo fooClone = Cloner.deepClone(foo);
  *
  *  </pre>
- *
- * @author Paul Speed
  */
 public class Cloner {
     static Logger log = Logger.getLogger(Cloner.class.getName());
@@ -105,29 +64,9 @@ public class Cloner {
     private IdentityHashMap<Object, Object> index = new IdentityHashMap<>();
 
     /**
-     * Custom functions for cloning objects.
-     */
-    private Map<Class, CloneFunction> functions = new HashMap<>();
-
-    /**
      * Cache the clone methods once for all cloners.
      */
     private static final Map<Class, Method> methodCache = new ConcurrentHashMap<>();
-
-    /**
-     * Creates a new cloner with only default clone functions and an empty
-     * object index.
-     */
-    public Cloner() {
-        // Register some standard types
-        ListCloneFunction listFunction = new ListCloneFunction();
-        functions.put(java.util.ArrayList.class, listFunction);
-        functions.put(java.util.LinkedList.class, listFunction);
-        functions.put(java.util.concurrent.CopyOnWriteArrayList.class, listFunction);
-        functions.put(java.util.Vector.class, listFunction);
-        functions.put(java.util.Stack.class, listFunction);
-        functions.put(java.util.ArrayList.class, listFunction);
-    }
 
     /**
      * Convenience utility function that creates a new Cloner, uses it to
@@ -135,27 +74,6 @@ public class Cloner {
      */
     public static <T> T deepClone(T object) {
         return new Cloner().clone(object);
-    }
-
-    /**
-     * Deeps clones the specified object, reusing previous clones when possible.
-     * <p>
-     * <p>Object cloning priority works as follows:</p>
-     * <ul>
-     * <li>If the object has already been cloned then its clone is returned.
-     * <li>If there is a custom CloneFunction then it is called to clone the object.
-     * <li>If the object implements Cloneable then its clone() method is called, arrays are
-     * deep cloned with entries passing through clone().
-     * <li>If the object implements JmeCloneable then its cloneFields() method is called on the
-     * clone.
-     * <li>Else an IllegalArgumentException is thrown.
-     * </ul>
-     * <p>
-     * Note: objects returned by this method may not have yet had their cloneField()
-     * method called.
-     */
-    public <T> T clone(T object) {
-        return clone(object, true);
     }
 
     /**
@@ -180,9 +98,6 @@ public class Cloner {
      * called to clone the object.
      * <li>If the object implements Cloneable then its clone() method is called, arrays are
      * deep cloned with entries passing through clone().
-     * <li>If the object implements JmeCloneable then its cloneFields() method is called on the
-     * clone.
-     * <li>Else an IllegalArgumentException is thrown.
      * </ul>
      * <p>
      * <p>The abililty to selectively use clone functions is useful when
@@ -191,7 +106,7 @@ public class Cloner {
      * Note: objects returned by this method may not have yet had their cloneField()
      * method called.
      */
-    public <T> T clone(T object, boolean useFunctions) {
+    public <T> T clone(T object) {
         if (object == null) {
             return null;
         }
@@ -207,37 +122,12 @@ public class Cloner {
         if (clone != null || index.containsKey(object)) {
             if (log.isLoggable(Level.FINER)) {
                 log.finer("cloned:" + object.getClass() + "@" + System.identityHashCode(object)
-                        + " as cached:" + (clone == null
-                        ? "null"
-                        : (clone.getClass() + "@" + System
+                          + " as cached:" + (clone == null
+                                             ? "null"
+                                             : (clone.getClass() + "@" + System
                         .identityHashCode(clone))));
             }
             return type.cast(clone);
-        }
-
-        // See if there is a custom function... that trumps everything.
-        CloneFunction<T> f = getCloneFunction(type);
-        if (f != null) {
-            T result = f.cloneObject(this, object);
-
-            // Store the object in the identity map so that any circular references
-            // are resolvable.
-            index.put(object, result);
-
-            // Now call the function again to deep clone the fields
-            f.cloneFields(this, result, object);
-
-            if (log.isLoggable(Level.FINER)) {
-                if (result == null) {
-                    log.finer("cloned:" + object.getClass() + "@" + System.identityHashCode(object)
-                            + " as transformed:null");
-                } else {
-                    log.finer("clone:" + object.getClass() + "@" + System.identityHashCode(object)
-                            + " as transformed:" + result.getClass() + "@"
-                            + System.identityHashCode(result));
-                }
-            }
-            return result;
         }
 
         if (object.getClass().isArray()) {
@@ -263,48 +153,9 @@ public class Cloner {
 
         if (log.isLoggable(Level.FINER)) {
             log.finer("cloned:" + object.getClass() + "@" + System.identityHashCode(object)
-                    + " as " + clone.getClass() + "@" + System.identityHashCode(clone));
+                      + " as " + clone.getClass() + "@" + System.identityHashCode(clone));
         }
         return type.cast(clone);
-    }
-
-    /**
-     * Sets a custom CloneFunction for implementations of the specified Java type.  Some
-     * inheritance checks are made but no disambiguation is performed.
-     * <p>Note: in the general case, it is better to register against specific classes and
-     * not super-classes or super-interfaces unless you know specifically that they are cloneable.</p>
-     * <p>By default ListCloneFunction is registered for ArrayList, LinkedList, CopyOnWriteArrayList,
-     * Vector, Stack, and JME's SafeArrayList.</p>
-     */
-    public <T> void setCloneFunction(Class<T> type, CloneFunction<T> function) {
-        if (function == null) {
-            functions.remove(type);
-        } else {
-            functions.put(type, function);
-        }
-    }
-
-    /**
-     * Returns a previously registered clone function for the specified type or null
-     * if there is no custom clone function for the type.
-     */
-    @SuppressWarnings("unchecked")
-    public <T> CloneFunction<T> getCloneFunction(Class<T> type) {
-        CloneFunction<T> result = (CloneFunction<T>) functions.get(type);
-        if (result == null) {
-            // Do a more exhaustive search
-            for (Map.Entry<Class, CloneFunction> e : functions.entrySet()) {
-                if (e.getKey().isAssignableFrom(type)) {
-                    result = e.getValue();
-                    break;
-                }
-            }
-            if (result != null) {
-                // Cache it for later
-                functions.put(type, result);
-            }
-        }
-        return result;
     }
 
     /**
@@ -380,8 +231,7 @@ public class Cloner {
     protected <T> T arrayClone(T object) {
         // Java doesn't support the cloning of arrays through reflection unless
         // you open access to Object's protected clone array... which requires
-        // elevated privileges.  So we will do a work-around that is slightly less
-        // elegant.
+        // elevated privileges. So we will do a work-around that is slightly less elegant.
         // This should be 100% allowed without a case but Java generics
         // is not that smart
         Class<T> type = objectClass(object);

@@ -170,56 +170,109 @@ public class RenderState implements Cloneable {
     }
 
     /**
-     * <code>BlendFunc</code> defines the blending functions for use with
-     * <code>BlendMode.Custom</code>.
-     * Source color components are referred to as (R_s0, G_s0, B_s0, A_s0).
-     * Destination color components are referred to as (R_d, G_d, B_d, A_d).
+     * returns true if the given renderState is equal to this one
+     *
+     * @param o the renderState to compare to
+     * @return true if the renderStates are equal
      */
-    public enum BlendFunc {
-        /**
-         * RGB Factor (0, 0, 0), Alpha Factor (0)
-         */
-        Zero,
-        /**
-         * RGB Factor (1, 1, 1), Alpha Factor (1)
-         */
-        One,
-        /**
-         * RGB Factor (R_s0, G_s0, B_s0), Alpha Factor (A_s0)
-         */
-        Src_Color,
-        /**
-         * RGB Factor (1-R_s0, 1-G_s0, 1-B_s0), Alpha Factor (1-A_s0)
-         */
-        One_Minus_Src_Color,
-        /**
-         * RGB Factor (R_d, G_d, B_d), Alpha Factor (A_d)
-         */
-        Dst_Color,
-        /**
-         * RGB Factor (1-R_d, 1-G_d, 1-B_d), Alpha Factor (1-A_d)
-         */
-        One_Minus_Dst_Color,
-        /**
-         * RGB Factor (A_s0, A_s0, A_s0), Alpha Factor (A_s0)
-         */
-        Src_Alpha,
-        /**
-         * RGB Factor (1-A_s0, 1-A_s0, 1-A_s0), Alpha Factor (1-A_s0)
-         */
-        One_Minus_Src_Alpha,
-        /**
-         * RGB Factor (A_d, A_d, A_d), Alpha Factor (A_d)
-         */
-        Dst_Alpha,
-        /**
-         * RGB Factor (1-A_d, 1-A_d, 1-A_d), Alpha Factor (1-A_d)
-         */
-        One_Minus_Dst_Alpha,
-        /**
-         * RGB Factor (i, i, i), Alpha Factor (1)
-         */
-        Src_Alpha_Saturate;
+    @Override
+    public boolean equals(Object o) {
+        if (o == null) {
+            return false;
+        }
+        if (!(o instanceof RenderState)) {
+            return false;
+        }
+        RenderState rs = (RenderState) o;
+
+        if (wireframe != rs.wireframe) {
+            return false;
+        }
+
+        if (cullMode != rs.cullMode) {
+            return false;
+        }
+
+        if (depthWrite != rs.depthWrite) {
+            return false;
+        }
+
+        if (depthTest != rs.depthTest) {
+            return false;
+        }
+        if (depthTest) {
+            if (depthFunc != rs.depthFunc) {
+                return false;
+            }
+        }
+
+        if (colorWrite != rs.colorWrite) {
+            return false;
+        }
+
+        if (blendEquation != rs.blendEquation) {
+            return false;
+        }
+
+        if (blendEquationAlpha != rs.blendEquationAlpha) {
+            return false;
+        }
+
+        if (blendMode != rs.blendMode) {
+            return false;
+        }
+
+        if (offsetEnabled != rs.offsetEnabled) {
+            return false;
+        }
+
+        if (offsetFactor != rs.offsetFactor) {
+            return false;
+        }
+
+        if (offsetUnits != rs.offsetUnits) {
+            return false;
+        }
+
+        if (stencilTest != rs.stencilTest) {
+            return false;
+        }
+
+        if (stencilTest) {
+            if (frontStencilStencilFailOperation != rs.frontStencilStencilFailOperation) {
+                return false;
+            }
+            if (frontStencilDepthFailOperation != rs.frontStencilDepthFailOperation) {
+                return false;
+            }
+            if (frontStencilDepthPassOperation != rs.frontStencilDepthPassOperation) {
+                return false;
+            }
+            if (backStencilStencilFailOperation != rs.backStencilStencilFailOperation) {
+                return false;
+            }
+            if (backStencilDepthFailOperation != rs.backStencilDepthFailOperation) {
+                return false;
+            }
+
+            if (backStencilDepthPassOperation != rs.backStencilDepthPassOperation) {
+                return false;
+            }
+            if (frontStencilFunction != rs.frontStencilFunction) {
+                return false;
+            }
+            if (backStencilFunction != rs.backStencilFunction) {
+                return false;
+            }
+        }
+
+        return !(lineWidth != rs.lineWidth)
+               && (!blendMode.equals(BlendMode.Custom)
+                   || sfactorRGB == rs.getCustomSfactorRGB()
+                      && dfactorRGB == rs.getCustomDfactorRGB()
+                      && sfactorAlpha == rs.getCustomSfactorAlpha()
+                      && dfactorAlpha == rs.getCustomDfactorAlpha());
+
     }
 
     /**
@@ -450,111 +503,56 @@ public class RenderState implements Cloneable {
     }
 
     /**
-     * returns true if the given renderState is equal to this one
-     *
-     * @param o the renderState to compare to
-     * @return true if the renderStates are equal
+     * <code>BlendFunc</code> defines the blending functions for use with
+     * <code>BlendMode.Custom</code>.
+     * Source color components are referred to as (R_s0, G_s0, B_s0, A_s0).
+     * Destination color components are referred to as (R_d, G_d, B_d, A_d).
      */
-    @Override
-    public boolean equals(Object o) {
-        if (o == null) {
-            return false;
-        }
-        if (!(o instanceof RenderState)) {
-            return false;
-        }
-        RenderState rs = (RenderState) o;
-
-        if (wireframe != rs.wireframe) {
-            return false;
-        }
-
-        if (cullMode != rs.cullMode) {
-            return false;
-        }
-
-        if (depthWrite != rs.depthWrite) {
-            return false;
-        }
-
-        if (depthTest != rs.depthTest) {
-            return false;
-        }
-        if (depthTest) {
-            if (depthFunc != rs.depthFunc) {
-                return false;
-            }
-        }
-
-        if (colorWrite != rs.colorWrite) {
-            return false;
-        }
-
-        if (blendEquation != rs.blendEquation) {
-            return false;
-        }
-
-        if (blendEquationAlpha != rs.blendEquationAlpha) {
-            return false;
-        }
-
-        if (blendMode != rs.blendMode) {
-            return false;
-        }
-
-        if (offsetEnabled != rs.offsetEnabled) {
-            return false;
-        }
-
-        if (offsetFactor != rs.offsetFactor) {
-            return false;
-        }
-
-        if (offsetUnits != rs.offsetUnits) {
-            return false;
-        }
-
-        if (stencilTest != rs.stencilTest) {
-            return false;
-        }
-
-        if (stencilTest) {
-            if (frontStencilStencilFailOperation != rs.frontStencilStencilFailOperation) {
-                return false;
-            }
-            if (frontStencilDepthFailOperation != rs.frontStencilDepthFailOperation) {
-                return false;
-            }
-            if (frontStencilDepthPassOperation != rs.frontStencilDepthPassOperation) {
-                return false;
-            }
-            if (backStencilStencilFailOperation != rs.backStencilStencilFailOperation) {
-                return false;
-            }
-            if (backStencilDepthFailOperation != rs.backStencilDepthFailOperation) {
-                return false;
-            }
-
-            if (backStencilDepthPassOperation != rs.backStencilDepthPassOperation) {
-                return false;
-            }
-            if (frontStencilFunction != rs.frontStencilFunction) {
-                return false;
-            }
-            if (backStencilFunction != rs.backStencilFunction) {
-                return false;
-            }
-        }
-
-        if (lineWidth != rs.lineWidth) {
-            return false;
-        }
-
-        return !blendMode.equals(BlendMode.Custom)
-               || sfactorRGB == rs.getCustomSfactorRGB() && dfactorRGB == rs.getCustomDfactorRGB()
-                  && sfactorAlpha == rs.getCustomSfactorAlpha() && dfactorAlpha == rs
-                .getCustomDfactorAlpha();
-
+    public enum BlendFunc {
+        /**
+         * RGB Factor (0, 0, 0), Alpha Factor (0)
+         */
+        Zero,
+        /**
+         * RGB Factor (1, 1, 1), Alpha Factor (1)
+         */
+        One,
+        /**
+         * RGB Factor (R_s0, G_s0, B_s0), Alpha Factor (A_s0)
+         */
+        Src_Color,
+        /**
+         * RGB Factor (1-R_s0, 1-G_s0, 1-B_s0), Alpha Factor (1-A_s0)
+         */
+        One_Minus_Src_Color,
+        /**
+         * RGB Factor (R_d, G_d, B_d), Alpha Factor (A_d)
+         */
+        Dst_Color,
+        /**
+         * RGB Factor (1-R_d, 1-G_d, 1-B_d), Alpha Factor (1-A_d)
+         */
+        One_Minus_Dst_Color,
+        /**
+         * RGB Factor (A_s0, A_s0, A_s0), Alpha Factor (A_s0)
+         */
+        Src_Alpha,
+        /**
+         * RGB Factor (1-A_s0, 1-A_s0, 1-A_s0), Alpha Factor (1-A_s0)
+         */
+        One_Minus_Src_Alpha,
+        /**
+         * RGB Factor (A_d, A_d, A_d), Alpha Factor (A_d)
+         */
+        Dst_Alpha,
+        /**
+         * RGB Factor (1-A_d, 1-A_d, 1-A_d), Alpha Factor (1-A_d)
+         */
+        One_Minus_Dst_Alpha,
+        /**
+         * RGB Factor (i, i, i), Alpha Factor (1)
+         */
+        Src_Alpha_Saturate
     }
 
     /**

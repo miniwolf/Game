@@ -1,9 +1,17 @@
 package mini.renderEngine.opengl;
 
 import mini.material.RenderState;
-import mini.math.*;
-import mini.renderEngine.*;
-import mini.scene.Geometry;
+import mini.math.ColorRGBA;
+import mini.math.FastMath;
+import mini.math.Quaternion;
+import mini.math.Vector2f;
+import mini.math.Vector3f;
+import mini.math.Vector4f;
+import mini.renderEngine.Caps;
+import mini.renderEngine.IDList;
+import mini.renderEngine.Limits;
+import mini.renderEngine.RenderContext;
+import mini.renderEngine.Renderer;
 import mini.scene.Mesh;
 import mini.scene.VertexBuffer;
 import mini.shaders.Attribute;
@@ -17,15 +25,42 @@ import mini.textures.Texture;
 import mini.textures.image.LastTextureState;
 import mini.utils.BufferUtils;
 import mini.utils.MipMapGenerator;
-import org.lwjgl.opengl.*;
+import org.lwjgl.opengl.AMDSeamlessCubemapPerTexture;
+import org.lwjgl.opengl.ARBDrawBuffers;
+import org.lwjgl.opengl.ARBFramebufferObject;
+import org.lwjgl.opengl.ARBGetProgramBinary;
+import org.lwjgl.opengl.ARBMultisample;
+import org.lwjgl.opengl.ARBTextureMultisample;
+import org.lwjgl.opengl.ARBVertexArrayObject;
+import org.lwjgl.opengl.EXTFramebufferBlit;
+import org.lwjgl.opengl.EXTFramebufferMultisample;
+import org.lwjgl.opengl.EXTFramebufferObject;
+import org.lwjgl.opengl.EXTTextureFilterAnisotropic;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
+import org.lwjgl.opengl.GL13;
+import org.lwjgl.opengl.GL14;
+import org.lwjgl.opengl.GL15;
+import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL30;
+import org.lwjgl.opengl.GL31;
+import org.lwjgl.opengl.GL32;
+import org.lwjgl.opengl.GL33;
+import org.lwjgl.opengl.GL40;
+import org.lwjgl.opengl.GL41;
 
-import java.nio.*;
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
+import java.nio.ShortBuffer;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,14 +71,12 @@ public final class GLRenderer implements Renderer {
     private static final boolean VALIDATE_SHADER = false;
     private static final Pattern GLVERSION_PATTERN = Pattern.compile(".*?(\\d+)\\.(\\d+).*");
 
-    private final ByteBuffer nameBuf = BufferUtils.createByteBuffer(250);
     private final StringBuilder stringBuf = new StringBuilder(250);
     private final IntBuffer intBuf1 = BufferUtils.createIntBuffer(1);
     private final IntBuffer intBuf16 = BufferUtils.createIntBuffer(16);
-    private final FloatBuffer floatBuf16 = BufferUtils.createFloatBuffer(16);
     private final RenderContext context = new RenderContext();
     private final EnumSet<Caps> caps = EnumSet.noneOf(Caps.class);
-    private final EnumMap<Limits, Integer> limits = new EnumMap<Limits, Integer>(Limits.class);
+    private final Map<Limits, Integer> limits = new EnumMap<>(Limits.class);
 
     private FrameBuffer mainFbOverride = null;
     private int vpX, vpY, vpW, vpH;
@@ -54,12 +87,12 @@ public final class GLRenderer implements Renderer {
 
     private final TextureUtil texUtil = new TextureUtil();
 
-    public EnumSet<Caps> getCaps() {
+    public Set<Caps> getCaps() {
         return caps;
     }
 
     // Not making public yet ...
-    public EnumMap<Limits, Integer> getLimits() {
+    public Map<Limits, Integer> getLimits() {
         return limits;
     }
 
@@ -155,7 +188,7 @@ public final class GLRenderer implements Renderer {
                 if (glslVer < 400) {
                     break;
                 }
-                // so that future OpenGL revisions wont break jme3
+                // so that future OpenGL revisions wont break
                 // fall through intentional
             case 450:
                 caps.add(Caps.GLSL450);
@@ -2295,16 +2328,10 @@ public final class GLRenderer implements Renderer {
 
     public void updateBufferData(VertexBuffer vb) {
         int bufId = vb.getId();
-        boolean created = false;
         if (bufId == -1) {
             // create buffer
             bufId = GL15.glGenBuffers();
             vb.setId(bufId);
-//            objManager.registerObject(vb);
-
-            //statistics.onNewVertexBuffer();
-
-            created = true;
         }
 
         // bind buffer
@@ -2314,18 +2341,12 @@ public final class GLRenderer implements Renderer {
             if (context.boundElementArrayVBO != bufId) {
                 GL15.glBindBuffer(target, bufId);
                 context.boundElementArrayVBO = bufId;
-                //statistics.onVertexBufferUse(vb, true);
-            } else {
-                //statistics.onVertexBufferUse(vb, false);
             }
         } else {
             target = GL15.GL_ARRAY_BUFFER;
             if (context.boundArrayVBO != bufId) {
                 GL15.glBindBuffer(target, bufId);
                 context.boundArrayVBO = bufId;
-                //statistics.onVertexBufferUse(vb, true);
-            } else {
-                //statistics.onVertexBufferUse(vb, false);
             }
         }
 
