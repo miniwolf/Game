@@ -9,14 +9,12 @@ import mini.material.TechniqueDef;
 import mini.math.ColorRGBA;
 import mini.math.Vector3f;
 import mini.math.Vector4f;
-import mini.renderEngine.Caps;
-import mini.renderEngine.RenderManager;
-import mini.renderEngine.Renderer;
-import mini.renderEngine.opengl.GLDebug;
-import mini.renderEngine.opengl.GLRenderer;
+import mini.renderer.Caps;
+import mini.renderer.RenderManager;
+import mini.renderer.Renderer;
 import mini.scene.Geometry;
 import mini.shaders.DefineList;
-import mini.shaders.ShaderProgram;
+import mini.shaders.Shader;
 import mini.shaders.Uniform;
 import mini.shaders.VarType;
 import mini.utils.TempVars;
@@ -46,7 +44,7 @@ public final class SinglePassLightingLogic extends DefaultTechniqueDefLogic {
     }
 
     @Override
-    public ShaderProgram makeCurrent(RenderManager renderManager, EnumSet<Caps> rendererCaps,
+    public Shader makeCurrent(RenderManager renderManager, EnumSet<Caps> rendererCaps,
                                      LightList lights, DefineList defines) {
         defines.set(nbLightsDefineId, renderManager.getSinglePassLightBatchSize() * 3);
         defines.set(singlePassLightingDefineId, true);
@@ -66,7 +64,7 @@ public final class SinglePassLightingLogic extends DefaultTechniqueDefLogic {
      * g_LightPosition.w is the inverse radius (1/r) of the light (for
      * attenuation) <br/> </p>
      */
-    protected int updateLightListUniforms(ShaderProgram shader, Geometry g, LightList lightList, int numLights, RenderManager rm, int startIndex) {
+    protected int updateLightListUniforms(Shader shader, Geometry g, LightList lightList, int numLights, RenderManager rm, int startIndex) {
         if (numLights == 0) { // this shader does not do lighting, ignore.
             return 0;
         }
@@ -147,7 +145,7 @@ public final class SinglePassLightingLogic extends DefaultTechniqueDefLogic {
     }
 
     @Override
-    public void render(RenderManager renderManager, ShaderProgram shader, Geometry geometry, LightList lights, int lastTexUnit) {
+    public void render(RenderManager renderManager, Shader shader, Geometry geometry, LightList lights, int lastTexUnit) {
         int nbRenderedLights = 0;
         Renderer renderer = renderManager.getRenderer();
         int batchSize = renderManager.getSinglePassLightBatchSize();

@@ -33,7 +33,6 @@ package mini.math;
 
 import mini.utils.TempVars;
 
-import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
@@ -193,11 +192,7 @@ public final class Quaternion implements Cloneable, java.io.Serializable {
      * @return true if this Quaternion is {0,0,0,1}
      */
     public boolean isIdentity() {
-        if (x == 0 && y == 0 && z == 0 && w == 1) {
-            return true;
-        } else {
-            return false;
-        }
+        return x == 0 && y == 0 && z == 0 && w == 1;
     }
 
     /**
@@ -336,7 +331,7 @@ public final class Quaternion implements Cloneable, java.io.Serializable {
             m22 *= lengthSquared;
         }
 
-        // Use the Graphics Gems code, from 
+        // Use the Graphics Gems code, from
         // ftp://ftp.cis.upenn.edu/pub/graphics/shoemake/quatut.ps.Z
         // *NOT* the "Matrix and Quaternions FAQ", which has errors!
 
@@ -1143,7 +1138,7 @@ public final class Quaternion implements Cloneable, java.io.Serializable {
      * (x, y, z, w)
      *
      * @return the string representation of this object.
-     * @see Object#toString()
+     * @see java.lang.Object#toString()
      */
     @Override
     public String toString() {
@@ -1177,10 +1172,7 @@ public final class Quaternion implements Cloneable, java.io.Serializable {
         if (Float.compare(z, comp.z) != 0) {
             return false;
         }
-        if (Float.compare(w, comp.w) != 0) {
-            return false;
-        }
-        return true;
+        return Float.compare(w, comp.w) == 0;
     }
 
     /**
@@ -1189,7 +1181,7 @@ public final class Quaternion implements Cloneable, java.io.Serializable {
      * Hashtable, HashMap, HashSet etc.
      *
      * @return the hashcode for this instance of Quaternion.
-     * @see Object#hashCode()
+     * @see java.lang.Object#hashCode()
      */
     @Override
     public int hashCode() {
@@ -1209,7 +1201,7 @@ public final class Quaternion implements Cloneable, java.io.Serializable {
      *
      * @param in the ObjectInput value to read from.
      * @throws IOException if the ObjectInput value has problems reading a float.
-     * @see Externalizable
+     * @see java.io.Externalizable
      */
     public void readExternal(ObjectInput in) throws IOException {
         x = in.readFloat();
@@ -1225,7 +1217,7 @@ public final class Quaternion implements Cloneable, java.io.Serializable {
      *
      * @param out the object to write to.
      * @throws IOException if writing to the ObjectOutput fails.
-     * @see Externalizable
+     * @see java.io.Externalizable
      */
     public void writeExternal(ObjectOutput out) throws IOException {
         out.writeFloat(x);

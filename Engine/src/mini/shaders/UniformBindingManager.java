@@ -6,10 +6,8 @@ import mini.math.Matrix4f;
 import mini.math.Vector2f;
 import mini.math.Vector3f;
 import mini.math.Vector4f;
-import mini.renderEngine.Camera;
-import mini.scene.Geometry;
+import mini.renderer.Camera;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -19,8 +17,6 @@ import java.util.List;
  * The {@link #updateUniformBindings(java.util.List) } will update
  * a given list of uniforms based on the current state
  * of the manager.
- *
- * @author Kirill Vainer
  */
 public class UniformBindingManager {
     private float near, far;
@@ -56,7 +52,7 @@ public class UniformBindingManager {
      * Updates the given list of uniforms with {@link UniformBinding uniform bindings}
      * based on the current world state.
      */
-    public void updateUniformBindings(ShaderProgram shader) {
+    public void updateUniformBindings(Shader shader) {
         List<Uniform> params = shader.getBoundUniforms();
         for (Uniform u : params) {
             switch (u.getBinding()) {

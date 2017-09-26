@@ -2,13 +2,8 @@ package mini.scene;
 
 import mini.material.Material;
 import mini.math.Matrix4f;
-import mini.openglObjects.VAO;
-import mini.renderEngine.Camera;
+import mini.renderer.Camera;
 import mini.utils.TempVars;
-import mini.utils.clone.Cloner;
-
-import java.io.IOException;
-import java.util.Queue;
 
 /**
  * <code>Geometry</code> defines a leaf node of the scene graph. The leaf node

@@ -1,6 +1,6 @@
 package mini.scene;
 
-import mini.renderEngine.opengl.GLRenderer;
+import mini.renderer.opengl.GLRenderer;
 import mini.utils.BufferUtils;
 import mini.utils.NativeObject;
 

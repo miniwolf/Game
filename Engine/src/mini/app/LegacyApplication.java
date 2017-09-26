@@ -4,20 +4,15 @@ import mini.input.InputManager;
 import mini.input.KeyInput;
 import mini.input.MouseInput;
 import mini.math.Vector3f;
-import mini.renderEngine.Camera;
-import mini.renderEngine.RenderManager;
-import mini.renderEngine.Renderer;
-import mini.renderEngine.ViewPort;
+import mini.renderer.Camera;
+import mini.renderer.RenderManager;
+import mini.renderer.Renderer;
+import mini.renderer.ViewPort;
 import mini.system.ApplicationContext;
 import mini.system.ApplicationSystem;
 import mini.system.SystemListener;
-import scala.App;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.Future;
 
 /**
  * The <code>LegacyApplication</code> class represents an instance of a

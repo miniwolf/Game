@@ -2,11 +2,11 @@ package mini.material;
 
 import mini.light.LightList;
 import mini.material.logic.TechniqueDefLogic;
-import mini.renderEngine.Caps;
-import mini.renderEngine.RenderManager;
+import mini.renderer.Caps;
+import mini.renderer.RenderManager;
 import mini.scene.Geometry;
 import mini.shaders.DefineList;
-import mini.shaders.ShaderProgram;
+import mini.shaders.Shader;
 import mini.shaders.VarType;
 
 import java.util.EnumSet;
@@ -88,7 +88,7 @@ public class Technique {
      * @param rendererCaps  The renderer capabilities which the shader should support.
      * @return A compatible shader.
      */
-    ShaderProgram makeCurrent(RenderManager renderManager, List<MatParamOverride> worldOverrides,
+    Shader makeCurrent(RenderManager renderManager, List<MatParamOverride> worldOverrides,
                               List<MatParamOverride> forcedOverrides, LightList lights,
                               EnumSet<Caps> rendererCaps) {
         TechniqueDefLogic logic = def.getLogic();
@@ -113,7 +113,7 @@ public class Technique {
      * @param shader        The shader
      * @param geometry      The geometry to render
      */
-    void render(RenderManager renderManager, ShaderProgram shader, Geometry geometry,
+    void render(RenderManager renderManager, Shader shader, Geometry geometry,
                 LightList lights, int lastTexUnit) {
         TechniqueDefLogic logic = def.getLogic();
         logic.render(renderManager, shader, geometry, lights, lastTexUnit);

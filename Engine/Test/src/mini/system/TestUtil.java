@@ -31,7 +31,7 @@
  */
 package mini.system;
 
-import mini.renderEngine.RenderManager;
+import mini.renderer.RenderManager;
 
 public class TestUtil {
     static {

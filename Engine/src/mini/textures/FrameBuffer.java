@@ -1,11 +1,10 @@
 package mini.textures;
 
 import mini.material.RenderState;
-import mini.renderEngine.Caps;
-import mini.renderEngine.opengl.GLRenderer;
+import mini.renderer.Caps;
+import mini.renderer.opengl.GLRenderer;
 import mini.utils.NativeObject;
 
-import java.lang.annotation.Native;
 import java.util.ArrayList;
 import java.util.List;
 

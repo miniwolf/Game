@@ -1,15 +1,13 @@
 package mini.textures;
 
 import mini.math.FastMath;
-import mini.renderEngine.Caps;
-import mini.renderEngine.Renderer;
-import mini.renderEngine.opengl.GLRenderer;
+import mini.renderer.Caps;
+import mini.renderer.Renderer;
 import mini.textures.image.ColorSpace;
 import mini.textures.image.LastTextureState;
 import mini.utils.BufferUtils;
 import mini.utils.NativeObject;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -292,16 +290,16 @@ public class Image extends NativeObject {
         private boolean isCompressed;
         private boolean isFloatingPoint;
 
-        private Format(int bpp) {
+        Format(int bpp) {
             this.bpp = bpp;
         }
 
-        private Format(int bpp, boolean isFP) {
+        Format(int bpp, boolean isFP) {
             this(bpp);
             this.isFloatingPoint = isFP;
         }
 
-        private Format(int bpp, boolean isDepth, boolean isCompressed, boolean isFP) {
+        Format(int bpp, boolean isDepth, boolean isCompressed, boolean isFP) {
             this(bpp, isFP);
             this.isDepth = isDepth;
             this.isCompressed = isCompressed;
@@ -983,11 +981,7 @@ public class Image extends NativeObject {
         if (this.getMipMapSizes() == null && that.getMipMapSizes() != null) {
             return false;
         }
-        if (this.getMultiSamples() != that.getMultiSamples()) {
-            return false;
-        }
-
-        return true;
+        return this.getMultiSamples() == that.getMultiSamples();
     }
 
     @Override

@@ -32,7 +32,6 @@
 
 package mini.helloworld;
 
-import mini.app.Application;
 import mini.app.SimpleApplication;
 import mini.asset.TextureKey;
 import mini.light.DirectionalLight;
@@ -40,7 +39,7 @@ import mini.material.Material;
 import mini.material.RenderState.BlendMode;
 import mini.math.ColorRGBA;
 import mini.math.Vector3f;
-import mini.renderEngine.queue.RenderQueue;
+import mini.renderer.queue.RenderQueue;
 import mini.scene.Geometry;
 import mini.scene.shape.Box;
 import mini.scene.shape.Sphere;

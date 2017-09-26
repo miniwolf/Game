@@ -824,12 +824,9 @@ public final class Vector3f implements Cloneable, java.io.Serializable {
             Float.isNaN(vector.z)) {
             return false;
         }
-        if (Float.isInfinite(vector.x) ||
-            Float.isInfinite(vector.y) ||
-            Float.isInfinite(vector.z)) {
-            return false;
-        }
-        return true;
+        return !Float.isInfinite(vector.x) &&
+               !Float.isInfinite(vector.y) &&
+               !Float.isInfinite(vector.z);
     }
 
     public static void generateOrthonormalBasis(Vector3f u, Vector3f v, Vector3f w) {
@@ -911,10 +908,7 @@ public final class Vector3f implements Cloneable, java.io.Serializable {
         if (Float.compare(y, comp.y) != 0) {
             return false;
         }
-        if (Float.compare(z, comp.z) != 0) {
-            return false;
-        }
-        return true;
+        return Float.compare(z, comp.z) == 0;
     }
 
     /**
@@ -936,7 +930,7 @@ public final class Vector3f implements Cloneable, java.io.Serializable {
      * <code>toString</code> returns the string representation of this vector.
      * The format is:
      * <p>
-     * org.jme.mini.math.Vector3f [X=XX.XXXX, Y=YY.YYYY, Z=ZZ.ZZZZ]
+     * mini.math.Vector3f [X=XX.XXXX, Y=YY.YYYY, Z=ZZ.ZZZZ]
      *
      * @return the string representation of this vector.
      */

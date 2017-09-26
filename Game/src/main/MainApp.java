@@ -1,15 +1,11 @@
 package main;
 
-import loaders.LoaderSettings;
-import loaders.SceneLoader;
-import loaders.SceneLoaderFactory;
 import mini.input.Keyboard;
 import mini.input.KeyboardKey;
 import mini.input.KeyboardListener;
 import mini.input.Mouse;
 import mini.input.MouseButton;
 import mini.input.MouseListener;
-import mini.renderEngine.RenderEngine;
 
 public class MainApp {
     public static void main(String[] args) {
@@ -17,8 +13,7 @@ public class MainApp {
                            "C:/Users/miniwolf/Engine/Engine/lib/lwjgl-natives-windows/");
 
         // before context creation
-        RenderEngine engine = RenderEngine.init();
-        SceneLoader loader = SceneLoaderFactory.createSceneLoader();
+//        RenderEngine engine = RenderEngine.init();
         //Scene scene = loader.loadScene(new MyFile(LoaderSettings.RES_FOLDER, "Socuwan Scene"));
         /*
         MyFile textureFile = new MyFile(LoaderSettings.RES_FOLDER
@@ -75,6 +70,6 @@ public class MainApp {
 //        }
 //
 //        scene.delete();
-        engine.close();
+//        engine.close();
     }
 }

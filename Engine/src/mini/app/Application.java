@@ -1,13 +1,10 @@
 package mini.app;
 
-import mini.renderEngine.Camera;
-import mini.renderEngine.RenderManager;
-import mini.renderEngine.Renderer;
-import mini.renderEngine.ViewPort;
+import mini.renderer.Camera;
+import mini.renderer.RenderManager;
+import mini.renderer.Renderer;
+import mini.renderer.ViewPort;
 import mini.system.ApplicationContext;
-
-import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
 
 /**
  * The <code>Application</code> interface represents the minimum exposed

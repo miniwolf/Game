@@ -10,18 +10,14 @@ import mini.math.Matrix4f;
 import mini.math.Quaternion;
 import mini.math.Transform;
 import mini.math.Vector3f;
-import mini.renderEngine.Camera;
-import mini.renderEngine.queue.RenderQueue;
+import mini.renderer.Camera;
+import mini.renderer.queue.RenderQueue;
 import mini.utils.TempVars;
 import mini.utils.clone.Cloner;
 import mini.utils.clone.IdentityCloneFunction;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Queue;
 
 /**
  * <code>Spatial</code> defines the base class for scene graph nodes. It
@@ -57,7 +53,7 @@ public abstract class Spatial implements Cloneable {
          * Never cull this from view, always draw it.
          * Note that we will still get culled if our parent is culled.
          */
-        Never;
+        Never
     }
 
     /**
@@ -76,7 +72,7 @@ public abstract class Spatial implements Cloneable {
         /**
          * This spatial will never be batched when attached to a BatchNode.
          */
-        Never;
+        Never
     }
 
     /**

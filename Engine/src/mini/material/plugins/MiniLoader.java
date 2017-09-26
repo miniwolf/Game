@@ -14,9 +14,8 @@ import mini.material.logic.SinglePassLightingLogic;
 import mini.math.ColorRGBA;
 import mini.math.Vector2f;
 import mini.math.Vector3f;
-import mini.renderEngine.queue.RenderQueue;
 import mini.shaders.DefineList;
-import mini.shaders.ShaderProgram;
+import mini.shaders.Shader;
 import mini.shaders.VarType;
 import mini.textures.Texture;
 import mini.textures.Texture2D;
@@ -49,14 +48,14 @@ public class MiniLoader {
     private RenderState renderState;
     private ArrayList<String> presetDefines = new ArrayList<String>();
 
-    private List<EnumMap<ShaderProgram.ShaderType, String>> shaderLanguages;
-    private EnumMap<ShaderProgram.ShaderType, String> shaderNames;
+    private List<EnumMap<Shader.ShaderType, String>> shaderLanguages;
+    private EnumMap<Shader.ShaderType, String> shaderNames;
 
     private static final String whitespacePattern = "\\p{javaWhitespace}+";
 
     public MiniLoader() {
         shaderLanguages = new ArrayList<>();// EnumMap<>(Shader.ShaderType.class);
-        shaderNames = new EnumMap<>(ShaderProgram.ShaderType.class);
+        shaderNames = new EnumMap<>(Shader.ShaderType.class);
     }
 
     // <TYPE> <LANG> : <SOURCE>
@@ -67,7 +66,7 @@ public class MiniLoader {
         }
         String[] typeAndLang = split[0].split(whitespacePattern);
 
-        for (ShaderProgram.ShaderType shaderType : ShaderProgram.ShaderType.values()) {
+        for (Shader.ShaderType shaderType : Shader.ShaderType.values()) {
             if (typeAndLang[0].equals(shaderType.toString() + "Shader")) {
 
                 readShaderDefinition(shaderType, split[1].trim(),
@@ -76,7 +75,7 @@ public class MiniLoader {
         }
     }
 
-    private void readShaderDefinition(ShaderProgram.ShaderType shaderType, String name,
+    private void readShaderDefinition(Shader.ShaderType shaderType, String name,
                                       String... languages) {
         shaderNames.put(shaderType, name);
 
@@ -87,7 +86,7 @@ public class MiniLoader {
         langSize = languages.length;
         for (int i = 0; i < languages.length; i++) {
             if (i >= shaderLanguages.size()) {
-                shaderLanguages.add(new EnumMap<>(ShaderProgram.ShaderType.class));
+                shaderLanguages.add(new EnumMap<>(Shader.ShaderType.class));
             }
             shaderLanguages.get(i).put(shaderType, languages[i]);
         }
@@ -436,7 +435,7 @@ public class MiniLoader {
         }
     }
 
-    private void readWorldParams(List<Statement> worldParams) throws IOException {
+    private void readWorldParams(List<Statement> worldParams) {
         for (Statement statement : worldParams) {
             technique.addWorldParam(statement.getLine());
         }
@@ -654,8 +653,8 @@ public class MiniLoader {
             technique.setShaderFile(technique.hashCode() + "", technique.hashCode() + "", "GLSL100",
                                     "GLSL100");
             techniqueDefs.add(technique);
-        } else if (shaderNames.containsKey(ShaderProgram.ShaderType.Vertex) && shaderNames
-                .containsKey(ShaderProgram.ShaderType.Fragment)) {
+        } else if (shaderNames.containsKey(Shader.ShaderType.Vertex) && shaderNames
+                .containsKey(Shader.ShaderType.Fragment)) {
             if (shaderLanguages.size() > 1) {
                 for (int i = 1; i < shaderLanguages.size(); i++) {
                     cloner.clearIndex();
@@ -816,8 +815,8 @@ public class MiniLoader {
 
     protected void initNodesLoader() {
         if (!isUseNodes) {
-            isUseNodes = shaderNames.get(ShaderProgram.ShaderType.Vertex) == null
-                         && shaderNames.get(ShaderProgram.ShaderType.Fragment) == null;
+            isUseNodes = shaderNames.get(Shader.ShaderType.Vertex) == null
+                         && shaderNames.get(Shader.ShaderType.Fragment) == null;
             if (isUseNodes) {
                 if (nodesLoaderDelegate == null) {
                     nodesLoaderDelegate = new ShaderNodeLoaderDelegate();

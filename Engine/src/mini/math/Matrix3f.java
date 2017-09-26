@@ -144,7 +144,7 @@ public final class Matrix3f implements Cloneable, java.io.Serializable {
 
     /**
      * <code>get</code> retrieves a value from the matrix at the given
-     * position. If the position is invalid a <code>JmeException</code> is
+     * position. If the position is invalid a <code>IllegalArgumentException</code> is
      * thrown.
      *
      * @param i the row index.
@@ -533,7 +533,7 @@ public final class Matrix3f implements Cloneable, java.io.Serializable {
 
     /**
      * <code>set</code> places a given value into the matrix at the given
-     * position. If the position is invalid a <code>JmeException</code> is
+     * position. If the position is invalid a <code>IllegalArgumentException</code> is
      * thrown.
      *
      * @param i     the row index.
@@ -592,11 +592,11 @@ public final class Matrix3f implements Cloneable, java.io.Serializable {
      *
      * @param matrix the new values of the matrix.
      * @return this
+     * @throws IllegalArgumentException if the array is not of size 9.
      */
     public Matrix3f set(float[][] matrix) {
         if (matrix.length != 3 || matrix[0].length != 3) {
-            throw new IllegalArgumentException(
-                    "Array must be of size 9.");
+            throw new IllegalArgumentException("Array must be of size 9.");
         }
 
         m00 = matrix[0][0];
@@ -1080,7 +1080,7 @@ public final class Matrix3f implements Cloneable, java.io.Serializable {
     /**
      * <code>toString</code> returns the string representation of this object.
      * It is in a format of a 3x3 matrix. For example, an identity matrix would
-     * be represented by the following string. com.jme.mini.math.Matrix3f <br>[<br>
+     * be represented by the following string. com.mini.math.Matrix3f <br>[<br>
      * 1.0  0.0  0.0 <br>
      * 0.0  1.0  0.0 <br>
      * 0.0  0.0  1.0 <br>]<br>
@@ -1089,29 +1089,16 @@ public final class Matrix3f implements Cloneable, java.io.Serializable {
      */
     @Override
     public String toString() {
-        StringBuilder result = new StringBuilder("Matrix3f\n[\n");
-        result.append(" ");
-        result.append(m00);
-        result.append("  ");
-        result.append(m01);
-        result.append("  ");
-        result.append(m02);
-        result.append(" \n");
-        result.append(" ");
-        result.append(m10);
-        result.append("  ");
-        result.append(m11);
-        result.append("  ");
-        result.append(m12);
-        result.append(" \n");
-        result.append(" ");
-        result.append(m20);
-        result.append("  ");
-        result.append(m21);
-        result.append("  ");
-        result.append(m22);
-        result.append(" \n]");
-        return result.toString();
+        return "Matrix3f\n[\n"
+               + " " + m00
+               + "  " + m01
+               + "  " + m02 + " \n"
+               + " " + m10
+               + "  " + m11
+               + "  " + m12 + " \n"
+               + " " + m20
+               + "  " + m21
+               + "  " + m22 + " \n]";
     }
 
     /**
@@ -1120,7 +1107,7 @@ public final class Matrix3f implements Cloneable, java.io.Serializable {
      * Hashtable, HashMap, HashSet etc.
      *
      * @return the hashcode for this instance of Matrix4f.
-     * @see Object#hashCode()
+     * @see java.lang.Object#hashCode()
      */
     @Override
     public int hashCode() {
@@ -1148,7 +1135,7 @@ public final class Matrix3f implements Cloneable, java.io.Serializable {
      */
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof Matrix3f) || o == null) {
+        if (!(o instanceof Matrix3f)) {
             return false;
         }
 
@@ -1183,11 +1170,7 @@ public final class Matrix3f implements Cloneable, java.io.Serializable {
         if (Float.compare(m21, comp.m21) != 0) {
             return false;
         }
-        if (Float.compare(m22, comp.m22) != 0) {
-            return false;
-        }
-
-        return true;
+        return Float.compare(m22, comp.m22) == 0;
     }
 
     /**
@@ -1325,11 +1308,7 @@ public final class Matrix3f implements Cloneable, java.io.Serializable {
         if (Math.abs(mat.m20) > 1e-4) {
             return false;
         }
-        if (Math.abs(mat.m21) > 1e-4) {
-            return false;
-        }
-
-        return true;
+        return !(Math.abs(mat.m21) > 1e-4);
     }
 
     @Override

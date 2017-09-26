@@ -5,10 +5,10 @@ import mini.material.MatParam;
 import mini.material.MaterialDef;
 import mini.material.ShaderGenerationInfo;
 import mini.material.TechniqueDef;
+import mini.shaders.Shader;
 import mini.shaders.ShaderNode;
 import mini.shaders.ShaderNodeDefinition;
 import mini.shaders.ShaderNodeVariable;
-import mini.shaders.ShaderProgram;
 import mini.shaders.ShaderUtils;
 import mini.shaders.UniformBinding;
 import mini.shaders.VarType;
@@ -130,7 +130,7 @@ public class ShaderNodeLoaderDelegate {
 
                 if (line.startsWith("Type")) {
                     String type = line.substring(line.lastIndexOf(':') + 1).trim();
-                    shaderNodeDefinition.setType(ShaderProgram.ShaderType.valueOf(type));
+                    shaderNodeDefinition.setType(Shader.ShaderType.valueOf(type));
                 } else if (line.startsWith("Shader ")) {
                     readShaderStatement(statement);
                     shaderNodeDefinition.getShadersLanguage().add(shaderLanguage);
@@ -615,7 +615,7 @@ public class ShaderNodeLoaderDelegate {
                 storeGlobal(right, statement1);
                 break;
             case "Attr":
-                if (shaderNode.getDefinition().getType() == ShaderProgram.ShaderType.Fragment) {
+                if (shaderNode.getDefinition().getType() == Shader.ShaderType.Fragment) {
                     throw new MatParseException("Cannot have an attribute as input in a fragment shader" + right.getName(), statement1);
                 }
                 updateVarFromAttributes(mapping.getRightVariable(), mapping);
@@ -626,7 +626,7 @@ public class ShaderNodeLoaderDelegate {
                 if (param == null) {
                     throw new MatParseException("Could not find a Material Parameter named " + right.getName(), statement1);
                 }
-                if (shaderNode.getDefinition().getType() == ShaderProgram.ShaderType.Vertex) {
+                if (shaderNode.getDefinition().getType() == Shader.ShaderType.Vertex) {
                     if (updateRightFromUniforms(param, mapping, vertexDeclaredUniforms, statement1)) {
                         storeVertexUniform(mapping.getRightVariable());
                     }
@@ -650,7 +650,7 @@ public class ShaderNodeLoaderDelegate {
                 if (worldParam == null) {
                     throw new MatParseException("Could not find a World Parameter named " + right.getName(), statement1);
                 }
-                if (shaderNode.getDefinition().getType() == ShaderProgram.ShaderType.Vertex) {
+                if (shaderNode.getDefinition().getType() == Shader.ShaderType.Vertex) {
                     if (updateRightFromUniforms(worldParam, mapping, vertexDeclaredUniforms)) {
                         storeVertexUniform(mapping.getRightVariable());
                     }
@@ -786,7 +786,7 @@ public class ShaderNodeLoaderDelegate {
      */
     public void storeGlobal(ShaderNodeVariable var, Statement statement1) throws IOException {
         var.setShaderOutput(true);
-        if (shaderNode.getDefinition().getType() == ShaderProgram.ShaderType.Vertex) {
+        if (shaderNode.getDefinition().getType() == Shader.ShaderType.Vertex) {
             ShaderNodeVariable global = techniqueDef.getShaderGenerationInfo().getVertexGlobal();
             if (global != null) {
                 if (!global.getName().equals(var.getName())) {
@@ -795,7 +795,7 @@ public class ShaderNodeLoaderDelegate {
             } else {
                 techniqueDef.getShaderGenerationInfo().setVertexGlobal(var);
             }
-        } else if (shaderNode.getDefinition().getType() == ShaderProgram.ShaderType.Fragment) {
+        } else if (shaderNode.getDefinition().getType() == Shader.ShaderType.Fragment) {
             storeVariable(var, techniqueDef.getShaderGenerationInfo().getFragmentGlobals());
         }
     }
@@ -874,7 +874,7 @@ public class ShaderNodeLoaderDelegate {
      */
     public void storeVaryings(ShaderNode node, ShaderNodeVariable variable) {
         variable.setShaderOutput(true);
-        if (node.getDefinition().getType() == ShaderProgram.ShaderType.Vertex && shaderNode.getDefinition().getType() == ShaderProgram.ShaderType.Fragment) {
+        if (node.getDefinition().getType() == Shader.ShaderType.Vertex && shaderNode.getDefinition().getType() == Shader.ShaderType.Fragment) {
             DeclaredVariable dv = varyings.get(variable.getName());
             if (dv == null) {
                 techniqueDef.getShaderGenerationInfo().getVaryings().add(variable);

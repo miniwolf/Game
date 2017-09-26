@@ -769,13 +769,10 @@ public final class Vector4f implements Cloneable, java.io.Serializable {
             Float.isNaN(vector.w)) {
             return false;
         }
-        if (Float.isInfinite(vector.x) ||
-            Float.isInfinite(vector.y) ||
-            Float.isInfinite(vector.z) ||
-            Float.isInfinite(vector.w)) {
-            return false;
-        }
-        return true;
+        return !Float.isInfinite(vector.x) &&
+               !Float.isInfinite(vector.y) &&
+               !Float.isInfinite(vector.z) &&
+               !Float.isInfinite(vector.w);
     }
 
     @Override
@@ -831,10 +828,7 @@ public final class Vector4f implements Cloneable, java.io.Serializable {
         if (Float.compare(z, comp.z) != 0) {
             return false;
         }
-        if (Float.compare(w, comp.w) != 0) {
-            return false;
-        }
-        return true;
+        return Float.compare(w, comp.w) == 0;
     }
 
     /**
@@ -857,7 +851,7 @@ public final class Vector4f implements Cloneable, java.io.Serializable {
      * <code>toString</code> returns the string representation of this vector.
      * The format is:
      * <p>
-     * org.jme.mini.math.Vector3f [X=XX.XXXX, Y=YY.YYYY, Z=ZZ.ZZZZ, W=WW.WWWW]
+     * mini.math.Vector3f [X=XX.XXXX, Y=YY.YYYY, Z=ZZ.ZZZZ, W=WW.WWWW]
      *
      * @return the string representation of this vector.
      */

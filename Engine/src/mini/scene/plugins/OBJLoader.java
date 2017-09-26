@@ -4,8 +4,12 @@ import mini.asset.ModelKey;
 import mini.material.Material;
 import mini.math.Vector2f;
 import mini.math.Vector3f;
-import mini.renderEngine.queue.RenderQueue;
-import mini.scene.*;
+import mini.renderer.queue.RenderQueue;
+import mini.scene.Geometry;
+import mini.scene.Mesh;
+import mini.scene.Node;
+import mini.scene.Spatial;
+import mini.scene.VertexBuffer;
 import mini.scene.mesh.IndexBuffer;
 import mini.scene.mesh.IndexIntBuffer;
 import mini.scene.mesh.IndexShortBuffer;
@@ -17,7 +21,13 @@ import java.io.InputStream;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Scanner;
 
 /**
  * Reads OBJ format models.
@@ -69,10 +79,7 @@ public final class OBJLoader {
             if (this.vt != other.vt && (this.vt == null || !this.vt.equals(other.vt))) {
                 return false;
             }
-            if (this.vn != other.vn && (this.vn == null || !this.vn.equals(other.vn))) {
-                return false;
-            }
-            return true;
+            return this.vn == other.vn || (this.vn != null && this.vn.equals(other.vn));
         }
 
         @Override

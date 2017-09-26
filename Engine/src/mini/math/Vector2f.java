@@ -31,7 +31,6 @@
  */
 package mini.math;
 
-import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
@@ -257,11 +256,8 @@ public final class Vector2f implements Cloneable, java.io.Serializable {
             Float.isNaN(vector.y)) {
             return false;
         }
-        if (Float.isInfinite(vector.x) ||
-            Float.isInfinite(vector.y)) {
-            return false;
-        }
-        return true;
+        return !Float.isInfinite(vector.x) &&
+               !Float.isInfinite(vector.y);
     }
 
     /**
@@ -658,15 +654,12 @@ public final class Vector2f implements Cloneable, java.io.Serializable {
         if (Float.compare(x, comp.x) != 0) {
             return false;
         }
-        if (Float.compare(y, comp.y) != 0) {
-            return false;
-        }
-        return true;
+        return Float.compare(y, comp.y) == 0;
     }
 
     /**
      * <code>toString</code> returns the string representation of this vector
-     * object. The format of the string is such: com.jme.mini.math.Vector2f
+     * object. The format of the string is such: mini.math.Vector2f
      * [X=XX.XXXX, Y=YY.YYYY]
      *
      * @return the string representation of this vector.
@@ -681,10 +674,9 @@ public final class Vector2f implements Cloneable, java.io.Serializable {
      * @param in ObjectInput
      * @throws IOException
      * @throws ClassNotFoundException
-     * @see Externalizable
+     * @see java.io.Externalizable
      */
-    public void readExternal(ObjectInput in) throws IOException,
-                                                    ClassNotFoundException {
+    public void readExternal(ObjectInput in) throws IOException {
         x = in.readFloat();
         y = in.readFloat();
     }
@@ -694,7 +686,7 @@ public final class Vector2f implements Cloneable, java.io.Serializable {
      *
      * @param out ObjectOutput
      * @throws IOException
-     * @see Externalizable
+     * @see java.io.Externalizable
      */
     public void writeExternal(ObjectOutput out) throws IOException {
         out.writeFloat(x);

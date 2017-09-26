@@ -69,7 +69,7 @@ public class FastMathTest {
         return new Vector2f(FastMath.nextRandomFloat(),
                             FastMath.nextRandomFloat());
     }
-    
+
     @Ignore
     @Test
     public void testCounterClockwise() {

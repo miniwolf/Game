@@ -10,7 +10,7 @@ import java.util.List;
 public class ShaderNodeDefinition {
 
     private String name;
-    private ShaderProgram.ShaderType type;
+    private Shader.ShaderType type;
     private List<String> shadersLanguage = new ArrayList<>();
     private List<String> shadersPath = new ArrayList<>();
     private String documentation;
@@ -27,7 +27,7 @@ public class ShaderNodeDefinition {
      * @param shaderPath     the path of the shader
      * @param shaderLanguage the shader language (minimum required for this definition)
      */
-    public ShaderNodeDefinition(String name, ShaderProgram.ShaderType type, String shaderPath,
+    public ShaderNodeDefinition(String name, Shader.ShaderType type, String shaderPath,
                                 String shaderLanguage) {
         this.name = name;
         this.type = type;
@@ -62,7 +62,7 @@ public class ShaderNodeDefinition {
     /**
      * @return the type of shader the definition applies to
      */
-    public ShaderProgram.ShaderType getType() {
+    public Shader.ShaderType getType() {
         return type;
     }
 
@@ -71,7 +71,7 @@ public class ShaderNodeDefinition {
      *
      * @param type the type
      */
-    public void setType(ShaderProgram.ShaderType type) {
+    public void setType(Shader.ShaderType type) {
         this.type = type;
     }
 

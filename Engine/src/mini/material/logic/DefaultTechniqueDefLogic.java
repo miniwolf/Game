@@ -5,13 +5,12 @@ import mini.light.Light;
 import mini.light.LightList;
 import mini.material.TechniqueDef;
 import mini.math.ColorRGBA;
-import mini.renderEngine.Caps;
-import mini.renderEngine.RenderManager;
-import mini.renderEngine.Renderer;
-import mini.renderEngine.opengl.GLRenderer;
+import mini.renderer.Caps;
+import mini.renderer.RenderManager;
+import mini.renderer.Renderer;
 import mini.scene.Geometry;
 import mini.shaders.DefineList;
-import mini.shaders.ShaderProgram;
+import mini.shaders.Shader;
 
 import java.util.EnumSet;
 
@@ -46,13 +45,13 @@ public class DefaultTechniqueDefLogic implements TechniqueDefLogic {
     }
 
     @Override
-    public ShaderProgram makeCurrent(RenderManager renderManager, EnumSet<Caps> rendererCaps,
+    public Shader makeCurrent(RenderManager renderManager, EnumSet<Caps> rendererCaps,
                                      LightList lights, DefineList defines) {
         return techniqueDef.getShader(rendererCaps, defines);
     }
 
     @Override
-    public void render(RenderManager renderManager, ShaderProgram shader, Geometry geometry,
+    public void render(RenderManager renderManager, Shader shader, Geometry geometry,
                        LightList lights, int lastTexUnit) {
         Renderer renderer = renderManager.getRenderer();
         renderer.setShader(shader);

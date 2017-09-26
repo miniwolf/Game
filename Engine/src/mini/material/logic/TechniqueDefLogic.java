@@ -3,11 +3,11 @@ package mini.material.logic;
 import mini.light.LightList;
 import mini.material.MatParam;
 import mini.material.RenderState;
-import mini.renderEngine.Caps;
-import mini.renderEngine.RenderManager;
+import mini.renderer.Caps;
+import mini.renderer.RenderManager;
 import mini.scene.Geometry;
 import mini.shaders.DefineList;
-import mini.shaders.ShaderProgram;
+import mini.shaders.Shader;
 import mini.shaders.Uniform;
 import mini.shaders.UniformBinding;
 import mini.textures.Texture;
@@ -39,7 +39,7 @@ public interface TechniqueDefLogic {
      *
      * @return The shader to use for rendering.
      */
-    ShaderProgram makeCurrent(RenderManager renderManager, EnumSet<Caps> rendererCaps, LightList lights, DefineList defines);
+    Shader makeCurrent(RenderManager renderManager, EnumSet<Caps> rendererCaps, LightList lights, DefineList defines);
 
     /**
      * Requests that the <code>TechniqueDefLogic</code> renders the given geometry.
@@ -55,6 +55,6 @@ public interface TechniqueDefLogic {
      * @param shader The shader
      * @param geometry The geometry to render
      */
-    void render(RenderManager renderManager, ShaderProgram shader, Geometry geometry,
+    void render(RenderManager renderManager, Shader shader, Geometry geometry,
                 LightList lights, int lastTexUnit);
 }

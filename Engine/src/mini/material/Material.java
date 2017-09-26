@@ -9,13 +9,11 @@ import mini.math.Matrix4f;
 import mini.math.Vector2f;
 import mini.math.Vector3f;
 import mini.math.Vector4f;
-import mini.post.SceneProcessor;
-import mini.renderEngine.Caps;
-import mini.renderEngine.RenderManager;
-import mini.renderEngine.Renderer;
-import mini.renderEngine.opengl.GLRenderer;
+import mini.renderer.Caps;
+import mini.renderer.RenderManager;
+import mini.renderer.Renderer;
 import mini.scene.Geometry;
-import mini.shaders.ShaderProgram;
+import mini.shaders.Shader;
 import mini.shaders.Uniform;
 import mini.shaders.UniformBindingManager;
 import mini.shaders.VarType;
@@ -732,7 +730,7 @@ public class Material implements Cloneable {
         sortingId = -1;
     }
 
-    private int applyOverrides(Renderer renderer, ShaderProgram shader,
+    private int applyOverrides(Renderer renderer, Shader shader,
                                List<MatParamOverride> overrides, int unit) {
         for (MatParamOverride override : overrides) {
             VarType type = override.getVarType();
@@ -760,7 +758,7 @@ public class Material implements Cloneable {
         return unit;
     }
 
-    private int updateShaderMaterialParameters(Renderer renderer, ShaderProgram shader,
+    private int updateShaderMaterialParameters(Renderer renderer, Shader shader,
                                                List<MatParamOverride> worldOverrides,
                                                List<MatParamOverride> forcedOverrides) {
 
@@ -830,19 +828,19 @@ public class Material implements Cloneable {
             return;
         }
 
-        ShaderProgram shader = technique.makeCurrent(renderManager, null, null, null, rendererCaps);
+        Shader shader = technique.makeCurrent(renderManager, null, null, null, rendererCaps);
         updateShaderMaterialParameters(renderer, shader, null, null);
         renderManager.getRenderer().setShader(shader);
     }
 
-    private void clearUniformsSetByCurrent(ShaderProgram shader) {
+    private void clearUniformsSetByCurrent(Shader shader) {
         Map<String, Uniform> uniforms = shader.getUniformMap();
         for (Uniform u : uniforms.values()) {
             u.clearSetByCurrentMaterial();
         }
     }
 
-    private void resetUniformsNotSetByCurrent(ShaderProgram shader) {
+    private void resetUniformsNotSetByCurrent(Shader shader) {
         Map<String, Uniform> uniforms = shader.getUniformMap();
         for (Uniform u : uniforms.values()) {
             if (!u.isSetByCurrentMaterial()) {
@@ -934,7 +932,7 @@ public class Material implements Cloneable {
         List<MatParamOverride> overrides = geometry.getWorldMatParamOverrides();
 
         // Select shader to use
-        ShaderProgram shader = technique
+        Shader shader = technique
                 .makeCurrent(renderManager, overrides, renderManager.getForcedMatParams(), lights,
                              rendererCaps);
 

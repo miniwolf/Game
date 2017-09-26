@@ -4,7 +4,7 @@ package mini.shaders;
  * Created by miniwolf on 28-04-2017.
  */
 
-import mini.renderEngine.opengl.GLRenderer;
+import mini.renderer.opengl.GLRenderer;
 import mini.utils.NativeObject;
 
 /**
@@ -12,13 +12,13 @@ import mini.utils.NativeObject;
  * is assigned a certain pipeline which it controls (described by it's type).
  */
 public class ShaderSource extends NativeObject {
-    ShaderProgram.ShaderType sourceType;
+    Shader.ShaderType sourceType;
     String language;
     String name;
     String source;
     String defines;
 
-    public ShaderSource(ShaderProgram.ShaderType type) {
+    public ShaderSource(Shader.ShaderType type) {
         super();
         this.sourceType = type;
         if (type == null) {
@@ -43,7 +43,7 @@ public class ShaderSource extends NativeObject {
         return name;
     }
 
-    public ShaderProgram.ShaderType getType() {
+    public Shader.ShaderType getType() {
         return sourceType;
     }
 

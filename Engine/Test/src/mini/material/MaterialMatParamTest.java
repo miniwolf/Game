@@ -33,16 +33,15 @@ package mini.material;
 
 import mini.light.LightList;
 import mini.math.Matrix4f;
-import mini.renderEngine.RenderManager;
+import mini.renderer.RenderManager;
 import mini.scene.Geometry;
 import mini.scene.Node;
 import mini.scene.shape.Box;
 import mini.shaders.DefineList;
-import mini.shaders.ShaderProgram;
+import mini.shaders.Shader;
 import mini.shaders.Uniform;
 import mini.shaders.VarType;
 import mini.system.NullRenderer;
-import mini.system.TestUtil;
 import mini.textures.Image.Format;
 import mini.textures.Texture;
 import mini.textures.Texture2D;
@@ -54,7 +53,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 
-import static mini.scene.MPOTestUtils.*;
+import static mini.scene.MPOTestUtils.mpoBool;
+import static mini.scene.MPOTestUtils.mpoFloat;
+import static mini.scene.MPOTestUtils.mpoInt;
+import static mini.scene.MPOTestUtils.mpoMatrix4Array;
+import static mini.scene.MPOTestUtils.mpoTexture2D;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -65,7 +68,7 @@ import static org.junit.Assert.assertEquals;
 public class MaterialMatParamTest {
 
     private static final HashSet<String> IGNORED_UNIFORMS = new HashSet<String>(
-            Arrays.asList(new String[]{"m_ParallaxHeight", "m_Shininess", "m_BackfaceShadows"}));
+            Arrays.asList("m_ParallaxHeight", "m_Shininess", "m_BackfaceShadows"));
 
     @Test
     public void testBoolMpoOnly() {
@@ -439,7 +442,7 @@ public class MaterialMatParamTest {
 
     private final NullRenderer renderer = new NullRenderer() {
         @Override
-        public void setShader(ShaderProgram shader) {
+        public void setShader(Shader shader) {
             MaterialMatParamTest.this.usedShader = shader;
             evaluated = true;
         }
@@ -452,7 +455,7 @@ public class MaterialMatParamTest {
     private final RenderManager renderManager = new RenderManager(renderer);
 
     private boolean evaluated = false;
-    private ShaderProgram usedShader = null;
+    private Shader usedShader = null;
     private final Texture[] usedTextures = new Texture[32];
 
     private void inputMp(MatParam... params) {

@@ -2,7 +2,7 @@ package mini.material;
 
 import mini.app.SimpleApplication;
 import mini.asset.TextureKey;
-import mini.renderEngine.queue.RenderQueue;
+import mini.renderer.queue.RenderQueue;
 import mini.scene.Geometry;
 import mini.scene.shape.Quad;
 import mini.textures.Texture;

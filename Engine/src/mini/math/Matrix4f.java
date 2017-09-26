@@ -242,7 +242,7 @@ public final class Matrix4f implements Cloneable, java.io.Serializable {
 
     /**
      * <code>get</code> retrieves a value from the matrix at the given
-     * position. If the position is invalid a <code>JmeException</code> is
+     * position. If the position is invalid a <code>IllegalArgumentException</code> is
      * thrown.
      *
      * @param i the row index.
@@ -404,7 +404,7 @@ public final class Matrix4f implements Cloneable, java.io.Serializable {
 
     /**
      * <code>set</code> places a given value into the matrix at the given
-     * position. If the position is invalid a <code>JmeException</code> is
+     * position. If the position is invalid a <code>IllegalArgumentException</code> is
      * thrown.
      *
      * @param i     the row index.
@@ -485,6 +485,7 @@ public final class Matrix4f implements Cloneable, java.io.Serializable {
      * values.
      *
      * @param matrix the matrix to set the value to.
+     * @throws IllegalArgumentException if the array is not of size 16.
      */
     public void set(float[][] matrix) {
         if (matrix.length != 4 || matrix[0].length != 4) {
@@ -853,7 +854,7 @@ public final class Matrix4f implements Cloneable, java.io.Serializable {
             // A
             m02 = (right + left) / (right - left);
 
-            // B 
+            // B
             m12 = (top + bottom) / (top - bottom);
 
             // C
@@ -1893,7 +1894,6 @@ public final class Matrix4f implements Cloneable, java.io.Serializable {
      * translation part of this matrix.
      *
      * @param vec the Vector3f data to be translated.
-     * @throws IllegalArgumentException if the size of the Vector3f is not 3.
      */
     public void inverseTranslateVect(float[] vec) {
         if (vec.length != 3) {
@@ -1955,7 +1955,7 @@ public final class Matrix4f implements Cloneable, java.io.Serializable {
     /**
      * <code>toString</code> returns the string representation of this object.
      * It is in a format of a 4x4 matrix. For example, an identity matrix would
-     * be represented by the following string. com.jme.mini.math.Matrix3f <br>[<br>
+     * be represented by the following string. mini.math.Matrix3f <br>[<br>
      * 1.0  0.0  0.0  0.0 <br>
      * 0.0  1.0  0.0  0.0 <br>
      * 0.0  0.0  1.0  0.0 <br>
@@ -2011,7 +2011,7 @@ public final class Matrix4f implements Cloneable, java.io.Serializable {
      * Hashtable, HashMap, HashSet etc.
      *
      * @return the hashcode for this instance of Matrix4f.
-     * @see Object#hashCode()
+     * @see java.lang.Object#hashCode()
      */
     @Override
     public int hashCode() {
@@ -2104,11 +2104,7 @@ public final class Matrix4f implements Cloneable, java.io.Serializable {
         if (Float.compare(m32, comp.m32) != 0) {
             return false;
         }
-        if (Float.compare(m33, comp.m33) != 0) {
-            return false;
-        }
-
-        return true;
+        return Float.compare(m33, comp.m33) == 0;
     }
 
     /**
@@ -2191,11 +2187,7 @@ public final class Matrix4f implements Cloneable, java.io.Serializable {
         if (Math.abs(mat.m31) > 1e-4) {
             return false;
         }
-        if (Math.abs(mat.m32) > 1e-4) {
-            return false;
-        }
-
-        return true;
+        return !(Math.abs(mat.m32) > 1e-4);
     }
 
     // XXX: This tests more solid than converting the q to a matrix and multiplying... why?

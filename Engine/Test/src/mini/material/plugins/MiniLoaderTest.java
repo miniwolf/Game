@@ -4,7 +4,7 @@ import mini.asset.MaterialKey;
 import mini.asset.TextureKey;
 import mini.material.MatParamTexture;
 import mini.material.MaterialDef;
-import mini.renderEngine.Caps;
+import mini.renderer.Caps;
 import mini.shaders.VarType;
 import mini.textures.Texture;
 import mini.textures.plugins.AWTLoader;
@@ -28,7 +28,7 @@ public class MiniLoaderTest {
     private MaterialDef materialDef;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
     }
 
     @Test
