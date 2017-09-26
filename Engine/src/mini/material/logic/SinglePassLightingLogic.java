@@ -19,7 +19,7 @@ import mini.shaders.Uniform;
 import mini.shaders.VarType;
 import mini.utils.TempVars;
 
-import java.util.EnumSet;
+import java.util.Set;
 
 public final class SinglePassLightingLogic extends DefaultTechniqueDefLogic {
 
@@ -44,8 +44,8 @@ public final class SinglePassLightingLogic extends DefaultTechniqueDefLogic {
     }
 
     @Override
-    public Shader makeCurrent(RenderManager renderManager, EnumSet<Caps> rendererCaps,
-                                     LightList lights, DefineList defines) {
+    public Shader makeCurrent(RenderManager renderManager, Set<Caps> rendererCaps,
+                              LightList lights, DefineList defines) {
         defines.set(nbLightsDefineId, renderManager.getSinglePassLightBatchSize() * 3);
         defines.set(singlePassLightingDefineId, true);
         return super.makeCurrent(renderManager, rendererCaps, lights, defines);

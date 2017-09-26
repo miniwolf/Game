@@ -1,6 +1,10 @@
 package mini.system;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -9,7 +13,10 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import static mini.system.Platform.*;
+import static mini.system.Platform.Linux32;
+import static mini.system.Platform.Linux64;
+import static mini.system.Platform.MacOSX32;
+import static mini.system.Platform.MacOSX64;
 
 /**
  * Utility class to register, extract, and load native libraries.
@@ -34,16 +41,13 @@ import static mini.system.Platform.*;
  * NativeLibraryLoader.loadNativeLibrary("mystuff", true);
  * </pre></code>
  * It will load the right library automatically based on the platform.
- *
- * @author Kirill Vainer
  */
 public final class NativeLibraryLoader {
     private static final byte[] buf = new byte[1024 * 100];
     private static File extractionFolderOverride = null;
     private static File extractionFolder = null;
 
-    private static final HashMap<NativeLibrary.Key, NativeLibrary> nativeLibraryMap
-            = new HashMap<NativeLibrary.Key, NativeLibrary>();
+    private static final Map<NativeLibrary.Key, NativeLibrary> nativeLibraryMap = new HashMap<>();
 
     /**
      * Register a new known library.
@@ -63,7 +67,7 @@ public final class NativeLibraryLoader {
     public static void registerNativeLibrary(String name, Platform platform,
                                              String path, String extractAsName) {
         nativeLibraryMap.put(new NativeLibrary.Key(name, platform),
-                new NativeLibrary(name, platform, path, extractAsName));
+                             new NativeLibrary(name, platform, path, extractAsName));
     }
 
     /**
@@ -158,7 +162,7 @@ public final class NativeLibraryLoader {
                 setExtractionFolderToUserCache();
             } else {
                 try {
-                    File file = new File(workingFolder + File.separator + ".jmetestwrite");
+                    File file = new File(workingFolder + File.separator + ".testwrite");
                     file.createNewFile();
                     file.delete();
                     extractionFolder = workingFolder;
@@ -171,7 +175,7 @@ public final class NativeLibraryLoader {
     }
 
     /**
-     * Determine jME3's cache folder for the user account based on the OS.
+     * Determine cache folder for the user account based on the OS.
      * <p>
      * If the OS cache folder is missing, the assumption is that this
      * particular version of the OS does not have a dedicated cache folder,
@@ -222,21 +226,23 @@ public final class NativeLibraryLoader {
             extractFolderInHome.mkdir();
         }
 
-        extractionFolder = new File(extractFolderInHome, "natives_" + Integer.toHexString(computeNativesHash()));
+        extractionFolder = new File(extractFolderInHome,
+                                    "natives_" + Integer.toHexString(computeNativesHash()));
 
         if (!extractionFolder.exists()) {
             extractionFolder.mkdir();
         }
 
         System.err.println("Working directory is not writable. "
-                + "Natives will be extracted to:\n" + extractionFolder);
+                           + "Natives will be extracted to:\n" + extractionFolder);
     }
 
     private static int computeNativesHash() {
         URLConnection conn = null;
         try {
             String classpath = System.getProperty("java.class.path");
-            URL url = Thread.currentThread().getContextClassLoader().getResource("mini/system/NativeLibraryLoader.class");
+            URL url = Thread.currentThread().getContextClassLoader()
+                            .getResource("mini/system/NativeLibraryLoader.class");
 
             StringBuilder sb = new StringBuilder(url.toString());
             if (sb.indexOf("jar:") == 0) {
@@ -251,8 +257,7 @@ public final class NativeLibraryLoader {
             }
 
             conn = url.openConnection();
-            int hash = classpath.hashCode() ^ (int) conn.getLastModified();
-            return hash;
+            return classpath.hashCode() ^ (int) conn.getLastModified();
         } catch (IOException ex) {
             throw new UnsupportedOperationException(ex);
         } finally {
@@ -260,7 +265,7 @@ public final class NativeLibraryLoader {
                 try {
                     conn.getInputStream().close();
                     conn.getOutputStream().close();
-                } catch (IOException ex) {
+                } catch (IOException ignored) {
                 }
             }
         }
@@ -269,7 +274,8 @@ public final class NativeLibraryLoader {
     public static File[] getJarsWithNatives() {
         Set<File> jarFiles = new HashSet<>();
         for (Map.Entry<NativeLibrary.Key, NativeLibrary> lib : nativeLibraryMap.entrySet()) {
-            File jarFile = getJarForNativeLibrary(lib.getValue().getPlatform(), lib.getValue().getName());
+            File jarFile = getJarForNativeLibrary(lib.getValue().getPlatform(),
+                                                  lib.getValue().getName());
             if (jarFile != null) {
                 jarFiles.add(jarFile);
             }
@@ -277,7 +283,8 @@ public final class NativeLibraryLoader {
         return jarFiles.toArray(new File[0]);
     }
 
-    public static void extractNativeLibraries(Platform platform, File targetDir) throws IOException {
+    public static void extractNativeLibraries(Platform platform, File targetDir)
+            throws IOException {
         for (Map.Entry<NativeLibrary.Key, NativeLibrary> lib : nativeLibraryMap.entrySet()) {
             if (lib.getValue().getPlatform() == platform) {
                 if (!targetDir.exists()) {
@@ -364,7 +371,8 @@ public final class NativeLibraryLoader {
         }
     }
 
-    public static void extractNativeLibrary(Platform platform, String name, File targetDir) throws IOException {
+    public static void extractNativeLibrary(Platform platform, String name, File targetDir)
+            throws IOException {
         NativeLibrary library = nativeLibraryMap.get(new NativeLibrary.Key(name, platform));
         if (library == null) {
             return;
@@ -413,13 +421,13 @@ public final class NativeLibraryLoader {
             if (in != null) {
                 try {
                     in.close();
-                } catch (IOException ex) {
+                } catch (IOException ignored) {
                 }
             }
             if (out != null) {
                 try {
                     out.close();
-                } catch (IOException ex) {
+                } catch (IOException ignored) {
                 }
             }
         }
@@ -441,10 +449,10 @@ public final class NativeLibraryLoader {
             if (isRequired) {
                 throw new UnsatisfiedLinkError(
                         "The required native library '" + name + "'"
-                                + " is not available for your OS: " + platform);
+                        + " is not available for your OS: " + platform);
             } else {
                 System.out.println("The optional native library ''" + name + "''" +
-                        " is not available for your OS: " + platform);
+                                   " is not available for your OS: " + platform);
                 return;
             }
         }
@@ -481,18 +489,18 @@ public final class NativeLibraryLoader {
                     // Need to unmap it from library specific parts.
                     System.loadLibrary(unmappedName);
                     System.out.println("Loaded system installed "
-                            + "version of native library: " + unmappedName);
+                                       + "version of native library: " + unmappedName);
                 }
             } catch (UnsatisfiedLinkError e) {
                 if (isRequired) {
                     throw new UnsatisfiedLinkError(
                             "The required native library '" + unmappedName + "'"
-                                    + " was not found in the classpath via '" + pathInJar
-                                    + "'. Error message: " + e.getMessage());
+                            + " was not found in the classpath via '" + pathInJar
+                            + "'. Error message: " + e.getMessage());
                 } else {
                     System.out.println("The optional native library ''" + unmappedName + "''" +
-                            " was not found in the classpath via ''" + pathInJar + "''" +
-                            ". Error message: " + e.getMessage());
+                                       " was not found in the classpath via ''" + pathInJar + "''" +
+                                       ". Error message: " + e.getMessage());
                 }
             }
 
@@ -519,7 +527,7 @@ public final class NativeLibraryLoader {
         } catch (IOException ex) {
             // Maybe put more detail here? Not sure..
             throw new UnsatisfiedLinkError("Failed to open file: '" + url +
-                    "'. Error: " + ex);
+                                           "'. Error: " + ex);
         }
 
         File targetFile = new File(extactionDirectory, loadedAsFileName);
@@ -534,7 +542,7 @@ public final class NativeLibraryLoader {
                 // Allow ~1 second range for OSes that only support low precision
                 if (targetLastModified + 1000 > sourceLastModified) {
                     System.out.println("Not copying library " + loadedAsFileName + "."
-                            + "Latest already extracted.");
+                                       + "Latest already extracted.");
                     return;
                 }
             }
@@ -559,7 +567,7 @@ public final class NativeLibraryLoader {
                 return;
             } else {
                 throw new UnsatisfiedLinkError("Failed to extract native "
-                        + "library to: " + targetFile);
+                                               + "library to: " + targetFile);
             }
         } finally {
             // XXX: HACK. Vary loading method based on library name..
@@ -568,11 +576,11 @@ public final class NativeLibraryLoader {
                 case "lwjgl":
                 case "lwjgl3":
                     System.setProperty("org.lwjgl.librarypath",
-                            extactionDirectory.getAbsolutePath());
+                                       extactionDirectory.getAbsolutePath());
                     break;
                 case "jinput":
                     System.setProperty("net.java.games.input.librarypath",
-                            extactionDirectory.getAbsolutePath());
+                                       extactionDirectory.getAbsolutePath());
                     break;
                 default:
                     // all other libraries (openal, bullet, custom)
@@ -584,18 +592,19 @@ public final class NativeLibraryLoader {
             if (in != null) {
                 try {
                     in.close();
-                } catch (IOException ex) {
+                } catch (IOException ignored) {
                 }
             }
             if (out != null) {
                 try {
                     out.close();
-                } catch (IOException ex) {
+                } catch (IOException ignored) {
                 }
             }
         }
 
-        System.out.println("Loaded native library from ''" + url + "'' into ''" + targetFile + "''");
+        System.out
+                .println("Loaded native library from ''" + url + "'' into ''" + targetFile + "''");
     }
 
 }

@@ -54,7 +54,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * <code>BufferUtils</code> is a helper class for generating nio buffers from
  * data classes such as Vectors and ColorRGBA.
  *
- * @author Joshua Slack
+ * @author Joshua Slack and Miniwolf
  */
 public final class BufferUtils {
     /**
@@ -251,8 +251,7 @@ public final class BufferUtils {
      * @return the requested new FloatBuffer
      */
     public static FloatBuffer createVector3Buffer(int vertices) {
-        FloatBuffer vBuff = createFloatBuffer(3 * vertices);
-        return vBuff;
+        return createFloatBuffer(3 * vertices);
     }
 
     /**
@@ -509,8 +508,7 @@ public final class BufferUtils {
      * @return the requested new FloatBuffer
      */
     public static FloatBuffer createVector2Buffer(int vertices) {
-        FloatBuffer vBuff = createFloatBuffer(2 * vertices);
-        return vBuff;
+        return createFloatBuffer(2 * vertices);
     }
 
     /**

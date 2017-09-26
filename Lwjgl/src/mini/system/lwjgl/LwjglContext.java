@@ -166,7 +166,7 @@ public abstract class LwjglContext implements ApplicationContext {
             while (created.get() != createdVal) {
                 try {
                     createdLock.wait();
-                } catch (InterruptedException ex) {
+                } catch (InterruptedException ignored) {
                 }
             }
         }

@@ -18,6 +18,8 @@ import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by miniwolf on 30-04-2017.
@@ -455,7 +457,7 @@ public class TechniqueDef implements Cloneable {
         return new DefineList(defineNames.size());
     }
 
-    private Shader loadShader(EnumSet<Caps> rendererCaps, DefineList defines) {
+    private Shader loadShader(Set<Caps> rendererCaps, DefineList defines) {
         StringBuilder sb = new StringBuilder();
         sb.append(shaderPrologue);
         defines.generateSource(sb, defineNames, defineTypes);
@@ -494,7 +496,7 @@ public class TechniqueDef implements Cloneable {
         return shader;
     }
 
-    public Shader getShader(EnumSet<Caps> rendererCaps, DefineList defines) {
+    public Shader getShader(Set<Caps> rendererCaps, DefineList defines) {
         Shader shader = definesToShaderMap.get(defines);
         if (shader == null) {
             shader = loadShader(rendererCaps, defines);
@@ -509,8 +511,8 @@ public class TechniqueDef implements Cloneable {
      * @param shaderNames     EnumMap containing all shader names for this stage
      * @param shaderLanguages EnumMap containing all shader languages for this stage
      */
-    public void setShaderFile(EnumMap<Shader.ShaderType, String> shaderNames,
-                              EnumMap<Shader.ShaderType, String> shaderLanguages) {
+    public void setShaderFile(Map<Shader.ShaderType, String> shaderNames,
+                              Map<Shader.ShaderType, String> shaderLanguages) {
         requiredCaps.clear();
 
         weight = 0;
@@ -633,7 +635,7 @@ public class TechniqueDef implements Cloneable {
     }
 
     /**
-     * Returns the Enum containing the ShaderNames;
+     * Returns the Enum containing the ShaderProgramNames;
      *
      * @return
      */
@@ -642,7 +644,7 @@ public class TechniqueDef implements Cloneable {
     }
 
     /**
-     * Returns the Enum containing the ShaderLanguages;
+     * Returns the Enum containing the ShaderProgramLanguages;
      *
      * @return
      */

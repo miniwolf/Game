@@ -14,7 +14,6 @@ import mini.renderer.Camera;
 import mini.renderer.queue.RenderQueue;
 import mini.utils.TempVars;
 import mini.utils.clone.Cloner;
-import mini.utils.clone.IdentityCloneFunction;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -483,8 +482,7 @@ public abstract class Spatial implements Cloneable {
      * spatial has, it will look at the given position in world space.
      *
      * @param position where to look at in terms of world coordinates
-     * @param upVector a vector indicating the (local) up direction. (typically {0,
-     *                 1, 0} in jME.)
+     * @param upVector a vector indicating the (local) up direction. (typically {0, 1, 0})
      */
     public void lookAt(Vector3f position, Vector3f upVector) {
         Vector3f worldTranslation = getWorldTranslation();
@@ -768,13 +766,7 @@ public abstract class Spatial implements Cloneable {
      * @return true if the ancestor is found, false otherwise.
      */
     public boolean hasAncestor(Node ancestor) {
-        if (parent == null) {
-            return false;
-        } else if (parent.equals(ancestor)) {
-            return true;
-        } else {
-            return parent.hasAncestor(ancestor);
-        }
+        return parent != null && (parent.equals(ancestor) || parent.hasAncestor(ancestor));
     }
 
     /**
@@ -1078,30 +1070,21 @@ public abstract class Spatial implements Cloneable {
     /**
      * @return A clone of this Spatial, the scene graph in its entirety
      * is cloned and can be altered independently of the original scene graph.
-     *
+     * <p>
      * Note that meshes of geometries are not cloned explicitly, they
      * are shared if static, or specially cloned if animated.
-     *
+     * <p>
+     * All controls will be cloned using the Control.cloneForSpatial method
+     * on the clone.
      * @see Mesh#cloneForAnim()
      */
-    public Spatial clone( boolean cloneMaterial ) {
-
+    @Override
+    public Spatial clone() {
         // Setup the cloner for the type of cloning we want to do.
         Cloner cloner = new Cloner();
 
         // First, we definitely do not want to clone our own parent
         cloner.setClonedValue(parent, null);
-
-        // If we aren't cloning materials then we will make sure those
-        // aren't cloned also
-        if( !cloneMaterial ) {
-            cloner.setCloneFunction(Material.class, new IdentityCloneFunction<>());
-        }
-
-        // By default the meshes are not cloned.  The geometry
-        // may choose to selectively force them to be cloned but
-        // normally they will be shared
-        cloner.setCloneFunction(Mesh.class, new IdentityCloneFunction<>());
 
         // Clone it!
         Spatial clone = cloner.clone(this);
@@ -1116,27 +1099,9 @@ public abstract class Spatial implements Cloneable {
     }
 
     /**
-     * @return A clone of this Spatial, the scene graph in its entirety
-     * is cloned and can be altered independently of the original scene graph.
-     *
-     * Note that meshes of geometries are not cloned explicitly, they
-     * are shared if static, or specially cloned if animated.
-     *
-     * All controls will be cloned using the Control.cloneForSpatial method
-     * on the clone.
-     *
-     * @see Mesh#cloneForAnim()
-     */
-    @Override
-    public Spatial clone() {
-        return clone(true);
-    }
-
-    /**
      * @return Similar to Spatial.clone() except will create a deep clone of all
      * geometries' meshes. Normally this method shouldn't be used. Instead, use
      * Spatial.clone()
-     *
      * @see Spatial#clone()
      */
     public Spatial deepClone() {

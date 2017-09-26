@@ -341,14 +341,13 @@ public class Image extends NativeObject {
         public boolean isFloatingPont() {
             return isFloatingPoint;
         }
-
     }
 
     // image attributes
     protected Format format;
     protected int width, height, depth;
     protected int[] mipMapSizes;
-    protected ArrayList<ByteBuffer> data;
+    protected List<ByteBuffer> data;
     protected int multiSamples = 1;
     protected ColorSpace colorSpace = null;
 //    protected int mipOffset = 0;
@@ -470,7 +469,7 @@ public class Image extends NativeObject {
     public Image clone() {
         Image clone = (Image) super.clone();
         clone.mipMapSizes = mipMapSizes != null ? mipMapSizes.clone() : null;
-        clone.data = data != null ? new ArrayList<ByteBuffer>(data) : null;
+        clone.data = data != null ? new ArrayList<>(data) : null;
         clone.lastTextureState = new LastTextureState();
         clone.setUpdateNeeded();
         return clone;
@@ -482,7 +481,7 @@ public class Image extends NativeObject {
      */
     public Image() {
         super();
-        data = new ArrayList<ByteBuffer>(1);
+        data = new ArrayList<>(1);
     }
 
     protected Image(int id) {
@@ -568,7 +567,7 @@ public class Image extends NativeObject {
         this.width = width;
         this.height = height;
         if (data != null) {
-            this.data = new ArrayList<ByteBuffer>(1);
+            this.data = new ArrayList<>(1);
             this.data.add(data);
         }
         this.mipMapSizes = mipMapSizes;
@@ -695,14 +694,14 @@ public class Image extends NativeObject {
      * @param data the data that contains the image information.
      */
     public void setData(ByteBuffer data) {
-        this.data = new ArrayList<ByteBuffer>(1);
+        this.data = new ArrayList<>(1);
         this.data.add(data);
         setUpdateNeeded();
     }
 
     public void addData(ByteBuffer data) {
         if (this.data == null) {
-            this.data = new ArrayList<ByteBuffer>(1);
+            this.data = new ArrayList<>(1);
         }
         this.data.add(data);
         setUpdateNeeded();
@@ -959,29 +958,14 @@ public class Image extends NativeObject {
             return false;
         }
         Image that = (Image) other;
-        if (this.getFormat() != that.getFormat()) {
-            return false;
-        }
-        if (this.getWidth() != that.getWidth()) {
-            return false;
-        }
-        if (this.getHeight() != that.getHeight()) {
-            return false;
-        }
-        if (this.getData() != null && !this.getData().equals(that.getData())) {
-            return false;
-        }
-        if (this.getData() == null && that.getData() != null) {
-            return false;
-        }
-        if (this.getMipMapSizes() != null
-            && !Arrays.equals(this.getMipMapSizes(), that.getMipMapSizes())) {
-            return false;
-        }
-        if (this.getMipMapSizes() == null && that.getMipMapSizes() != null) {
-            return false;
-        }
-        return this.getMultiSamples() == that.getMultiSamples();
+        return this.getFormat() == that.getFormat() && this.getWidth() == that.getWidth()
+               && this.getHeight() == that.getHeight()
+               && (this.getData() == null || this.getData().equals(that.getData()))
+               && (this.getData() != null || that.getData() == null)
+               && (this.getMipMapSizes() == null
+                   || Arrays.equals(this.getMipMapSizes(), that.getMipMapSizes()))
+               && (this.getMipMapSizes() != null || that.getMipMapSizes() == null)
+               && this.getMultiSamples() == that.getMultiSamples();
     }
 
     @Override
@@ -996,5 +980,4 @@ public class Image extends NativeObject {
         hash = 97 * hash + this.multiSamples;
         return hash;
     }
-
 }

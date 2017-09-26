@@ -23,10 +23,10 @@ import mini.textures.image.ColorSpace;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * <code>Material</code> describes the rendering style for a given
@@ -550,7 +550,7 @@ public class Material implements Cloneable {
             return;
         }
 
-        VarType paramType = null;
+        VarType paramType;
         switch (value.getType()) {
             case TwoDimensional:
                 paramType = VarType.Texture2D;
@@ -685,7 +685,7 @@ public class Material implements Cloneable {
         // When choosing technique, we choose one that
         // supports all the caps.
         if (tech == null) {
-            EnumSet<Caps> rendererCaps = renderManager.getRenderer().getCaps();
+            Set<Caps> rendererCaps = renderManager.getRenderer().getCaps();
             List<TechniqueDef> techDefs = def.getTechniqueDefs(name);
             if (techDefs == null || techDefs.isEmpty()) {
                 throw new IllegalArgumentException(
@@ -822,7 +822,7 @@ public class Material implements Cloneable {
         }
         TechniqueDef techniqueDef = technique.getDef();
         Renderer renderer = renderManager.getRenderer();
-        EnumSet<Caps> rendererCaps = renderer.getCaps();
+        Set<Caps> rendererCaps = renderer.getCaps();
 
         if (techniqueDef.isNoRender()) {
             return;
@@ -919,7 +919,7 @@ public class Material implements Cloneable {
 
         TechniqueDef techniqueDef = technique.getDef();
         Renderer renderer = renderManager.getRenderer();
-        EnumSet<Caps> rendererCaps = renderer.getCaps();
+        Set<Caps> rendererCaps = renderer.getCaps();
 
         if (techniqueDef.isNoRender()) {
             return;

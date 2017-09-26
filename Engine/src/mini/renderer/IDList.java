@@ -33,19 +33,18 @@ public class IDList {
      * from there, false otherwise.
      */
     public boolean moveToNew(int idx){
-        if (newLen == 0 || newList[newLen-1] != idx)
+        if (newLen == 0 || newList[newLen - 1] != idx) {
             // add item to newList first
             newList[newLen++] = idx;
+        }
 
-        // find idx in oldList, if removed successfuly, return true.
+        // find idx in oldList, if removed successfully, return true.
         for (int i = 0; i < oldLen; i++){
             if (oldList[i] == idx){
                 // found index in slot i
                 // delete index from old list
                 oldLen --;
-                for (int j = i; j < oldLen; j++){
-                    oldList[j] = oldList[j+1];
-                }
+                System.arraycopy(oldList, i + 1, oldList, i, oldLen - i);
                 return true;
             }
         }

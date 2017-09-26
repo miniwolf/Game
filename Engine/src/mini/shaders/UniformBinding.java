@@ -171,10 +171,10 @@ public enum UniformBinding {
 
     String glslType;
 
-    private UniformBinding() {
+    UniformBinding() {
     }
 
-    private UniformBinding(String glslType) {
+    UniformBinding(String glslType) {
         this.glslType = glslType;
     }
 

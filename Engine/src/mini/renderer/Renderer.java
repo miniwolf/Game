@@ -12,8 +12,8 @@ import mini.textures.Texture;
 import mini.utils.NativeObject;
 
 import java.nio.ByteBuffer;
-import java.util.EnumMap;
-import java.util.EnumSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * The <code>Renderer</code> is responsible for taking rendering commands and
@@ -32,14 +32,14 @@ public interface Renderer {
      * Get the capabilities of the renderer.
      * @return The capabilities of the renderer.
      */
-    EnumSet<Caps> getCaps();
+    Set<Caps> getCaps();
 
     /**
      * Get the limits of the renderer.
      *
      * @return The limits of the renderer.
      */
-    EnumMap<Limits, Integer> getLimits();
+    Map<Limits, Integer> getLimits();
 
     /**
      * Invalidates the current rendering state. Should be called after

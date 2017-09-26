@@ -10,18 +10,15 @@ package mini.input.controls;
  * the event will be invoked when the button is pressed, with <code>value</code>
  * set to <code>true</code>, and will be invoked again when the button is released,
  * with <code>value</code> set to <code>false</code>.
- *
- * @author Kirill Vainer
  */
 public interface ActionListener extends InputListener {
-
     /**
      * Called when an input to which this listener is registered to is invoked.
      *
-     * @param name The name of the mapping that was invoked
+     * @param name      The name of the mapping that was invoked
      * @param isPressed True if the action is "pressed", false otherwise
-     * @param tpf The time per frame value.
+     * @param tpf       The time per frame value.
      */
-    public void onAction(String name, boolean isPressed, float tpf);
+    void onAction(String name, boolean isPressed, float tpf);
 }
 

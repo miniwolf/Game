@@ -60,6 +60,7 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -70,14 +71,12 @@ public final class GLRenderer implements Renderer {
     private static final boolean VALIDATE_SHADER = false;
     private static final Pattern GLVERSION_PATTERN = Pattern.compile(".*?(\\d+)\\.(\\d+).*");
 
-    private final ByteBuffer nameBuf = BufferUtils.createByteBuffer(250);
     private final StringBuilder stringBuf = new StringBuilder(250);
     private final IntBuffer intBuf1 = BufferUtils.createIntBuffer(1);
     private final IntBuffer intBuf16 = BufferUtils.createIntBuffer(16);
-    private final FloatBuffer floatBuf16 = BufferUtils.createFloatBuffer(16);
     private final RenderContext context = new RenderContext();
     private final EnumSet<Caps> caps = EnumSet.noneOf(Caps.class);
-    private final EnumMap<Limits, Integer> limits = new EnumMap<Limits, Integer>(Limits.class);
+    private final Map<Limits, Integer> limits = new EnumMap<>(Limits.class);
 
     private FrameBuffer mainFbOverride = null;
     private int vpX, vpY, vpW, vpH;
@@ -88,12 +87,12 @@ public final class GLRenderer implements Renderer {
 
     private final TextureUtil texUtil = new TextureUtil();
 
-    public EnumSet<Caps> getCaps() {
+    public Set<Caps> getCaps() {
         return caps;
     }
 
     // Not making public yet ...
-    public EnumMap<Limits, Integer> getLimits() {
+    public Map<Limits, Integer> getLimits() {
         return limits;
     }
 
@@ -189,7 +188,7 @@ public final class GLRenderer implements Renderer {
                 if (glslVer < 400) {
                     break;
                 }
-                // so that future OpenGL revisions wont break jme3
+                // so that future OpenGL revisions wont break
                 // fall through intentional
             case 450:
                 caps.add(Caps.GLSL450);
@@ -2329,16 +2328,10 @@ public final class GLRenderer implements Renderer {
 
     public void updateBufferData(VertexBuffer vb) {
         int bufId = vb.getId();
-        boolean created = false;
         if (bufId == -1) {
             // create buffer
             bufId = GL15.glGenBuffers();
             vb.setId(bufId);
-//            objManager.registerObject(vb);
-
-            //statistics.onNewVertexBuffer();
-
-            created = true;
         }
 
         // bind buffer
@@ -2348,18 +2341,12 @@ public final class GLRenderer implements Renderer {
             if (context.boundElementArrayVBO != bufId) {
                 GL15.glBindBuffer(target, bufId);
                 context.boundElementArrayVBO = bufId;
-                //statistics.onVertexBufferUse(vb, true);
-            } else {
-                //statistics.onVertexBufferUse(vb, false);
             }
         } else {
             target = GL15.GL_ARRAY_BUFFER;
             if (context.boundArrayVBO != bufId) {
                 GL15.glBindBuffer(target, bufId);
                 context.boundArrayVBO = bufId;
-                //statistics.onVertexBufferUse(vb, true);
-            } else {
-                //statistics.onVertexBufferUse(vb, false);
             }
         }
 

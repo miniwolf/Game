@@ -393,7 +393,7 @@ public class Glsl100ShaderGenerator {
         comment(source, shaderNode, "Begin");
         startCondition(shaderNode.getCondition(), source);
 
-        List<String> declaredInputs = new ArrayList<String>();
+        List<String> declaredInputs = new ArrayList<>();
         for (VariableMapping mapping : shaderNode.getInputMapping()) {
 
             //Variables fed with a sampler matparam or world param are replaced by the matparam itself

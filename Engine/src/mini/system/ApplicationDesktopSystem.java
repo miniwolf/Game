@@ -1,7 +1,6 @@
 package mini.system;
 
-import java.awt.EventQueue;
-import java.awt.GraphicsEnvironment;
+import java.awt.*;
 
 /**
  */
@@ -12,7 +11,7 @@ public class ApplicationDesktopSystem extends ApplicationSystemDelegate {
             final String msg = message;
             EventQueue.invokeLater(() -> ErrorDialog.showDialog(msg));
         } else {
-            System.err.println("[JME ERROR] " + message);
+            System.err.println("[ERROR] " + message);
         }
     }
 

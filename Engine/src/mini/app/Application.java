@@ -8,7 +8,7 @@ import mini.system.ApplicationContext;
 
 /**
  * The <code>Application</code> interface represents the minimum exposed
- * capabilities of a concrete jME3 application.
+ * capabilities of a concrete application.
  */
 public interface Application {
     /**
@@ -22,7 +22,7 @@ public interface Application {
     Renderer getRenderer();
 
     /**
-     * @return The {@link JmeContext display context} for the application
+     * @return The {@link ApplicationContext display context} for the application
      */
     ApplicationContext getContext();
 

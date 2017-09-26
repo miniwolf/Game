@@ -765,16 +765,16 @@ public final class Vector3f implements Cloneable, java.io.Serializable {
     }
 
     /**
-     * <code>angleBetween</code> returns (in radians) the angle between two vectors.
-     * It is assumed that both this vector and the given vector are unit vectors (iow, normalized).
+     * Check a vector... if it is null or its floats are NaN or infinite,
+     * return false.  Else return true.
      *
-     * @param otherVector a unit vector to find the angle against
-     * @return the angle in radians.
+     * @param vector the vector to check
+     * @return true or false as stated above.
      */
-    public float angleBetween(Vector3f otherVector) {
-        float dotProduct = dot(otherVector);
-        float angle = FastMath.acos(dotProduct);
-        return angle;
+    public static boolean isValidVector(Vector3f vector) {
+        return vector != null && !Float.isNaN(vector.x) && !Float.isNaN(vector.y) && !Float
+                .isNaN(vector.z) && !Float.isInfinite(vector.x) && !Float.isInfinite(vector.y)
+               && !Float.isInfinite(vector.z);
     }
 
     /**
@@ -809,24 +809,15 @@ public final class Vector3f implements Cloneable, java.io.Serializable {
     }
 
     /**
-     * Check a vector... if it is null or its floats are NaN or infinite,
-     * return false.  Else return true.
+     * <code>angleBetween</code> returns (in radians) the angle between two vectors.
+     * It is assumed that both this vector and the given vector are unit vectors (iow, normalized).
      *
-     * @param vector the vector to check
-     * @return true or false as stated above.
+     * @param otherVector a unit vector to find the angle against
+     * @return the angle in radians.
      */
-    public static boolean isValidVector(Vector3f vector) {
-        if (vector == null) {
-            return false;
-        }
-        if (Float.isNaN(vector.x) ||
-            Float.isNaN(vector.y) ||
-            Float.isNaN(vector.z)) {
-            return false;
-        }
-        return !Float.isInfinite(vector.x) &&
-               !Float.isInfinite(vector.y) &&
-               !Float.isInfinite(vector.z);
+    public float angleBetween(Vector3f otherVector) {
+        float dotProduct = dot(otherVector);
+        return FastMath.acos(dotProduct);
     }
 
     public static void generateOrthonormalBasis(Vector3f u, Vector3f v, Vector3f w) {

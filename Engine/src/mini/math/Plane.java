@@ -31,9 +31,6 @@
  */
 package mini.math;
 
-import java.io.IOException;
-import java.util.logging.Logger;
-
 /**
  * <code>Plane</code> defines a plane where Normal dot (x,y,z) = Constant.
  * This provides methods for calculating a "distance" of a point from this
@@ -47,12 +44,9 @@ public class Plane implements Cloneable, java.io.Serializable {
 
     static final long serialVersionUID = 1;
 
-    private static final Logger logger = Logger.getLogger(Plane.class.getName());
-
-    public static enum Side {
-        None,
-        Positive,
-        Negative
+    public boolean isOnPlane(Vector3f point) {
+        float dist = pseudoDistance(point);
+        return dist < FastMath.FLT_EPSILON && dist > -FastMath.FLT_EPSILON;
     }
 
     /**
@@ -189,13 +183,10 @@ public class Plane implements Cloneable, java.io.Serializable {
         }
     }
 
-    public boolean isOnPlane(Vector3f point) {
-        float dist = pseudoDistance(point);
-        if (dist < FastMath.FLT_EPSILON && dist > -FastMath.FLT_EPSILON) {
-            return true;
-        } else {
-            return false;
-        }
+    public enum Side {
+        None,
+        Positive,
+        Negative
     }
 
     /**

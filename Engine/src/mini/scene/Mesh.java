@@ -2,12 +2,14 @@ package mini.scene;
 
 import mini.material.Material;
 import mini.material.RenderState;
-import mini.math.Vector3f;
 import mini.scene.mesh.IndexBuffer;
 import mini.utils.BufferUtils;
 
-import java.io.IOException;
-import java.nio.*;
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
+import java.nio.ShortBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -270,53 +272,6 @@ public class Mesh implements Cloneable {
      */
     public void setMaxNumWeights(int maxNumWeights) {
         this.maxNumWeights = maxNumWeights;
-    }
-
-    /**
-     * @return <code>1.0</code>
-     * @see #setPointSize(float)
-     * @deprecated Always returns <code>1.0</code> since point size is
-     * determined in the vertex shader.
-     */
-    @Deprecated
-    public float getPointSize() {
-        return 1.0f;
-    }
-
-    /**
-     * @param pointSize ignored
-     * @deprecated Does nothing, since the size of {@link Mode#Points points} is
-     * determined via the vertex shader's <code>gl_PointSize</code> output.
-     */
-    @Deprecated
-    public void setPointSize(float pointSize) {
-    }
-
-    /**
-     * Returns the line width for line meshes.
-     *
-     * @return the line width
-     * @deprecated use {@link Material#getAdditionalRenderState()} and {@link RenderState#getLineWidth()}
-     */
-    @Deprecated
-    public float getLineWidth() {
-        return lineWidth;
-    }
-
-    /**
-     * Specify the line width for meshes of the line modes, such
-     * as {@link Mode#Lines}. The line width is specified as on-screen pixels,
-     * the default value is 1.0.
-     *
-     * @param lineWidth The line width
-     * @deprecated use {@link Material#getAdditionalRenderState()} and {@link RenderState#setLineWidth(float)}
-     */
-    @Deprecated
-    public void setLineWidth(float lineWidth) {
-        if (lineWidth < 1f) {
-            throw new IllegalArgumentException("lineWidth must be greater than or equal to 1.0");
-        }
-        this.lineWidth = lineWidth;
     }
 
     /**

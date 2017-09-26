@@ -356,20 +356,8 @@ public class Geometry extends Spatial {
      * and normals are deep copied.
      */
     @Override
-    public Geometry clone(boolean cloneMaterial) {
-        return (Geometry)super.clone(cloneMaterial);
-    }
-
-    /**
-     * This version of clone is a shallow clone, in other words, the
-     * same mesh is referenced as the original geometry.
-     * Exception: if the mesh is marked as being a software
-     * animated mesh, (bind pose is set) then the positions
-     * and normals are deep copied.
-     */
-    @Override
     public Geometry clone() {
-        return clone(true);
+        return (Geometry) super.clone();
     }
 
     /**

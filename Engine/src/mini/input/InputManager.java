@@ -69,7 +69,7 @@ public class InputManager implements RawInputListener {
     private boolean safeMode = false;
     private float globalAxisDeadZone = 0.05f;
     private final Vector2f cursorPos = new Vector2f();
-    private final Map<Integer, ArrayList<Mapping>> bindings = new HashMap<>();
+    private final Map<Integer, List<Mapping>> bindings = new HashMap<>();
     private final HashMap<String, Mapping> mappings = new HashMap<>();
     private final Map<Integer, Long> pressedButtons = new HashMap<>();
     private final Map<Integer, Float> axisValues = new HashMap<>();
@@ -113,7 +113,7 @@ public class InputManager implements RawInputListener {
     }
 
     private void invokeActions(int hash, boolean pressed) {
-        ArrayList<Mapping> maps = bindings.get(hash);
+        List<Mapping> maps = bindings.get(hash);
         if (maps == null) {
             return;
         }
@@ -155,8 +155,7 @@ public class InputManager implements RawInputListener {
 
             long pressTime = pressTimeObj;
             long lastUpdate = lastLastUpdateTime;
-            long releaseTime = time;
-            long timeDelta = releaseTime - Math.max(pressTime, lastUpdate);
+            long timeDelta = time - Math.max(pressTime, lastUpdate);
 
             if (timeDelta > 0) {
                 invokeAnalogs(hash, computeAnalogValue(timeDelta), false);
@@ -184,7 +183,7 @@ public class InputManager implements RawInputListener {
     }
 
     private void invokeAnalogs(int hash, float value, boolean isAxis) {
-        ArrayList<Mapping> maps = bindings.get(hash);
+        List<Mapping> maps = bindings.get(hash);
         if (maps == null) {
             return;
         }
@@ -214,7 +213,7 @@ public class InputManager implements RawInputListener {
             return;
         }
 
-        ArrayList<Mapping> maps = bindings.get(hash);
+        List<Mapping> maps = bindings.get(hash);
         if (maps == null) {
             return;
         }
@@ -374,11 +373,7 @@ public class InputManager implements RawInputListener {
      */
     public void addListener(InputListener listener, String... mappingNames) {
         for (String mappingName : mappingNames) {
-            Mapping mapping = mappings.get(mappingName);
-            if (mapping == null) {
-                mapping = new Mapping(mappingName);
-                mappings.put(mappingName, mapping);
-            }
+            Mapping mapping = mappings.computeIfAbsent(mappingName, Mapping::new);
             if (!mapping.listeners.contains(listener)) {
                 mapping.listeners.add(listener);
             }
@@ -416,19 +411,11 @@ public class InputManager implements RawInputListener {
      * @see InputManager#deleteMapping(java.lang.String)
      */
     public void addMapping(String mappingName, Trigger... triggers) {
-        Mapping mapping = mappings.get(mappingName);
-        if (mapping == null) {
-            mapping = new Mapping(mappingName);
-            mappings.put(mappingName, mapping);
-        }
+        Mapping mapping = mappings.computeIfAbsent(mappingName, Mapping::new);
 
         for (Trigger trigger : triggers) {
             int hash = trigger.triggerHashCode();
-            ArrayList<Mapping> names = bindings.get(hash);
-            if (names == null) {
-                names = new ArrayList<Mapping>();
-                bindings.put(hash, names);
-            }
+            List<Mapping> names = bindings.computeIfAbsent(hash, k -> new ArrayList<>());
             if (!names.contains(mapping)) {
                 names.add(mapping);
                 mapping.triggers.add(hash);
@@ -473,7 +460,7 @@ public class InputManager implements RawInputListener {
         List<Integer> triggers = mapping.triggers;
         for (int i = triggers.size() - 1; i >= 0; i--) {
             int hash = triggers.get(i);
-            ArrayList<Mapping> maps = bindings.get(hash);
+            List<Mapping> maps = bindings.get(hash);
             maps.remove(mapping);
         }
     }
@@ -495,7 +482,7 @@ public class InputManager implements RawInputListener {
             throw new IllegalArgumentException("Cannot find mapping: " + mappingName);
         }
 
-        ArrayList<Mapping> maps = bindings.get(trigger.triggerHashCode());
+        List<Mapping> maps = bindings.get(trigger.triggerHashCode());
         maps.remove(mapping);
 
     }

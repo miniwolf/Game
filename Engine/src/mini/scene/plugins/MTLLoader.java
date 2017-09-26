@@ -12,7 +12,11 @@ import mini.utils.MyFile;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Scanner;
 
 public class MTLLoader {
     private Scanner scan;
@@ -30,8 +34,6 @@ public class MTLLoader {
     private String matName;
     protected float alpha = 1;
     private boolean transparent = false;
-    private boolean disallowAmbient = false;
-    private boolean disallowSpecular = false;
 
     public void reset() {
         scan = null;
@@ -56,7 +58,7 @@ public class MTLLoader {
 
     private boolean skipLine() {
         try {
-            scan.skip(".*\r{0,1}\n");
+            scan.skip(".*\r?\n");
             return true;
         } catch (NoSuchElementException ex) {
             // EOF
@@ -69,8 +71,6 @@ public class MTLLoader {
         diffuse.set(ColorRGBA.LightGray);
         specular.set(ColorRGBA.Black);
         shininess = 16;
-        disallowAmbient = false;
-        disallowSpecular = false;
         shadeless = false;
         transparent = false;
         matName = null;
@@ -219,7 +219,6 @@ public class MTLLoader {
                     shadeless = true;
                     break;
                 case 1:
-                    disallowSpecular = true;
                     break;
                 case 2:
                 case 3:
@@ -236,7 +235,7 @@ public class MTLLoader {
                     break;
             }
         } else if (cmd.equals("ke") || cmd.equals("ni")) {
-            // Ni: index of refraction - unsupported in jME
+            // Ni: index of refraction - unsupported
             // Ke: emission color
             return skipLine();
         } else {

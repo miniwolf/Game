@@ -24,7 +24,7 @@ public final class Shader extends NativeObject {
 
     /**
      * Uniforms bound to {@link UniformBinding}s.
-     *
+     * <p>
      * Managed by the {@link UniformBindingManager}.
      */
     private final List<Uniform> boundUniforms;
@@ -78,7 +78,7 @@ public final class Shader extends NativeObject {
      * Creates a new shader, {@link #initialize() } must be called
      * after this constructor for the shader to be usable.
      */
-    public Shader(){
+    public Shader() {
         super();
         shaderSourceList = new ArrayList<>();
         uniforms = new HashMap<>();
@@ -89,14 +89,14 @@ public final class Shader extends NativeObject {
     /**
      * Do not use this constructor. Used for destructable clones only.
      */
-    protected Shader(Shader s){
+    protected Shader(Shader s) {
         super(s.id);
 
         // Shader sources cannot be shared, therefore they must
         // be destroyed together with the parent shader.
         shaderSourceList = new ArrayList<ShaderSource>();
-        for (ShaderSource source : s.shaderSourceList){
-            shaderSourceList.add( (ShaderSource)source.createDestructableClone() );
+        for (ShaderSource source : s.shaderSourceList) {
+            shaderSourceList.add((ShaderSource) source.createDestructableClone());
         }
 
         uniforms = null;
@@ -107,13 +107,14 @@ public final class Shader extends NativeObject {
     /**
      * Adds source code to a certain pipeline.
      *
-     * @param type The pipeline to control
-     * @param source The shader source code (in GLSL).
-     * @param defines Preprocessor defines (placed at the beginning of the shader)
+     * @param type     The pipeline to control
+     * @param source   The shader source code (in GLSL).
+     * @param defines  Preprocessor defines (placed at the beginning of the shader)
      * @param language The shader source language, currently accepted is GLSL###
-     * where ### is the version, e.g. GLSL100 = GLSL 1.0, GLSL330 = GLSL 3.3, etc.
+     *                 where ### is the version, e.g. GLSL100 = GLSL 1.0, GLSL330 = GLSL 3.3, etc.
      */
-    public void addSource(ShaderType type, String name, String source, String defines, String language){
+    public void addSource(ShaderType type, String name, String source, String defines,
+                          String language) {
         ShaderSource shaderSource = new ShaderSource(type);
         shaderSource.setSource(source);
         shaderSource.setName(name);
@@ -125,7 +126,7 @@ public final class Shader extends NativeObject {
         setUpdateNeeded();
     }
 
-    public void addUniformBinding(UniformBinding binding){
+    public void addUniformBinding(UniformBinding binding) {
         String uniformName = "g_" + binding.name();
         Uniform uniform = uniforms.get(uniformName);
         if (uniform == null) {
@@ -137,10 +138,10 @@ public final class Shader extends NativeObject {
         }
     }
 
-    public Uniform getUniform(String name){
+    public Uniform getUniform(String name) {
         assert name.startsWith("m_") || name.startsWith("g_");
         Uniform uniform = uniforms.get(name);
-        if (uniform == null){
+        if (uniform == null) {
             uniform = new Uniform();
             uniform.name = name;
             uniforms.put(name, uniform);
@@ -148,14 +149,14 @@ public final class Shader extends NativeObject {
         return uniform;
     }
 
-    public void removeUniform(String name){
+    public void removeUniform(String name) {
         uniforms.remove(name);
     }
 
-    public Attribute getAttribute(VertexBuffer.Type attribType){
+    public Attribute getAttribute(VertexBuffer.Type attribType) {
         int ordinal = attribType.ordinal();
         Attribute attrib = attribs.get(ordinal);
-        if (attrib == null){
+        if (attrib == null) {
             attrib = new Attribute();
             attrib.name = attribType.name();
             attribs.put(ordinal, attrib);
@@ -163,7 +164,7 @@ public final class Shader extends NativeObject {
         return attrib;
     }
 
-    public Map<String, Uniform> getUniformMap(){
+    public Map<String, Uniform> getUniformMap() {
         return uniforms;
     }
 
@@ -171,7 +172,7 @@ public final class Shader extends NativeObject {
         return boundUniforms;
     }
 
-    public Collection<ShaderSource> getSources(){
+    public Collection<ShaderSource> getSources() {
         return shaderSourceList;
     }
 
@@ -219,7 +220,7 @@ public final class Shader extends NativeObject {
      */
     public void resetLocations() {
         if (uniforms != null) {
-            // NOTE: Shader sources will be reset seperately from the shader itself.
+            // NOTE: Shader sources will be reset separately from the shader itself.
             for (Uniform uniform : uniforms.values()) {
                 uniform.reset(); // fixes issue with re-initialization
             }
@@ -232,7 +233,7 @@ public final class Shader extends NativeObject {
     }
 
     @Override
-    public void setUpdateNeeded(){
+    public void setUpdateNeeded() {
         super.setUpdateNeeded();
         resetLocations();
     }
@@ -244,7 +245,7 @@ public final class Shader extends NativeObject {
     @Override
     public void resetObject() {
         this.id = -1;
-        for (ShaderSource source : shaderSourceList){
+        for (ShaderSource source : shaderSourceList) {
             source.resetObject();
         }
         setUpdateNeeded();
@@ -252,15 +253,15 @@ public final class Shader extends NativeObject {
 
     @Override
     public void deleteObject(Object rendererObject) {
-        ((Renderer)rendererObject).deleteShader(this);
+        ((Renderer) rendererObject).deleteShader(this);
     }
 
-    public NativeObject createDestructableClone(){
+    public NativeObject createDestructableClone() {
         return new Shader(this);
     }
 
     @Override
     public long getUniqueId() {
-        return ((long)OBJTYPE_SHADER << 32) | ((long)id);
+        return ((long) OBJTYPE_SHADER << 32) | ((long) id);
     }
 }

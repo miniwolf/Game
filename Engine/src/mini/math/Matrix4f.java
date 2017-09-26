@@ -622,11 +622,15 @@ public final class Matrix4f implements Cloneable, java.io.Serializable {
         }
     }
 
-    public Matrix4f transpose() {
-        float[] tmp = new float[16];
-        get(tmp, true);
-        Matrix4f mat = new Matrix4f(tmp);
-        return mat;
+    static boolean equalIdentity(Matrix4f mat) {
+        return !(Math.abs(mat.m00 - 1) > 1e-4) && !(Math.abs(mat.m11 - 1) > 1e-4) &&
+               !(Math.abs(mat.m22 - 1) > 1e-4) && !(Math.abs(mat.m33 - 1) > 1e-4) &&
+               !(Math.abs(mat.m01) > 1e-4) && !(Math.abs(mat.m02) > 1e-4) &&
+               !(Math.abs(mat.m03) > 1e-4) && !(Math.abs(mat.m10) > 1e-4) &&
+               !(Math.abs(mat.m12) > 1e-4) && !(Math.abs(mat.m13) > 1e-4) &&
+               !(Math.abs(mat.m20) > 1e-4) && !(Math.abs(mat.m21) > 1e-4) &&
+               !(Math.abs(mat.m23) > 1e-4) && !(Math.abs(mat.m30) > 1e-4) &&
+               !(Math.abs(mat.m31) > 1e-4) && !(Math.abs(mat.m32) > 1e-4);
     }
 
     /**
@@ -1889,21 +1893,10 @@ public final class Matrix4f implements Cloneable, java.io.Serializable {
         setInverseRotationRadians(vec);
     }
 
-    /**
-     * <code>inverseTranslateVect</code> translates a given Vector3f by the
-     * translation part of this matrix.
-     *
-     * @param vec the Vector3f data to be translated.
-     */
-    public void inverseTranslateVect(float[] vec) {
-        if (vec.length != 3) {
-            throw new IllegalArgumentException(
-                    "vec must be of size 3.");
-        }
-
-        vec[0] = vec[0] - m03;
-        vec[1] = vec[1] - m13;
-        vec[2] = vec[2] - m23;
+    public Matrix4f transpose() {
+        float[] tmp = new float[16];
+        get(tmp, true);
+        return new Matrix4f(tmp);
     }
 
     /**
@@ -1953,56 +1946,21 @@ public final class Matrix4f implements Cloneable, java.io.Serializable {
     }
 
     /**
-     * <code>toString</code> returns the string representation of this object.
-     * It is in a format of a 4x4 matrix. For example, an identity matrix would
-     * be represented by the following string. mini.math.Matrix3f <br>[<br>
-     * 1.0  0.0  0.0  0.0 <br>
-     * 0.0  1.0  0.0  0.0 <br>
-     * 0.0  0.0  1.0  0.0 <br>
-     * 0.0  0.0  0.0  1.0 <br>]<br>
+     * <code>inverseTranslateVect</code> translates a given Vector3f by the
+     * translation part of this matrix.
      *
-     * @return the string representation of this object.
+     * @param vec the Vector3f data to be translated.
+     * @throws IllegalArgumentException if the size of the Vector3f is not 3.
      */
-    @Override
-    public String toString() {
-        StringBuilder result = new StringBuilder("Matrix4f\n[\n");
-        result.append(" ");
-        result.append(m00);
-        result.append("  ");
-        result.append(m01);
-        result.append("  ");
-        result.append(m02);
-        result.append("  ");
-        result.append(m03);
-        result.append(" \n");
-        result.append(" ");
-        result.append(m10);
-        result.append("  ");
-        result.append(m11);
-        result.append("  ");
-        result.append(m12);
-        result.append("  ");
-        result.append(m13);
-        result.append(" \n");
-        result.append(" ");
-        result.append(m20);
-        result.append("  ");
-        result.append(m21);
-        result.append("  ");
-        result.append(m22);
-        result.append("  ");
-        result.append(m23);
-        result.append(" \n");
-        result.append(" ");
-        result.append(m30);
-        result.append("  ");
-        result.append(m31);
-        result.append("  ");
-        result.append(m32);
-        result.append("  ");
-        result.append(m33);
-        result.append(" \n]");
-        return result.toString();
+    public void inverseTranslateVect(float[] vec) {
+        if (vec.length != 3) {
+            throw new IllegalArgumentException(
+                    "vec must be of size 3.");
+        }
+
+        vec[0] = vec[0] - m03;
+        vec[1] = vec[1] - m13;
+        vec[2] = vec[2] - m23;
     }
 
     /**
@@ -2047,64 +2005,21 @@ public final class Matrix4f implements Cloneable, java.io.Serializable {
      */
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof Matrix4f) || o == null) {
+        if (o == null || !(o instanceof Matrix4f)) {
             return false;
         }
-
         if (this == o) {
             return true;
         }
-
         Matrix4f comp = (Matrix4f) o;
-        if (Float.compare(m00, comp.m00) != 0) {
-            return false;
-        }
-        if (Float.compare(m01, comp.m01) != 0) {
-            return false;
-        }
-        if (Float.compare(m02, comp.m02) != 0) {
-            return false;
-        }
-        if (Float.compare(m03, comp.m03) != 0) {
-            return false;
-        }
-
-        if (Float.compare(m10, comp.m10) != 0) {
-            return false;
-        }
-        if (Float.compare(m11, comp.m11) != 0) {
-            return false;
-        }
-        if (Float.compare(m12, comp.m12) != 0) {
-            return false;
-        }
-        if (Float.compare(m13, comp.m13) != 0) {
-            return false;
-        }
-
-        if (Float.compare(m20, comp.m20) != 0) {
-            return false;
-        }
-        if (Float.compare(m21, comp.m21) != 0) {
-            return false;
-        }
-        if (Float.compare(m22, comp.m22) != 0) {
-            return false;
-        }
-        if (Float.compare(m23, comp.m23) != 0) {
-            return false;
-        }
-
-        if (Float.compare(m30, comp.m30) != 0) {
-            return false;
-        }
-        if (Float.compare(m31, comp.m31) != 0) {
-            return false;
-        }
-        if (Float.compare(m32, comp.m32) != 0) {
-            return false;
-        }
-        return Float.compare(m33, comp.m33) == 0;
+        return Float.compare(m00, comp.m00) == 0 && Float.compare(m01, comp.m01) == 0
+               && Float.compare(m02, comp.m02) == 0 && Float.compare(m03, comp.m03) == 0
+               && Float.compare(m10, comp.m10) == 0 && Float.compare(m11, comp.m11) == 0
+               && Float.compare(m12, comp.m12) == 0 && Float.compare(m13, comp.m13) == 0
+               && Float.compare(m20, comp.m20) == 0 && Float.compare(m21, comp.m21) == 0
+               && Float.compare(m22, comp.m22) == 0 && Float.compare(m23, comp.m23) == 0
+               && Float.compare(m30, comp.m30) == 0 && Float.compare(m31, comp.m31) == 0
+               && Float.compare(m32, comp.m32) == 0 && Float.compare(m33, comp.m33) == 0;
     }
 
     /**
@@ -2137,57 +2052,24 @@ public final class Matrix4f implements Cloneable, java.io.Serializable {
         m32 *= scale.getZ();
     }
 
-    static boolean equalIdentity(Matrix4f mat) {
-        if (Math.abs(mat.m00 - 1) > 1e-4) {
-            return false;
-        }
-        if (Math.abs(mat.m11 - 1) > 1e-4) {
-            return false;
-        }
-        if (Math.abs(mat.m22 - 1) > 1e-4) {
-            return false;
-        }
-        if (Math.abs(mat.m33 - 1) > 1e-4) {
-            return false;
-        }
-
-        if (Math.abs(mat.m01) > 1e-4) {
-            return false;
-        }
-        if (Math.abs(mat.m02) > 1e-4) {
-            return false;
-        }
-        if (Math.abs(mat.m03) > 1e-4) {
-            return false;
-        }
-
-        if (Math.abs(mat.m10) > 1e-4) {
-            return false;
-        }
-        if (Math.abs(mat.m12) > 1e-4) {
-            return false;
-        }
-        if (Math.abs(mat.m13) > 1e-4) {
-            return false;
-        }
-
-        if (Math.abs(mat.m20) > 1e-4) {
-            return false;
-        }
-        if (Math.abs(mat.m21) > 1e-4) {
-            return false;
-        }
-        if (Math.abs(mat.m23) > 1e-4) {
-            return false;
-        }
-
-        if (Math.abs(mat.m30) > 1e-4) {
-            return false;
-        }
-        if (Math.abs(mat.m31) > 1e-4) {
-            return false;
-        }
-        return !(Math.abs(mat.m32) > 1e-4);
+    /**
+     * <code>toString</code> returns the string representation of this object.
+     * It is in a format of a 4x4 matrix. For example, an identity matrix would
+     * be represented by the following string. com.jme.mini.math.Matrix3f <br>[<br>
+     * 1.0  0.0  0.0  0.0 <br>
+     * 0.0  1.0  0.0  0.0 <br>
+     * 0.0  0.0  1.0  0.0 <br>
+     * 0.0  0.0  0.0  1.0 <br>]<br>
+     *
+     * @return the string representation of this object.
+     */
+    @Override
+    public String toString() {
+        return "Matrix4f\n[\n"
+               + " " + m00 + "  " + m01 + "  " + m02 + "  " + m03 + " \n"
+               + " " + m10 + "  " + m11 + "  " + m12 + "  " + m13 + " \n"
+               + " " + m20 + "  " + m21 + "  " + m22 + "  " + m23 + " \n"
+               + " " + m30 + "  " + m31 + "  " + m32 + "  " + m33 + " \n]";
     }
 
     // XXX: This tests more solid than converting the q to a matrix and multiplying... why?

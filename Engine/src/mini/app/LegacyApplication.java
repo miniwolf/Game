@@ -15,16 +15,14 @@ import mini.system.SystemListener;
 import java.util.concurrent.Callable;
 
 /**
- * The <code>LegacyApplication</code> class represents an instance of a
- * real-time 3D rendering jME application.
+ * The <code>LegacyApplication</code> class represents an instance of a real-time 3D rendering
+ * application.
  * <p>
- * An <code>LegacyApplication</code> provides all the tools that are commonly used in jME3
- * applications.
+ * An <code>LegacyApplication</code> provides all the tools that are commonly used.
  * <p>
- * jME3 applications *SHOULD NOT EXTEND* this class but extend {@link mini.app.SimpleApplication} instead.
+ * applications *SHOULD NOT EXTEND* this class but extend {@link mini.app.SimpleApplication} instead.
  */
 public class LegacyApplication implements Application, SystemListener {
-
     protected Renderer renderer;
     protected RenderManager renderManager;
     protected ViewPort viewPort;
@@ -130,7 +128,7 @@ public class LegacyApplication implements Application, SystemListener {
     }
 
     /**
-     * @return The {@link JmeContext display context} for the application
+     * @return The {@link ApplicationContext display context} for the application
      */
     public ApplicationContext getContext() {
         return context;
@@ -173,15 +171,15 @@ public class LegacyApplication implements Application, SystemListener {
      * Initializes the application's canvas for use.
      * <p>
      * After calling this method, cast the {@link #getContext() context} to
-     * {@link JmeCanvasContext},
-     * then acquire the canvas with {@link JmeCanvasContext#getCanvas() }
+     * {@link ApplicationCanvasContext},
+     * then acquire the canvas with {@link ApplicationCanvasContext#getCanvas() }
      * and attach it to an AWT/Swing Frame.
      * The rendering thread will start when the canvas becomes visible on
      * screen, however if you wish to start the context immediately you
      * may call {@link #startCanvas() } to force the rendering thread
      * to start.
      *
-     * @see JmeCanvasContext
+     * @see ApplicationCanvasContext
      * @see Type#Canvas
      */
     public void createCanvas() {

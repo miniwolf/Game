@@ -12,7 +12,7 @@ import mini.scene.Geometry;
 import mini.shaders.DefineList;
 import mini.shaders.Shader;
 
-import java.util.EnumSet;
+import java.util.Set;
 
 /**
  * @author miniwolf
@@ -45,8 +45,8 @@ public class DefaultTechniqueDefLogic implements TechniqueDefLogic {
     }
 
     @Override
-    public Shader makeCurrent(RenderManager renderManager, EnumSet<Caps> rendererCaps,
-                                     LightList lights, DefineList defines) {
+    public Shader makeCurrent(RenderManager renderManager, Set<Caps> rendererCaps,
+                              LightList lights, DefineList defines) {
         return techniqueDef.getShader(rendererCaps, defines);
     }
 
