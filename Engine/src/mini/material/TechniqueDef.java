@@ -22,7 +22,9 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Created by miniwolf on 30-04-2017.
+ * Describes a technique definition.
+ *
+ * @author miniwolf
  */
 public class TechniqueDef implements Cloneable {
     /**
@@ -77,11 +79,6 @@ public class TechniqueDef implements Cloneable {
         SinglePassAndImageBased,
 
         /**
-         * @deprecated OpenGL1 is not supported anymore
-         */
-        @Deprecated
-        FixedPipeline,
-        /**
          * Similar to {@link #SinglePass} except the type of each light is known
          * at shader compile time.
          * <p>
@@ -110,9 +107,13 @@ public class TechniqueDef implements Cloneable {
     }
 
     private final EnumSet<Caps> requiredCaps = EnumSet.noneOf(Caps.class);
-
+    private final HashMap<DefineList, Shader> definesToShaderMap;
     private String name;
     private int sortId;
+    private boolean usesNodes = false;
+    private boolean noRender = false;
+    //used to find the best fit technique
+    private float weight = 0;
 
     private EnumMap<Shader.ShaderType, String> shaderLanguages;
     private EnumMap<Shader.ShaderType, String> shaderNames;
@@ -121,14 +122,11 @@ public class TechniqueDef implements Cloneable {
     private List<String> defineNames;
     private List<VarType> defineTypes;
     private List<UniformBinding> worldBinds;
-    private HashMap<String, Integer> paramToDefineId;
-    private final HashMap<DefineList, Shader> definesToShaderMap;
-
-    private boolean usesNodes = false;
     private List<ShaderNode> shaderNodes;
+    private HashMap<String, Integer> paramToDefineId;
+
     private ShaderGenerationInfo shaderGenerationInfo;
 
-    private boolean noRender = false;
     private RenderState renderState;
     private RenderState forcedRenderState;
 
@@ -139,13 +137,10 @@ public class TechniqueDef implements Cloneable {
     //The space in which the light should be transposed before sending to the shader.
     private LightSpace lightSpace;
 
-    //used to find the best fit technique
-    private float weight = 0;
-
     /**
      * Creates a new technique definition.
      * <p>
-     * Used internally by the J3M/J3MD loader.
+     * Used internally by the Mini/MiniD loader.
      *
      * @param name The name of the technique
      */
@@ -320,6 +315,8 @@ public class TechniqueDef implements Cloneable {
         requiredCaps.add(vertCap);
         Caps fragCap = Caps.valueOf(fragLanguage);
         requiredCaps.add(fragCap);
+
+        weight = Math.max(vertCap.ordinal(), fragCap.ordinal());
     }
 
     /**
@@ -478,7 +475,8 @@ public class TechniqueDef implements Cloneable {
                 }
                 String shaderSourceCode = null;
                 try {
-                    shaderSourceCode = (String) GLSLLoader.load(new ShaderNodeDefinitionKey(shaderSourceAssetName));
+                    shaderSourceCode = (String) GLSLLoader
+                            .load(new ShaderNodeDefinitionKey(shaderSourceAssetName));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -574,7 +572,7 @@ public class TechniqueDef implements Cloneable {
      *
      * @param shaderType
      */
-    public String getShaderLanguage(Shader.ShaderType shaderType) {
+    public String getShaderProgramLanguage(Shader.ShaderType shaderType) {
         return shaderLanguages.get(shaderType);
     }
 
@@ -583,7 +581,7 @@ public class TechniqueDef implements Cloneable {
      *
      * @param shaderType
      */
-    public String getShaderName(Shader.ShaderType shaderType) {
+    public String getShaderProgramName(Shader.ShaderType shaderType) {
         return shaderNames.get(shaderType);
     }
 
@@ -634,12 +632,21 @@ public class TechniqueDef implements Cloneable {
         return worldBinds;
     }
 
+    public List<ShaderNode> getShaderNodes() {
+        return shaderNodes;
+    }
+
+    public void setShaderNodes(List<ShaderNode> shaderNodes) {
+        this.shaderNodes = shaderNodes;
+        usesNodes = true;
+    }
+
     /**
      * Returns the Enum containing the ShaderProgramNames;
      *
      * @return
      */
-    public EnumMap<Shader.ShaderType, String> getShaderNames() {
+    public EnumMap<Shader.ShaderType, String> getShaderProgramNames() {
         return shaderNames;
     }
 
@@ -648,17 +655,8 @@ public class TechniqueDef implements Cloneable {
      *
      * @return
      */
-    public EnumMap<Shader.ShaderType, String> getShaderLanguages() {
+    public EnumMap<Shader.ShaderType, String> getShaderProgramLanguages() {
         return shaderLanguages;
-    }
-
-    public List<ShaderNode> getShaderNodes() {
-        return shaderNodes;
-    }
-
-    public void setShaderNodes(List<ShaderNode> shaderNodes) {
-        this.shaderNodes = shaderNodes;
-        usesNodes = true;
     }
 
     public ShaderGenerationInfo getShaderGenerationInfo() {
@@ -672,6 +670,7 @@ public class TechniqueDef implements Cloneable {
     @Override
     public String toString() {
         return "TechniqueDef[name=" + name
+               + ", requiredCaps=" + requiredCaps
                + ", noRender=" + noRender
                + ", lightMode=" + lightMode
                + ", usesNodes=" + usesNodes
