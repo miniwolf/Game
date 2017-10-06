@@ -1,8 +1,8 @@
-package mini.renderEngine;
+package mini.renderer;
 
 /**
  * <code>Limits</code> allows querying the limits of certain features in
- * {@link mini.renderEngine.opengl.GLRenderer}.
+ * {@link mini.renderer.opengl.GLRenderer}.
  * <p>
  * For example, maximum texture sizes or number of samples.
  *

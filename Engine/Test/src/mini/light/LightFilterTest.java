@@ -2,7 +2,7 @@ package mini.light;
 
 import mini.math.FastMath;
 import mini.math.Vector3f;
-import mini.renderEngine.Camera;
+import mini.renderer.Camera;
 import mini.scene.Geometry;
 import mini.scene.shape.Box;
 import org.junit.Before;

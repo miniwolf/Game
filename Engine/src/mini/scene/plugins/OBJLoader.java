@@ -4,7 +4,7 @@ import mini.asset.ModelKey;
 import mini.material.Material;
 import mini.math.Vector2f;
 import mini.math.Vector3f;
-import mini.renderEngine.queue.RenderQueue;
+import mini.renderer.queue.RenderQueue;
 import mini.scene.Geometry;
 import mini.scene.Mesh;
 import mini.scene.Node;
@@ -56,6 +56,11 @@ public final class OBJLoader {
 
     protected String objName;
     protected Node objNode;
+    private List<Vertex> vertList = new ArrayList<>();
+
+    protected static class Face {
+        Vertex[] verticies;
+    }
 
     public static Object load(ModelKey info) throws IOException {
         OBJLoader loader = new OBJLoader();
@@ -103,10 +108,6 @@ public final class OBJLoader {
 
         // only 1 geometry, so no need to send node
         return loader.objNode.getQuantity() == 1 ? loader.objNode.getChild(0) : loader.objNode;
-    }
-
-    protected static class Face {
-        Vertex[] verticies;
     }
 
     public void reset() {
@@ -245,8 +246,6 @@ public final class OBJLoader {
         }
     }
 
-    private List<Vertex> vertList = new ArrayList<>();
-
     private Vector3f readVector3() {
         Vector3f v = new Vector3f();
 
@@ -264,14 +263,6 @@ public final class OBJLoader {
         String[] split = line.split("\\s+");
         v.setX(Float.parseFloat(split[0].trim()));
         v.setY(Float.parseFloat(split[1].trim()));
-
-//        v.setX(scan.nextFloat());
-//        if (scan.hasNextFloat()){
-//            v.setY(scan.nextFloat());
-//            if (scan.hasNextFloat()){
-//                scan.nextFloat(); // ignore
-//            }
-//        }
 
         return v;
     }

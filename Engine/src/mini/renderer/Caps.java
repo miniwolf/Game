@@ -1,6 +1,6 @@
-package mini.renderEngine;
+package mini.renderer;
 
-import mini.shaders.ShaderProgram;
+import mini.shaders.Shader;
 import mini.shaders.ShaderSource;
 import mini.textures.FrameBuffer;
 import mini.textures.Image;
@@ -420,7 +420,7 @@ public enum Caps {
      * @param shader The shader to check
      * @return True if it is supported, false otherwise.
      */
-    public static boolean supports(Collection<Caps> caps, ShaderProgram shader) {
+    public static boolean supports(Collection<Caps> caps, Shader shader) {
         for (ShaderSource source : shader.getSources()) {
             if (source.getLanguage().startsWith("GLSL")) {
                 int ver = Integer.parseInt(source.getLanguage().substring(4));

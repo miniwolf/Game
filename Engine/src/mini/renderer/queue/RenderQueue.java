@@ -1,8 +1,8 @@
-package mini.renderEngine.queue;
+package mini.renderer.queue;
 
 import mini.post.SceneProcessor;
-import mini.renderEngine.Camera;
-import mini.renderEngine.RenderManager;
+import mini.renderer.Camera;
+import mini.renderer.RenderManager;
 import mini.scene.Geometry;
 
 /**

@@ -2,7 +2,7 @@ package mini.scene;
 
 import mini.material.MatParamOverride;
 import mini.math.Matrix4f;
-import mini.renderEngine.Camera;
+import mini.renderer.Camera;
 import mini.shaders.VarType;
 import mini.textures.Texture2D;
 

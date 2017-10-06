@@ -9,7 +9,7 @@ import mini.math.FastMath;
 import mini.math.Matrix3f;
 import mini.math.Quaternion;
 import mini.math.Vector3f;
-import mini.renderEngine.Camera;
+import mini.renderer.Camera;
 
 /**
  * A first person view camera controller.

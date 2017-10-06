@@ -2,12 +2,12 @@ package mini.material;
 
 import mini.light.LightList;
 import mini.math.Matrix4f;
-import mini.renderEngine.RenderManager;
+import mini.renderer.RenderManager;
 import mini.scene.Geometry;
 import mini.scene.Node;
 import mini.scene.shape.Box;
 import mini.shaders.DefineList;
-import mini.shaders.ShaderProgram;
+import mini.shaders.Shader;
 import mini.shaders.Uniform;
 import mini.shaders.VarType;
 import mini.system.NullRenderer;
@@ -409,7 +409,7 @@ public class MaterialMatParamTest {
 
     private final NullRenderer renderer = new NullRenderer() {
         @Override
-        public void setShader(ShaderProgram shader) {
+        public void setShader(Shader shader) {
             MaterialMatParamTest.this.usedShader = shader;
             evaluated = true;
         }
@@ -422,7 +422,7 @@ public class MaterialMatParamTest {
     private final RenderManager renderManager = new RenderManager(renderer);
 
     private boolean evaluated = false;
-    private ShaderProgram usedShader = null;
+    private Shader usedShader = null;
     private final Texture[] usedTextures = new Texture[32];
 
     private void inputMp(MatParam... params) {

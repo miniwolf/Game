@@ -1,4 +1,4 @@
-package mini.renderEngine.opengl;
+package mini.renderer.opengl;
 
 import org.lwjgl.opengl.EXTFramebufferObject;
 import org.lwjgl.opengl.GL11;

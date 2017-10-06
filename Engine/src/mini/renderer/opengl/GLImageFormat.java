@@ -1,4 +1,4 @@
-package mini.renderEngine.opengl;
+package mini.renderer.opengl;
 
 /**
  * Created by miniwolf on 25-04-2017.

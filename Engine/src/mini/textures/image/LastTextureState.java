@@ -1,6 +1,6 @@
 package mini.textures.image;
 
-import mini.renderEngine.opengl.GLRenderer;
+import mini.renderer.opengl.GLRenderer;
 import mini.textures.Texture;
 
 /**

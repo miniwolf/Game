@@ -242,7 +242,7 @@ public final class Matrix4f implements Cloneable, java.io.Serializable {
 
     /**
      * <code>get</code> retrieves a value from the matrix at the given
-     * position. If the position is invalid a <code>JmeException</code> is
+     * position. If the position is invalid a <code>IllegalArgumentException</code> is
      * thrown.
      *
      * @param i the row index.
@@ -404,7 +404,7 @@ public final class Matrix4f implements Cloneable, java.io.Serializable {
 
     /**
      * <code>set</code> places a given value into the matrix at the given
-     * position. If the position is invalid a <code>JmeException</code> is
+     * position. If the position is invalid a <code>IllegalArgumentException</code> is
      * thrown.
      *
      * @param i     the row index.
@@ -485,6 +485,7 @@ public final class Matrix4f implements Cloneable, java.io.Serializable {
      * values.
      *
      * @param matrix the matrix to set the value to.
+     * @throws IllegalArgumentException if the array is not of size 16.
      */
     public void set(float[][] matrix) {
         if (matrix.length != 4 || matrix[0].length != 4) {
@@ -630,7 +631,6 @@ public final class Matrix4f implements Cloneable, java.io.Serializable {
                !(Math.abs(mat.m20) > 1e-4) && !(Math.abs(mat.m21) > 1e-4) &&
                !(Math.abs(mat.m23) > 1e-4) && !(Math.abs(mat.m30) > 1e-4) &&
                !(Math.abs(mat.m31) > 1e-4) && !(Math.abs(mat.m32) > 1e-4);
-
     }
 
     /**
@@ -858,7 +858,7 @@ public final class Matrix4f implements Cloneable, java.io.Serializable {
             // A
             m02 = (right + left) / (right - left);
 
-            // B 
+            // B
             m12 = (top + bottom) / (top - bottom);
 
             // C
@@ -1558,10 +1558,26 @@ public final class Matrix4f implements Cloneable, java.io.Serializable {
         return store;
     }
 
-    public Matrix4f transpose() {
-        float[] tmp = new float[16];
-        get(tmp, true);
-        return new Matrix4f(tmp);
+    /**
+     * <code>determinant</code> generates the determinate of this matrix.
+     *
+     * @return the determinate
+     */
+    public float determinant() {
+        float fA0 = m00 * m11 - m01 * m10;
+        float fA1 = m00 * m12 - m02 * m10;
+        float fA2 = m00 * m13 - m03 * m10;
+        float fA3 = m01 * m12 - m02 * m11;
+        float fA4 = m01 * m13 - m03 * m11;
+        float fA5 = m02 * m13 - m03 * m12;
+        float fB0 = m20 * m31 - m21 * m30;
+        float fB1 = m20 * m32 - m22 * m30;
+        float fB2 = m20 * m33 - m23 * m30;
+        float fB3 = m21 * m32 - m22 * m31;
+        float fB4 = m21 * m33 - m23 * m31;
+        float fB5 = m22 * m33 - m23 * m32;
+        float fDet = fA0 * fB5 - fA1 * fB4 + fA2 * fB3 + fA3 * fB2 - fA4 * fB1 + fA5 * fB0;
+        return fDet;
     }
 
     /**
@@ -1877,22 +1893,10 @@ public final class Matrix4f implements Cloneable, java.io.Serializable {
         setInverseRotationRadians(vec);
     }
 
-    /**
-     * <code>inverseTranslateVect</code> translates a given Vector3f by the
-     * translation part of this matrix.
-     *
-     * @param vec the Vector3f data to be translated.
-     * @throws IllegalArgumentException if the size of the Vector3f is not 3.
-     */
-    public void inverseTranslateVect(float[] vec) {
-        if (vec.length != 3) {
-            throw new IllegalArgumentException(
-                    "vec must be of size 3.");
-        }
-
-        vec[0] = vec[0] - m03;
-        vec[1] = vec[1] - m13;
-        vec[2] = vec[2] - m23;
+    public Matrix4f transpose() {
+        float[] tmp = new float[16];
+        get(tmp, true);
+        return new Matrix4f(tmp);
     }
 
     /**
@@ -1942,24 +1946,21 @@ public final class Matrix4f implements Cloneable, java.io.Serializable {
     }
 
     /**
-     * <code>determinant</code> generates the determinate of this matrix.
+     * <code>inverseTranslateVect</code> translates a given Vector3f by the
+     * translation part of this matrix.
      *
-     * @return the determinate
+     * @param vec the Vector3f data to be translated.
+     * @throws IllegalArgumentException if the size of the Vector3f is not 3.
      */
-    public float determinant() {
-        float fA0 = m00 * m11 - m01 * m10;
-        float fA1 = m00 * m12 - m02 * m10;
-        float fA2 = m00 * m13 - m03 * m10;
-        float fA3 = m01 * m12 - m02 * m11;
-        float fA4 = m01 * m13 - m03 * m11;
-        float fA5 = m02 * m13 - m03 * m12;
-        float fB0 = m20 * m31 - m21 * m30;
-        float fB1 = m20 * m32 - m22 * m30;
-        float fB2 = m20 * m33 - m23 * m30;
-        float fB3 = m21 * m32 - m22 * m31;
-        float fB4 = m21 * m33 - m23 * m31;
-        float fB5 = m22 * m33 - m23 * m32;
-        return fA0 * fB5 - fA1 * fB4 + fA2 * fB3 + fA3 * fB2 - fA4 * fB1 + fA5 * fB0;
+    public void inverseTranslateVect(float[] vec) {
+        if (vec.length != 3) {
+            throw new IllegalArgumentException(
+                    "vec must be of size 3.");
+        }
+
+        vec[0] = vec[0] - m03;
+        vec[1] = vec[1] - m13;
+        vec[2] = vec[2] - m23;
     }
 
     /**
@@ -1968,7 +1969,7 @@ public final class Matrix4f implements Cloneable, java.io.Serializable {
      * Hashtable, HashMap, HashSet etc.
      *
      * @return the hashcode for this instance of Matrix4f.
-     * @see Object#hashCode()
+     * @see java.lang.Object#hashCode()
      */
     @Override
     public int hashCode() {
@@ -1997,23 +1998,28 @@ public final class Matrix4f implements Cloneable, java.io.Serializable {
     }
 
     /**
-     * <code>toString</code> returns the string representation of this object.
-     * It is in a format of a 4x4 matrix. For example, an identity matrix would
-     * be represented by the following string. com.jme.mini.math.Matrix3f <br>[<br>
-     * 1.0  0.0  0.0  0.0 <br>
-     * 0.0  1.0  0.0  0.0 <br>
-     * 0.0  0.0  1.0  0.0 <br>
-     * 0.0  0.0  0.0  1.0 <br>]<br>
+     * are these two matrices the same? they are is they both have the same mXX values.
      *
-     * @return the string representation of this object.
+     * @param o the object to compare for equality
+     * @return true if they are equal
      */
     @Override
-    public String toString() {
-        return "Matrix4f\n[\n"
-               + " " + m00 + "  " + m01 + "  " + m02 + "  " + m03 + " \n"
-               + " " + m10 + "  " + m11 + "  " + m12 + "  " + m13 + " \n"
-               + " " + m20 + "  " + m21 + "  " + m22 + "  " + m23 + " \n"
-               + " " + m30 + "  " + m31 + "  " + m32 + "  " + m33 + " \n]";
+    public boolean equals(Object o) {
+        if (o == null || !(o instanceof Matrix4f)) {
+            return false;
+        }
+        if (this == o) {
+            return true;
+        }
+        Matrix4f comp = (Matrix4f) o;
+        return Float.compare(m00, comp.m00) == 0 && Float.compare(m01, comp.m01) == 0
+               && Float.compare(m02, comp.m02) == 0 && Float.compare(m03, comp.m03) == 0
+               && Float.compare(m10, comp.m10) == 0 && Float.compare(m11, comp.m11) == 0
+               && Float.compare(m12, comp.m12) == 0 && Float.compare(m13, comp.m13) == 0
+               && Float.compare(m20, comp.m20) == 0 && Float.compare(m21, comp.m21) == 0
+               && Float.compare(m22, comp.m22) == 0 && Float.compare(m23, comp.m23) == 0
+               && Float.compare(m30, comp.m30) == 0 && Float.compare(m31, comp.m31) == 0
+               && Float.compare(m32, comp.m32) == 0 && Float.compare(m33, comp.m33) == 0;
     }
 
     /**
@@ -2047,31 +2053,23 @@ public final class Matrix4f implements Cloneable, java.io.Serializable {
     }
 
     /**
-     * are these two matrices the same? they are is they both have the same mXX values.
+     * <code>toString</code> returns the string representation of this object.
+     * It is in a format of a 4x4 matrix. For example, an identity matrix would
+     * be represented by the following string. com.jme.mini.math.Matrix3f <br>[<br>
+     * 1.0  0.0  0.0  0.0 <br>
+     * 0.0  1.0  0.0  0.0 <br>
+     * 0.0  0.0  1.0  0.0 <br>
+     * 0.0  0.0  0.0  1.0 <br>]<br>
      *
-     * @param o the object to compare for equality
-     * @return true if they are equal
+     * @return the string representation of this object.
      */
     @Override
-    public boolean equals(Object o) {
-        if (o == null || !(o instanceof Matrix4f)) {
-            return false;
-        }
-
-        if (this == o) {
-            return true;
-        }
-
-        Matrix4f comp = (Matrix4f) o;
-        return Float.compare(m00, comp.m00) == 0 && Float.compare(m01, comp.m01) == 0
-               && Float.compare(m02, comp.m02) == 0 && Float.compare(m03, comp.m03) == 0
-               && Float.compare(m10, comp.m10) == 0 && Float.compare(m11, comp.m11) == 0
-               && Float.compare(m12, comp.m12) == 0 && Float.compare(m13, comp.m13) == 0
-               && Float.compare(m20, comp.m20) == 0 && Float.compare(m21, comp.m21) == 0
-               && Float.compare(m22, comp.m22) == 0 && Float.compare(m23, comp.m23) == 0
-               && Float.compare(m30, comp.m30) == 0 && Float.compare(m31, comp.m31) == 0
-               && Float.compare(m32, comp.m32) == 0 && Float.compare(m33, comp.m33) == 0;
-
+    public String toString() {
+        return "Matrix4f\n[\n"
+               + " " + m00 + "  " + m01 + "  " + m02 + "  " + m03 + " \n"
+               + " " + m10 + "  " + m11 + "  " + m12 + "  " + m13 + " \n"
+               + " " + m20 + "  " + m21 + "  " + m22 + "  " + m23 + " \n"
+               + " " + m30 + "  " + m31 + "  " + m32 + "  " + m33 + " \n]";
     }
 
     // XXX: This tests more solid than converting the q to a matrix and multiplying... why?

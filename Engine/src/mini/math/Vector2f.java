@@ -31,7 +31,6 @@
  */
 package mini.math;
 
-import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
@@ -647,7 +646,7 @@ public final class Vector2f implements Cloneable, java.io.Serializable {
 
     /**
      * <code>toString</code> returns the string representation of this vector
-     * object. The format of the string is such: com.jme.mini.math.Vector2f
+     * object. The format of the string is such: mini.math.Vector2f
      * [X=XX.XXXX, Y=YY.YYYY]
      *
      * @return the string representation of this vector.
@@ -662,10 +661,9 @@ public final class Vector2f implements Cloneable, java.io.Serializable {
      * @param in ObjectInput
      * @throws IOException
      * @throws ClassNotFoundException
-     * @see Externalizable
+     * @see java.io.Externalizable
      */
-    public void readExternal(ObjectInput in) throws IOException,
-                                                    ClassNotFoundException {
+    public void readExternal(ObjectInput in) throws IOException {
         x = in.readFloat();
         y = in.readFloat();
     }
@@ -675,7 +673,7 @@ public final class Vector2f implements Cloneable, java.io.Serializable {
      *
      * @param out ObjectOutput
      * @throws IOException
-     * @see Externalizable
+     * @see java.io.Externalizable
      */
     public void writeExternal(ObjectOutput out) throws IOException {
         out.writeFloat(x);

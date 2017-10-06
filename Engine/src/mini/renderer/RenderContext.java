@@ -1,11 +1,11 @@
-package mini.renderEngine;
+package mini.renderer;
 
 import mini.material.RenderState;
 import mini.math.ColorRGBA;
-import mini.renderEngine.opengl.GLRenderer;
+import mini.renderer.opengl.GLRenderer;
 import mini.scene.Mesh;
 import mini.scene.VertexBuffer;
-import mini.shaders.ShaderProgram;
+import mini.shaders.Shader;
 import mini.textures.FrameBuffer;
 import mini.textures.Image;
 import mini.textures.Texture;
@@ -93,7 +93,7 @@ public class RenderContext {
     /**
      * @see GLRenderer#setShader(ShaderProgram)
      */
-    public ShaderProgram boundShader;
+    public Shader boundShader;
 
     /**
      * @see GLRenderer#setFrameBuffer(FrameBuffer)

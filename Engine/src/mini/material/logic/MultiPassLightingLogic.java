@@ -10,11 +10,10 @@ import mini.material.TechniqueDef;
 import mini.math.ColorRGBA;
 import mini.math.Quaternion;
 import mini.math.Vector3f;
-import mini.math.Vector4f;
-import mini.renderEngine.RenderManager;
-import mini.renderEngine.Renderer;
+import mini.renderer.RenderManager;
+import mini.renderer.Renderer;
 import mini.scene.Geometry;
-import mini.shaders.ShaderProgram;
+import mini.shaders.Shader;
 import mini.shaders.Uniform;
 import mini.shaders.VarType;
 import mini.utils.TempVars;
@@ -36,7 +35,7 @@ public final class MultiPassLightingLogic extends DefaultTechniqueDefLogic {
     }
 
     @Override
-    public void render(RenderManager renderManager, ShaderProgram shader, Geometry geometry, LightList lights, int lastTexUnit) {
+    public void render(RenderManager renderManager, Shader shader, Geometry geometry, LightList lights, int lastTexUnit) {
         Renderer r = renderManager.getRenderer();
         Uniform lightDir = shader.getUniform("g_LightDirection");
         Uniform lightColor = shader.getUniform("g_LightColor");
@@ -69,7 +68,6 @@ public final class MultiPassLightingLogic extends DefaultTechniqueDefLogic {
             Quaternion tmpLightDirection = vars.quat1;
             Quaternion tmpLightPosition = vars.quat2;
             ColorRGBA tmpLightColor = vars.color;
-            Vector4f tmpVec = vars.vect4f1;
 
             ColorRGBA color = l.getColor();
             tmpLightColor.set(color);
@@ -121,4 +119,3 @@ public final class MultiPassLightingLogic extends DefaultTechniqueDefLogic {
         }
     }
 }
-

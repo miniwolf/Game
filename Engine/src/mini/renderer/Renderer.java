@@ -1,10 +1,10 @@
-package mini.renderEngine;
+package mini.renderer;
 
 import mini.material.RenderState;
 import mini.math.ColorRGBA;
 import mini.scene.Mesh;
 import mini.scene.VertexBuffer;
-import mini.shaders.ShaderProgram;
+import mini.shaders.Shader;
 import mini.shaders.ShaderSource;
 import mini.textures.FrameBuffer;
 import mini.textures.Image;
@@ -123,7 +123,7 @@ public interface Renderer {
      *
      * @param shader The shader to use for rendering.
      */
-    void setShader(ShaderProgram shader);
+    void setShader(Shader shader);
 
     /**
      * Deletes a shader. This method also deletes
@@ -132,7 +132,7 @@ public interface Renderer {
      * @param shader Shader to delete.
      * @see #deleteShaderSource(ShaderSource)
      */
-    void deleteShader(ShaderProgram shader);
+    void deleteShader(Shader shader);
 
     /**
      * Deletes the provided shader source.

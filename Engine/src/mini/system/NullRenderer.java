@@ -4,12 +4,12 @@ import mini.light.LightList;
 import mini.material.RenderState;
 import mini.math.ColorRGBA;
 import mini.math.Matrix4f;
-import mini.renderEngine.Caps;
-import mini.renderEngine.Limits;
-import mini.renderEngine.Renderer;
+import mini.renderer.Caps;
+import mini.renderer.Limits;
+import mini.renderer.Renderer;
 import mini.scene.Mesh;
 import mini.scene.VertexBuffer;
-import mini.shaders.ShaderProgram;
+import mini.shaders.Shader;
 import mini.shaders.ShaderSource;
 import mini.textures.FrameBuffer;
 import mini.textures.Image;
@@ -74,10 +74,10 @@ public class NullRenderer implements Renderer {
     public void setLighting(LightList lights) {
     }
 
-    public void setShader(ShaderProgram shader) {
+    public void setShader(Shader shader) {
     }
 
-    public void deleteShader(ShaderProgram shader) {
+    public void deleteShader(Shader shader) {
     }
 
     public void deleteShaderSource(ShaderSource source) {

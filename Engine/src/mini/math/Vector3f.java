@@ -921,7 +921,7 @@ public final class Vector3f implements Cloneable, java.io.Serializable {
      * <code>toString</code> returns the string representation of this vector.
      * The format is:
      * <p>
-     * org.jme.mini.math.Vector3f [X=XX.XXXX, Y=YY.YYYY, Z=ZZ.ZZZZ]
+     * mini.math.Vector3f [X=XX.XXXX, Y=YY.YYYY, Z=ZZ.ZZZZ]
      *
      * @return the string representation of this vector.
      */

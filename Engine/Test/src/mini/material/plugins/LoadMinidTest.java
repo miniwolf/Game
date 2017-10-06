@@ -1,11 +1,11 @@
 package mini.material.plugins;
 
 import mini.material.Material;
-import mini.renderEngine.Caps;
-import mini.renderEngine.RenderManager;
+import mini.renderer.Caps;
+import mini.renderer.RenderManager;
 import mini.scene.Geometry;
 import mini.scene.shape.Box;
-import mini.shaders.ShaderProgram;
+import mini.shaders.Shader;
 import mini.system.NullRenderer;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,8 +36,7 @@ public class LoadMinidTest {
         material.selectTechnique("Default", renderManager);
 
         assertEquals(material.getActiveTechnique().getDef().getShaderNodes().size(), 2);
-        ShaderProgram s = material.getActiveTechnique().getDef().getShader(myCaps, material
-                .getActiveTechnique().getDynamicDefines());
+        Shader s = material.getActiveTechnique().getDef().getShader(myCaps,  material.getActiveTechnique().getDynamicDefines());
         assertEquals(s.getSources().size(), 2);
     }
 

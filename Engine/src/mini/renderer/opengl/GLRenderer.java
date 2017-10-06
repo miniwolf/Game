@@ -1,4 +1,4 @@
-package mini.renderEngine.opengl;
+package mini.renderer.opengl;
 
 import mini.material.RenderState;
 import mini.math.ColorRGBA;
@@ -7,15 +7,15 @@ import mini.math.Quaternion;
 import mini.math.Vector2f;
 import mini.math.Vector3f;
 import mini.math.Vector4f;
-import mini.renderEngine.Caps;
-import mini.renderEngine.IDList;
-import mini.renderEngine.Limits;
-import mini.renderEngine.RenderContext;
-import mini.renderEngine.Renderer;
+import mini.renderer.Caps;
+import mini.renderer.IDList;
+import mini.renderer.Limits;
+import mini.renderer.RenderContext;
+import mini.renderer.Renderer;
 import mini.scene.Mesh;
 import mini.scene.VertexBuffer;
 import mini.shaders.Attribute;
-import mini.shaders.ShaderProgram;
+import mini.shaders.Shader;
 import mini.shaders.ShaderSource;
 import mini.shaders.Uniform;
 import mini.shaders.tools.ShaderDebug;
@@ -960,7 +960,7 @@ public final class GLRenderer implements Renderer {
     /*********************************************************************\
      |* Shaders                                                           *|
      \*********************************************************************/
-    protected void updateUniformLocation(ShaderProgram shader, Uniform uniform) {
+    protected void updateUniformLocation(Shader shader, Uniform uniform) {
         int loc = GL20.glGetUniformLocation(shader.getId(), uniform.getName());
         if (loc < 0) {
             uniform.setLocation(-1);
@@ -971,7 +971,7 @@ public final class GLRenderer implements Renderer {
         }
     }
 
-    protected void bindProgram(ShaderProgram shader) {
+    protected void bindProgram(Shader shader) {
         int shaderId = shader.getId();
         if (context.boundShaderProgram != shaderId) {
             GL20.glUseProgram(shaderId);
@@ -983,7 +983,7 @@ public final class GLRenderer implements Renderer {
         }
     }
 
-    protected void updateUniform(ShaderProgram shader, Uniform uniform) {
+    protected void updateUniform(Shader shader, Uniform uniform) {
         int shaderId = shader.getId();
 
         assert uniform.getName() != null;
@@ -1098,7 +1098,7 @@ public final class GLRenderer implements Renderer {
         }
     }
 
-    protected void updateShaderUniforms(ShaderProgram shader) {
+    protected void updateShaderUniforms(Shader shader) {
         Map<String, Uniform> uniforms = shader.getUniformMap();
         for (Uniform uniform : uniforms.values()) {
             if (uniform.isUpdateNeeded()) {
@@ -1107,14 +1107,14 @@ public final class GLRenderer implements Renderer {
         }
     }
 
-    protected void resetUniformLocations(ShaderProgram shader) {
+    protected void resetUniformLocations(Shader shader) {
         Map<String, Uniform> uniforms = shader.getUniformMap();
         for (Uniform uniform : uniforms.values()) {
             uniform.reset(); // e.g check location again
         }
     }
 
-    public int convertShaderType(ShaderProgram.ShaderType type) {
+    public int convertShaderType(Shader.ShaderType type) {
         switch (type) {
             case Fragment:
                 return GL20.GL_FRAGMENT_SHADER;
@@ -1182,7 +1182,7 @@ public final class GLRenderer implements Renderer {
                     // request GLSL ES (1.00) when compiling under GLES2.
                     stringBuf.append("#version 100\n");
 
-                    if (source.getType() == ShaderProgram.ShaderType.Fragment) {
+                    if (source.getType() == Shader.ShaderType.Fragment) {
                         // GLES2 requires precision qualifier.
                         stringBuf.append("precision mediump float;\n");
                     }
@@ -1239,7 +1239,7 @@ public final class GLRenderer implements Renderer {
         }
     }
 
-    public void updateShaderData(ShaderProgram shader) {
+    public void updateShaderData(Shader shader) {
         int id = shader.getId();
         boolean needRegister = false;
         if (id == -1) {
@@ -1261,7 +1261,7 @@ public final class GLRenderer implements Renderer {
             if (source.isUpdateNeeded()) {
                 updateShaderSourceData(source);
             }
-            if (source.getType() == ShaderProgram.ShaderType.Fragment
+            if (source.getType() == Shader.ShaderType.Fragment
                     && source.getLanguage().equals("GLSL150")) {
                 bindFragDataRequired = true;
             }
@@ -1316,7 +1316,7 @@ public final class GLRenderer implements Renderer {
         }
     }
 
-    public void setShader(ShaderProgram shader) {
+    public void setShader(Shader shader) {
         if (shader == null) {
             throw new IllegalArgumentException("Shader cannot be null");
         } else {
@@ -1344,7 +1344,7 @@ public final class GLRenderer implements Renderer {
         source.resetObject();
     }
 
-    public void deleteShader(ShaderProgram shader) {
+    public void deleteShader(Shader shader) {
         if (shader.getId() == -1) {
             System.err.println("Shader is not uploaded to GPU, cannot delete.");
             return;

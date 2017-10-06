@@ -14,8 +14,6 @@ import java.util.List;
  *
  * This class is not intended to be used by the engine users directly. It's the
  * structure for loading shader nodes from a minid material definition file
- *
- * @author Nehon
  */
 public class ShaderNode implements Cloneable {
     private String name;

@@ -1,6 +1,6 @@
 package mini.light;
 
-import mini.renderEngine.Camera;
+import mini.renderer.Camera;
 import mini.scene.Geometry;
 
 /**
@@ -28,7 +28,7 @@ public interface LightFilter {
      * An advanced implementation would determine if the light intersects
      * the {@link Geometry#getWorldBound() geometry's bounding volume} and if
      * the light intersects the frustum of the camera set in
-     * {@link #setCamera(mini.renderEngine.Camera)} as well as sort the lights
+     * {@link #setCamera(mini.renderer.Camera)} as well as sort the lights
      * according to some "influence" criteria - this will then provide
      * an optimal set of lights that should be used for rendering.
      *

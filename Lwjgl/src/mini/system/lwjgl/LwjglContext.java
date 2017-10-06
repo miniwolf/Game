@@ -2,7 +2,7 @@ package mini.system.lwjgl;
 
 import mini.input.lwjgl.LwjglKeyInput;
 import mini.input.lwjgl.LwjglMouseInput;
-import mini.renderEngine.opengl.GLRenderer;
+import mini.renderer.opengl.GLRenderer;
 import mini.system.ApplicationContext;
 import mini.system.NativeLibraryLoader;
 import mini.system.SystemListener;

@@ -1,6 +1,6 @@
-package mini.renderEngine.opengl;
+package mini.renderer.opengl;
 
-import mini.renderEngine.Caps;
+import mini.renderer.Caps;
 import mini.textures.Image;
 import mini.textures.image.ColorSpace;
 import org.lwjgl.opengl.GL11;

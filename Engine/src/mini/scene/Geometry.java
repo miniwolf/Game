@@ -2,7 +2,7 @@ package mini.scene;
 
 import mini.material.Material;
 import mini.math.Matrix4f;
-import mini.renderEngine.Camera;
+import mini.renderer.Camera;
 import mini.utils.TempVars;
 
 /**

@@ -1,7 +1,7 @@
 package mini.light;
 
 
-import mini.renderEngine.Camera;
+import mini.renderer.Camera;
 import mini.scene.Geometry;
 import mini.utils.TempVars;
 

@@ -1,8 +1,14 @@
-package mini.renderEngine.opengl;
+package mini.renderer.opengl;
 
-import mini.renderEngine.Caps;
+import mini.renderer.Caps;
 import mini.textures.Image;
-import org.lwjgl.opengl.*;
+import org.lwjgl.opengl.ARBTextureFloat;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
+import org.lwjgl.opengl.GL14;
+import org.lwjgl.opengl.GL21;
+import org.lwjgl.opengl.GL30;
+import org.lwjgl.opengl.GL41;
 
 import java.util.EnumSet;
 

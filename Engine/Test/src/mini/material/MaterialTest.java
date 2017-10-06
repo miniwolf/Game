@@ -1,7 +1,7 @@
 package mini.material;
 
-import mini.renderEngine.Caps;
-import mini.renderEngine.RenderManager;
+import mini.renderer.Caps;
+import mini.renderer.RenderManager;
 import mini.scene.Geometry;
 import mini.scene.shape.Box;
 import mini.system.NullRenderer;

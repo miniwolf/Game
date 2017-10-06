@@ -2,7 +2,7 @@ package mini.light;
 
 import mini.math.ColorRGBA;
 import mini.math.Vector3f;
-import mini.renderEngine.Camera;
+import mini.renderer.Camera;
 import mini.scene.Spatial;
 import mini.utils.TempVars;
 

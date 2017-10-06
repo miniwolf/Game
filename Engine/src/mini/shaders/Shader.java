@@ -1,38 +1,38 @@
 package mini.shaders;
 
-import mini.renderEngine.opengl.GLRenderer;
+import mini.renderer.Renderer;
 import mini.scene.VertexBuffer;
 import mini.utils.NativeObject;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ShaderProgram extends NativeObject {
-    private boolean isUpdateNeeded = true;
+public final class Shader extends NativeObject {
 
     /**
      * A list of all shader sources currently attached.
      */
-    private List<ShaderSource> shaderSourceList = new ArrayList<>();
-
-    /**
-     * Maps attribute name to the location of the attribute in the shader.
-     */
-    private Map<Integer, Attribute> attribs = new HashMap<>();
+    private final List<ShaderSource> shaderSourceList;
 
     /**
      * Maps uniform name to the uniform variable.
      */
-    private Map<String, Uniform> uniforms = new HashMap<>();
+    private final Map<String, Uniform> uniforms;
 
     /**
      * Uniforms bound to {@link UniformBinding}s.
      * <p>
      * Managed by the {@link UniformBindingManager}.
      */
-    private List<Uniform> boundUniforms = new ArrayList<>();
+    private final List<Uniform> boundUniforms;
+
+    /**
+     * Maps attribute name to the location of the attribute in the shader.
+     */
+    private final Map<Integer, Attribute> attribs;
 
     /**
      * Type of shader. The shader will control the pipeline of it's type.
@@ -74,25 +74,11 @@ public class ShaderProgram extends NativeObject {
         }
     }
 
-    /*public ShaderProgram(MyFile vertexFile, MyFile fragmentFile, String... inVariables) {
-        int vertexShaderID = loadShader(vertexFile, GL20.GL_VERTEX_SHADER);
-        int fragmentShaderID = loadShader(fragmentFile, GL20.GL_FRAGMENT_SHADER);
-        programID = GL20.glCreateProgram();
-        GL20.glAttachShader(programID, vertexShaderID);
-        GL20.glAttachShader(programID, fragmentShaderID);
-        bindAttributes(inVariables);
-        GL20.glLinkProgram(programID);
-        GL20.glDetachShader(programID, vertexShaderID);
-        GL20.glDetachShader(programID, fragmentShaderID);
-        GL20.glDeleteShader(vertexShaderID);
-        GL20.glDeleteShader(fragmentShaderID);
-    }*/
-
     /**
      * Creates a new shader, {@link #initialize() } must be called
      * after this constructor for the shader to be usable.
      */
-    public ShaderProgram() {
+    public Shader() {
         super();
         shaderSourceList = new ArrayList<>();
         uniforms = new HashMap<>();
@@ -103,12 +89,12 @@ public class ShaderProgram extends NativeObject {
     /**
      * Do not use this constructor. Used for destructable clones only.
      */
-    protected ShaderProgram(ShaderProgram s) {
+    protected Shader(Shader s) {
         super(s.id);
 
         // Shader sources cannot be shared, therefore they must
         // be destroyed together with the parent shader.
-        shaderSourceList = new ArrayList<>();
+        shaderSourceList = new ArrayList<ShaderSource>();
         for (ShaderSource source : s.shaderSourceList) {
             shaderSourceList.add((ShaderSource) source.createDestructableClone());
         }
@@ -121,10 +107,14 @@ public class ShaderProgram extends NativeObject {
     /**
      * Adds source code to a certain pipeline.
      *
-     * @param type  The pipeline to control
-     * @param lines The shader source code lines (in GLSL).
+     * @param type     The pipeline to control
+     * @param source   The shader source code (in GLSL).
+     * @param defines  Preprocessor defines (placed at the beginning of the shader)
+     * @param language The shader source language, currently accepted is GLSL###
+     *                 where ### is the version, e.g. GLSL100 = GLSL 1.0, GLSL330 = GLSL 3.3, etc.
      */
-    public void addSource(ShaderType type, String name, String source, String defines, String language) {
+    public void addSource(ShaderType type, String name, String source, String defines,
+                          String language) {
         ShaderSource shaderSource = new ShaderSource(type);
         shaderSource.setSource(source);
         shaderSource.setName(name);
@@ -134,10 +124,6 @@ public class ShaderProgram extends NativeObject {
         }
         shaderSourceList.add(shaderSource);
         setUpdateNeeded();
-    }
-
-    public List<ShaderSource> getSources() {
-        return shaderSourceList;
     }
 
     public void addUniformBinding(UniformBinding binding) {
@@ -163,6 +149,10 @@ public class ShaderProgram extends NativeObject {
         return uniform;
     }
 
+    public void removeUniform(String name) {
+        uniforms.remove(name);
+    }
+
     public Attribute getAttribute(VertexBuffer.Type attribType) {
         int ordinal = attribType.ordinal();
         Attribute attrib = attribs.get(ordinal);
@@ -182,12 +172,8 @@ public class ShaderProgram extends NativeObject {
         return boundUniforms;
     }
 
-    public boolean isUpdateNeeded() {
-        return isUpdateNeeded;
-    }
-
-    public void clearUpdateNeeded() {
-        isUpdateNeeded = false;
+    public Collection<ShaderSource> getSources() {
+        return shaderSourceList;
     }
 
     @Override
@@ -196,6 +182,36 @@ public class ShaderProgram extends NativeObject {
                "[numSources=" + shaderSourceList.size() +
                ", numUniforms=" + uniforms.size() +
                ", shaderSources=" + getSources() + "]";
+    }
+
+    /**
+     * Removes the "set-by-current-material" flag from all uniforms.
+     * When a uniform is modified after this call, the flag shall
+     * become "set-by-current-material".
+     * A call to {@link #resetUniformsNotSetByCurrent() } will reset
+     * all uniforms that do not have the "set-by-current-material" flag
+     * to their default value (usually all zeroes or false).
+     */
+    public void clearUniformsSetByCurrentFlag() {
+        int size = uniforms.size();
+        for (Uniform u : uniforms.values()) {
+            u.clearSetByCurrentMaterial();
+        }
+    }
+
+    /**
+     * Resets all uniforms that do not have the "set-by-current-material" flag
+     * to their default value (usually all zeroes or false).
+     * When a uniform is modified, that flag is set, to remove the flag,
+     * use {@link #clearUniformsSetByCurrent() }.
+     */
+    public void resetUniformsNotSetByCurrent() {
+        int size = uniforms.size();
+        for (Uniform u : uniforms.values()) {
+            if (!u.isSetByCurrentMaterial()) {
+                u.clearValue();
+            }
+        }
     }
 
     /**
@@ -210,8 +226,8 @@ public class ShaderProgram extends NativeObject {
             }
         }
         if (attribs != null) {
-            for (Map.Entry<Integer, Attribute> entry : attribs.entrySet()) {
-                entry.getValue().location = ShaderVariable.LOC_UNKNOWN;
+            for (Attribute attribute : attribs.values()) {
+                attribute.location = ShaderVariable.LOC_UNKNOWN;
             }
         }
     }
@@ -237,11 +253,11 @@ public class ShaderProgram extends NativeObject {
 
     @Override
     public void deleteObject(Object rendererObject) {
-        ((GLRenderer) rendererObject).deleteShader(this);
+        ((Renderer) rendererObject).deleteShader(this);
     }
 
     public NativeObject createDestructableClone() {
-        return new ShaderProgram(this);
+        return new Shader(this);
     }
 
     @Override

@@ -1,4 +1,4 @@
-package mini.renderEngine;
+package mini.renderer;
 
 import mini.math.FastMath;
 import mini.math.Matrix4f;

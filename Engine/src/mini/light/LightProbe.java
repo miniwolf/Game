@@ -1,7 +1,7 @@
 package mini.light;
 
 import mini.math.Vector3f;
-import mini.renderEngine.Camera;
+import mini.renderer.Camera;
 import mini.scene.Node;
 import mini.scene.Spatial;
 import mini.textures.TextureCubeMap;

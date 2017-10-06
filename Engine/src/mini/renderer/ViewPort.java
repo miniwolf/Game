@@ -1,8 +1,8 @@
-package mini.renderEngine;
+package mini.renderer;
 
 import mini.math.ColorRGBA;
 import mini.post.SceneProcessor;
-import mini.renderEngine.queue.RenderQueue;
+import mini.renderer.queue.RenderQueue;
 import mini.scene.Geometry;
 import mini.scene.Spatial;
 import mini.textures.FrameBuffer;

@@ -1,8 +1,8 @@
 package mini.post;
 
-import mini.renderEngine.RenderManager;
-import mini.renderEngine.ViewPort;
-import mini.renderEngine.queue.RenderQueue;
+import mini.renderer.RenderManager;
+import mini.renderer.ViewPort;
+import mini.renderer.queue.RenderQueue;
 import mini.textures.FrameBuffer;
 
 /**

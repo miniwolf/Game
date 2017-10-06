@@ -2,8 +2,8 @@ package mini.system;
 
 import mini.input.KeyInput;
 import mini.input.MouseInput;
-import mini.renderEngine.Renderer;
-import mini.renderEngine.opengl.GLRenderer;
+import mini.renderer.Renderer;
+import mini.renderer.opengl.GLRenderer;
 
 public interface ApplicationContext {
     /**

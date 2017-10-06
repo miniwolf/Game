@@ -1,4 +1,4 @@
-package mini.renderEngine;
+package mini.renderer;
 
 import mini.light.DefaultLightFilter;
 import mini.light.LightFilter;
@@ -11,14 +11,14 @@ import mini.material.Technique;
 import mini.material.TechniqueDef;
 import mini.math.Matrix4f;
 import mini.post.SceneProcessor;
-import mini.renderEngine.queue.GeometryList;
-import mini.renderEngine.queue.RenderQueue;
+import mini.renderer.queue.GeometryList;
+import mini.renderer.queue.RenderQueue;
 import mini.scene.Geometry;
 import mini.scene.Mesh;
 import mini.scene.Node;
 import mini.scene.Spatial;
 import mini.scene.VertexBuffer;
-import mini.shaders.ShaderProgram;
+import mini.shaders.Shader;
 import mini.shaders.UniformBinding;
 import mini.shaders.UniformBindingManager;
 import mini.system.NullRenderer;
@@ -461,7 +461,7 @@ public class RenderManager {
      * Updates the given list of uniforms with {@link UniformBinding uniform bindings}
      * based on the current world state.
      */
-    public void updateUniformBindings(ShaderProgram shader) {
+    public void updateUniformBindings(Shader shader) {
         uniformBindingManager.updateUniformBindings(shader);
     }
 

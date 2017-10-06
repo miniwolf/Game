@@ -1,8 +1,8 @@
-package mini.renderEngine.queue;
+package mini.renderer.queue;
 
 import mini.material.Material;
 import mini.math.Vector3f;
-import mini.renderEngine.Camera;
+import mini.renderer.Camera;
 import mini.scene.Geometry;
 
 public class OpaqueComparator implements GeometryComparator {

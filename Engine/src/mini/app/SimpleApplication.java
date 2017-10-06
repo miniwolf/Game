@@ -4,8 +4,8 @@ import mini.input.FlyByCamera;
 import mini.input.KeyInput;
 import mini.input.controls.ActionListener;
 import mini.input.controls.KeyTrigger;
-import mini.renderEngine.RenderManager;
-import mini.renderEngine.queue.RenderQueue;
+import mini.renderer.RenderManager;
+import mini.renderer.queue.RenderQueue;
 import mini.scene.Node;
 import mini.scene.Spatial;
 

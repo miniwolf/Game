@@ -1,3 +1,34 @@
+/*
+ * Copyright (c) 2009-2012 jMonkeyEngine
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *
+ * * Redistributions of source code must retain the above copyright
+ *   notice, this list of conditions and the following disclaimer.
+ *
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in the
+ *   documentation and/or other materials provided with the distribution.
+ *
+ * * Neither the name of 'jMonkeyEngine' nor the names of its contributors
+ *   may be used to endorse or promote products derived from this software
+ *   without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 package mini.utils;
 
 import mini.math.ColorRGBA;
@@ -16,13 +47,14 @@ import java.nio.ByteOrder;
 import java.nio.DoubleBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
-import java.nio.LongBuffer;
 import java.nio.ShortBuffer;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * <code>BufferUtils</code> is a helper class for generating nio buffers from
- * jME data classes such as Vectors and ColorRGBA.
+ * data classes such as Vectors and ColorRGBA.
+ *
+ * @author Joshua Slack and Miniwolf
  */
 public final class BufferUtils {
     /**
@@ -172,6 +204,29 @@ public final class BufferUtils {
     }
 
     /**
+     * Generate a new FloatBuffer using the given array of ColorRGBA objects.
+     * The FloatBuffer will be 4 * data.length long and contain the color data.
+     *
+     * @param data array of ColorRGBA objects to place into a new FloatBuffer
+     */
+    public static FloatBuffer createFloatBuffer(ColorRGBA... data) {
+        if (data == null) {
+            return null;
+        }
+        FloatBuffer buff = createFloatBuffer(4 * data.length);
+        for (ColorRGBA color : data) {
+            if (color != null) {
+                buff.put(color.getRed()).put(color.getGreen()).put(color.getBlue())
+                    .put(color.getAlpha());
+            } else {
+                buff.put(0).put(0).put(0).put(0);
+            }
+        }
+        buff.flip();
+        return buff;
+    }
+
+    /**
      * Generate a new FloatBuffer using the given array of float primitives.
      *
      * @param data array of float primitives to place into a new FloatBuffer
@@ -252,12 +307,12 @@ public final class BufferUtils {
     }
 
     /**
-     * Sets the data contained in the given vector4 into the FloatBuffer at the
+     * Sets the data contained in the given vector4f into the FloatBuffer at the
      * specified index.
      *
      * @param vec   the {@link Vector4f} to insert
      * @param buf   the buffer to insert into
-     * @param index the position to place the data; in terms of vector4 not floats
+     * @param index the position to place the data; in terms of vector4f not floats
      */
     public static void setInBuffer(Vector4f vec, FloatBuffer buf, int index) {
         buf.position(index * 4);
@@ -709,7 +764,7 @@ public final class BufferUtils {
         buf.rewind();
 
         DoubleBuffer copy;
-        if (isDirect(buf)) {
+        if (buf.isDirect()) {
             copy = createDoubleBuffer(buf.limit());
         } else {
             copy = DoubleBuffer.allocate(buf.limit());
@@ -767,7 +822,7 @@ public final class BufferUtils {
         buf.rewind();
 
         FloatBuffer copy;
-        if (isDirect(buf)) {
+        if (buf.isDirect()) {
             copy = createFloatBuffer(buf.limit());
         } else {
             copy = FloatBuffer.allocate(buf.limit());
@@ -827,7 +882,7 @@ public final class BufferUtils {
         buf.rewind();
 
         IntBuffer copy;
-        if (isDirect(buf)) {
+        if (buf.isDirect()) {
             copy = createIntBuffer(buf.limit());
         } else {
             copy = IntBuffer.allocate(buf.limit());
@@ -906,7 +961,7 @@ public final class BufferUtils {
         buf.rewind();
 
         ByteBuffer copy;
-        if (isDirect(buf)) {
+        if (buf.isDirect()) {
             copy = createByteBuffer(buf.limit());
         } else {
             copy = ByteBuffer.allocate(buf.limit());
@@ -978,7 +1033,7 @@ public final class BufferUtils {
         buf.rewind();
 
         ShortBuffer copy;
-        if (isDirect(buf)) {
+        if (buf.isDirect()) {
             copy = createShortBuffer(buf.limit());
         } else {
             copy = ShortBuffer.allocate(buf.limit());
@@ -1135,47 +1190,13 @@ public final class BufferUtils {
      * to OutOfMemoryError yourself using direct buffers.
      **/
     public static void destroyDirectBuffer(Buffer toBeDestroyed) {
-        if (!isDirect(toBeDestroyed)) {
+        if (!toBeDestroyed.isDirect()) {
             return;
         }
         allocator.destroyDirectBuffer(toBeDestroyed);
     }
 
-    /*
-     * FIXME when java 1.5 supprt is dropped - replace calls to this method with
-     * Buffer.isDirect
-     * 
-     * Buffer.isDirect() is only java 6. Java 5 only have this method on Buffer
-     * subclasses : FloatBuffer, IntBuffer, ShortBuffer,
-     * ByteBuffer,DoubleBuffer, LongBuffer. CharBuffer has been excluded as we
-     * don't use it.
-     * 
-     */
-    private static boolean isDirect(Buffer buf) {
-        if (buf instanceof FloatBuffer) {
-            return buf.isDirect();
-        }
-        if (buf instanceof IntBuffer) {
-            return buf.isDirect();
-        }
-        if (buf instanceof ShortBuffer) {
-            return buf.isDirect();
-        }
-        if (buf instanceof ByteBuffer) {
-            return buf.isDirect();
-        }
-        if (buf instanceof DoubleBuffer) {
-            return buf.isDirect();
-        }
-        if (buf instanceof LongBuffer) {
-            return buf.isDirect();
-        }
-        throw new UnsupportedOperationException(
-                " BufferUtils.isDirect was called on " + buf.getClass().getName());
-    }
-
     private static class BufferInfo extends PhantomReference<Buffer> {
-
         private Class type;
         private int size;
 

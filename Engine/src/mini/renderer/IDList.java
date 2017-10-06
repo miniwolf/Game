@@ -1,4 +1,4 @@
-package mini.renderEngine;
+package mini.renderer;
 
 import java.util.Arrays;
 

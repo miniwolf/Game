@@ -102,7 +102,7 @@ public class Glsl100ShaderGenerator {
      * @return the index of the shader path in ShaderNodeDefinition shadersPath list
      * @throws NumberFormatException
      */
-    protected int findShaderIndexFromVersion(ShaderNode shaderNode, ShaderProgram.ShaderType type)
+    protected int findShaderIndexFromVersion(ShaderNode shaderNode, Shader.ShaderType type)
             throws NumberFormatException {
         int index = 0;
         List<String> lang = shaderNode.getDefinition().getShadersLanguage();
@@ -132,7 +132,7 @@ public class Glsl100ShaderGenerator {
     private void generateDeclarationAndMainBody(List<ShaderNode> shaderNodes,
                                                 StringBuilder sourceDeclaration,
                                                 StringBuilder source, ShaderGenerationInfo info,
-                                                ShaderProgram.ShaderType type) {
+                                                Shader.ShaderType type) {
         for (ShaderNode shaderNode : shaderNodes) {
             if (info.getUnusedNodes().contains(shaderNode.getName())) {
                 continue;
@@ -161,10 +161,10 @@ public class Glsl100ShaderGenerator {
      * @return the code of the generated vertex shader
      */
     protected String buildShader(List<ShaderNode> shaderNodes, ShaderGenerationInfo info,
-                                 ShaderProgram.ShaderType type) {
-        if (type == ShaderProgram.ShaderType.TessellationControl ||
-            type == ShaderProgram.ShaderType.TessellationEvaluation ||
-            type == ShaderProgram.ShaderType.Geometry) {
+                                 Shader.ShaderType type) {
+        if (type == Shader.ShaderType.TessellationControl ||
+            type == Shader.ShaderType.TessellationEvaluation ||
+            type == Shader.ShaderType.Geometry) {
             // TODO: Those are not supported.
             // Too much code assumes that type is either Vertex or Fragment
             return null;
@@ -175,7 +175,7 @@ public class Glsl100ShaderGenerator {
         StringBuilder source = new StringBuilder();
 
         generateUniforms(sourceDeclaration, info, type);
-        if (type == ShaderProgram.ShaderType.Vertex) {
+        if (type == Shader.ShaderType.Vertex) {
             generateAttributes(sourceDeclaration, info);
         }
 
@@ -193,7 +193,7 @@ public class Glsl100ShaderGenerator {
      *
      * @return a Shader program
      */
-    public ShaderProgram generateShader(String definesSourceCode) {
+    public Shader generateShader(String definesSourceCode) {
         if (techniqueDef == null) {
             throw new UnsupportedOperationException("The shaderGenerator was not "
                                                     + "properly initialized, call "
@@ -203,8 +203,8 @@ public class Glsl100ShaderGenerator {
         String techniqueName = techniqueDef.getName();
         ShaderGenerationInfo info = techniqueDef.getShaderGenerationInfo();
 
-        ShaderProgram shader = new ShaderProgram();
-        for (ShaderProgram.ShaderType type : ShaderProgram.ShaderType.values()) {
+        Shader shader = new Shader();
+        for (Shader.ShaderType type : Shader.ShaderType.values()) {
             String extension = type.getExtension();
             String language = getLanguageAndVersion(type);
             String shaderSourceCode = buildShader(techniqueDef.getShaderNodes(), info, type);
@@ -221,9 +221,9 @@ public class Glsl100ShaderGenerator {
     }
 
     private void generateUniforms(StringBuilder source, ShaderGenerationInfo info,
-                                  ShaderProgram.ShaderType type) {
+                                  Shader.ShaderType type) {
         generateUniforms(source,
-                         type == ShaderProgram.ShaderType.Vertex ? info.getVertexUniforms() :
+                         type == Shader.ShaderType.Vertex ? info.getVertexUniforms() :
                          info.getFragmentUniforms());
     }
 
@@ -268,10 +268,10 @@ public class Glsl100ShaderGenerator {
     }
 
     private void generateVaryings(StringBuilder source, ShaderGenerationInfo info,
-                                  ShaderProgram.ShaderType type) {
+                                  Shader.ShaderType type) {
         source.append("\n");
         info.getVaryings()
-            .forEach(var -> declareVarying(source, var, type != ShaderProgram.ShaderType.Vertex));
+            .forEach(var -> declareVarying(source, var, type != Shader.ShaderType.Vertex));
     }
 
     /**
@@ -299,14 +299,14 @@ public class Glsl100ShaderGenerator {
      * Shader outputs are declared and initialized inside the main section
      */
     private void generateStartOfMainSection(StringBuilder source, ShaderGenerationInfo info,
-                                            ShaderProgram.ShaderType type) {
+                                            Shader.ShaderType type) {
         source.append("\n");
         source.append("void main(){\n");
         indent();
         appendIndent(source);
-        if (type == ShaderProgram.ShaderType.Vertex) {
+        if (type == Shader.ShaderType.Vertex) {
             declareGlobalPosition(info, source);
-        } else if (type == ShaderProgram.ShaderType.Fragment) {
+        } else if (type == Shader.ShaderType.Fragment) {
             for (ShaderNodeVariable global : info.getFragmentGlobals()) {
                 declareVariable(source, global, "vec4(1.0)");
             }
@@ -322,11 +322,11 @@ public class Glsl100ShaderGenerator {
      * gl_FragData if several output are declared for the fragment shader
      */
     private void generateEndOfMainSection(StringBuilder source, ShaderGenerationInfo info,
-                                          ShaderProgram.ShaderType type) {
+                                          Shader.ShaderType type) {
         source.append("\n");
-        if (type == ShaderProgram.ShaderType.Vertex) {
+        if (type == Shader.ShaderType.Vertex) {
             appendOutput(source, "gl_Position", info.getVertexGlobal());
-        } else if (type == ShaderProgram.ShaderType.Fragment) {
+        } else if (type == Shader.ShaderType.Fragment) {
             List<ShaderNodeVariable> globals = info.getFragmentGlobals();
             if (globals.size() == 1) {
                 appendOutput(source, "gl_FragColor", globals.get(0));
@@ -729,7 +729,7 @@ public class Glsl100ShaderGenerator {
         return var.getNameSpace().equals("MatParam") || var.getNameSpace().equals("WorldParam");
     }
 
-    protected String getLanguageAndVersion(ShaderProgram.ShaderType type) {
+    protected String getLanguageAndVersion(Shader.ShaderType type) {
         return "GLSL100";
     }
 
