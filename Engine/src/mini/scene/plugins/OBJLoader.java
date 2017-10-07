@@ -71,7 +71,8 @@ public final class OBJLoader {
         String folderName = info.getFile().getDirectory();
         String ext = info.getFile().getExtension();
         loader.objName = loader.objName.substring(0, loader.objName.length() - ext.length() - 1);
-        if (folderName != null && folderName.length() > 0) {
+        if (folderName != null && folderName.length() > 0 && loader.objName
+                .startsWith(folderName)) {
             loader.objName = loader.objName.substring(folderName.length());
         }
 
@@ -276,7 +277,7 @@ public final class OBJLoader {
         name = new MyFile(name).getName();
         ModelKey mtlKey = new ModelKey(key.getFile().getDirectory() + name);
         try {
-            matList = (HashMap<String, Material>) MTLLoader.load(mtlKey);
+            matList = (Map<String, Material>) MTLLoader.load(mtlKey);
         } catch (Exception ex) {
             System.err.println("Cannot locate " + name + " for model " + key);
         }
@@ -323,8 +324,9 @@ public final class OBJLoader {
         } else if (cmd.equals("usemtl")) {
             // use material from MTL lib for the following faces
             currentMatName = scan.next();
-//            if (!matList.containsKey(currentMatName))
-//                throw new IOException("Cannot locate material " + currentMatName + " in MTL file!");
+            if (!matList.containsKey(currentMatName)) {
+                throw new IOException("Cannot locate material " + currentMatName + " in MTL file!");
+            }
 
         } else if (cmd.equals("mtllib")) {
             // specify MTL lib to use for this OBJ file
