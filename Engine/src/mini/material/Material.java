@@ -73,7 +73,7 @@ public class Material implements Cloneable {
     public Material(String defName) {
         this();
         try {
-            def = (MaterialDef) MiniLoader.load(new MaterialKey(defName));
+            def = (MaterialDef) new MiniLoader().load(new MaterialKey(defName));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -253,16 +253,11 @@ public class Material implements Cloneable {
 
         // Comparing additional render states
         if (additionalState == null) {
-            if (other.additionalState != null) {
-                return false;
-            }
+            return other.additionalState == null;
         } else {
-            if (!additionalState.equals(other.additionalState)) {
-                return false;
-            }
+            return additionalState.equals(other.additionalState);
         }
 
-        return true;
     }
 
     /**

@@ -138,7 +138,7 @@ public class MTLLoader {
         texKey.setGenerateMips(true);
         Texture texture = null;
         try {
-            texture = (Texture) AWTLoader.load(texKey);
+            texture = (Texture) new AWTLoader().load(texKey);
             texture.setWrap(Texture.WrapMode.Repeat);
         } catch (Exception ex) {
             System.err.println("Cannot locate " + texKey + " for material " + key);

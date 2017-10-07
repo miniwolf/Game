@@ -1,119 +1,36 @@
 package mini.scene;
 
-import mini.renderer.opengl.GLRenderer;
+import mini.math.FastMath;
+import mini.renderer.Renderer;
 import mini.utils.BufferUtils;
 import mini.utils.NativeObject;
 
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.DoubleBuffer;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
+import java.nio.LongBuffer;
 import java.nio.ShortBuffer;
 
 /**
- * Created by miniwolf on 15-04-2017.
+ * A <code>VertexBuffer</code> contains a particular type of geometry
+ * data used by {@link Mesh}es. Every VertexBuffer set on a <code>Mesh</code>
+ * is sent as an attribute to the vertex shader to be processed.
+ * <p>
+ * Several terms are used throughout the javadoc for this class, explanation:
+ * <ul>
+ * <li>Element - A single element is the largest individual object
+ * inside a VertexBuffer. E.g. if the VertexBuffer is used to store 3D position
+ * data, then an element will be a single 3D vector.</li>
+ * <li>Component - A component represents the parts inside an element.
+ * For a 3D vector, a single component is one of the dimensions, X, Y or Z.</li>
+ * </ul>
  */
-public class VertexBuffer extends NativeObject {
-    private boolean normalized = false;
-    private int id = -1;
-    private int stride = 0;
-    private int offset = 0;
+public class VertexBuffer extends NativeObject implements Cloneable {
 
-    /**
-     * Type of buffer. Specifies the actual attribute it defines.
-     */
-    public enum Type {
-        /**
-         * Position of the vertex (3 floats)
-         */
-        Position,
-
-        /**
-         * The size of the point when using point buffers (float).
-         */
-        Size,
-
-        /**
-         * Normal vector, normalized (3 floats).
-         */
-        Normal,
-
-        /**
-         * Texture coordinate (2 float)
-         */
-        TexCoord,
-
-        /**
-         * Color and Alpha (4 floats)
-         */
-        Color,
-
-        /**
-         * Tangent vector, normalized (4 floats) (x,y,z,w). The w component is
-         * called the binormal parity, is not normalized, and is either 1f or
-         * -1f. It's used to compute the direction on the binormal vector on the
-         * GPU at render time.
-         */
-        Tangent,
-
-        /**
-         * Binormal vector, normalized (3 floats, optional)
-         */
-        Binormal,
-
-        /**
-         * Specifies the source data for various vertex buffers
-         * when interleaving is used. By default the format is
-         * byte.
-         */
-        InterleavedData,
-
-        /**
-         * Specifies the index buffer, must contain integer data
-         * (ubyte, ushort, or uint).
-         */
-        Index,
-
-        /**
-         * Texture coordinate #2
-         */
-        TexCoord2,
-
-        /**
-         * Texture coordinate #3
-         */
-        TexCoord3,
-
-        /**
-         * Texture coordinate #4
-         */
-        TexCoord4,
-
-        /**
-         * Texture coordinate #5
-         */
-        TexCoord5,
-
-        /**
-         * Texture coordinate #6
-         */
-        TexCoord6,
-
-        /**
-         * Texture coordinate #7
-         */
-        TexCoord7,
-
-        /**
-         * Texture coordinate #8
-         */
-        TexCoord8,
-
-        /**
-         * Information about this instance.
-         * <p>
-         * Format should be {@link Format#Float} and number of components should be 16.
-         */
-        InstanceData
-    }
+    protected int offset = 0;
 
     /**
      * The usage of the VertexBuffer, specifies how often the buffer is used. This can determine if
@@ -217,269 +134,20 @@ public class VertexBuffer extends NativeObject {
         }
     }
 
+    protected int lastLimit = 0;
+    protected int stride = 0;
+    protected int components = 0;
     /**
-     * derived from components format.getComponentSize()
+     * derived from components * format.getComponentSize()
      */
-    private transient int componentsLength = 0;
-    private transient boolean dataSizeChanged = false;
-
-    private int instanceSpan = 0;
-    private int components = 0;
-    private int lastLimit = 0;
-    private Type bufType;
-    private Buffer data = null;
-    private Usage usage;
-    private Format format;
-
-    /**
-     * Creates an empty, uninitialized buffer.
-     * Must call setupData() to initialize.
-     */
-    public VertexBuffer(Type type) {
-        super();
-        this.bufType = type;
-    }
-
-    /**
-     * Serialization only. Do not use.
-     */
-    public VertexBuffer() {
-        super();
-    }
-
-    protected VertexBuffer(int id) {
-        super(id);
-    }
-
-    /**
-     * Called to initialize the data in the <code>VertexBuffer</code>. Must only
-     * be called once.
-     *
-     * @param usage      The usage for the data, or how often will the data be updated per frame.
-     *                   See the {@link Usage} enum.
-     * @param components The number of components per element.
-     * @param format     The {@link Format format}, or data-type of a single component.
-     * @param data       A native buffer, the format of which matches the {@link Format} argument.
-     */
-    public void setupData(Usage usage, int components, Format format, Buffer data) {
-        if (usage == null || format == null || data == null) {
-            throw new IllegalArgumentException("None of the arguments can be null");
-        }
-
-        if (data.isReadOnly()) {
-            throw new IllegalArgumentException("VertexBuffer data cannot be read-only.");
-        }
-
-        if (bufType != Type.InstanceData) {
-            if (components < 1 || components > 4) {
-                throw new IllegalArgumentException("components must be between 1 and 4");
-            }
-        }
-
-        this.data = data;
-        this.components = components;
-        this.usage = usage;
-        this.format = format;
-        this.componentsLength = components * format.getComponentSize();
-        this.lastLimit = data.limit();
-        setUpdateNeeded();
-    }
-
-    /**
-     * Called to update the data in the buffer with new data. Can only
-     * be called after {@link VertexBuffer#setupData(VertexBuffer.Usage, int, VertexBuffer.Format, java.nio.Buffer) }
-     * has been called. Note that it is fine to call this method on the
-     * data already set, e.g. vb.updateData(vb.getData()), this will just
-     * set the proper update flag indicating the data should be sent to the GPU
-     * again.
-     * <p>
-     * It is allowed to specify a buffer with different capacity than the
-     * originally set buffer, HOWEVER, if you do so, you must
-     * call Mesh.updateCounts() otherwise bizarre errors can occur.
-     *
-     * @param data The data buffer to set
-     */
-    public void updateData(Buffer data) {
-        // Check if the data buffer is read-only which is a sign
-        // of a bug on the part of the caller
-        if (data != null && data.isReadOnly()) {
-            throw new IllegalArgumentException("VertexBuffer data cannot be read-only.");
-        }
-
-        // will force renderer to call glBufferData again
-        if (data != null && (this.data.getClass() != data.getClass()
-                || data.limit() != lastLimit)) {
-            dataSizeChanged = true;
-            lastLimit = data.limit();
-        }
-
-        this.data = data;
-        setUpdateNeeded();
-    }
-
-    public void clearUpdateNeeded() {
-        updateNeeded = false;
-        dataSizeChanged = false;
-    }
-
-    /**
-     * @return The usage of this buffer. See {@link Usage} for more
-     * information.
-     */
-    public Usage getUsage() {
-        return usage;
-    }
-
-    /**
-     * @param usage The usage of this buffer. See {@link Usage} for more
-     *              information.
-     */
-    public void setUsage(Usage usage) {
-//        if (id != -1)
-//            throw new UnsupportedOperationException("Data has already been sent. Cannot set usage.");
-
-        this.usage = usage;
-        this.setUpdateNeeded();
-    }
-
-    /**
-     * @return The type of information that this buffer has.
-     */
-    public Type getBufferType() {
-        return bufType;
-    }
-
-    /**
-     * @return The {@link Format format}, or data type of the data.
-     */
-    public Format getFormat() {
-        return format;
-    }
-
-    /**
-     * Returns the raw internal data buffer used by this VertexBuffer.
-     * This buffer is not safe to call from multiple threads since buffers
-     * have their own internal position state that cannot be shared.
-     * Call getData().duplicate(), getData().asReadOnlyBuffer(), or
-     * the more convenient getDataReadOnly() if the buffer may be accessed
-     * from multiple threads.
-     *
-     * @return A native buffer, in the specified {@link Format format}.
-     */
-    public Buffer getData() {
-        return data;
-    }
-
-    /**
-     * @return The number of components of the given {@link Format format} per
-     * element.
-     */
-    public int getNumComponents() {
-        return components;
-    }
-
-    /**
-     * @return The total number of data elements in the data buffer.
-     */
-    public int getNumElements() {
-        int elements = data.limit() / components;
-        if (format == Format.Half)
-            elements /= 2;
-        return elements;
-    }
-
-    /**
-     * @param normalized Set to true if integer components should be converted
-     *                   from their maximal range into the range 0.0 - 1.0 when converted to
-     *                   a floating-point value for the shader.
-     *                   E.g. if the {@link Format} is {@link Format#UnsignedInt}, then
-     *                   the components will be converted to the range 0.0 - 1.0 by dividing
-     *                   every integer by 2^32.
-     */
-    public void setNormalized(boolean normalized) {
-        this.normalized = normalized;
-    }
-
-    /**
-     * @return True if integer components should be converted to the range 0-1.
-     * @see VertexBuffer#setNormalized(boolean)
-     */
-    public boolean isNormalized() {
-        return normalized;
-    }
-
-    /**
-     * Sets the instanceSpan to 1 or 0 depending on
-     * the value of instanced and the existing value of
-     * instanceSpan.
-     */
-    public void setInstanced(boolean instanced) {
-        if (instanced && instanceSpan == 0) {
-            instanceSpan = 1;
-        } else if (!instanced) {
-            instanceSpan = 0;
-        }
-    }
-
-    /**
-     * Returns true if instanceSpan is more than 0 indicating
-     * that this vertex buffer contains per-instance data.
-     */
-    public boolean isInstanced() {
-        return instanceSpan > 0;
-    }
-
-    /**
-     * Sets how this vertex buffer matches with rendered instances
-     * where 0 means no instancing at all, ie: all elements are
-     * per vertex.  If set to 1 then each element goes with one
-     * instance.  If set to 2 then each element goes with two
-     * instances and so on.
-     */
-    public void setInstanceSpan(int i) {
-        this.instanceSpan = i;
-    }
-
-    public int getInstanceSpan() {
-        return instanceSpan;
-    }
-
-    /**
-     * @return The stride (in bytes) for the data.
-     * @see #setStride(int)
-     */
-    public int getStride() {
-        return stride;
-    }
-
-    /**
-     * Set the stride (in bytes) for the data.
-     * <p>
-     * If the data is packed in the buffer, then stride is 0, if there's other
-     * data that is between the current component and the next component in the
-     * buffer, then this specifies the size in bytes of that additional data.
-     *
-     * @param stride the stride (in bytes) for the data
-     */
-    public void setStride(int stride) {
-        this.stride = stride;
-    }
-
-    /**
-     * @return The offset after which the data is sent to the GPU.
-     * @see #setOffset(int)
-     */
-    public int getOffset() {
-        return offset;
-    }
-
-    /**
-     * @param offset Specify the offset (in bytes) from the start of the buffer
-     *               after which the data is sent to the GPU.
-     */
-    public void setOffset(int offset) {
-        this.offset = offset;
-    }
+    protected transient int componentsLength = 0;
+    protected Buffer data = null;
+    protected Usage usage;
+    protected Type bufType;
+    protected Format format;
+    protected boolean normalized = false;
+    protected int instanceSpan = 0;
+    protected transient boolean dataSizeChanged = false;
 
     /**
      * Creates a {@link Buffer} that satisfies the given type and size requirements
@@ -488,8 +156,9 @@ public class VertexBuffer extends NativeObject {
      * of elements with the given number of components in each element.
      */
     public static Buffer createBuffer(Format format, int components, int numElements) {
-        if (components < 1 || components > 4)
+        if (components < 1 || components > 4) {
             throw new IllegalArgumentException("Num components must be between 1 and 4");
+        }
 
         int total = numElements * components;
 
@@ -515,21 +184,729 @@ public class VertexBuffer extends NativeObject {
     }
 
     /**
+     * Creates an empty, uninitialized buffer.
+     * Must call setupData() to initialize.
+     */
+    public VertexBuffer(Type type) {
+        super();
+        this.bufType = type;
+    }
+
+    /**
+     * Serialization only. Do not use.
+     */
+    public VertexBuffer() {
+        super();
+    }
+
+    protected VertexBuffer(int id) {
+        super(id);
+    }
+
+    public boolean invariant() {
+        // Does the VB hold any data?
+        if (data == null) {
+            throw new AssertionError();
+        }
+        // Position must be 0.
+        if (data.position() != 0) {
+            throw new AssertionError();
+        }
+        // Is the size of the VB == 0?
+        if (data.limit() == 0) {
+            throw new AssertionError();
+        }
+        // Does offset exceed buffer limit or negative?
+        if (offset > data.limit() || offset < 0) {
+            throw new AssertionError();
+        }
+        // Are components between 1 and 4?
+
+        // Are components between 1 and 4 and not InstanceData?
+        if (bufType != Type.InstanceData) {
+            if (components < 1 || components > 4) {
+                throw new AssertionError();
+            }
+        }
+
+        // Does usage comply with buffer directness?
+        //if (usage == Usage.CpuOnly && data.isDirect()) {
+        //    throw new AssertionError();
+        /*} else*/
+        if (usage != Usage.CpuOnly && !data.isDirect()) {
+            throw new AssertionError();
+        }
+
+        // Double/Char/Long buffers are not supported for VertexBuffers.
+        // For the rest, ensure they comply with the "Format" value.
+        if (data instanceof DoubleBuffer) {
+            throw new AssertionError();
+        } else if (data instanceof CharBuffer) {
+            throw new AssertionError();
+        } else if (data instanceof LongBuffer) {
+            throw new AssertionError();
+        } else if (data instanceof FloatBuffer && format != Format.Float) {
+            throw new AssertionError();
+        } else if (data instanceof IntBuffer && format != Format.Int
+                   && format != Format.UnsignedInt) {
+            throw new AssertionError();
+        } else if (data instanceof ShortBuffer && format != Format.Short
+                   && format != Format.UnsignedShort) {
+            throw new AssertionError();
+        } else if (data instanceof ByteBuffer && format != Format.Byte
+                   && format != Format.UnsignedByte) {
+            throw new AssertionError();
+        }
+        return true;
+    }
+
+    /**
+     * @return The offset after which the data is sent to the GPU.
+     * @see #setOffset(int)
+     */
+    public int getOffset() {
+        return offset;
+    }
+
+    /**
+     * @param offset Specify the offset (in bytes) from the start of the buffer
+     *               after which the data is sent to the GPU.
+     */
+    public void setOffset(int offset) {
+        this.offset = offset;
+    }
+
+    /**
+     * @return The stride (in bytes) for the data.
+     * @see #setStride(int)
+     */
+    public int getStride() {
+        return stride;
+    }
+
+    /**
+     * Set the stride (in bytes) for the data.
+     * <p>
+     * If the data is packed in the buffer, then stride is 0, if there's other
+     * data that is between the current component and the next component in the
+     * buffer, then this specifies the size in bytes of that additional data.
+     *
+     * @param stride the stride (in bytes) for the data
+     */
+    public void setStride(int stride) {
+        this.stride = stride;
+    }
+
+    /**
+     * Returns the raw internal data buffer used by this VertexBuffer.
+     * This buffer is not safe to call from multiple threads since buffers
+     * have their own internal position state that cannot be shared.
+     * Call getData().duplicate(), getData().asReadOnlyBuffer(), or
+     * the more convenient getDataReadOnly() if the buffer may be accessed
+     * from multiple threads.
+     *
+     * @return A native buffer, in the specified {@link Format format}.
+     */
+    public Buffer getData() {
+        return data;
+    }
+
+    /**
+     * Returns a safe read-only version of this VertexBuffer's data.  The
+     * contents of the buffer will reflect whatever changes are made on
+     * other threads (eventually) but these should not be used in that way.
+     * This method provides a read-only buffer that is safe to _read_ from
+     * a separate thread since it has its own book-keeping state (position, limit, etc.)
+     *
+     * @return A rewound native buffer in the specified {@link Format format}
+     * that is safe to read from a separate thread from other readers.
+     */
+    public Buffer getDataReadOnly() {
+
+        if (data == null) {
+            return null;
+        }
+
+        // Create a read-only duplicate().  Note: this does not copy
+        // the underlying memory, it just creates a new read-only wrapper
+        // with its own buffer position state.
+
+        // Unfortunately, this is not 100% straight forward since Buffer
+        // does not have an asReadOnlyBuffer() method.
+        Buffer result;
+        if (data instanceof ByteBuffer) {
+            result = ((ByteBuffer) data).asReadOnlyBuffer();
+        } else if (data instanceof FloatBuffer) {
+            result = ((FloatBuffer) data).asReadOnlyBuffer();
+        } else if (data instanceof ShortBuffer) {
+            result = ((ShortBuffer) data).asReadOnlyBuffer();
+        } else if (data instanceof IntBuffer) {
+            result = ((IntBuffer) data).asReadOnlyBuffer();
+        } else {
+            throw new UnsupportedOperationException(
+                    "Cannot get read-only view of buffer type:" + data);
+        }
+
+        // Make sure the caller gets a consistent view since we may
+        // have grabbed this buffer while another thread was reading
+        // the raw data.
+        result.rewind();
+
+        return result;
+    }
+
+    /**
+     * @return The usage of this buffer. See {@link Usage} for more information.
+     */
+    public Usage getUsage() {
+        return usage;
+    }
+
+    /**
+     * @param usage The usage of this buffer. See {@link Usage} for more information.
+     */
+    public void setUsage(Usage usage) {
+//        if (id != -1)
+//            throw new UnsupportedOperationException("Data has already been sent. Cannot set usage.");
+
+        this.usage = usage;
+        this.setUpdateNeeded();
+    }
+
+    /**
+     * @return True if integer components should be converted to the range 0-1.
+     * @see VertexBuffer#setNormalized(boolean)
+     */
+    public boolean isNormalized() {
+        return normalized;
+    }
+
+    /**
+     * @param normalized Set to true if integer components should be converted
+     *                   from their maximal range into the range 0.0 - 1.0 when converted to
+     *                   a floating-point value for the shader.
+     *                   E.g. if the {@link Format} is {@link Format#UnsignedInt}, then
+     *                   the components will be converted to the range 0.0 - 1.0 by dividing
+     *                   every integer by 2^32.
+     */
+    public void setNormalized(boolean normalized) {
+        this.normalized = normalized;
+    }
+
+    /**
+     * Returns true if instanceSpan is more than 0 indicating
+     * that this vertex buffer contains per-instance data.
+     */
+    public boolean isInstanced() {
+        return instanceSpan > 0;
+    }
+
+    /**
+     * Sets the instanceSpan to 1 or 0 depending on
+     * the value of instanced and the existing value of
+     * instanceSpan.
+     */
+    public void setInstanced(boolean instanced) {
+        if (instanced && instanceSpan == 0) {
+            instanceSpan = 1;
+        } else if (!instanced) {
+            instanceSpan = 0;
+        }
+    }
+
+    public int getInstanceSpan() {
+        return instanceSpan;
+    }
+
+    /**
+     * Sets how this vertex buffer matches with rendered instances
+     * where 0 means no instancing at all, ie: all elements are
+     * per vertex.  If set to 1 then each element goes with one
+     * instance.  If set to 2 then each element goes with two
+     * instances and so on.
+     */
+    public void setInstanceSpan(int i) {
+        this.instanceSpan = i;
+    }
+
+    /**
+     * @return The type of information that this buffer has.
+     */
+    public Type getBufferType() {
+        return bufType;
+    }
+
+    /**
+     * @return The {@link Format format}, or data type of the data.
+     */
+    public Format getFormat() {
+        return format;
+    }
+
+    /**
+     * @return The number of components of the given {@link Format format} per
+     * element.
+     */
+    public int getNumComponents() {
+        return components;
+    }
+
+    /**
+     * @return The total number of data elements in the data buffer.
+     */
+    public int getNumElements() {
+        int elements = data.limit() / components;
+        if (format == Format.Half) {
+            elements /= 2;
+        }
+        return elements;
+    }
+
+    /**
      * Returns the number of 'instances' in this VertexBuffer.  This
      * is dependent on the current instanceSpan.  When instanceSpan
-     * is 0 then 'instances' is 1. Otherwise, instances is elements *
+     * is 0 then 'instances' is 1.  Otherwise, instances is elements *
      * instanceSpan.  It is possible to render a mesh with more instances
      * but the instance data begins to repeat.
      */
     public int getBaseInstanceCount() {
-        return 1;
-        // TODO: Support instanced rendering
+        if (instanceSpan == 0) {
+            return 1;
+        }
+        return getNumElements() * instanceSpan;
+    }
+
+    /**
+     * Called to initialize the data in the <code>VertexBuffer</code>. Must only
+     * be called once.
+     *
+     * @param usage      The usage for the data, or how often will the data be updated per frame.
+     *                   See the {@link Usage} enum.
+     * @param components The number of components per element.
+     * @param format     The {@link Format format}, or data-type of a single component.
+     * @param data       A native buffer, the format of which matches the {@link Format} argument.
+     */
+    public void setupData(Usage usage, int components, Format format, Buffer data) {
+        if (id != -1) {
+            throw new UnsupportedOperationException(
+                    "Data has already been sent. Cannot setupData again.");
+        }
+
+        if (usage == null || format == null || data == null) {
+            throw new IllegalArgumentException("None of the arguments can be null");
+        }
+
+        if (data.isReadOnly()) {
+            throw new IllegalArgumentException("VertexBuffer data cannot be read-only.");
+        }
+
+        if (bufType != Type.InstanceData) {
+            if (components < 1 || components > 4) {
+                throw new IllegalArgumentException("components must be between 1 and 4");
+            }
+        }
+
+        this.data = data;
+        this.components = components;
+        this.usage = usage;
+        this.format = format;
+        this.componentsLength = components * format.getComponentSize();
+        this.lastLimit = data.limit();
+        setUpdateNeeded();
+    }
+
+    /**
+     * Called to update the data in the buffer with new data. Can only
+     * be called after {@link VertexBuffer#setupData(com.jme3.scene.VertexBuffer.Usage, int, com.jme3.scene.VertexBuffer.Format, java.nio.Buffer) }
+     * has been called. Note that it is fine to call this method on the
+     * data already set, e.g. vb.updateData(vb.getData()), this will just
+     * set the proper update flag indicating the data should be sent to the GPU
+     * again.
+     * <p>
+     * It is allowed to specify a buffer with different capacity than the
+     * originally set buffer, HOWEVER, if you do so, you must
+     * call Mesh.updateCounts() otherwise bizarre errors can occur.
+     *
+     * @param data The data buffer to set
+     */
+    public void updateData(Buffer data) {
+//        if (id != -1) {
+//            // request to update data is okay
+//        }
+
+        // Check if the data buffer is read-only which is a sign
+        // of a bug on the part of the caller
+        if (data != null && data.isReadOnly()) {
+            throw new IllegalArgumentException("VertexBuffer data cannot be read-only.");
+        }
+
+        // will force renderer to call glBufferData again
+        if (data != null && (this.data.getClass() != data.getClass()
+                             || data.limit() != lastLimit)) {
+            dataSizeChanged = true;
+            lastLimit = data.limit();
+        }
+
+        this.data = data;
+        setUpdateNeeded();
+    }
+
+    /**
+     * Returns true if the data size of the VertexBuffer has changed.
+     * Internal use only.
+     *
+     * @return true if the data size has changed
+     */
+    public boolean hasDataSizeChanged() {
+        return dataSizeChanged;
+    }
+
+    @Override
+    public void clearUpdateNeeded() {
+        super.clearUpdateNeeded();
+        dataSizeChanged = false;
+    }
+
+    /**
+     * Converts single floating-point data to {@link Format#Half half} floating-point data.
+     */
+    public void convertToHalf() {
+        if (id != -1) {
+            throw new UnsupportedOperationException("Data has already been sent.");
+        }
+
+        if (format != Format.Float) {
+            throw new IllegalStateException("Format must be float!");
+        }
+
+        int numElements = data.limit() / components;
+        format = Format.Half;
+        this.componentsLength = components * format.getComponentSize();
+
+        ByteBuffer halfData = BufferUtils.createByteBuffer(componentsLength * numElements);
+        halfData.rewind();
+
+        FloatBuffer floatData = (FloatBuffer) data;
+        floatData.rewind();
+
+        for (int i = 0; i < floatData.limit(); i++) {
+            float f = floatData.get(i);
+            short half = FastMath.convertFloatToHalf(f);
+            halfData.putShort(half);
+        }
+        this.data = halfData;
+        setUpdateNeeded();
+        dataSizeChanged = true;
+    }
+
+    /**
+     * Reduces the capacity of the buffer to the given amount
+     * of elements, any elements at the end of the buffer are truncated
+     * as necessary.
+     *
+     * @param numElements The number of elements to reduce to.
+     */
+    public void compact(int numElements) {
+        int total = components * numElements;
+        data.clear();
+        switch (format) {
+            case Byte:
+            case UnsignedByte:
+            case Half:
+                ByteBuffer bbuf = (ByteBuffer) data;
+                bbuf.limit(total);
+                ByteBuffer bnewBuf = BufferUtils.createByteBuffer(total);
+                bnewBuf.put(bbuf);
+                data = bnewBuf;
+                break;
+            case Short:
+            case UnsignedShort:
+                ShortBuffer sbuf = (ShortBuffer) data;
+                sbuf.limit(total);
+                ShortBuffer snewBuf = BufferUtils.createShortBuffer(total);
+                snewBuf.put(sbuf);
+                data = snewBuf;
+                break;
+            case Int:
+            case UnsignedInt:
+                IntBuffer ibuf = (IntBuffer) data;
+                ibuf.limit(total);
+                IntBuffer inewBuf = BufferUtils.createIntBuffer(total);
+                inewBuf.put(ibuf);
+                data = inewBuf;
+                break;
+            case Float:
+                FloatBuffer fbuf = (FloatBuffer) data;
+                fbuf.limit(total);
+                FloatBuffer fnewBuf = BufferUtils.createFloatBuffer(total);
+                fnewBuf.put(fbuf);
+                data = fnewBuf;
+                break;
+            default:
+                throw new UnsupportedOperationException("Unrecognized buffer format: " + format);
+        }
+        data.clear();
+        setUpdateNeeded();
+        dataSizeChanged = true;
+    }
+
+    /**
+     * Modify a component inside an element.
+     * The <code>val</code> parameter must be in the buffer's format:
+     * {@link Format}.
+     *
+     * @param elementIndex   The element index to modify
+     * @param componentIndex The component index to modify
+     * @param val            The value to set, either byte, short, int or float depending
+     *                       on the {@link Format}.
+     */
+    public void setElementComponent(int elementIndex, int componentIndex, Object val) {
+        int inPos = elementIndex * components;
+        int elementPos = componentIndex;
+
+        if (format == Format.Half) {
+            inPos *= 2;
+            elementPos *= 2;
+        }
+
+        data.clear();
+
+        switch (format) {
+            case Byte:
+            case UnsignedByte:
+            case Half:
+                ByteBuffer bin = (ByteBuffer) data;
+                bin.put(inPos + elementPos, (Byte) val);
+                break;
+            case Short:
+            case UnsignedShort:
+                ShortBuffer sin = (ShortBuffer) data;
+                sin.put(inPos + elementPos, (Short) val);
+                break;
+            case Int:
+            case UnsignedInt:
+                IntBuffer iin = (IntBuffer) data;
+                iin.put(inPos + elementPos, (Integer) val);
+                break;
+            case Float:
+                FloatBuffer fin = (FloatBuffer) data;
+                fin.put(inPos + elementPos, (Float) val);
+                break;
+            default:
+                throw new UnsupportedOperationException("Unrecognized buffer format: " + format);
+        }
+    }
+
+    /**
+     * Get the component inside an element.
+     *
+     * @param elementIndex   The element index
+     * @param componentIndex The component index
+     * @return The component, as one of the primitive types, byte, short,
+     * int or float.
+     */
+    public Object getElementComponent(int elementIndex, int componentIndex) {
+        int inPos = elementIndex * components;
+        int elementPos = componentIndex;
+
+        if (format == Format.Half) {
+            inPos *= 2;
+            elementPos *= 2;
+        }
+
+        Buffer srcData = getDataReadOnly();
+
+        switch (format) {
+            case Byte:
+            case UnsignedByte:
+            case Half:
+                ByteBuffer bin = (ByteBuffer) srcData;
+                return bin.get(inPos + elementPos);
+            case Short:
+            case UnsignedShort:
+                ShortBuffer sin = (ShortBuffer) srcData;
+                return sin.get(inPos + elementPos);
+            case Int:
+            case UnsignedInt:
+                IntBuffer iin = (IntBuffer) srcData;
+                return iin.get(inPos + elementPos);
+            case Float:
+                FloatBuffer fin = (FloatBuffer) srcData;
+                return fin.get(inPos + elementPos);
+            default:
+                throw new UnsupportedOperationException("Unrecognized buffer format: " + format);
+        }
+    }
+
+    /**
+     * Copies a single element of data from this <code>VertexBuffer</code>
+     * to the given output VertexBuffer.
+     *
+     * @param inIndex  The input element index
+     * @param outVb    The buffer to copy to
+     * @param outIndex The output element index
+     * @throws IllegalArgumentException If the formats of the buffers do not
+     *                                  match.
+     */
+    public void copyElement(int inIndex, VertexBuffer outVb, int outIndex) {
+        copyElements(inIndex, outVb, outIndex, 1);
+    }
+
+    /**
+     * Copies a sequence of elements of data from this <code>VertexBuffer</code>
+     * to the given output VertexBuffer.
+     *
+     * @param inIndex  The input element index
+     * @param outVb    The buffer to copy to
+     * @param outIndex The output element index
+     * @param len      The number of elements to copy
+     * @throws IllegalArgumentException If the formats of the buffers do not
+     *                                  match.
+     */
+    public void copyElements(int inIndex, VertexBuffer outVb, int outIndex, int len) {
+        if (outVb.format != format || outVb.components != components) {
+            throw new IllegalArgumentException("Buffer format mismatch. Cannot copy");
+        }
+
+        int inPos = inIndex * components;
+        int outPos = outIndex * components;
+        int elementSz = components;
+        if (format == Format.Half) {
+            // because half is stored as bytebuf but its 2 bytes long
+            inPos *= 2;
+            outPos *= 2;
+            elementSz *= 2;
+        }
+
+        // Make sure to grab a read-only copy in case some other
+        // thread is also accessing the buffer and messing with its
+        // position()
+        Buffer srcData = getDataReadOnly();
+        outVb.data.clear();
+
+        switch (format) {
+            case Byte:
+            case UnsignedByte:
+            case Half:
+                ByteBuffer bin = (ByteBuffer) srcData;
+                ByteBuffer bout = (ByteBuffer) outVb.data;
+                bin.position(inPos).limit(inPos + elementSz * len);
+                bout.position(outPos).limit(outPos + elementSz * len);
+                bout.put(bin);
+                break;
+            case Short:
+            case UnsignedShort:
+                ShortBuffer sin = (ShortBuffer) srcData;
+                ShortBuffer sout = (ShortBuffer) outVb.data;
+                sin.position(inPos).limit(inPos + elementSz * len);
+                sout.position(outPos).limit(outPos + elementSz * len);
+                sout.put(sin);
+                break;
+            case Int:
+            case UnsignedInt:
+                IntBuffer iin = (IntBuffer) srcData;
+                IntBuffer iout = (IntBuffer) outVb.data;
+                iin.position(inPos).limit(inPos + elementSz * len);
+                iout.position(outPos).limit(outPos + elementSz * len);
+                iout.put(iin);
+                break;
+            case Float:
+                FloatBuffer fin = (FloatBuffer) srcData;
+                FloatBuffer fout = (FloatBuffer) outVb.data;
+                fin.position(inPos).limit(inPos + elementSz * len);
+                fout.position(outPos).limit(outPos + elementSz * len);
+                fout.put(fin);
+                break;
+            default:
+                throw new UnsupportedOperationException("Unrecognized buffer format: " + format);
+        }
+
+        // Clear the output buffer to rewind it and reset its
+        // limit from where we shortened it above.
+        outVb.data.clear();
+    }
+
+    /**
+     * Creates a deep clone of the {@link VertexBuffer}.
+     *
+     * @return Deep clone of this buffer
+     */
+    @Override
+    public VertexBuffer clone() {
+        // NOTE: Superclass GLObject automatically creates shallow clone
+        // e.g re-use ID.
+        VertexBuffer vb = (VertexBuffer) super.clone();
+        vb.handleRef = new Object();
+        vb.id = -1;
+        if (data != null) {
+            // Make sure to pass a read-only buffer to clone so that
+            // the position information doesn't get clobbered by another
+            // reading thread during cloning (and vice versa) since this is
+            // a purely read-only operation.
+            vb.updateData(BufferUtils.clone(getDataReadOnly()));
+        }
+
+        return vb;
+    }
+
+    /**
+     * Creates a deep clone of this VertexBuffer but overrides the
+     * {@link Type}.
+     *
+     * @param overrideType The type of the cloned VertexBuffer
+     * @return A deep clone of the buffer
+     */
+    public VertexBuffer clone(Type overrideType) {
+        VertexBuffer vb = new VertexBuffer(overrideType);
+        vb.components = components;
+        vb.componentsLength = componentsLength;
+
+        // Make sure to pass a read-only buffer to clone so that
+        // the position information doesn't get clobbered by another
+        // reading thread during cloning (and vice versa) since this is
+        // a purely read-only operation.
+        vb.data = BufferUtils.clone(getDataReadOnly());
+        vb.format = format;
+        vb.handleRef = new Object();
+        vb.id = -1;
+        vb.normalized = normalized;
+        vb.instanceSpan = instanceSpan;
+        vb.offset = offset;
+        vb.stride = stride;
+        vb.updateNeeded = true;
+        vb.usage = usage;
+        return vb;
+    }
+
+    @Override
+    public String toString() {
+        String dataTxt = null;
+        if (data != null) {
+            dataTxt = ", elements=" + data.limit();
+        }
+        return getClass().getSimpleName() + "[fmt=" + format.name()
+               + ", type=" + bufType.name()
+               + ", usage=" + usage.name()
+               + dataTxt + "]";
     }
 
     @Override
     public void resetObject() {
+//        assert this.id != -1;
         this.id = -1;
         setUpdateNeeded();
+    }
+
+    @Override
+    public void deleteObject(Object rendererObject) {
+        ((Renderer) rendererObject).deleteBuffer(this);
+    }
+
+    @Override
+    protected void deleteNativeBuffers() {
+        if (data != null) {
+            BufferUtils.destroyDirectBuffer(data);
+        }
     }
 
     @Override
@@ -542,8 +919,162 @@ public class VertexBuffer extends NativeObject {
         return new VertexBuffer(id);
     }
 
-    @Override
-    public void deleteObject(Object rendererObject) {
-        ((GLRenderer) rendererObject).deleteBuffer(this);
+    /**
+     * Type of buffer. Specifies the actual attribute it defines.
+     */
+    public enum Type {
+        /**
+         * Position of the vertex (3 floats)
+         */
+        Position,
+
+        /**
+         * The size of the point when using point buffers (float).
+         */
+        Size,
+
+        /**
+         * Normal vector, normalized (3 floats).
+         */
+        Normal,
+
+        /**
+         * Texture coordinate (2 float)
+         */
+        TexCoord,
+
+        /**
+         * Color and Alpha (4 floats)
+         */
+        Color,
+
+        /**
+         * Tangent vector, normalized (4 floats) (x,y,z,w). The w component is
+         * called the binormal parity, is not normalized, and is either 1f or
+         * -1f. It's used to compute the direction on the binormal vector on the
+         * GPU at render time.
+         */
+        Tangent,
+
+        /**
+         * Binormal vector, normalized (3 floats, optional)
+         */
+        Binormal,
+
+        /**
+         * Specifies the source data for various vertex buffers
+         * when interleaving is used. By default the format is
+         * byte.
+         */
+        InterleavedData,
+
+        /**
+         * Do not use.
+         */
+        @Deprecated
+        Reserved0,
+        /**
+         * Specifies the index buffer, must contain integer data
+         * (ubyte, ushort, or uint).
+         */
+        Index,
+
+        /**
+         * Initial vertex position, used with animation.
+         * Should have the same format and size as {@link Type#Position}.
+         * If used with software skinning, the usage should be
+         * {@link Usage#CpuOnly}, and the buffer should be allocated
+         * on the heap.
+         */
+        BindPosePosition,
+
+        /**
+         * Initial vertex normals, used with animation.
+         * Should have the same format and size as {@link Type#Normal}.
+         * If used with software skinning, the usage should be
+         * {@link Usage#CpuOnly}, and the buffer should be allocated
+         * on the heap.
+         */
+        BindPoseNormal,
+
+        /**
+         * Bone weights, used with animation (4 floats).
+         * Only used for software skinning, the usage should be
+         * {@link Usage#CpuOnly}, and the buffer should be allocated
+         * on the heap.
+         */
+        BoneWeight,
+
+        /**
+         * Bone indices, used with animation (4 ubytes).
+         * Only used for software skinning, the usage should be
+         * {@link Usage#CpuOnly}, and the buffer should be allocated
+         * on the heap as a ubytes buffer.
+         */
+        BoneIndex,
+
+        /**
+         * Texture coordinate #2
+         */
+        TexCoord2,
+
+        /**
+         * Texture coordinate #3
+         */
+        TexCoord3,
+
+        /**
+         * Texture coordinate #4
+         */
+        TexCoord4,
+
+        /**
+         * Texture coordinate #5
+         */
+        TexCoord5,
+
+        /**
+         * Texture coordinate #6
+         */
+        TexCoord6,
+
+        /**
+         * Texture coordinate #7
+         */
+        TexCoord7,
+
+        /**
+         * Texture coordinate #8
+         */
+        TexCoord8,
+
+        /**
+         * Initial vertex tangents, used with animation.
+         * Should have the same format and size as {@link Type#Tangent}.
+         * If used with software skinning, the usage should be
+         * {@link Usage#CpuOnly}, and the buffer should be allocated
+         * on the heap.
+         */
+        BindPoseTangent,
+
+        /**
+         * Bone weights, used with animation (4 floats).
+         * for Hardware Skinning only
+         */
+        HWBoneWeight,
+
+        /**
+         * Bone indices, used with animation (4 ubytes).
+         * for Hardware Skinning only
+         * either an int or float buffer due to shader attribute types restrictions.
+         */
+        HWBoneIndex,
+
+        /**
+         * Information about this instance.
+         * <p>
+         * Format should be {@link Format#Float} and number of components should be 16.
+         */
+        InstanceData
     }
 }

@@ -12,7 +12,7 @@ import mini.utils.MyFile;
  * in the cache will be collected when all clones of the texture become
  * unreachable.
  */
-public class TextureKey extends AssetKey {
+public class TextureKey extends AssetKey<Texture> {
     private boolean generateMips;
     private boolean flipY;
     private int anisotropy;

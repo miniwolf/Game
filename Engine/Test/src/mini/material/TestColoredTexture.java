@@ -25,7 +25,8 @@ public class TestColoredTexture extends SimpleApplication {
 
         Material mat = new Material("MatDefs/Misc/Unshaded.minid");
         mat.setTexture("ColorMap",
-                       (Texture) AWTLoader.load(new TextureKey("Textures/Terrain/Pond/Pond.jpg")));
+                       (Texture) new AWTLoader()
+                               .load(new TextureKey("Textures/Terrain/Pond/Pond.jpg")));
         quad.setMaterial(mat);
         guiNode.attachChildAt(quad, 0);
     }

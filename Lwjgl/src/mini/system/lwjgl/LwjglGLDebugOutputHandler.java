@@ -35,6 +35,9 @@ class LwjglGLDebugOutputHandler implements ARBDebugOutputCallback.Handler {
         constMap.put(ARBDebugOutput.GL_DEBUG_SEVERITY_HIGH_ARB, "HIGH");
         constMap.put(ARBDebugOutput.GL_DEBUG_SEVERITY_MEDIUM_ARB, "MEDIUM");
         constMap.put(ARBDebugOutput.GL_DEBUG_SEVERITY_LOW_ARB, "LOW");
+
+        constMap.put(ARBDebugOutput.GL_DEBUG_CALLBACK_FUNCTION_ARB, "CALLBACK_FUNCTION");
+        constMap.put(ARBDebugOutput.GL_DEBUG_CALLBACK_USER_PARAM_ARB, "USER_PARAM");
     }
 
     @Override
