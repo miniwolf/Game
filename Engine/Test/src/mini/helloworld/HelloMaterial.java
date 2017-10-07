@@ -36,7 +36,7 @@ public class HelloMaterial extends SimpleApplication {
         Material cube1Mat = new Material("MatDefs/Misc/Unshaded.minid");
         TextureKey key = new TextureKey("Interface/Logo/Monkey.jpg", true);
         key.setGenerateMips(true);
-        Texture cube1Tex = (Texture) AWTLoader.load(key);
+        Texture cube1Tex = (Texture) new AWTLoader().load(key);
         cube1Mat.setTexture("ColorMap", cube1Tex);
         cube1Geo.setMaterial(cube1Mat);
         rootNode.attachChild(cube1Geo);
@@ -46,7 +46,7 @@ public class HelloMaterial extends SimpleApplication {
         Geometry cube2Geo = new Geometry("window frame", cube2Mesh);
         Material cube2Mat = new Material("MatDefs/Misc/Unshaded.minid");
         cube2Mat.setTexture("ColorMap",
-                            (Texture) AWTLoader
+                            (Texture) new AWTLoader()
                                     .load(new TextureKey("Textures/ColoredTex/Monkey.png")));
         cube2Mat.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);  // activate transparency
         cube2Geo.setQueueBucket(RenderQueue.Bucket.Transparent);
@@ -60,10 +60,10 @@ public class HelloMaterial extends SimpleApplication {
         TangentBinormalGenerator.generate(sphereMesh);           // for lighting effect
         Material sphereMat = new Material("MatDefs/Light/Lighting.minid");
         sphereMat.setTexture("DiffuseMap",
-                             (Texture) AWTLoader
+                             (Texture) new AWTLoader()
                                      .load(new TextureKey("Textures/Terrain/Pond/Pond.jpg")));
         sphereMat.setTexture("NormalMap",
-                             (Texture) AWTLoader.load(new TextureKey(
+                             (Texture) new AWTLoader().load(new TextureKey(
                                      "Textures/Terrain/Pond/Pond_normal.png")));
         sphereMat.setBoolean("UseMaterialColors", true);
         sphereMat.setColor("Diffuse", ColorRGBA.White);

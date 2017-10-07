@@ -7,7 +7,7 @@ import mini.textures.image.ColorSpace;
 import mini.utils.BufferUtils;
 
 import javax.imageio.ImageIO;
-import java.awt.Transparency;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
@@ -94,7 +94,7 @@ public class AWTLoader {
         }
     }
 
-    public Image load(InputStream in) throws IOException {
+    private Image load(InputStream in) throws IOException {
         ImageIO.setUseCache(false);
         BufferedImage img = ImageIO.read(in);
         if (img == null) {
@@ -103,11 +103,10 @@ public class AWTLoader {
         return load(img);
     }
 
-    public static Object load(TextureKey key) {
+    public Object load(TextureKey key) {
         if (ImageIO.getImageReadersBySuffix(key.getFile().getName().split("\\.")[1]) != null) {
             try {
-                AWTLoader loader = new AWTLoader();
-                Image img = loader.load(key.getFile().getInputStream());
+                Image img = load(key.getFile().getInputStream());
                 if (img == null) {
                     throw new RuntimeException(
                             "The given image cannot be loaded " + key.getFile().getPath());

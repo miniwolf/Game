@@ -17,7 +17,7 @@ public class TextureBuilder {
     }
 
     public Texture create() {
-        Image load = (Image) AWTLoader.load(new TextureKey(file.getName()));
+        Image load = (Image) new AWTLoader().load(new TextureKey(file.getName()));
         return new Texture2D(load);
     }
 

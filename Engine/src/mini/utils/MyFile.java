@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class MyFile {
@@ -92,5 +93,24 @@ public class MyFile {
     public String getExtension() {
         String[] fileType = path.split("\\.");
         return fileType[fileType.length - 1];
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        MyFile myFile = (MyFile) o;
+        return Objects.equals(path, myFile.path) &&
+               Objects.equals(name, myFile.name);
+    }
+
+    @Override
+    public int hashCode() {
+
+        return Objects.hash(path, name);
     }
 }

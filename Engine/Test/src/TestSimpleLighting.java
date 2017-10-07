@@ -52,7 +52,7 @@ public class TestSimpleLighting extends SimpleApplication {
         Geometry lightMdl = new Geometry("Light", new Sphere(10, 10, 0.1f));
         try {
             lightMdl.setMaterial(
-                    (Material) MiniLoader.load(new MaterialKey("Materials/RedColor.mini")));
+                    (Material) new MiniLoader().load(new MaterialKey("Materials/RedColor.mini")));
         } catch (IOException e) {
             e.printStackTrace();
         }

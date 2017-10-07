@@ -11,9 +11,11 @@ import mini.textures.plugins.AWTLoader;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.io.IOException;
 import java.util.EnumSet;
@@ -22,26 +24,42 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({AWTLoader.class})
 public class MiniLoaderTest {
     @Mock
     private MaterialDef materialDef;
 
+    private MiniLoader loader;
+
+    @Mock
+    private MiniLoader mockedMiniLoader;
+
+    @Mock
+    private AWTLoader mockedAWTLoader;
+
     @Before
     public void setUp() {
+        try {
+            when(mockedMiniLoader
+                         .load(ArgumentMatchers.any(MaterialKey.class))).thenReturn(materialDef);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        loader = new MiniLoader();
     }
 
     @Test
     public void noDefaultTechnique_shouldBeSupported() throws IOException {
         //when(assetInfo.()).thenReturn(MiniLoader.class.getResourceAsStream("/no-default-technique.j3md"));
-        MaterialDef def = (MaterialDef) MiniLoader.load(new MaterialKey("no-default-technique.minid"));
+        MaterialDef def = (MaterialDef) loader.load(new MaterialKey("no-default-technique.minid"));
         assertEquals(1, def.getTechniqueDefs("Test").size());
     }
 
     @Test
     public void fixedPipelineTechnique_shouldBeIgnored() throws IOException {
 //        when(assetInfo.openStream()).thenReturn(MiniLoader.class.getResourceAsStream("/no-shader-specified.j3md"));
-        MaterialDef def = (MaterialDef) MiniLoader.load(new MaterialKey("no-shader-specified.minid"));
+        MaterialDef def = (MaterialDef) loader.load(new MaterialKey("no-shader-specified.minid"));
         assertEquals(null, def.getTechniqueDefs("A"));
         assertEquals(1, def.getTechniqueDefs("B").size());
     }
@@ -49,10 +67,12 @@ public class MiniLoaderTest {
     @Test
     public void multipleSameNamedTechniques_shouldBeSupported() throws IOException {
 //        when(assetInfo.openStream()).thenReturn(MiniLoader.class.getResourceAsStream("/same-name-technique.j3md"));
-        MaterialDef def = (MaterialDef) MiniLoader.load(new MaterialKey("same-name-technique.minid"));
+        MaterialDef def = (MaterialDef) loader.load(new MaterialKey("same-name-technique.minid"));
         assertEquals(2, def.getTechniqueDefs("Test").size());
-        assertEquals(EnumSet.of(Caps.GLSL150), def.getTechniqueDefs("Test").get(0).getRequiredCaps());
-        assertEquals(EnumSet.of(Caps.GLSL100), def.getTechniqueDefs("Test").get(1).getRequiredCaps());
+        assertEquals(EnumSet.of(Caps.GLSL150),
+                     def.getTechniqueDefs("Test").get(0).getRequiredCaps());
+        assertEquals(EnumSet.of(Caps.GLSL100),
+                     def.getTechniqueDefs("Test").get(1).getRequiredCaps());
     }
 
     @Test
@@ -62,14 +82,19 @@ public class MiniLoaderTest {
         final Texture textureOldStyle = Mockito.mock(Texture.class);
         final Texture textureOldStyleUsingQuotes = Mockito.mock(Texture.class);
 
-        final TextureKey textureKeyUsingQuotes = setupMockForTexture("OldStyleUsingQuotes", "old style using quotes/texture.png", true, textureOldStyleUsingQuotes);
-        final TextureKey textureKeyOldStyle = setupMockForTexture("OldStyle", "old style/texture.png", true, textureOldStyle);
+        final TextureKey textureKeyUsingQuotes = setupMockForTexture("OldStyleUsingQuotes",
+                                                                     "old style using quotes/texture.png",
+                                                                     true,
+                                                                     textureOldStyleUsingQuotes);
+        final TextureKey textureKeyOldStyle = setupMockForTexture("OldStyle",
+                                                                  "old style/texture.png", true,
+                                                                  textureOldStyle);
 
-        MiniLoader.load(new MaterialKey("texture-parameters-oldstyle.mini"));
+        loader.load(new MaterialKey("texture-parameters-oldstyle.mini"), mockedMiniLoader,
+                    mockedAWTLoader);
 
-        AWTLoader loader = new AWTLoader();
-        verify(loader).load(textureKeyUsingQuotes.getFile().getInputStream());
-        verify(loader).load(textureKeyOldStyle.getFile().getInputStream());
+        verify(mockedAWTLoader).load(textureKeyUsingQuotes);
+        verify(mockedAWTLoader).load(textureKeyOldStyle);
         verify(textureOldStyle).setWrap(Texture.WrapMode.Repeat);
         verify(textureOldStyleUsingQuotes).setWrap(Texture.WrapMode.Repeat);
     }
@@ -87,8 +112,10 @@ public class MiniLoaderTest {
         final Texture textureCombined = Mockito.mock(Texture.class);
         final Texture textureLooksLikeOldStyle = Mockito.mock(Texture.class);
 
-        final TextureKey textureKeyNoParameters = setupMockForTexture("Empty", "empty.png", false, textureNoParameters);
-        final TextureKey textureKeyFlip = setupMockForTexture("Flip", "flip.png", true, textureFlip);
+        final TextureKey textureKeyNoParameters = setupMockForTexture("Empty", "empty.png", false,
+                                                                      textureNoParameters);
+        final TextureKey textureKeyFlip = setupMockForTexture("Flip", "flip.png", true,
+                                                              textureFlip);
         setupMockForTexture("Repeat", "repeat.png", false, textureRepeat);
         setupMockForTexture("RepeatAxis", "repeat-axis.png", false, textureRepeatAxis);
         setupMockForTexture("Min", "min.png", false, textureMin);
@@ -96,11 +123,11 @@ public class MiniLoaderTest {
         setupMockForTexture("Combined", "combined.png", true, textureCombined);
         setupMockForTexture("LooksLikeOldStyle", "oldstyle.png", true, textureLooksLikeOldStyle);
 
-        MiniLoader.load(new MaterialKey("texture-parameters-newstyle.mini"));
+        loader.load(new MaterialKey("texture-parameters-newstyle.mini"), mockedMiniLoader,
+                    mockedAWTLoader);
 
-        AWTLoader loader = new AWTLoader();
-        verify(loader).load(textureKeyNoParameters.getFile().getInputStream());
-        verify(loader).load(textureKeyFlip.getFile().getInputStream());
+        verify(mockedAWTLoader).load(textureKeyNoParameters);
+        verify(mockedAWTLoader).load(textureKeyFlip);
 
         verify(textureRepeat).setWrap(Texture.WrapMode.Repeat);
         verify(textureRepeatAxis).setWrap(Texture.WrapAxis.T, Texture.WrapMode.Repeat);
@@ -112,13 +139,14 @@ public class MiniLoaderTest {
         verify(textureCombined).setWrap(Texture.WrapMode.Repeat);
     }
 
-    private TextureKey setupMockForTexture(final String paramName, final String path, final boolean flipY, final Texture texture) {
-        when(materialDef.getMaterialParam(paramName)).thenReturn(new MatParamTexture(VarType.Texture2D, paramName, texture, null));
+    private TextureKey setupMockForTexture(final String paramName, final String path,
+                                           final boolean flipY, final Texture texture) {
+        when(materialDef.getMaterialParam(paramName))
+                .thenReturn(new MatParamTexture(VarType.Texture2D, paramName, texture, null));
 
         final TextureKey textureKey = new TextureKey(path, flipY);
         textureKey.setGenerateMips(true);
-
-        when(AWTLoader.load(textureKey)).thenReturn(texture);
+        when(mockedAWTLoader.load(textureKey)).thenReturn(texture);
 
         return textureKey;
     }
