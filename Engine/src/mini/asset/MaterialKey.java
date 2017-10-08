@@ -1,6 +1,6 @@
 package mini.asset;
 
-import mini.utils.MyFile;
+import mini.material.Material;
 
 /**
  * Used for loading {@link Material materials} only (not material definitions!).
@@ -8,10 +8,10 @@ import mini.utils.MyFile;
  * referenced textures will be collected when all instances of the material
  * become unreachable.
  */
-public class MaterialKey extends AssetKey {
+public class MaterialKey extends AssetKey<Material> {
 
     public MaterialKey(String name) {
-        super(new MyFile(name));
+        super(name);
     }
 
     public MaterialKey() {

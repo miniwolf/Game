@@ -4,16 +4,12 @@ import mini.asset.ModelKey;
 import mini.light.DirectionalLight;
 import mini.light.PointLight;
 import mini.material.Material;
-import mini.material.plugins.MiniLoader;
 import mini.math.ColorRGBA;
 import mini.math.Quaternion;
 import mini.math.Vector3f;
 import mini.scene.Geometry;
-import mini.scene.plugins.OBJLoader;
 import mini.scene.shape.Sphere;
 import mini.utils.TangentBinormalGenerator;
-
-import java.io.IOException;
 
 /**
  * Created by miniwolf on 06-05-2017.
@@ -28,15 +24,11 @@ public class TestSimpleLighting extends SimpleApplication {
 
     @Override
     public void simpleInitApp() {
-        Geometry teapot = null;
-        try {
-            teapot = (Geometry) OBJLoader.load(new ModelKey("obj/teapot.obj"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        Geometry teapot = (Geometry) assetManager
+                .loadAsset(new ModelKey("/Models/Teapot/Teapot.obj"));
         TangentBinormalGenerator.generate(teapot.getMesh(), true);
         teapot.setLocalScale(2f);
-        Material mat = new Material("MatDefs/Light/Lighting.minid");
+        Material mat = new Material(assetManager, "MatDefs/Light/Lighting.minid");
         mat.setFloat("Shininess", 25);
         mat.setBoolean("UseMaterialColors", true);
         cam.setLocation(new Vector3f(0.015041917f, 0.4572918f, 5.2874837f));
@@ -50,12 +42,7 @@ public class TestSimpleLighting extends SimpleApplication {
         rootNode.attachChild(teapot);
 
         Geometry lightMdl = new Geometry("Light", new Sphere(10, 10, 0.1f));
-        try {
-            lightMdl.setMaterial(
-                    (Material) new MiniLoader().load(new MaterialKey("Materials/RedColor.mini")));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        lightMdl.setMaterial(assetManager.loadAsset(new MaterialKey("Materials/RedColor.mini")));
 
         lightMdl.getMesh().setStatic();
         rootNode.attachChild(lightMdl);

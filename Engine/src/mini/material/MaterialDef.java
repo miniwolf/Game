@@ -1,5 +1,6 @@
 package mini.material;
 
+import mini.asset.AssetManager;
 import mini.shaders.VarType;
 import mini.textures.image.ColorSpace;
 
@@ -19,14 +20,16 @@ public class MaterialDef {
     private Map<String, List<TechniqueDef>> techniques = new HashMap<>();
     private String name;
     private String assetName;
+    private AssetManager assetManager;
 
     /**
      * Creates a new material definition with the given name.
      *
      * @param name The debug name of the material definition
      */
-    public MaterialDef(String name) {
+    public MaterialDef(AssetManager assetManager, String name) {
         this.name = name;
+        this.assetManager = assetManager;
     }
 
     /**
@@ -124,5 +127,9 @@ public class MaterialDef {
      */
     public void addMaterialParamTexture(VarType type, String name, ColorSpace colorSpace) {
         matParams.put(name, new MatParamTexture(type, name, null, colorSpace));
+    }
+
+    public AssetManager getAssetManager() {
+        return assetManager;
     }
 }

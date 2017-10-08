@@ -1,7 +1,7 @@
 ShaderNodesDefinitions {
     ShaderNodeDefinition CommonVert {
         Type: Vertex
-        Shader GLSL100: MatDefs/ShaderNodes/Common/CommonVert.vert
+        Shader GLSL100: /MatDefs/ShaderNodes/Common/CommonVert.vert
         Documentation {
             This Node is responsible for computing vertex position in projection space.
             It also can pass texture coordinates 1 & 2, and vertexColor to the frgment shader as varying (or inputs for glsl >=1.3)

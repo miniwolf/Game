@@ -1,5 +1,9 @@
 package mini.scene.plugins;
 
+import mini.asset.AssetInfo;
+import mini.asset.AssetKey;
+import mini.asset.AssetLoader;
+import mini.asset.AssetManager;
 import mini.asset.ModelKey;
 import mini.material.Material;
 import mini.math.Vector2f;
@@ -32,7 +36,7 @@ import java.util.Scanner;
 /**
  * Reads OBJ format models.
  */
-public final class OBJLoader {
+public final class OBJLoader implements AssetLoader {
 
     protected final List<Vector3f> verts = new ArrayList<>();
     protected final List<Vector2f> texCoords = new ArrayList<>();
@@ -57,34 +61,41 @@ public final class OBJLoader {
     protected String objName;
     protected Node objNode;
     private List<Vertex> vertList = new ArrayList<>();
+    private AssetManager assetManager;
 
     protected static class Face {
         Vertex[] verticies;
     }
 
-    public static Object load(ModelKey info) throws IOException {
-        OBJLoader loader = new OBJLoader();
-        loader.reset();
+    public Object load(AssetInfo info) throws IOException {
+        reset();
 
-        loader.key = info;
-        loader.objName = info.getFile().getName();
-        String folderName = info.getFile().getDirectory();
-        String ext = info.getFile().getExtension();
-        loader.objName = loader.objName.substring(0, loader.objName.length() - ext.length() - 1);
-        if (folderName != null && folderName.length() > 0) {
-            loader.objName = loader.objName.substring(folderName.length());
+        if (!(info.getKey() instanceof ModelKey)) {
+            throw new IllegalArgumentException("Model assets must be loaded using a ModelKey");
         }
 
-        loader.objNode = new Node(loader.objName + "-objnode");
+        key = (ModelKey) info.getKey();
+        assetManager = info.getManager();
+        objName = key.getName();
+
+        String folderName = key.getFolder();
+        String ext = key.getExtension();
+        objName = objName.substring(0, objName.length() - ext.length() - 1);
+        if (folderName != null && folderName.length() > 0 && objName
+                .startsWith(folderName)) {
+            objName = objName.substring(folderName.length());
+        }
+
+        objNode = new Node(objName + "-objnode");
 
         InputStream in = null;
         try {
-            in = info.getFile().getInputStream();
+            in = info.openStream();
 
-            loader.scan = new Scanner(in);
-            loader.scan.useLocale(Locale.US);
+            scan = new Scanner(in);
+            scan.useLocale(Locale.US);
 
-            while (loader.readLine()) {
+            while (readLine()) {
             }
         } finally {
             if (in != null) {
@@ -92,22 +103,22 @@ public final class OBJLoader {
             }
         }
 
-        if (loader.matFaces.size() > 0) {
-            for (Map.Entry<String, List<Face>> entry : loader.matFaces.entrySet()) {
+        if (matFaces.size() > 0) {
+            for (Map.Entry<String, List<Face>> entry : matFaces.entrySet()) {
                 List<Face> materialFaces = entry.getValue();
                 if (materialFaces.size() > 0) {
-                    Geometry geom = loader.createGeometry(materialFaces, entry.getKey());
-                    loader.objNode.attachChild(geom);
+                    Geometry geom = createGeometry(materialFaces, entry.getKey());
+                    objNode.attachChild(geom);
                 }
             }
-        } else if (loader.faces.size() > 0) {
+        } else if (faces.size() > 0) {
             // generate final geometry
-            Geometry geom = loader.createGeometry(loader.faces, null);
-            loader.objNode.attachChild(geom);
+            Geometry geom = createGeometry(faces, null);
+            objNode.attachChild(geom);
         }
 
         // only 1 geometry, so no need to send node
-        return loader.objNode.getQuantity() == 1 ? loader.objNode.getChild(0) : loader.objNode;
+        return objNode.getQuantity() == 1 ? objNode.getChild(0) : objNode;
     }
 
     public void reset() {
@@ -274,9 +285,9 @@ public final class OBJLoader {
 
         // NOTE: Cut off any relative/absolute paths
         name = new MyFile(name).getName();
-        ModelKey mtlKey = new ModelKey(key.getFile().getDirectory() + name);
+        AssetKey<Map<String, Material>> mtlKey = new AssetKey<>(key.getFolder() + name);
         try {
-            matList = (HashMap<String, Material>) MTLLoader.load(mtlKey);
+            matList = assetManager.loadAsset(mtlKey);
         } catch (Exception ex) {
             System.err.println("Cannot locate " + name + " for model " + key);
         }
@@ -323,8 +334,9 @@ public final class OBJLoader {
         } else if (cmd.equals("usemtl")) {
             // use material from MTL lib for the following faces
             currentMatName = scan.next();
-//            if (!matList.containsKey(currentMatName))
-//                throw new IOException("Cannot locate material " + currentMatName + " in MTL file!");
+            if (!matList.containsKey(currentMatName)) {
+                throw new IOException("Cannot locate material " + currentMatName + " in MTL file!");
+            }
 
         } else if (cmd.equals("mtllib")) {
             // specify MTL lib to use for this OBJ file
@@ -358,7 +370,7 @@ public final class OBJLoader {
         }
         if (material == null) {
             // create default material
-            material = new Material("MatDefs/Light/Lighting.minid");
+            material = new Material(assetManager, "MatDefs/Light/Lighting.minid");
             material.setFloat("Shininess", 64);
         }
         geom.setMaterial(material);

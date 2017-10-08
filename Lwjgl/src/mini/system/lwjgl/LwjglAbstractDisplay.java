@@ -47,14 +47,14 @@ public abstract class LwjglAbstractDisplay extends LwjglContext implements Runna
     protected boolean initInThread(){
         try {
             // Enable uncaught exception handler only for current thread
-            Thread.currentThread().setUncaughtExceptionHandler((thread, thrown) -> {
-                listener.handleError("Uncaught exception thrown in "+thread.toString(), thrown);
-                if (needClose.get()){
-                    // listener.handleError() has requested the
-                    // context to close. Satisfy request.
-                    deinitInThread();
-                }
-            });
+//            Thread.currentThread().setUncaughtExceptionHandler((thread, thrown) -> {
+//                listener.handleError("Uncaught exception thrown in "+thread.toString(), thrown);
+//                if (needClose.get()){
+//                    // listener.handleError() has requested the
+//                    // context to close. Satisfy request.
+//                    deinitInThread();
+//                }
+//            });
 
             // For canvas, this will create a pbuffer,
             // allowing us to query information.

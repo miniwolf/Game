@@ -1,5 +1,6 @@
 package mini.material;
 
+import mini.asset.AssetManager;
 import mini.light.LightList;
 import mini.math.Matrix4f;
 import mini.renderer.RenderManager;
@@ -11,6 +12,7 @@ import mini.shaders.Shader;
 import mini.shaders.Uniform;
 import mini.shaders.VarType;
 import mini.system.NullRenderer;
+import mini.system.TestUtil;
 import mini.textures.Image.Format;
 import mini.textures.Texture;
 import mini.textures.Texture2D;
@@ -489,7 +491,8 @@ public class MaterialMatParamTest {
     }
 
     private void material(String path) {
-        geometry.setMaterial(new Material(path));
+        AssetManager assetManager = TestUtil.createAssetManager();
+        geometry.setMaterial(new Material(assetManager, path));
     }
 
     private void evaluateTechniqueDef() {

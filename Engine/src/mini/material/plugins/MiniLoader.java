@@ -1,7 +1,9 @@
 package mini.material.plugins;
 
+import mini.asset.AssetInfo;
 import mini.asset.AssetKey;
-import mini.asset.MaterialKey;
+import mini.asset.AssetLoader;
+import mini.asset.AssetManager;
 import mini.asset.TextureKey;
 import mini.material.MatParam;
 import mini.material.Material;
@@ -20,7 +22,6 @@ import mini.shaders.VarType;
 import mini.textures.Texture;
 import mini.textures.Texture2D;
 import mini.textures.image.ColorSpace;
-import mini.textures.plugins.AWTLoader;
 import mini.utils.blockparser.BlockLanguageParser;
 import mini.utils.blockparser.Statement;
 import mini.utils.clone.Cloner;
@@ -35,7 +36,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class MiniLoader {
+public class MiniLoader implements AssetLoader {
     // private ErrorLogger errors;
     private ShaderNodeLoaderDelegate nodesLoaderDelegate;
     private boolean isUseNodes = false;
@@ -53,7 +54,7 @@ public class MiniLoader {
     private Map<Shader.ShaderType, String> shaderNames;
 
     private static final String whitespacePattern = "\\p{javaWhitespace}+";
-    private AWTLoader awtLoader;
+    private AssetManager assetManager;
 
     public MiniLoader() {
         shaderLanguages = new ArrayList<>();// EnumMap<>(Shader.ShaderType.class);
@@ -159,7 +160,7 @@ public class MiniLoader {
                     .get(0).equals("Flip") && !values.get(0).equals("Repeat")) {
                 System.err
                         .println("Unknown texture option \"" + value + "\" encountered for \"" + key
-                                 + "\" in material \"" + material.getKey().getFile().getName()
+                                 + "\" in material \"" + material.getKey().getName()
                                  + "\"");
             } else if (textureOption != null) {
                 final String option = textureOption.getOptionValue(value);
@@ -266,17 +267,17 @@ public class MiniLoader {
         Texture texture;
 
         try {
-            texture = (Texture) awtLoader.load(textureKey);
+            texture = assetManager.loadTexture(textureKey);
         } catch (RuntimeException ex) {
             System.err.println("Cannot locate " + textureKey + " for material " + key);
             texture = null;
         }
 
         if (texture == null) {
-            Texture load = (Texture) awtLoader.load(new TextureKey("Textures/MissingTexture.png"));
+            Texture load = (Texture) assetManager.loadAsset("Textures/MissingTexture.png");
             texture = new Texture2D(load.getImage());
             texture.setKey(textureKey);
-            texture.setName(textureKey.getFile().getName());
+            texture.setName(textureKey.getName());
         }
 
         // Apply texture options to the texture
@@ -289,8 +290,7 @@ public class MiniLoader {
         return texture;
     }
 
-    private Object readValue(final VarType type, final String value,
-                             AWTLoader awtLoader) throws IOException {
+    private Object readValue(final VarType type, final String value) throws IOException {
         if (type.isTextureType()) {
             return parseTextureType(type, value);
         } else {
@@ -388,7 +388,7 @@ public class MiniLoader {
 
         Object defaultValObj = null;
         if (defaultVal != null) {
-            defaultValObj = readValue(type, defaultVal, awtLoader);
+            defaultValObj = readValue(type, defaultVal);
         }
         if (type.isTextureType()) {
             materialDef.addMaterialParamTexture(type, name, colorSpace);
@@ -412,7 +412,7 @@ public class MiniLoader {
             throw new IOException("The material parameter: " + name + " is undefined.");
         }
 
-        Object valueObj = readValue(p.getVarType(), split[1], awtLoader);
+        Object valueObj = readValue(p.getVarType(), split[1]);
         if (p.getVarType().isTextureType()) {
             material.setTextureParam(name, p.getVarType(), (Texture) valueObj);
         } else {
@@ -420,15 +420,13 @@ public class MiniLoader {
         }
     }
 
-    private void readMaterialParams(List<Statement> paramsList,
-                                    AWTLoader awtLoader) throws IOException {
+    private void readMaterialParams(List<Statement> paramsList) throws IOException {
         for (Statement statement : paramsList) {
             readParam(statement.getLine());
         }
     }
 
-    private void readExtendingMaterialParams(List<Statement> paramsList,
-                                             AWTLoader awtLoader) throws IOException {
+    private void readExtendingMaterialParams(List<Statement> paramsList) throws IOException {
         for (Statement statement : paramsList) {
             readValueParam(statement.getLine());
         }
@@ -715,8 +713,7 @@ public class MiniLoader {
         presetDefines.clear();
     }
 
-    private void loadFromRoot(List<Statement> roots, MiniLoader miniLoader,
-                              AWTLoader awtLoader) throws IOException {
+    private void loadFromRoot(List<Statement> roots) throws IOException {
         if (roots.size() == 2) {
             Statement exception = roots.get(0);
             String line = exception.getLine();
@@ -756,8 +753,7 @@ public class MiniLoader {
 
             String extendedMat = split[1].trim();
 
-            MaterialDef def = (MaterialDef) miniLoader
-                    .load(new MaterialKey(extendedMat));
+            MaterialDef def = assetManager.loadAsset(new AssetKey<>(extendedMat));
             if (def == null) {
                 throw new MatParseException(
                         "Extended material " + extendedMat + " cannot be found.", materialStat);
@@ -771,9 +767,9 @@ public class MiniLoader {
             if (extending) {
                 throw new MatParseException("Expected ':', got '{'", materialStat);
             }
-            materialDef = new MaterialDef(materialName);
+            materialDef = new MaterialDef(assetManager, materialName);
             // NOTE: pass file name for defs so they can be loaded later
-            materialDef.setAssetName(key.getFile().getName());
+            materialDef.setAssetName(key.getName());
         } else {
             throw new MatParseException("Cannot use colon in material name/path", materialStat);
         }
@@ -784,7 +780,7 @@ public class MiniLoader {
             if (extending) {
                 switch (statType) {
                     case "MaterialParameters":
-                        readExtendingMaterialParams(statement.getContents(), awtLoader);
+                        readExtendingMaterialParams(statement.getContents());
                         break;
                     case "AdditionalRenderState":
                         readAdditionalRenderState(statement.getContents());
@@ -799,7 +795,7 @@ public class MiniLoader {
                         readTechnique(statement);
                         break;
                     case "MaterialParameters":
-                        readMaterialParams(statement.getContents(), awtLoader);
+                        readMaterialParams(statement.getContents());
                         break;
                     default:
                         throw new MatParseException(
@@ -809,22 +805,17 @@ public class MiniLoader {
         }
     }
 
-    public Object load(MaterialKey info) throws IOException {
-        return load(info, new MiniLoader(), new AWTLoader());
-    }
-
-    public Object load(MaterialKey info, MiniLoader loader,
-                       AWTLoader awtLoader) throws IOException {
-        this.awtLoader = awtLoader;
-        InputStream in = info.getFile().getInputStream();
+    public Object load(AssetInfo info) throws IOException {
+        this.assetManager = info.getManager();
+        InputStream in = info.openStream();
         try {
-            key = info;
+            key = info.getKey();
 //            if (key.getExtension().equals("mini") && !(key instanceof MaterialKey)) {
 //                throw new IOException("Material instances must be loaded via MaterialKey");
 //            } else if (key.getExtension().equals("minid") && key instanceof MaterialKey) {
 //                throw new IOException("Material definitions must be loaded via AssetKey");
 //            }
-            loadFromRoot(BlockLanguageParser.parse(in), loader, awtLoader);
+            loadFromRoot(BlockLanguageParser.parse(in));
 
         } finally {
             if (in != null) {
@@ -859,6 +850,7 @@ public class MiniLoader {
                 }
                 nodesLoaderDelegate.setTechniqueDef(technique);
                 nodesLoaderDelegate.setMaterialDef(materialDef);
+                nodesLoaderDelegate.setAssetManager(assetManager);
             }
         }
     }

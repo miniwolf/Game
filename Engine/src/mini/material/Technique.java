@@ -1,5 +1,6 @@
 package mini.material;
 
+import mini.asset.AssetManager;
 import mini.light.LightList;
 import mini.material.logic.TechniqueDefLogic;
 import mini.renderer.Caps;
@@ -92,6 +93,7 @@ public class Technique {
                        List<MatParamOverride> forcedOverrides, LightList lights,
                        Set<Caps> rendererCaps) {
         TechniqueDefLogic logic = def.getLogic();
+        AssetManager assetManager = owner.getMaterialDef().getAssetManager();
 
         dynamicDefines.clear();
         dynamicDefines.setAll(paramDefines);
@@ -103,7 +105,7 @@ public class Technique {
             applyOverrides(dynamicDefines, forcedOverrides);
         }
 
-        return logic.makeCurrent(renderManager, rendererCaps, lights, dynamicDefines);
+        return logic.makeCurrent(assetManager, renderManager, rendererCaps, lights, dynamicDefines);
     }
 
     /**

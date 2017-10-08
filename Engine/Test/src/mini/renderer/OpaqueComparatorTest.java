@@ -1,5 +1,6 @@
 package mini.renderer;
 
+import mini.asset.AssetManager;
 import mini.material.Material;
 import mini.material.TechniqueDef;
 import mini.math.ColorRGBA;
@@ -27,10 +28,12 @@ public class OpaqueComparatorTest {
     private final Mesh mesh = new Box(1, 1, 1);
     private Camera cam = new Camera(1, 1);
     private RenderManager renderManager;
+    private AssetManager assetManager;
     private OpaqueComparator comparator = new OpaqueComparator();
 
     @Before
     public void setUp() {
+        assetManager = TestUtil.createAssetManager();
         renderManager = TestUtil.createRenderManager();
         comparator.setCamera(cam);
     }
@@ -102,10 +105,10 @@ public class OpaqueComparatorTest {
 
     @Test
     public void testSortByMaterialDef() {
-        Material lightingMat = new Material("MatDefs/Light/Lighting.minid");
-        Material particleMat = new Material("MatDefs/Misc/Particle.minid");
-        Material unshadedMat = new Material("MatDefs/Misc/Unshaded.minid");
-        Material skyMat = new Material("MatDefs/Misc/Sky.minid");
+        Material lightingMat = new Material(assetManager, "MatDefs/Light/Lighting.minid");
+        Material particleMat = new Material(assetManager, "MatDefs/Misc/Particle.minid");
+        Material unshadedMat = new Material(assetManager, "MatDefs/Misc/Unshaded.minid");
+        Material skyMat = new Material(assetManager, "MatDefs/Misc/Sky.minid");
 
         lightingMat.setName("MatLight");
         particleMat.setName("MatParticle");
@@ -116,12 +119,13 @@ public class OpaqueComparatorTest {
 
     @Test
     public void testSortByTechnique() {
-        Material lightingMatDefault = new Material("MatDefs/Light/Lighting.minid");
-        Material lightingPreShadow = new Material("MatDefs/Light/Lighting.minid");
-        Material lightingPostShadow = new Material("MatDefs/Light/Lighting.minid");
-        Material lightingMatPreNormalPass = new Material("MatDefs/Light/Lighting.minid");
-        Material lightingMatGBuf = new Material("MatDefs/Light/Lighting.minid");
-        Material lightingMatGlow = new Material("MatDefs/Light/Lighting.minid");
+        Material lightingMatDefault = new Material(assetManager, "MatDefs/Light/Lighting.minid");
+        Material lightingPreShadow = new Material(assetManager, "MatDefs/Light/Lighting.minid");
+        Material lightingPostShadow = new Material(assetManager, "MatDefs/Light/Lighting.minid");
+        Material lightingMatPreNormalPass = new Material(assetManager,
+                                                         "MatDefs/Light/Lighting.minid");
+        Material lightingMatGBuf = new Material(assetManager, "MatDefs/Light/Lighting.minid");
+        Material lightingMatGlow = new Material(assetManager, "MatDefs/Light/Lighting.minid");
 
         lightingMatDefault.setName("TechDefault");
         lightingMatDefault.selectTechnique(TechniqueDef.DEFAULT_TECHNIQUE_NAME, renderManager);
@@ -144,8 +148,8 @@ public class OpaqueComparatorTest {
 
     @Test(expected = AssertionError.class)
     public void testNoSortByParam() {
-        Material sameMat1 = new Material("MatDefs/Misc/Unshaded.minid");
-        Material sameMat2 = new Material("MatDefs/Misc/Unshaded.minid");
+        Material sameMat1 = new Material(assetManager, "MatDefs/Misc/Unshaded.minid");
+        Material sameMat2 = new Material(assetManager, "MatDefs/Misc/Unshaded.minid");
 
         sameMat1.setName("MatRed");
         sameMat1.setColor("Color", ColorRGBA.Red);
@@ -166,9 +170,9 @@ public class OpaqueComparatorTest {
 
     @Test
     public void testSortByTexture() {
-        Material texture1Mat = new Material("MatDefs/Misc/Unshaded.minid");
-        Material texture2Mat = new Material("MatDefs/Misc/Unshaded.minid");
-        Material texture3Mat = new Material("MatDefs/Misc/Unshaded.minid");
+        Material texture1Mat = new Material(assetManager, "MatDefs/Misc/Unshaded.minid");
+        Material texture2Mat = new Material(assetManager, "MatDefs/Misc/Unshaded.minid");
+        Material texture3Mat = new Material(assetManager, "MatDefs/Misc/Unshaded.minid");
 
         Texture tex1 = createTexture("A");
         tex1.getImage().setId(1);
@@ -193,12 +197,14 @@ public class OpaqueComparatorTest {
 
     @Test
     public void testSortByShaderDefines() {
-        Material lightingMat = new Material("MatDefs/Light/Lighting.minid");
-        Material lightingMatVColor = new Material("MatDefs/Light/Lighting.minid");
-        Material lightingMatVLight = new Material("MatDefs/Light/Lighting.minid");
-        Material lightingMatTC = new Material("MatDefs/Light/Lighting.minid");
-        Material lightingMatVColorLight = new Material("MatDefs/Light/Lighting.minid");
-        Material lightingMatTCVColorLight = new Material("MatDefs/Light/Lighting.minid");
+        Material lightingMat = new Material(assetManager, "MatDefs/Light/Lighting.minid");
+        Material lightingMatVColor = new Material(assetManager, "MatDefs/Light/Lighting.minid");
+        Material lightingMatVLight = new Material(assetManager, "MatDefs/Light/Lighting.minid");
+        Material lightingMatTC = new Material(assetManager, "MatDefs/Light/Lighting.minid");
+        Material lightingMatVColorLight = new Material(assetManager,
+                                                       "MatDefs/Light/Lighting.minid");
+        Material lightingMatTCVColorLight = new Material(assetManager,
+                                                         "MatDefs/Light/Lighting.minid");
 
         lightingMat.setName("DefNone");
 
@@ -226,8 +232,8 @@ public class OpaqueComparatorTest {
 
     @Test
     public void testSortByAll() {
-        Material matBase1 = new Material("MatDefs/Light/Lighting.minid");
-        Material matBase2 = new Material("MatDefs/Misc/Unshaded.minid");
+        Material matBase1 = new Material(assetManager, "MatDefs/Light/Lighting.minid");
+        Material matBase2 = new Material(assetManager, "MatDefs/Misc/Unshaded.minid");
 
         Texture texBase = createTexture("BASE");
         texBase.getImage().setId(1);

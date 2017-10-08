@@ -15,6 +15,7 @@ public class ApplicationDesktopSystem extends ApplicationSystemDelegate {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private ApplicationContext newContextLwjgl() {
         try {
             Class<? extends ApplicationContext> ctxClazz =
@@ -24,7 +25,7 @@ public class ApplicationDesktopSystem extends ApplicationSystemDelegate {
             System.err.println("Failed to create context" + ex.getMessage());
         } catch (ClassNotFoundException ex) {
             System.err.println("CRITICAL ERROR: Context class is missing!\n"
-                    + "Make sure context class is on the classpath." + ex);
+                               + "Make sure context class is on the classpath." + ex);
         }
 
         return null;

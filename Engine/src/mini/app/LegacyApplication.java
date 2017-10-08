@@ -1,5 +1,6 @@
 package mini.app;
 
+import mini.asset.AssetManager;
 import mini.input.InputManager;
 import mini.input.KeyInput;
 import mini.input.MouseInput;
@@ -37,6 +38,7 @@ public class LegacyApplication implements Application, SystemListener {
     protected MouseInput mouseInput;
     protected KeyInput keyInput;
     protected InputManager inputManager;
+    protected AssetManager assetManager;
 
     /**
      * Set the display settings to define the display created.
@@ -269,6 +271,8 @@ public class LegacyApplication implements Application, SystemListener {
      * and far values 1 and 1000 units respectively.
      */
     public void initialize() {
+        initAssetManager();
+
         initDisplay();
         initCamera();
 
@@ -276,6 +280,10 @@ public class LegacyApplication implements Application, SystemListener {
             initInput();
         }
         // user code here..
+    }
+
+    private void initAssetManager() {
+        assetManager = ApplicationSystem.newAssetManager();
     }
 
     /**

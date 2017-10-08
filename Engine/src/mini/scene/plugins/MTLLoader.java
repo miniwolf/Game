@@ -1,13 +1,14 @@
 package mini.scene.plugins;
 
+import mini.asset.AssetInfo;
 import mini.asset.AssetKey;
-import mini.asset.ModelKey;
+import mini.asset.AssetLoader;
+import mini.asset.AssetManager;
 import mini.asset.TextureKey;
 import mini.material.Material;
 import mini.material.RenderState;
 import mini.math.ColorRGBA;
 import mini.textures.Texture;
-import mini.textures.plugins.AWTLoader;
 import mini.utils.MyFile;
 
 import java.io.IOException;
@@ -18,7 +19,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
-public class MTLLoader {
+public class MTLLoader implements AssetLoader {
     private Scanner scan;
     private Map<String, Material> matList;
     //protected Material material;
@@ -34,6 +35,7 @@ public class MTLLoader {
     private String matName;
     protected float alpha = 1;
     private boolean transparent = false;
+    private AssetManager assetManager;
 
     public void reset() {
         scan = null;
@@ -89,12 +91,12 @@ public class MTLLoader {
         }
 
         if (shadeless) {
-            material = new Material("MatDefs/Misc/Unshaded.minid");
+            material = new Material(assetManager, "MatDefs/Misc/Unshaded.minid");
             material.setColor("Color", diffuse.clone());
             material.setTexture("ColorMap", diffuseMap);
             // TODO: Add handling for alpha map?
         } else {
-            material = new Material("MatDefs/Light/Lighting.minid");
+            material = new Material(assetManager, "MatDefs/Light/Lighting.minid");
             material.setBoolean("UseMaterialColors", true);
             material.setColor("Ambient", ambient.clone());
             material.setColor("Diffuse", diffuse.clone());
@@ -138,7 +140,7 @@ public class MTLLoader {
         texKey.setGenerateMips(true);
         Texture texture = null;
         try {
-            texture = (Texture) new AWTLoader().load(texKey);
+            texture = assetManager.loadTexture(texKey);
             texture.setWrap(Texture.WrapMode.Repeat);
         } catch (Exception ex) {
             System.err.println("Cannot locate " + texKey + " for material " + key);
@@ -247,33 +249,36 @@ public class MTLLoader {
     }
 
     @SuppressWarnings("empty-statement")
-    public static Object load(ModelKey info) throws IOException {
-        MTLLoader loader = new MTLLoader();
-        loader.reset();
+    public Object load(AssetInfo info) throws IOException {
+        reset();
 
-        loader.key = info;
-        loader.folderName = info.getFile().getDirectory();
-        loader.matList = new HashMap<>();
+        this.assetManager = info.getManager();
+
+        key = info.getKey();
+        folderName = key.getFolder();
+        matList = new HashMap<>();
 
         InputStream in = null;
         try {
-            in = info.getFile().getInputStream();
-            loader.scan = new Scanner(in);
-            loader.scan.useLocale(Locale.US);
+            in = info.openStream();
+            scan = new Scanner(in);
+            scan.useLocale(Locale.US);
 
-            while (loader.readLine()) ;
+            while (readLine()) {
+                ;
+            }
         } finally {
             if (in != null) {
                 in.close();
             }
         }
 
-        if (loader.matName != null) {
+        if (matName != null) {
             // still have a material in the vars
-            loader.createMaterial();
-            loader.resetMaterial();
+            createMaterial();
+            resetMaterial();
         }
 
-        return loader.matList;
+        return matList;
     }
 }

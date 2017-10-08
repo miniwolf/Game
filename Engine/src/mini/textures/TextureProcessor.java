@@ -34,7 +34,7 @@ public class TextureProcessor {
         }
 
         tex.setAnisotropicFilter(key.getAnisotropy());
-        tex.setName(key.getFile().getName());
+        tex.setName(key.getName());
         tex.setImage(img);
         return tex;
     }

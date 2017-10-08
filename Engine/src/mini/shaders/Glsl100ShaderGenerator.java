@@ -1,12 +1,11 @@
 package mini.shaders;
 
-import mini.asset.ShaderNodeDefinitionKey;
+import mini.asset.AssetKey;
+import mini.asset.AssetManager;
 import mini.material.ShaderGenerationInfo;
 import mini.material.TechniqueDef;
 import mini.material.plugins.ConditionParser;
-import mini.shaders.plugins.GLSLLoader;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -35,9 +34,14 @@ public class Glsl100ShaderGenerator {
      */
     private final static String INDENTCHAR = "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t";
     private ShaderNodeVariable inPosTmp;
+    private AssetManager assetManager;
 
     public void initialize(TechniqueDef techniqueDef) {
         this.techniqueDef = techniqueDef;
+    }
+
+    public Glsl100ShaderGenerator(AssetManager assetManager) {
+        this.assetManager = assetManager;
     }
 
     /**
@@ -140,12 +144,7 @@ public class Glsl100ShaderGenerator {
             if (shaderNode.getDefinition().getType() == type) {
                 int index = findShaderIndexFromVersion(shaderNode, type);
                 String shaderPath = shaderNode.getDefinition().getShadersPath().get(index);
-                String loadedSource = null;
-                try {
-                    loadedSource = (String) GLSLLoader.load(new ShaderNodeDefinitionKey(shaderPath));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                String loadedSource = assetManager.loadAsset(new AssetKey<>(shaderPath));
                 appendNodeDeclarationAndMain(loadedSource, sourceDeclaration, source, shaderNode,
                                              info, shaderPath);
             }

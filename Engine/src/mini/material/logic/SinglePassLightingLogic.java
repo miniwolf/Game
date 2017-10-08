@@ -1,5 +1,6 @@
 package mini.material.logic;
 
+import mini.asset.AssetManager;
 import mini.light.DirectionalLight;
 import mini.light.Light;
 import mini.light.LightList;
@@ -44,11 +45,12 @@ public final class SinglePassLightingLogic extends DefaultTechniqueDefLogic {
     }
 
     @Override
-    public Shader makeCurrent(RenderManager renderManager, Set<Caps> rendererCaps,
+    public Shader makeCurrent(AssetManager assetManager, RenderManager renderManager,
+                              Set<Caps> rendererCaps,
                               LightList lights, DefineList defines) {
         defines.set(nbLightsDefineId, renderManager.getSinglePassLightBatchSize() * 3);
         defines.set(singlePassLightingDefineId, true);
-        return super.makeCurrent(renderManager, rendererCaps, lights, defines);
+        return super.makeCurrent(assetManager, renderManager, rendererCaps, lights, defines);
     }
 
     /**

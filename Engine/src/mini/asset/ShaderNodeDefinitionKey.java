@@ -1,8 +1,10 @@
 package mini.asset;
 
-import mini.utils.MyFile;
+import mini.shaders.ShaderNodeDefinition;
 
-public class ShaderNodeDefinitionKey extends AssetKey {
+import java.util.List;
+
+public class ShaderNodeDefinitionKey extends AssetKey<List<ShaderNodeDefinition>> {
     private boolean loadDocumentation = false;
 
     /**
@@ -11,7 +13,7 @@ public class ShaderNodeDefinitionKey extends AssetKey {
      * @param name the name of the asset to load
      */
     public ShaderNodeDefinitionKey(String name) {
-        super(new MyFile(name));
+        super(name);
     }
 
     /**

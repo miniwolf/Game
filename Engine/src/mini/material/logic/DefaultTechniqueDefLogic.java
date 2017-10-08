@@ -1,5 +1,6 @@
 package mini.material.logic;
 
+import mini.asset.AssetManager;
 import mini.light.AmbientLight;
 import mini.light.Light;
 import mini.light.LightList;
@@ -45,9 +46,10 @@ public class DefaultTechniqueDefLogic implements TechniqueDefLogic {
     }
 
     @Override
-    public Shader makeCurrent(RenderManager renderManager, Set<Caps> rendererCaps,
+    public Shader makeCurrent(AssetManager assetManager, RenderManager renderManager,
+                              Set<Caps> rendererCaps,
                               LightList lights, DefineList defines) {
-        return techniqueDef.getShader(rendererCaps, defines);
+        return techniqueDef.getShader(assetManager, rendererCaps, defines);
     }
 
     @Override

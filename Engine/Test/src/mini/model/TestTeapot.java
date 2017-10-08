@@ -5,16 +5,11 @@ import mini.asset.MaterialKey;
 import mini.asset.ModelKey;
 import mini.light.DirectionalLight;
 import mini.light.PointLight;
-import mini.material.Material;
-import mini.material.plugins.MiniLoader;
 import mini.math.ColorRGBA;
 import mini.math.Vector3f;
 import mini.scene.Geometry;
 import mini.scene.Spatial;
-import mini.scene.plugins.OBJLoader;
 import mini.scene.shape.Sphere;
-
-import java.io.IOException;
 
 public class TestTeapot extends SimpleApplication {
     private PointLight pl;
@@ -31,21 +26,11 @@ public class TestTeapot extends SimpleApplication {
     public void simpleInitApp() {
         viewPort.setBackgroundColor(ColorRGBA.DarkGray);
 
-        Spatial bumpy = null;
-        try {
-            bumpy = (Spatial) OBJLoader.load(new ModelKey("Models/Teapot/Teapot.obj"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        Spatial bumpy = assetManager.loadAsset(new ModelKey("Models/Teapot/Teapot.obj"));
         rootNode.attachChild(bumpy);
 
         lightMdl = new Geometry("Light", new Sphere(10, 10, 0.1f));
-        try {
-            lightMdl.setMaterial((Material) new MiniLoader()
-                    .load(new MaterialKey("Materials/RedColor.mini")));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        lightMdl.setMaterial(assetManager.loadAsset(new MaterialKey("Materials/RedColor.mini")));
         rootNode.attachChild(lightMdl);
 
         // flourescent main light

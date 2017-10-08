@@ -1,8 +1,11 @@
 package mini.material.plugins;
 
-import mini.asset.MaterialKey;
+import mini.asset.AssetInfo;
+import mini.asset.AssetKey;
+import mini.asset.AssetManager;
 import mini.asset.TextureKey;
 import mini.material.MatParamTexture;
+import mini.material.Material;
 import mini.material.MaterialDef;
 import mini.renderer.Caps;
 import mini.shaders.VarType;
@@ -29,45 +32,46 @@ import static org.mockito.Mockito.when;
 public class MiniLoaderTest {
     @Mock
     private MaterialDef materialDef;
+    @Mock
+    private AssetInfo assetInfo;
+    @Mock
+    private AssetKey<Material> assetKey;
+    @Mock
+    private AssetManager assetManager;
 
     private MiniLoader loader;
 
-    @Mock
-    private MiniLoader mockedMiniLoader;
-
-    @Mock
-    private AWTLoader mockedAWTLoader;
-
     @Before
     public void setUp() {
-        try {
-            when(mockedMiniLoader
-                         .load(ArgumentMatchers.any(MaterialKey.class))).thenReturn(materialDef);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        when(assetKey.getExtension()).thenReturn(".mini");
+        when(assetInfo.getManager()).thenReturn(assetManager);
+        when(assetInfo.getKey()).thenReturn(assetKey);
+        when(assetManager.loadAsset(ArgumentMatchers.any(AssetKey.class))).thenReturn(materialDef);
         loader = new MiniLoader();
     }
 
     @Test
     public void noDefaultTechnique_shouldBeSupported() throws IOException {
-        //when(assetInfo.()).thenReturn(MiniLoader.class.getResourceAsStream("/no-default-technique.j3md"));
-        MaterialDef def = (MaterialDef) loader.load(new MaterialKey("no-default-technique.minid"));
+        when(assetInfo.openStream())
+                .thenReturn(MiniLoader.class.getResourceAsStream("/no-default-technique.minid"));
+        MaterialDef def = (MaterialDef) loader.load(assetInfo);
         assertEquals(1, def.getTechniqueDefs("Test").size());
     }
 
     @Test
     public void fixedPipelineTechnique_shouldBeIgnored() throws IOException {
-//        when(assetInfo.openStream()).thenReturn(MiniLoader.class.getResourceAsStream("/no-shader-specified.j3md"));
-        MaterialDef def = (MaterialDef) loader.load(new MaterialKey("no-shader-specified.minid"));
+        when(assetInfo.openStream())
+                .thenReturn(MiniLoader.class.getResourceAsStream("/no-shader-specified.minid"));
+        MaterialDef def = (MaterialDef) loader.load(assetInfo);
         assertEquals(null, def.getTechniqueDefs("A"));
         assertEquals(1, def.getTechniqueDefs("B").size());
     }
 
     @Test
     public void multipleSameNamedTechniques_shouldBeSupported() throws IOException {
-//        when(assetInfo.openStream()).thenReturn(MiniLoader.class.getResourceAsStream("/same-name-technique.j3md"));
-        MaterialDef def = (MaterialDef) loader.load(new MaterialKey("same-name-technique.minid"));
+        when(assetInfo.openStream())
+                .thenReturn(MiniLoader.class.getResourceAsStream("/same-name-technique.minid"));
+        MaterialDef def = (MaterialDef) loader.load(assetInfo);
         assertEquals(2, def.getTechniqueDefs("Test").size());
         assertEquals(EnumSet.of(Caps.GLSL150),
                      def.getTechniqueDefs("Test").get(0).getRequiredCaps());
@@ -77,7 +81,8 @@ public class MiniLoaderTest {
 
     @Test
     public void oldStyleTextureParameters_shouldBeSupported() throws Exception {
-//        when(assetInfo.openStream()).thenReturn(J3MLoader.class.getResourceAsStream("/texture-parameters-oldstyle.j3m"));
+        when(assetInfo.openStream()).thenReturn(
+                MiniLoader.class.getResourceAsStream("/texture-parameters-oldstyle.mini"));
 
         final Texture textureOldStyle = Mockito.mock(Texture.class);
         final Texture textureOldStyleUsingQuotes = Mockito.mock(Texture.class);
@@ -90,18 +95,18 @@ public class MiniLoaderTest {
                                                                   "old style/texture.png", true,
                                                                   textureOldStyle);
 
-        loader.load(new MaterialKey("texture-parameters-oldstyle.mini"), mockedMiniLoader,
-                    mockedAWTLoader);
+        loader.load(assetInfo);
 
-        verify(mockedAWTLoader).load(textureKeyUsingQuotes);
-        verify(mockedAWTLoader).load(textureKeyOldStyle);
+        verify(assetManager).loadTexture(textureKeyUsingQuotes);
+        verify(assetManager).loadTexture(textureKeyOldStyle);
         verify(textureOldStyle).setWrap(Texture.WrapMode.Repeat);
         verify(textureOldStyleUsingQuotes).setWrap(Texture.WrapMode.Repeat);
     }
 
     @Test
     public void newStyleTextureParameters_shouldBeSupported() throws Exception {
-//        when(assetInfo.openStream()).thenReturn(J3MLoader.class.getResourceAsStream("/texture-parameters-newstyle.j3m"));
+        when(assetInfo.openStream()).thenReturn(
+                MiniLoader.class.getResourceAsStream("/texture-parameters-newstyle.mini"));
 
         final Texture textureNoParameters = Mockito.mock(Texture.class);
         final Texture textureFlip = Mockito.mock(Texture.class);
@@ -123,11 +128,10 @@ public class MiniLoaderTest {
         setupMockForTexture("Combined", "combined.png", true, textureCombined);
         setupMockForTexture("LooksLikeOldStyle", "oldstyle.png", true, textureLooksLikeOldStyle);
 
-        loader.load(new MaterialKey("texture-parameters-newstyle.mini"), mockedMiniLoader,
-                    mockedAWTLoader);
+        loader.load(assetInfo);
 
-        verify(mockedAWTLoader).load(textureKeyNoParameters);
-        verify(mockedAWTLoader).load(textureKeyFlip);
+        verify(assetManager).loadTexture(textureKeyNoParameters);
+        verify(assetManager).loadTexture(textureKeyFlip);
 
         verify(textureRepeat).setWrap(Texture.WrapMode.Repeat);
         verify(textureRepeatAxis).setWrap(Texture.WrapAxis.T, Texture.WrapMode.Repeat);
@@ -146,7 +150,8 @@ public class MiniLoaderTest {
 
         final TextureKey textureKey = new TextureKey(path, flipY);
         textureKey.setGenerateMips(true);
-        when(mockedAWTLoader.load(textureKey)).thenReturn(texture);
+
+        when(assetManager.loadTexture(textureKey)).thenReturn(texture);
 
         return textureKey;
     }

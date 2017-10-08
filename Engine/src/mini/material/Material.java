@@ -1,9 +1,8 @@
 package mini.material;
 
 import mini.asset.AssetKey;
-import mini.asset.MaterialKey;
+import mini.asset.AssetManager;
 import mini.light.LightList;
-import mini.material.plugins.MiniLoader;
 import mini.math.ColorRGBA;
 import mini.math.Matrix4f;
 import mini.math.Vector2f;
@@ -21,7 +20,6 @@ import mini.textures.Image;
 import mini.textures.Texture;
 import mini.textures.image.ColorSpace;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -70,13 +68,8 @@ public class Material implements Cloneable {
         }
     }
 
-    public Material(String defName) {
-        this();
-        try {
-            def = (MaterialDef) new MiniLoader().load(new MaterialKey(defName));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public Material(AssetManager manager, String defName) {
+        this((MaterialDef) manager.loadAsset(defName));
     }
 
     /**
@@ -94,7 +87,7 @@ public class Material implements Cloneable {
      * @return Asset key name of the j3m file
      */
     public String getAssetName() {
-        return key != null ? key.getFile().getName() : null;
+        return key != null ? key.getName() : null;
     }
 
     /**
