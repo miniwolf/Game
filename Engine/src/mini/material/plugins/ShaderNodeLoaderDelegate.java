@@ -1,5 +1,6 @@
 package mini.material.plugins;
 
+import mini.asset.AssetManager;
 import mini.asset.ShaderNodeDefinitionKey;
 import mini.material.MatParam;
 import mini.material.MaterialDef;
@@ -46,6 +47,7 @@ public class ShaderNodeLoaderDelegate {
     protected String varNames = "";
     protected ConditionParser conditionParser = new ConditionParser();
     protected List<String> nulledConditions = new ArrayList<>();
+    protected AssetManager assetManager;
 
     protected class DeclaredVariable {
 
@@ -87,7 +89,7 @@ public class ShaderNodeLoaderDelegate {
                     shaderNodeDefinition = new ShaderNodeDefinition();
                     getNodeDefinitions().put(name, shaderNodeDefinition);
                     shaderNodeDefinition.setName(name);
-                    shaderNodeDefinition.setPath(key.getFile().getName());
+                    shaderNodeDefinition.setPath(key.getName());
                     readShaderNodeDefinition(statement.getContents(), key);
 
                 }
@@ -879,7 +881,15 @@ public class ShaderNodeLoaderDelegate {
      */
     public void storeFragmentUniform(ShaderNodeVariable var) {
         storeVariable(var, techniqueDef.getShaderGenerationInfo().getFragmentUniforms());
+    }
 
+    /**
+     * sets the assetmanager
+     *
+     * @param assetManager
+     */
+    public void setAssetManager(AssetManager assetManager) {
+        this.assetManager = assetManager;
     }
 
     /**
@@ -898,8 +908,7 @@ public class ShaderNodeLoaderDelegate {
             if (defLine.length == 3) {
                 List<ShaderNodeDefinition> defs;
                 try {
-                    defs = (List<ShaderNodeDefinition>) ShaderNodeDefinitionLoader
-                            .load(new ShaderNodeDefinitionKey(defLine[2].trim()));
+                    defs = assetManager.loadAsset(new ShaderNodeDefinitionKey(defLine[2].trim()));
                 } catch (RuntimeException e) {
                     throw new MatParseException("Couldn't find " + defLine[2].trim(), statement, e);
                 }

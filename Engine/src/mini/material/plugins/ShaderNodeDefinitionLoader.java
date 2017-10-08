@@ -1,5 +1,7 @@
 package mini.material.plugins;
 
+import mini.asset.AssetInfo;
+import mini.asset.AssetLoader;
 import mini.asset.ShaderNodeDefinitionKey;
 import mini.utils.blockparser.BlockLanguageParser;
 import mini.utils.blockparser.Statement;
@@ -15,12 +17,12 @@ import java.util.List;
  * ShaderNodeDefinition{} block that contains several ShaderNodeDefinition{}
  * blocks
  */
-public class ShaderNodeDefinitionLoader {
+public class ShaderNodeDefinitionLoader implements AssetLoader {
 
-    public static Object load(ShaderNodeDefinitionKey key) throws IOException {
+    public Object load(AssetInfo info) throws IOException {
         ShaderNodeLoaderDelegate loaderDelegate = new ShaderNodeLoaderDelegate();
 
-        InputStream in = key.getFile().getInputStream();
+        InputStream in = info.openStream();
         List<Statement> roots = BlockLanguageParser.parse(in);
 
         if (roots.size() == 2) {
@@ -37,6 +39,7 @@ public class ShaderNodeDefinitionLoader {
             throw new MatParseException("Too many roots in J3SN file", roots.get(0));
         }
 
-        return loaderDelegate.readNodesDefinitions(roots.get(0).getContents(), key);
+        return loaderDelegate.readNodesDefinitions(roots.get(0).getContents(),
+                                                   (ShaderNodeDefinitionKey) info.getKey());
     }
 }

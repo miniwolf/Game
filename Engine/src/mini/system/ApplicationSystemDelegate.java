@@ -1,5 +1,7 @@
 package mini.system;
 
+import mini.asset.AssetManager;
+
 public abstract class ApplicationSystemDelegate {
     public abstract ApplicationContext newContext();
 
@@ -45,5 +47,9 @@ public abstract class ApplicationSystemDelegate {
             default:
                 throw new UnsupportedOperationException("Unsupported architecture: " + arch);
         }
+    }
+
+    public AssetManager newAssetManager() {
+        return new AssetManager();
     }
 }

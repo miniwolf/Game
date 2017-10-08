@@ -1,10 +1,12 @@
 package mini.material;
 
+import mini.asset.AssetManager;
 import mini.renderer.Caps;
 import mini.renderer.RenderManager;
 import mini.scene.Geometry;
 import mini.scene.shape.Box;
 import mini.system.NullRenderer;
+import mini.system.TestUtil;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -131,7 +133,8 @@ public class MaterialTest {
     }
 
     private void material(String path) {
-        material = new Material(path);
+        AssetManager assetManager = TestUtil.createAssetManager();
+        material = new Material(assetManager, path);
         geometry.setMaterial(material);
     }
 }

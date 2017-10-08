@@ -500,7 +500,7 @@ public class Image extends NativeObject {
      * @param colorSpace
      * @see ColorSpace the colorSpace of the image
      */
-    public Image(Format format, int width, int height, int depth, ArrayList<ByteBuffer> data,
+    public Image(Format format, int width, int height, int depth, List<ByteBuffer> data,
                  int[] mipMapSizes, ColorSpace colorSpace) {
 
         this();

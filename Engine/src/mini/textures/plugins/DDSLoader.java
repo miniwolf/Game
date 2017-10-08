@@ -31,6 +31,7 @@
  */
 package mini.textures.plugins;
 
+import mini.asset.AssetInfo;
 import mini.asset.TextureKey;
 import mini.textures.Image;
 import mini.textures.Image.Format;
@@ -44,6 +45,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -172,18 +174,18 @@ public class DDSLoader {
         return buf.toString();
     }
 
-    public Object load(TextureKey info) throws IOException {
+    public Object load(AssetInfo info) throws IOException {
         InputStream stream = null;
         try {
-            stream = info.getFile().getInputStream();
+            stream = info.openStream();
             in = new LittleEndien(stream);
             loadHeader();
             if (texture3D) {
-                info.setTextureTypeHint(Texture.Type.ThreeDimensional);
+                ((TextureKey) info.getKey()).setTextureTypeHint(Texture.Type.ThreeDimensional);
             } else if (depth > 1) {
-                info.setTextureTypeHint(Texture.Type.CubeMap);
+                ((TextureKey) info.getKey()).setTextureTypeHint(Texture.Type.CubeMap);
             }
-            ArrayList<ByteBuffer> data = readData(info.isFlipY());
+            List<ByteBuffer> data = readData(((TextureKey) info.getKey()).isFlipY());
             return new Image(pixelFormat, width, height, depth, data, sizes, ColorSpace.sRGB);
         } finally {
             if (stream != null) {

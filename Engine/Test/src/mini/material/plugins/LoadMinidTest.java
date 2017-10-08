@@ -1,5 +1,6 @@
 package mini.material.plugins;
 
+import mini.asset.AssetManager;
 import mini.material.Material;
 import mini.renderer.Caps;
 import mini.renderer.RenderManager;
@@ -7,6 +8,7 @@ import mini.scene.Geometry;
 import mini.scene.shape.Box;
 import mini.shaders.Shader;
 import mini.system.NullRenderer;
+import mini.system.TestUtil;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -32,11 +34,13 @@ public class LoadMinidTest {
     @Test
     public void testShaderNodesMaterialDefLoading() {
         supportGlsl(100);
-        material("matdef.minid");
+        material("/matdef.minid");
         material.selectTechnique("Default", renderManager);
 
         assertEquals(material.getActiveTechnique().getDef().getShaderNodes().size(), 2);
-        Shader s = material.getActiveTechnique().getDef().getShader(myCaps,  material.getActiveTechnique().getDynamicDefines());
+        Shader s = material.getActiveTechnique().getDef()
+                           .getShader(TestUtil.createAssetManager(), myCaps,
+                                      material.getActiveTechnique().getDynamicDefines());
         assertEquals(s.getSources().size(), 2);
     }
 
@@ -63,7 +67,8 @@ public class LoadMinidTest {
     }
 
     private void material(String path) {
-        material = new Material(path);
+        AssetManager assetManager = TestUtil.createAssetManager();
+        material = new Material(assetManager, path);
         geometry.setMaterial(material);
     }
 }

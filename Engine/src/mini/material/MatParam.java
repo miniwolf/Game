@@ -238,7 +238,7 @@ When arrays can be inserted in J3M files
                     ret += "Mag" + texVal.getMagFilter().name() + " ";
                 }
 
-                return ret + "\"" + texKey.getFile().getName() + "\"";
+                return ret + "\"" + texKey.getName() + "\"";
             default:
                 return null; // parameter type not supported in J3M
         }

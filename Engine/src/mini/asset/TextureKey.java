@@ -1,7 +1,6 @@
 package mini.asset;
 
 import mini.textures.Texture;
-import mini.utils.MyFile;
 
 /**
  * Used to load textures from image files such as JPG or PNG.
@@ -18,17 +17,13 @@ public class TextureKey extends AssetKey<Texture> {
     private int anisotropy;
     private Texture.Type textureTypeHint = Texture.Type.TwoDimensional;
 
-    public TextureKey(MyFile name, boolean flipY) {
-        super(name);
+    public TextureKey(String path, boolean flipY) {
+        super(path);
         this.flipY = flipY;
     }
 
-    public TextureKey(String path, boolean flipY) {
-        this(new MyFile(path), flipY);
-    }
-
     public TextureKey(String name) {
-        super(new MyFile(name));
+        super(name);
         this.flipY = true;
     }
 
@@ -55,7 +50,7 @@ public class TextureKey extends AssetKey<Texture> {
                 type = " (" + textureTypeHint.toString() + ")";
                 break;
         }
-        return filename.toString() + (flipY ? " (Flipped)" : "") + type + (generateMips ? " (Mipmapped)" : "");
+        return name + (flipY ? " (Flipped)" : "") + type + (generateMips ? " (Mipmapped)" : "");
     }
 
     public boolean isFlipY() {

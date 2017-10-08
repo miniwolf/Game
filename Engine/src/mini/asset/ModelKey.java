@@ -1,6 +1,6 @@
 package mini.asset;
 
-import mini.utils.MyFile;
+import mini.scene.Spatial;
 
 /**
  * Used to load model files, such as OBJ or Blender models.
@@ -9,9 +9,9 @@ import mini.utils.MyFile;
  * allowing textures, materials, shaders, etc referenced by the model to
  * become collected.
  */
-public class ModelKey extends AssetKey {
+public class ModelKey extends AssetKey<Spatial> {
     public ModelKey(String name) {
-        super(new MyFile(name));
+        super(name);
     }
 
     public ModelKey() {

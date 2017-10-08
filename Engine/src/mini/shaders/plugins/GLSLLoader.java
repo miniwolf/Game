@@ -1,7 +1,8 @@
 package mini.shaders.plugins;
 
+import mini.asset.AssetInfo;
 import mini.asset.AssetKey;
-import mini.asset.ShaderNodeDefinitionKey;
+import mini.asset.AssetLoader;
 import mini.utils.MyFile;
 
 import java.io.BufferedReader;
@@ -18,16 +19,25 @@ import java.util.Set;
 /**
  * GLSL File parser that supports #import pre-processor statement
  */
-public class GLSLLoader {
+public class GLSLLoader implements AssetLoader {
     private Map<String, ShaderDependencyNode> dependCache = new HashMap<>();
 
-    /**
-     * Used to load {@link ShaderDependencyNode}s.
-     * Asset caching is disabled.
-     */
-    private class ShaderDependencyKey extends AssetKey {
-        public ShaderDependencyKey(String name) {
-            super(new MyFile(name));
+    public Object load(AssetInfo info) {
+        // The input stream provided is for the vertex shader,
+        // to retrieve the fragment shader, use the content manager
+        Reader reader = new InputStreamReader(info.openStream());
+        if (info.getKey().getExtension().equals("glsllib")) {
+            // NOTE: Loopback, GLSLLIB is loaded by this loader
+            // and needs data as InputStream
+            return reader;
+        } else {
+            GLSLLoader loader = new GLSLLoader();
+            ShaderDependencyNode rootNode = loader.loadNode(reader, "[main]");
+            StringBuilder extensions = new StringBuilder();
+            String code = loader.resolveDependencies(rootNode, new HashSet<>(), extensions);
+            extensions.append(code);
+            loader.dependCache.clear();
+            return extensions.toString();
         }
     }
 
@@ -126,22 +136,13 @@ public class GLSLLoader {
         }
     }
 
-    public static Object load(ShaderNodeDefinitionKey info) throws IOException {
-        // The input stream provided is for the vertex shader,
-        // to retrieve the fragment shader, use the content manager
-        Reader reader = new InputStreamReader(info.getFile().getInputStream());
-        if (info.getFile().getExtension().equals("glsllib")) {
-            // NOTE: Loopback, GLSLLIB is loaded by this loader
-            // and needs data as InputStream
-            return reader;
-        } else {
-            GLSLLoader loader = new GLSLLoader();
-            ShaderDependencyNode rootNode = loader.loadNode(reader, "[main]");
-            StringBuilder extensions = new StringBuilder();
-            String code = loader.resolveDependencies(rootNode, new HashSet<>(), extensions);
-            extensions.append(code);
-            loader.dependCache.clear();
-            return extensions.toString();
+    /**
+     * Used to load {@link ShaderDependencyNode}s.
+     * Asset caching is disabled.
+     */
+    private class ShaderDependencyKey extends AssetKey {
+        public ShaderDependencyKey(String name) {
+            super(name);
         }
     }
 }

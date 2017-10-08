@@ -1,5 +1,7 @@
 package mini.system;
 
+import mini.asset.AssetManager;
+
 public class ApplicationSystem {
     private static ApplicationSystemDelegate systemDelegate;
 
@@ -52,5 +54,9 @@ public class ApplicationSystem {
                 System.err.println("Severe: Failed to create ApplicationSystem delegate:\n" + ex);
             }
         }
+    }
+
+    public static AssetManager newAssetManager() {
+        return systemDelegate.newAssetManager();
     }
 }

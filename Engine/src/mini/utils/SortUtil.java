@@ -7,7 +7,7 @@ public class SortUtil {
     /**
      * Merge sort
      */
-    public static void msort(Object[] src, Object[] dest, Comparator comp) {
+    public static <T> void msort(T[] src, T[] dest, Comparator<T> comp) {
         msort(src, dest, 0, src.length - 1, comp);
     }
 
@@ -20,8 +20,8 @@ public class SortUtil {
      * @param high Index of end element
      * @param comp Comparator
      */
-    public static void msort(Object[] src, Object[] dest, int low, int high,
-                             Comparator comp) {
+    public static <T> void msort(T[] src, T[] dest, int low, int high,
+                                 Comparator<T> comp) {
         if (low < high) {
             int center = (low + high) / 2;
             msort(src, dest, low, center, comp);
@@ -30,8 +30,8 @@ public class SortUtil {
         }
     }
 
-    private static void merge(Object[] src, Object[] dest,
-                              int low, int middle, int high, Comparator comp) {
+    private static <T> void merge(T[] src, T[] dest,
+                                  int low, int middle, int high, Comparator<T> comp) {
         int leftEnd = middle - 1;
         int pos = low;
         int numElements = high - low + 1;

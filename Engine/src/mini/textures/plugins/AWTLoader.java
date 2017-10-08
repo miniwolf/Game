@@ -1,5 +1,7 @@
 package mini.textures.plugins;
 
+import mini.asset.AssetInfo;
+import mini.asset.AssetLoader;
 import mini.asset.TextureKey;
 import mini.textures.Image;
 import mini.textures.TextureProcessor;
@@ -19,7 +21,7 @@ import java.nio.ByteBuffer;
 /**
  * Created by miniwolf on 22-04-2017.
  */
-public class AWTLoader {
+public class AWTLoader implements AssetLoader {
     private Object extractImageData(BufferedImage img) {
         DataBuffer buf = img.getRaster().getDataBuffer();
         switch (buf.getDataType()) {
@@ -103,13 +105,13 @@ public class AWTLoader {
         return load(img);
     }
 
-    public Object load(TextureKey key) {
-        if (ImageIO.getImageReadersBySuffix(key.getFile().getName().split("\\.")[1]) != null) {
+    public Object load(AssetInfo info) {
+        TextureKey key = (TextureKey) info.getKey();
+        if (ImageIO.getImageReadersBySuffix(key.getName().split("\\.")[1]) != null) {
             try {
-                Image img = load(key.getFile().getInputStream());
+                Image img = load(info.openStream());
                 if (img == null) {
-                    throw new RuntimeException(
-                            "The given image cannot be loaded " + key.getFile().getPath());
+                    throw new RuntimeException("The given image cannot be loaded " + key.getName());
                 }
                 return TextureProcessor.postProcess(key, img);
             } catch (IOException e) {
@@ -117,7 +119,7 @@ public class AWTLoader {
             }
         } else {
             throw new IllegalArgumentException(
-                    "The extension " + key.getFile().getName().split(".")[1] + " is not supported");
+                    "The extension " + key.getName().split(".")[1] + " is not supported");
         }
         return null;
     }

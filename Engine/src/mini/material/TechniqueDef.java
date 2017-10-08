@@ -1,6 +1,6 @@
 package mini.material;
 
-import mini.asset.ShaderNodeDefinitionKey;
+import mini.asset.AssetManager;
 import mini.material.logic.TechniqueDefLogic;
 import mini.renderer.Caps;
 import mini.shaders.DefineList;
@@ -9,9 +9,7 @@ import mini.shaders.Shader;
 import mini.shaders.ShaderNode;
 import mini.shaders.UniformBinding;
 import mini.shaders.VarType;
-import mini.shaders.plugins.GLSLLoader;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -454,7 +452,8 @@ public class TechniqueDef implements Cloneable {
         return new DefineList(defineNames.size());
     }
 
-    private Shader loadShader(Set<Caps> rendererCaps, DefineList defines) {
+    private Shader loadShader(AssetManager assetManager, Set<Caps> rendererCaps,
+                              DefineList defines) {
         StringBuilder sb = new StringBuilder();
         sb.append(shaderPrologue);
         defines.generateSource(sb, defineNames, defineTypes);
@@ -462,7 +461,7 @@ public class TechniqueDef implements Cloneable {
 
         Shader shader;
         if (isUsingShaderNodes()) {
-            Glsl100ShaderGenerator shaderGenerator = new Glsl100ShaderGenerator();
+            Glsl100ShaderGenerator shaderGenerator = new Glsl100ShaderGenerator(assetManager);
             shaderGenerator.initialize(this);
             shader = shaderGenerator.generateShader(definesSourceCode);
         } else {
@@ -473,13 +472,8 @@ public class TechniqueDef implements Cloneable {
                 if (language == null || shaderSourceAssetName == null) {
                     continue;
                 }
-                String shaderSourceCode = null;
-                try {
-                    shaderSourceCode = (String) GLSLLoader
-                            .load(new ShaderNodeDefinitionKey(shaderSourceAssetName));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+
+                String shaderSourceCode = (String) assetManager.loadAsset(shaderSourceAssetName);
                 shader.addSource(type, shaderSourceAssetName, shaderSourceCode, definesSourceCode,
                                  language);
             }
@@ -494,10 +488,10 @@ public class TechniqueDef implements Cloneable {
         return shader;
     }
 
-    public Shader getShader(Set<Caps> rendererCaps, DefineList defines) {
+    public Shader getShader(AssetManager assetManager, Set<Caps> rendererCaps, DefineList defines) {
         Shader shader = definesToShaderMap.get(defines);
         if (shader == null) {
-            shader = loadShader(rendererCaps, defines);
+            shader = loadShader(assetManager, rendererCaps, defines);
             definesToShaderMap.put(defines.deepClone(), shader);
         }
         return shader;
