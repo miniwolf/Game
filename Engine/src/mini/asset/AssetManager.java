@@ -5,6 +5,7 @@ import mini.material.plugins.MiniLoader;
 import mini.material.plugins.ShaderNodeDefinitionLoader;
 import mini.scene.plugins.MTLLoader;
 import mini.scene.plugins.OBJLoader;
+import mini.scene.plugins.fbx.FBXLoader;
 import mini.shaders.plugins.GLSLLoader;
 import mini.textures.Texture;
 
@@ -19,6 +20,7 @@ public class AssetManager {
         registerLoader(GLSLLoader.class, "frag", "vert");
         registerLoader(ShaderNodeDefinitionLoader.class, "minisn");
         registerLoader(MTLLoader.class, "mtl");
+        registerLoader(FBXLoader.class, "fbx", "FBX");
         registerLocator(ClasspathLocator.class, "/");
     }
 

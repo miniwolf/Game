@@ -63,7 +63,7 @@ public class AssetKey<T> {
      * "Interface/Pictures/Monkey.png" has an extension of "png".
      */
     public String getExtension() {
-        return extension;
+        return extension.toLowerCase();
     }
 
     public String getFolder() {
