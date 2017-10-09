@@ -74,7 +74,7 @@ public class AssetKey<T> implements Cloneable {
      * "Interface/Pictures/Monkey.png" has an extension of "png".
      */
     public String getExtension() {
-        return extension;
+        return extension.toLowerCase();
     }
 
     public String getFolder() {

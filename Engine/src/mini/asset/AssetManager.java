@@ -10,6 +10,7 @@ import mini.material.plugins.ShaderNodeDefinitionLoader;
 import mini.scene.Spatial;
 import mini.scene.plugins.MTLLoader;
 import mini.scene.plugins.OBJLoader;
+import mini.scene.plugins.fbx.FBXLoader;
 import mini.shaders.plugins.GLSLLoader;
 import mini.textures.Texture;
 import mini.textures.plugins.AWTLoader;
@@ -36,6 +37,7 @@ public class AssetManager {
         registerLoader(MTLLoader.class, "mtl");
         registerLoader(BitmapFontLoader.class, "fnt");
         registerLoader(TGALoader.class, "tga");
+        registerLoader(FBXLoader.class, "fbx", "FBX");
         registerLocator(ClasspathLocator.class, "/");
     }
 
