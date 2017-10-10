@@ -38,6 +38,7 @@ public class AssetManager {
         registerLoader(BitmapFontLoader.class, "fnt");
         registerLoader(TGALoader.class, "tga");
         registerLoader(FBXLoader.class, "fbx", "FBX");
+        registerLoader(AWTLoader.class, "png", "jpg");
         registerLocator(ClasspathLocator.class, "/");
     }
 

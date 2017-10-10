@@ -47,14 +47,22 @@ public class FBXReaderTests {
     @Test
     public void WhenLoadingFBXFile_PropertyListOfFirstElementIsNonEmpty() throws IOException {
         FBXFile load = reader.readFBX(stream);
-        Assert.assertEquals("FBXHeaderVersion", load.getElements().get(1).getName());
+        Assert.assertEquals("FileId", load.getElements().get(1).getName());
         Assert.assertEquals(1, load.getElements().get(1).getProperties().size());
-        Assert.assertEquals(1003, load.getElements().get(1).getProperties().get(0));
+        Assert.assertEquals(1, load.getElements().get(1).getPropertyTypes().length);
     }
 
     @Test
     public void LoadingAllElements_WillAddAllElement() throws IOException {
         FBXFile load = reader.readFBX(stream);
-        Assert.assertEquals(13, load.getElements().size());
+        Assert.assertEquals(11, load.getElements().size());
+    }
+
+    @Test
+    public void LoadingAllElements_WillAddChildElements() throws IOException {
+        FBXFile load = reader.readFBX(stream);
+        Assert.assertEquals(6, load.getElements().get(0).getChildren().size());
+        Assert.assertEquals('I',
+                            load.getElements().get(0).getChildren().get(0).getPropertyTypes()[0]);
     }
 }
