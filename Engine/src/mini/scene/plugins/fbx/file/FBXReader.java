@@ -10,6 +10,9 @@ import java.util.Arrays;
 import java.util.zip.InflaterInputStream;
 
 public class FBXReader {
+    private static final int NULL_RECORD_LENGTH = 13;
+    private static final byte[] BLOCK_SENTINEL_DATA = new byte[NULL_RECORD_LENGTH];
+
     /**
      * String at the start of an FBX File:
      * "Kaydara FBX Binary\x20\x20\x00\x1a\x00"
@@ -41,13 +44,25 @@ public class FBXReader {
         }
         long numProperties = getUInt(byteBuffer);
         long propertyListLength = getUInt(byteBuffer);
-        FBXElement fbxElement = new FBXElement();
+
+        FBXElement fbxElement = new FBXElement((int) numProperties);
         byte[] name = getBytes(byteBuffer, getUByte(byteBuffer));
         fbxElement.setName(new String(name));
 
         for (int i = 0; i < numProperties; ++i) {
             char dataType = readDataType(byteBuffer);
             fbxElement.addProperty(readData(byteBuffer, dataType));
+            fbxElement.addPropertyType(dataType, i);
+        }
+
+        if (byteBuffer.position() < endOffset) { // Elements left to read
+            while (byteBuffer.position() < (endOffset - NULL_RECORD_LENGTH)) {
+                fbxElement.addChild(readFBXElement(byteBuffer));
+            }
+
+            if (!Arrays.equals(BLOCK_SENTINEL_DATA, getBytes(byteBuffer, NULL_RECORD_LENGTH))) {
+                throw new IOException("Failed to read null record, expected 13 zero bytes.");
+            }
         }
         return fbxElement;
     }
@@ -86,12 +101,15 @@ public class FBXReader {
 
     private Object readArray(ByteBuffer byteBuffer, char type, int bytes) throws IOException {
         int arrayLength = (int) getUInt(byteBuffer);
-        int encoding = (int) getUInt(byteBuffer); // TODO: Absolutely no clue...
+        int encoding = (int) getUInt(byteBuffer);
         int compressedLength = (int) getUInt(byteBuffer);
-        byte[] data = getBytes(byteBuffer, compressedLength);
-
+        byte[] data;
         if (encoding == 1) {
-            data = inflate(data);
+            data = inflate(getBytes(byteBuffer, compressedLength));
+        } else if (encoding == 0) {
+            data = getBytes(byteBuffer, arrayLength * bytes);
+        } else {
+            throw new IOException("Weird encoding not supported: " + encoding);
         }
 
         if (data.length != arrayLength * bytes) {

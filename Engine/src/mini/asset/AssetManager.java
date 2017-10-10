@@ -8,6 +8,7 @@ import mini.scene.plugins.OBJLoader;
 import mini.scene.plugins.fbx.FBXLoader;
 import mini.shaders.plugins.GLSLLoader;
 import mini.textures.Texture;
+import mini.textures.plugins.AWTLoader;
 
 import java.io.IOException;
 
@@ -21,6 +22,7 @@ public class AssetManager {
         registerLoader(ShaderNodeDefinitionLoader.class, "minisn");
         registerLoader(MTLLoader.class, "mtl");
         registerLoader(FBXLoader.class, "fbx", "FBX");
+        registerLoader(AWTLoader.class, "png", "jpg");
         registerLocator(ClasspathLocator.class, "/");
     }
 
