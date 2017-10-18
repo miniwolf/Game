@@ -2,7 +2,6 @@ package mini.model;
 
 import mini.app.SimpleApplication;
 import mini.asset.MaterialKey;
-import mini.asset.ModelKey;
 import mini.light.DirectionalLight;
 import mini.light.PointLight;
 import mini.math.ColorRGBA;
@@ -28,7 +27,7 @@ public class TestFBXLoading extends SimpleApplication {
         viewPort.setBackgroundColor(ColorRGBA.DarkGray);
 
         Spatial bumpy = assetManager
-                .loadAsset(new ModelKey("Models/Chloe/Chloe Price (No Jacket Episode 2).FBX"));
+                .loadModel("Models/Chloe/Chloe Price (No Jacket Episode 2).FBX");
         rootNode.attachChild(bumpy);
 
         lightMdl = new Geometry("Light", new Sphere(10, 10, 0.1f));

@@ -2,6 +2,8 @@ package mini.scene.plugins.fbx.file;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class FBXElement {
     private String name;
@@ -11,6 +13,10 @@ public class FBXElement {
 
     public FBXElement(int numProperties) {
         propertyTypes = new char[numProperties];
+    }
+
+    public Optional<FBXElement> getChildByName(String name) {
+        return children.stream().filter(child -> child.name.equals(name)).findFirst();
     }
 
     public String getName() {
@@ -31,7 +37,6 @@ public class FBXElement {
 
     public void addChild(FBXElement element) {
         children.add(element);
-
     }
 
     public void addPropertyType(char dataType, int index) {
@@ -44,5 +49,31 @@ public class FBXElement {
 
     public char[] getPropertyTypes() {
         return propertyTypes;
+    }
+
+    public List<FBXElement> getFBXProperties() {
+        List<FBXElement> props = new ArrayList<>();
+
+        Optional<FBXElement> propertyElement = getPropertyElement();
+        if (!propertyElement.isPresent()) {
+            return props;
+        }
+
+        return propertyElement.get().children.stream().peek(child -> {
+            if (!child.getName().equals("P")) {
+                throw new UnsupportedOperationException(
+                        "Unexpected property name: " + child.getName());
+            }
+        }).collect(Collectors.toList());
+    }
+
+    private Optional<FBXElement> getPropertyElement() {
+        return children.stream().peek(child -> {
+            if (child.getName().startsWith("Properties") && !child.getName()
+                                                                  .equals("Properties70")) {
+                throw new UnsupportedOperationException(
+                        "Unexpected PropertyType: " + child.getName());
+            }
+        }).filter(child -> "Properties70".equals(child.getName())).findFirst();
     }
 }

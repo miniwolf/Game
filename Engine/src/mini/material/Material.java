@@ -621,6 +621,16 @@ public class Material implements Cloneable {
     }
 
     /**
+     * Pass a Vector to setColor to apply the material to the shader.
+     *
+     * @param name  the name of the color defined in the material definition (minid)
+     * @param value the Vector3f value
+     */
+    public void setColor(String name, Vector3f value) {
+        setColor(name, new ColorRGBA(value.x, value.y, value.z, 1f));
+    }
+
+    /**
      * Pass a Vector2f to the material shader.
      *
      * @param name  the name of the Vector2f defined in the material definition (j3md)

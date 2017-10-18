@@ -16,7 +16,9 @@ import mini.utils.TempVars;
 import mini.utils.clone.Cloner;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * <code>Spatial</code> defines the base class for scene graph nodes. It
@@ -27,6 +29,7 @@ import java.util.List;
  * @author miniwolf
  */
 public abstract class Spatial implements Cloneable {
+
     /**
      * Specifies how frustum culling should be handled by
      * this spatial.
@@ -97,6 +100,7 @@ public abstract class Spatial implements Cloneable {
 
     protected List<MatParamOverride> localOverrides;
     protected List<MatParamOverride> worldOverrides;
+    protected Map<String, Object> userData;
 
     /**
      * This spatial's name.
@@ -989,6 +993,22 @@ public abstract class Spatial implements Cloneable {
         vars.release();
 
         return this;
+    }
+
+    public void setUserData(String key, Object data) {
+        if (data == null) { // Remove object
+            if (userData != null) {
+                userData.remove(key);
+                if (userData.isEmpty()) {
+                    userData = null;
+                }
+            }
+        } else {
+            if (userData == null) {
+                userData = new HashMap<>();
+            }
+            userData.put(key, new UserData(UserData.getObjectType(data), data));
+        }
     }
 
     /**

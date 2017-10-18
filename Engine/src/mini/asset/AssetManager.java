@@ -3,6 +3,7 @@ package mini.asset;
 import mini.asset.plugins.ClasspathLocator;
 import mini.material.plugins.MiniLoader;
 import mini.material.plugins.ShaderNodeDefinitionLoader;
+import mini.scene.Spatial;
 import mini.scene.plugins.MTLLoader;
 import mini.scene.plugins.OBJLoader;
 import mini.scene.plugins.fbx.FBXLoader;
@@ -59,5 +60,9 @@ public class AssetManager {
 
     public Texture loadTexture(TextureKey textureKey) {
         return loadAsset(textureKey);
+    }
+
+    public Spatial loadModel(String name) {
+        return loadAsset(new ModelKey(name));
     }
 }
