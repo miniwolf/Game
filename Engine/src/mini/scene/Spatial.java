@@ -25,8 +25,10 @@ import mini.utils.clone.IdentityCloneFunction;
 import mini.utils.clone.MiniCloneable;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Map;
 
 /**
  * <code>Spatial</code> defines the base class for scene graph nodes. It
@@ -36,12 +38,11 @@ import java.util.concurrent.CopyOnWriteArrayList;
  *
  * @author miniwolf
  */
-public abstract class Spatial implements Cloneable, CloneableSmartAsset, Collidable, MiniCloneable {
+public abstract class Spatial implements Cloneable , CloneableSmartAsset, Collidable, MiniCloneable {
     @Override
     public int collideWith(Collidable other, CollisionResults results) {
         return 0;
     }
-
     /**
      * Specifies how frustum culling should be handled by
      * this spatial.
@@ -112,6 +113,7 @@ public abstract class Spatial implements Cloneable, CloneableSmartAsset, Collida
 
     protected List<MatParamOverride> localOverrides;
     protected List<MatParamOverride> worldOverrides;
+    protected Map<String, Object> userData;
 
     /**
      * This spatial's name.
@@ -1119,6 +1121,22 @@ public abstract class Spatial implements Cloneable, CloneableSmartAsset, Collida
 
         Vector3f absTranslation = worldTranslation.subtract(worldCenter);
         setLocalTranslation(absTranslation);
+    }
+
+    public void setUserData(String key, Object data) {
+        if (data == null) { // Remove object
+            if (userData != null) {
+                userData.remove(key);
+                if (userData.isEmpty()) {
+                    userData = null;
+                }
+            }
+        } else {
+            if (userData == null) {
+                userData = new HashMap<>();
+            }
+            userData.put(key, new UserData(UserData.getObjectType(data), data));
+        }
     }
 
     /**
