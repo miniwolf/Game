@@ -1,23 +1,27 @@
 package mini.scene.plugins.fbx.objects;
 
+import mini.asset.AssetKey;
 import mini.asset.AssetManager;
 import mini.material.Material;
 import mini.material.RenderState;
+import mini.math.ColorRGBA;
 import mini.math.Vector3f;
 import mini.scene.plugins.fbx.file.FBXElement;
+import mini.scene.plugins.fbx.obj.FBXObject;
 
-public class FBXMaterial extends FBXObject {
+public class FBXMaterial extends FBXObject<Material> {
     private AssetManager assetManager;
     private Material material;
 
-    public FBXMaterial(FBXElement element, AssetManager assetManager) {
-        super(element);
+    public FBXMaterial(AssetManager assetManager, AssetKey key) {
+        super(assetManager, key);
         this.assetManager = assetManager;
-        initializeElement();
     }
 
-    protected void initializeElement() {
-        MaterialInformation information = readMaterialElement();
+    @Override
+    public void fromElement(FBXElement element) {
+        super.fromElement(element);
+        MaterialInformation information = readMaterialElement(element);
         material = createMaterial(information);
     }
 
@@ -34,9 +38,9 @@ public class FBXMaterial extends FBXObject {
         return material;
     }
 
-    private MaterialInformation readMaterialElement() {
+    private MaterialInformation readMaterialElement(FBXElement fbxElement) {
         MaterialInformation information = new MaterialInformation();
-        for (FBXElement element : element.getChildren()) {
+        for (FBXElement element : fbxElement.getChildren()) {
             switch (element.getName()) {
                 case "Properties70":
                     for (FBXElement property : element.getChildren()) {
@@ -65,6 +69,39 @@ public class FBXMaterial extends FBXObject {
 
     public Material getMaterial() {
         return material;
+    }
+
+    @Override
+    public void link(FBXObject obj, String propertyName) {
+        if (obj instanceof FBXTexture) {
+            FBXTexture other = (FBXTexture) obj;
+            if (other.getTexture() == null || material == null) {
+                return;
+            }
+
+            switch (propertyName) {
+                case "DiffuseColor":
+                    material.setTexture("DiffuseMap", other.getTexture());
+                    material.setColor("Diffuse", ColorRGBA.White);
+                    break;
+                case "SpecularColor":
+                    material.setTexture("SpecularMap", other.getTexture());
+                    material.setColor("Specular", ColorRGBA.White);
+                    break;
+                case "NormalMap":
+                    material.setTexture("NormalMap", other.getTexture());
+                    break;
+                default:
+                    System.out.println(propertyName);
+            }
+        } else {
+            System.out.println(obj);
+        }
+    }
+
+    @Override
+    public void link(FBXObject obj) {
+        System.out.println(obj);
     }
 
     private class MaterialInformation {

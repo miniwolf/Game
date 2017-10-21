@@ -29,7 +29,6 @@ import java.util.Map;
  * @author miniwolf
  */
 public abstract class Spatial implements Cloneable {
-
     /**
      * Specifies how frustum culling should be handled by
      * this spatial.
@@ -993,6 +992,20 @@ public abstract class Spatial implements Cloneable {
         vars.release();
 
         return this;
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> T getUserData(String key) {
+        if (userData == null) {
+            return null;
+        }
+
+        Object o = userData.get(key);
+        if (o instanceof UserData) {
+            return (T) ((UserData) o).getValue();
+        } else {
+            return (T) o;
+        }
     }
 
     public void setUserData(String key, Object data) {

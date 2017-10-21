@@ -1,62 +1,42 @@
 package mini.scene.plugins.fbx.objects;
 
+import mini.asset.AssetKey;
 import mini.asset.AssetManager;
 import mini.scene.plugins.fbx.FBXElementLoader;
 import mini.scene.plugins.fbx.file.FBXElement;
+import mini.scene.plugins.fbx.file.FBXId;
+import mini.scene.plugins.fbx.node.FBXRootNode;
+import mini.scene.plugins.fbx.obj.FBXObject;
+import mini.scene.plugins.fbx.obj.FBXObjectFactory;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-public class FBXObjectLoader implements FBXElementLoader<List<FBXObject>> {
-    private Map<Long, FBXMesh> geometryMap = new HashMap<>();
-    private Map<Long, FBXNode> modelMap = new HashMap<>();
+public class FBXObjectLoader implements FBXElementLoader<Map<FBXId, FBXObject>> {
+    private Map<FBXId, FBXObject> objectMap = new HashMap<>();
     private AssetManager assetManager;
+    private AssetKey key;
 
-    public FBXObjectLoader(AssetManager assetManager) {
+    public FBXObjectLoader(AssetManager assetManager, AssetKey key) {
         this.assetManager = assetManager;
+        this.key = key;
     }
 
     @Override
-    public List<FBXObject> load(FBXElement element) {
-        Set<String> unusedElements = new HashSet<>();
+    public Map<FBXId, FBXObject> load(FBXElement element) {
+        objectMap.put(FBXId.ROOT, new FBXRootNode(assetManager, key));
 
-        List<FBXObject> gatheredObjects = new ArrayList<>();
-        FBXObject obj;
         for (FBXElement fbxElement : element.getChildren()) {
-            switch (fbxElement.getName()) {
-                case "Geometry":
-                    obj = new FBXMesh(fbxElement);
-                    geometryMap.put(obj.id, (FBXMesh) obj);
-                    break;
-                case "Model":
-                    obj = new FBXNode(fbxElement);
-                    modelMap.put(obj.id,
-                                 (FBXNode) obj); // TODO: Do I need to distinguish between limbNode and other nodes?
-                    break;
-                case "Material":
-                    obj = new FBXMaterial(fbxElement, assetManager);
-                    break;
-                case "Texture":
-                    obj = new FBXTexture(fbxElement);
-                    break;
-                default:
-                    obj = null;
-                    unusedElements.add(fbxElement.getName());
+            FBXObject object = FBXObjectFactory.createObject(fbxElement, assetManager, key);
+            if (objectMap.containsKey(object.getId())) {
+                System.err.println("An object with ID \"" + object.getId() + "\" has already been "
+                                   + "defined. Overwriting previous");
             }
 
-            if (obj != null) {
-                gatheredObjects.add(obj);
-            }
+            objectMap.put(object.getId(), object);
+            // Todo: animation stuff here
         }
-        System.out.println("FBXObjectLoader unusedElements: ");
-        unusedElements.forEach(System.out::println);
 
-        System.out.println("FBXMesh unusedElements: ");
-        FBXMesh.getUnusedElements().forEach(System.out::println);
-        return gatheredObjects;
+        return objectMap;
     }
 }

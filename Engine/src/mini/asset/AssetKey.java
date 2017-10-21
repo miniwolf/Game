@@ -69,4 +69,8 @@ public class AssetKey<T> {
     public String getFolder() {
         return file.getDirectory();
     }
+
+    public String getFullPathFolder() {
+        return file.getFullPathDirectory();
+    }
 }

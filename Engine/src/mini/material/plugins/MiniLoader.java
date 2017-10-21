@@ -806,6 +806,8 @@ public class MiniLoader implements AssetLoader {
     }
 
     public Object load(AssetInfo info) throws IOException {
+        material = null;
+        materialDef = null;
         this.assetManager = info.getManager();
         InputStream in = info.openStream();
         try {

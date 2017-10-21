@@ -12,4 +12,10 @@ public interface AssetLocator {
      * @return The {@link AssetInfo} that was located, or null if not found.
      */
     AssetInfo locate(AssetManager manager, AssetKey key);
+
+    /**
+     * @param rootPath The root path where to look for assets. Typically this method will only be
+     *                 called once per instance of the asset locator.
+     */
+    void setRootPath(String rootPath);
 }

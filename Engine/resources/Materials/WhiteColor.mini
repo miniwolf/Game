@@ -1,0 +1,5 @@
+Material Red Color : MatDefs/Misc/Unshaded.minid {
+     MaterialParameters {
+         Color : 1 1 1 1
+     }
+}

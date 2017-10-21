@@ -292,7 +292,7 @@ public class Node extends Spatial {
             child.setTransformRefresh();
             child.setLightListRefresh();
             child.setMatParamOverrideRefresh();
-            System.out.println("Child (" + child.getName() + ") attached to this node (" + getName() + ")");
+            //System.out.println("Child (" + child.getName() + ") attached to this node (" + getName() + ")");
             invalidateUpdateList();
         }
         return children.size();

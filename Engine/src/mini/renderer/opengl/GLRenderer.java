@@ -263,9 +263,7 @@ public final class GLRenderer implements Renderer {
             caps.add(Caps.MeshInstancing);
         }
 
-        if (hasExtension("GL_OES_element_index_uint")) {
-            caps.add(Caps.IntegerIndexBuffer);
-        }
+        caps.add(Caps.IntegerIndexBuffer);
 
         if (hasExtension("GL_ARB_texture_buffer_object")) {
             caps.add(Caps.TextureBuffer);
