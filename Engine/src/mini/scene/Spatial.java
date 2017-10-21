@@ -38,11 +38,7 @@ import java.util.Map;
  *
  * @author miniwolf
  */
-public abstract class Spatial implements Cloneable , CloneableSmartAsset, Collidable, MiniCloneable {
-    @Override
-    public int collideWith(Collidable other, CollisionResults results) {
-        return 0;
-    }
+public abstract class Spatial implements Cloneable {
     /**
      * Specifies how frustum culling should be handled by
      * this spatial.
@@ -1121,6 +1117,20 @@ public abstract class Spatial implements Cloneable , CloneableSmartAsset, Collid
 
         Vector3f absTranslation = worldTranslation.subtract(worldCenter);
         setLocalTranslation(absTranslation);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> T getUserData(String key) {
+        if (userData == null) {
+            return null;
+        }
+
+        Object o = userData.get(key);
+        if (o instanceof UserData) {
+            return (T) ((UserData) o).getValue();
+        } else {
+            return (T) o;
+        }
     }
 
     public void setUserData(String key, Object data) {

@@ -58,6 +58,10 @@ public class MyFile {
         return path.substring(0, path.indexOf(name));
     }
 
+    public String getFullPathDirectory() {
+        return ClassLoader.getSystemResource(getDirectory()).getPath();
+    }
+
     @Override
     public String toString() {
         return getPath();

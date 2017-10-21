@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
 
 /**
  * Manages the asset loader and asset locator implementations. This is done by keeping an instance
@@ -62,6 +63,15 @@ public class ImplHandler {
 
     public AssetKey getParentKey() {
         return parentAssetKey.get();
+    }
+
+    public void removeLocator(Class<? extends AssetLocator> locatorClass, String rootPath) {
+        List<ImplThreadLocal<AssetLocator>> localsToRemove =
+                locatorList.stream()
+                           .filter(local -> local.getPath().equals(rootPath) &&
+                                            local.getType().equals(locatorClass))
+                           .collect(Collectors.toList());
+        locatorList.removeAll(localsToRemove);
     }
 
     /**
@@ -180,10 +190,18 @@ public class ImplHandler {
             return extension;
         }
 
+        public Class<? extends T> getType() {
+            return type;
+        }
+
         @Override
         protected T initialValue() {
             try {
-                return type.newInstance();
+                T obj = type.newInstance();
+                if (path != null) {
+                    ((AssetLocator) obj).setRootPath(path);
+                }
+                return obj;
             } catch (InstantiationException | IllegalAccessException e) {
                 System.err.println("Cannot create locator of type " + type.getName()
                                    + "does the class have an empty and public constructor?");

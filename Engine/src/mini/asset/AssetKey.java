@@ -95,4 +95,8 @@ public class AssetKey<T> implements Cloneable {
     public Class<? extends AssetProcessor> getProcessorType() {
         return null;
     }
+
+    public String getFullPathFolder() {
+        return file.getFullPathDirectory();
+    }
 }
