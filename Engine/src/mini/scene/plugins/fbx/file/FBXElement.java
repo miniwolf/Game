@@ -8,8 +8,9 @@ import java.util.stream.Collectors;
 public class FBXElement {
     private String name;
     private List<Object> properties = new ArrayList<>();
-    private final char[] propertyTypes;
+    private char[] propertyTypes;
     private List<FBXElement> children = new ArrayList<>();
+    private boolean legacy;
 
     public FBXElement(int numProperties) {
         propertyTypes = new char[numProperties];
@@ -59,21 +60,52 @@ public class FBXElement {
             return props;
         }
 
-        return propertyElement.get().children.stream().peek(child -> {
-            if (!child.getName().equals("P")) {
+        return legacy ? getLegacyProperties(propertyElement.get())
+                      : getNewStyleProperties(propertyElement.get());
+    }
+
+    private List<FBXElement> getNewStyleProperties(FBXElement propertyElement) {
+        return propertyElement.children.stream().peek(child -> {
+            if (!child.getName().equals("P") && !child.getName().equals("Property")) {
                 throw new UnsupportedOperationException(
                         "Unexpected property name: " + child.getName());
             }
         }).collect(Collectors.toList());
     }
 
-    private Optional<FBXElement> getPropertyElement() {
-        return children.stream().peek(child -> {
-            if (child.getName().startsWith("Properties") && !child.getName()
-                                                                  .equals("Properties70")) {
+    private List<FBXElement> getLegacyProperties(FBXElement propertyElement) {
+        return propertyElement.children.stream().peek(child -> {
+            if (!child.getName().equals("P") && !child.getName().equals("Property")) {
                 throw new UnsupportedOperationException(
-                        "Unexpected PropertyType: " + child.getName());
+                        "Unexpected property name: " + child.getName());
             }
-        }).filter(child -> "Properties70".equals(child.getName())).findFirst();
+        }).map(child -> {
+            char[] types = new char[child.propertyTypes.length + 1];
+            types[0] = child.propertyTypes[0];
+            types[1] = child.propertyTypes[0];
+            System.arraycopy(child.propertyTypes, 1, types, 2, types.length - 2);
+
+            List<Object> values = new ArrayList<>(child.properties);
+            values.add(1, values.get(0));
+
+            FBXElement dummyProperty = new FBXElement(types.length);
+            dummyProperty.children = child.children;
+            dummyProperty.name = child.name;
+            dummyProperty.propertyTypes = types;
+            dummyProperty.properties = values;
+            return dummyProperty;
+        }).collect(Collectors.toList());
+    }
+
+    private Optional<FBXElement> getPropertyElement() {
+        for (FBXElement child : children) {
+            if (child.getName().equals("Properties70")) {
+                return Optional.of(child);
+            } else if (child.getName().equals("Properties60")) {
+                legacy = true;
+                return Optional.of(child);
+            }
+        }
+        return Optional.empty();
     }
 }

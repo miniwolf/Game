@@ -60,6 +60,14 @@ public abstract class FBXObject<T> {
         return assetManager;
     }
 
+    public String getFullClassName() {
+        if (subclassName.equals("")) {
+            return className;
+        } else {
+            return subclassName + ":" + className;
+        }
+    }
+
     public String getClassName() {
         return className;
     }
@@ -84,4 +92,16 @@ public abstract class FBXObject<T> {
     public abstract void link(FBXObject obj);
 
     public abstract void link(FBXObject obj, String propertyName);
+
+    protected final void unsupportedConnectObject(FBXObject object) {
+        throw new IllegalArgumentException("Cannot attach objects of this class ("
+                                           + object.getFullClassName() + ") to " + object
+                                                   .getName());
+    }
+
+    protected final void unsupportedConnectObjectProperty(FBXObject object, String property) {
+        throw new IllegalArgumentException("Cannot attach object of this class ("
+                                           + object.getFullClassName() + ") to property "
+                                           + getClass().getSimpleName() + "[\"" + property + "\"]");
+    }
 }

@@ -31,12 +31,12 @@ public class FileLocator implements AssetLocator {
         try {
             String canonicalPath = file.getCanonicalPath();
             String absolutePath = file.getAbsolutePath();
-            if (!canonicalPath.endsWith(absolutePath)) {
-                throw new IllegalArgumentException("Asset name doesn't match requirements.\n" +
-                                                   "\"" + canonicalPath + "\" does not match \"" +
-                                                   absolutePath + "\""
-                );
-            }
+//            if (!canonicalPath.endsWith(absolutePath)) {
+//                throw new IllegalArgumentException("Asset name doesn't match requirements.\n" +
+//                                                   "\"" + canonicalPath + "\" does not match \"" +
+//                                                   absolutePath + "\""
+//                );
+//            }
             return new AssetInfoFile(manager, key, file);
         } catch (IOException e) {
             System.err.println("Filed to get file canonical path " + file);

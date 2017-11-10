@@ -16,9 +16,9 @@ import mini.scene.Node;
 import mini.scene.Spatial;
 import mini.scene.plugins.fbx.anim.FBXLimbNode;
 import mini.scene.plugins.fbx.file.FBXElement;
+import mini.scene.plugins.fbx.material.FBXMaterial;
 import mini.scene.plugins.fbx.mesh.FBXMesh;
 import mini.scene.plugins.fbx.obj.FBXObject;
-import mini.scene.plugins.fbx.objects.FBXMaterial;
 import mini.scene.plugins.fbx.utils.RotationOrder;
 
 import java.util.ArrayList;
@@ -114,6 +114,10 @@ public class FBXNode extends FBXObject<Spatial> {
         }
 
         spatial.setLocalTransform(localNodeTransformScale);
+
+        // TODO: take care of userdata, should be added to the spatial
+
+        return spatial;
     }
 
     private Spatial nodeFromMesh(FBXMesh fbxMesh) {
@@ -220,15 +224,6 @@ public class FBXNode extends FBXObject<Spatial> {
 
             childNode.parent = this;
             children.add(childNode);
-        } else if (object instanceof FBXMesh) {
-            if (mesh != null) {
-                throw new IllegalStateException("A mesh (" + mesh + ") is already attached to " +
-                                                this + ". Only one attribute allowed per node.");
-            }
-
-            mesh = (FBXMesh) object;
-        } else if (object instanceof FBXMaterial) {
-            materials.add((FBXMaterial) object);
         } else if (object instanceof FBXNodeAttribute) {
             if (nodeAttribute != null) {
                 throw new IllegalStateException("An FBXNodeAttribute (" + nodeAttribute + ") is "
@@ -240,8 +235,10 @@ public class FBXNode extends FBXObject<Spatial> {
             if (nodeAttribute instanceof FBXNullAttribute) {
                 nodeAttribute.getImplObject();
             }
+        } else if (object instanceof FBXMaterial) {
+            materials.add((FBXMaterial) object);
         } else {
-            System.out.println(object);
+            unsupportedConnectObject(object);
         }
     }
 

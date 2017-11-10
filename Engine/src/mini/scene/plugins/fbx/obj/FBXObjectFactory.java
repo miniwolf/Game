@@ -9,11 +9,11 @@ import mini.scene.plugins.fbx.anim.FBXCluster;
 import mini.scene.plugins.fbx.anim.FBXLimbNode;
 import mini.scene.plugins.fbx.anim.FBXSkinDeformer;
 import mini.scene.plugins.fbx.file.FBXElement;
+import mini.scene.plugins.fbx.material.FBXImage;
+import mini.scene.plugins.fbx.material.FBXMaterial;
 import mini.scene.plugins.fbx.mesh.FBXMesh;
 import mini.scene.plugins.fbx.node.FBXNode;
 import mini.scene.plugins.fbx.node.FBXNullAttribute;
-import mini.scene.plugins.fbx.objects.FBXImage;
-import mini.scene.plugins.fbx.objects.FBXMaterial;
 import mini.scene.plugins.fbx.objects.FBXTexture;
 
 import java.lang.reflect.Constructor;
@@ -23,7 +23,18 @@ public class FBXObjectFactory {
     public static FBXObject createObject(FBXElement fbxElement, AssetManager assetManager,
                                          AssetKey assetKey) {
         String elementName = fbxElement.getName();
-        String subclassName = (String) fbxElement.getProperties().get(2);
+        String subclassName;
+
+        if (fbxElement.getPropertyTypes().length == 3) {
+            // FBX 7.x (all objects start with Long ID)
+            subclassName = (String) fbxElement.getProperties().get(2);
+        } else if (fbxElement.getPropertyTypes().length == 2) {
+            // FBX 6.x (objects only have name and subclass)
+            subclassName = (String) fbxElement.getProperties().get(1);
+        } else {
+            //"Unknown object or invalid data"
+            return null;
+        }
 
         Class<? extends FBXObject> javaFBXClass = getImplementingClass(elementName, subclassName);
 
@@ -85,9 +96,12 @@ public class FBXObjectFactory {
         } else if ("AnimationLayer".equals(elementName)) {
             // Blended animations
             return FBXAnimLayer.class;
+        } else if ("SceneInfo".equals(elementName)) {
+            // Old-style FBX 6.1 uses this. Nothing useful here.
+            return FBXUnknownObject.class;
         }
         System.err
                 .println("Unknown object class or subclass: " + elementName + " : " + subclassName);
-        return null;
+        return FBXUnknownObject.class;
     }
 }

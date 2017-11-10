@@ -49,6 +49,7 @@ public class FBXLoader implements AssetLoader {
                     break;
                 case "Connections":
                     loadConnections(fbxElement);
+                    break;
                 default:
                     System.out.println("Skipped elements: " + fbxElement.getName());
             }
@@ -61,6 +62,10 @@ public class FBXLoader implements AssetLoader {
 
         // Convert it into a scene
         Node root = (Node) FBXNode.createScene(rootNode);
+
+        root.setName("FBX-scene");
+
+        return root;
     }
 
     private void loadConnections(FBXElement fbxElement) {

@@ -15,10 +15,13 @@ public class FBXLayerElement {
     static {
         indexTypes.add("UVIndex");
         indexTypes.add("NormalsIndex");
+        indexTypes.add("TangentsIndex");
+        indexTypes.add("BinormalsIndex");
         indexTypes.add("Smoothing");
         indexTypes.add("Materials");
         indexTypes.add("TextureId");
         indexTypes.add("PolygonGroup");
+        indexTypes.add("ColorIndex");
     }
 
     private int[] dataIndices;
@@ -105,6 +108,59 @@ public class FBXLayerElement {
         return layerElement;
     }
 
+    public Object getVertexData(int polygonIndex, int polygonVertexIndex, int vertexIndex,
+                                int edgeIndex) {
+        switch (refInfoType) {
+            case Direct:
+                return getVertexDataDirect(polygonIndex, polygonVertexIndex, vertexIndex,
+                                           edgeIndex);
+            case IndexToDirect:
+                return getVertexDataIndexToDirect(polygonIndex, polygonVertexIndex, vertexIndex,
+                                                  edgeIndex);
+        }
+        return null;
+    }
+
+    private Object getVertexDataIndexToDirect(int polygonIndex, int polygonVertexIndex,
+                                              int vertexIndex, int edgeIndex) {
+        switch (mapInfoType) {
+            case AllSame:
+                return data[dataIndices[0]];
+            case ByPolygon:
+                return data[dataIndices[polygonIndex]];
+            case ByPolygonVertex:
+                return data[dataIndices[polygonVertexIndex]];
+            case ByVertex:
+                return data[dataIndices[vertexIndex]];
+            case ByEdge:
+                return data[dataIndices[edgeIndex]];
+            default:
+                throw new UnsupportedOperationException();
+        }
+    }
+
+    private Object getVertexDataDirect(int polygonIndex, int polygonVertexIndex, int vertexIndex,
+                                       int edgeIndex) {
+        switch (mapInfoType) {
+            case AllSame:
+                return data[0];
+            case ByPolygon:
+                return data[polygonIndex];
+            case ByPolygonVertex:
+                return data[polygonVertexIndex];
+            case ByVertex:
+                return data[vertexIndex];
+            case ByEdge:
+                return data[edgeIndex];
+            default:
+                throw new UnsupportedOperationException();
+        }
+    }
+
+    public Integer getIndex() {
+        return index;
+    }
+
     public enum Type {
         Position,
         BoneIndex,
@@ -130,5 +186,9 @@ public class FBXLayerElement {
     public enum ReferenceInformationType {
         Direct,
         IndexToDirect
+    }
+
+    public Type getType() {
+        return type;
     }
 }

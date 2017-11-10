@@ -1,7 +1,8 @@
-package mini.scene.plugins.fbx.objects;
+package mini.scene.plugins.fbx.material;
 
 import mini.asset.AssetKey;
 import mini.asset.AssetManager;
+import mini.asset.TextureKey;
 import mini.scene.plugins.fbx.file.FBXElement;
 import mini.scene.plugins.fbx.obj.FBXObject;
 import mini.textures.Image;
@@ -12,10 +13,10 @@ import java.io.File;
 public class FBXImage extends FBXObject {
     private final AssetManager assetManager;
     private final AssetKey key;
-    private String relativeFilename;
-    private String filename;
+    private String relativeFilename; // = "../blah/texture.png
     private Image image;
     private String type;
+    private TextureKey textureKey;
 
     public FBXImage(AssetManager assetManager, AssetKey key) {
         super(assetManager, key);
@@ -46,6 +47,46 @@ public class FBXImage extends FBXObject {
         image = createImage();
     }
 
+    private static String getFileName(String filePath) {
+        // NOTE: new File().getParent() will not strip forward slashes on all platforms.
+        int fwdSlashIdx = filePath.lastIndexOf("/");
+        int bkSlashIdx = filePath.lastIndexOf("\\");
+
+        if (fwdSlashIdx != -1) {
+            filePath = filePath.substring(fwdSlashIdx + 1);
+        } else if (bkSlashIdx != -1) {
+            filePath = filePath.substring(bkSlashIdx + 1);
+        }
+
+        return filePath;
+    }
+
+    @Override
+    protected Object toImplObject() {
+        String fileName = getFileName(relativeFilename);
+
+        if (fileName == null) {
+            System.err.println("Cannot locate image for texture " + name);
+            // TODO: Setup placeholder image
+            return null;
+        }
+
+        // Try to load filename relative to FBX folder
+        textureKey = new TextureKey(key.getFolder() + fileName);
+        textureKey.setGenerateMips(true);
+        return assetManager.loadTexture(textureKey).getImage();
+    }
+
+    @Override
+    public void link(FBXObject obj) {
+        unsupportedConnectObject(obj);
+    }
+
+    @Override
+    public void link(FBXObject obj, String propertyName) {
+        unsupportedConnectObjectProperty(obj, propertyName);
+    }
+
     private Image createImage() {
         if (relativeFilename == null) {
             throw new UnsupportedOperationException();
@@ -60,5 +101,9 @@ public class FBXImage extends FBXObject {
 
     public Image getImage() {
         return image;
+    }
+
+    public TextureKey getTextureKey() {
+        return textureKey;
     }
 }

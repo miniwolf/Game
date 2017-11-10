@@ -47,7 +47,23 @@ public class FBXLayer {
     }
 
     public void setLayerElements(List<FBXLayerElement> layerElements) {
-        this.layerElements = layerElements;
+        for (FBXLayerElement layerElement : layerElements) {
+            FBXLayerElementRef reference = references.get(layerElement.getType());
+            if (reference != null && reference.layerElementIndex == layerElement.getIndex()) {
+                reference.layerElement = layerElement;
+            }
+        }
+    }
+
+    public Object getVertexData(FBXLayerElement.Type type, int polygonIndex,
+                                int polygonVertexIndex, int vertexIndex, int edgeIndex) {
+        FBXLayerElementRef reference = references.get(type);
+        if (reference == null) {
+            return null;
+        } else {
+            return reference.layerElement
+                    .getVertexData(polygonIndex, polygonVertexIndex, vertexIndex, edgeIndex);
+        }
     }
 
     private static class FBXLayerElementRef {

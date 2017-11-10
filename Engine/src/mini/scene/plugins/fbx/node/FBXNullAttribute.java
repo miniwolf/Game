@@ -10,6 +10,11 @@ public class FBXNullAttribute extends FBXNodeAttribute {
     }
 
     @Override
+    protected Object toImplObject() {
+        return new Object();
+    }
+
+    @Override
     public void link(FBXObject object) {
         throw new UnsupportedOperationException();
     }
