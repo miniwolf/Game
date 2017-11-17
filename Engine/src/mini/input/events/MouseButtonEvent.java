@@ -4,7 +4,6 @@ package mini.input.events;
  * Mouse button press/release event.
  */
 public class MouseButtonEvent extends InputEvent {
-
     private int x;
     private int y;
     private int btnIndex;

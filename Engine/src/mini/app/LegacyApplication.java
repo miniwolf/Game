@@ -1,5 +1,7 @@
 package mini.app;
 
+import mini.app.state.ApplicationState;
+import mini.app.state.ApplicationStateManager;
 import mini.asset.AssetManager;
 import mini.input.InputManager;
 import mini.input.KeyInput;
@@ -13,6 +15,8 @@ import mini.system.ApplicationContext;
 import mini.system.ApplicationSystem;
 import mini.system.SystemListener;
 
+import java.util.Arrays;
+import java.util.Objects;
 import java.util.concurrent.Callable;
 
 /**
@@ -39,6 +43,24 @@ public class LegacyApplication implements Application, SystemListener {
     protected KeyInput keyInput;
     protected InputManager inputManager;
     protected AssetManager assetManager;
+    protected ApplicationStateManager stateManager;
+
+    public LegacyApplication(ApplicationState... initialStates) {
+        initStateManager();
+
+        if (initialStates != null) {
+            Arrays.stream(initialStates)
+                  .filter(Objects::nonNull)
+                  .forEach(state -> stateManager.attach(state));
+        }
+    }
+
+    private void initStateManager() {
+        stateManager = new ApplicationStateManager(this);
+
+        // Always register a ResetStateState to make sure that the stats are cleared every frame
+        stateManager.attach(new ResetStatsState());
+    }
 
     /**
      * Set the display settings to define the display created.

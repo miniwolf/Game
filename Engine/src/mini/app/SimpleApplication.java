@@ -1,5 +1,6 @@
 package mini.app;
 
+import mini.app.state.ApplicationState;
 import mini.input.FlyByCamera;
 import mini.input.KeyInput;
 import mini.input.controls.ActionListener;
@@ -15,13 +16,13 @@ import mini.scene.Spatial;
  * using the {@link mini.app.StatsAppState} AppState. It will display
  * the current frames-per-second value on-screen in addition to the statistics.
  * Several keys have special functionality in <code>SimpleApplication</code>:<br/>
- *
+ * <p>
  * <table>
  * <tr><td>Esc</td><td>- Close the application</td></tr>
  * <tr><td>C</td><td>- Display the camera position and rotation in the console.</td></tr>
  * <tr><td>M</td><td>- Display memory usage in the console.</td></tr>
  * </table>
- *
+ * <p>
  * A {@link mini.app.FlyCamAppState} is by default attached as well and can
  * be removed by calling <code>stateManager.detach( stateManager.getState(FlyCamAppState.class) );</code>
  */
@@ -49,7 +50,11 @@ public abstract class SimpleApplication extends LegacyApplication {
     }
 
     public SimpleApplication() {
-        super();
+        this(new FlyCamAppState());
+    }
+
+    public SimpleApplication(ApplicationState... initialStates) {
+        super(initialStates);
     }
 
     @Override
@@ -59,8 +64,8 @@ public abstract class SimpleApplication extends LegacyApplication {
 
     /**
      * Retrieves flyCam
-     * @return flyCam Camera object
      *
+     * @return flyCam Camera object
      */
     public FlyByCamera getFlyByCamera() {
         return flyCam;
@@ -68,8 +73,8 @@ public abstract class SimpleApplication extends LegacyApplication {
 
     /**
      * Retrieves guiNode
-     * @return guiNode Node object
      *
+     * @return guiNode Node object
      */
     public Node getGuiNode() {
         return guiNode;
@@ -77,8 +82,8 @@ public abstract class SimpleApplication extends LegacyApplication {
 
     /**
      * Retrieves rootNode
-     * @return rootNode Node object
      *
+     * @return rootNode Node object
      */
     public Node getRootNode() {
         return rootNode;
@@ -90,8 +95,8 @@ public abstract class SimpleApplication extends LegacyApplication {
 
     /**
      * Toggles settings window to display at start-up
-     * @param showSettings Sets true/false
      *
+     * @param showSettings Sets true/false
      */
     public void setShowSettings(boolean showSettings) {
         this.showSettings = showSettings;
@@ -107,15 +112,15 @@ public abstract class SimpleApplication extends LegacyApplication {
 
         if (inputManager != null) {
 
-//            // We have to special-case the FlyCamAppState because too
-//            // many SimpleApplication subclasses expect it to exist in
-//            // simpleInit().  But at least it only gets initialized if
-//            // the app state is added.
-//            if (stateManager.getState(FlyCamAppState.class) != null) {
-//                flyCam = new FlyByCamera(cam);
-//                flyCam.setMoveSpeed(1f); // odd to set this here but it did it before
-//                stateManager.getState(FlyCamAppState.class).setCamera( flyCam );
-//            }
+            // We have to special-case the FlyCamAppState because too
+            // many SimpleApplication subclasses expect it to exist in
+            // simpleInit().  But at least it only gets initialized if
+            // the app state is added.
+            if (stateManager.getState(FlyCamAppState.class) != null) {
+                flyCam = new FlyByCamera(cam);
+                flyCam.setMoveSpeed(1f); // odd to set this here but it did it before
+                stateManager.getState(FlyCamAppState.class).setCamera(flyCam);
+            }
 
             inputManager.addMapping(INPUT_MAPPING_EXIT, new KeyTrigger(KeyInput.KEY_ESCAPE));
             inputManager.addListener(actionListener, INPUT_MAPPING_EXIT);
@@ -132,6 +137,9 @@ public abstract class SimpleApplication extends LegacyApplication {
             return;
         }
 
+        // update states
+        stateManager.update();
+
         // simple update and root node
         simpleUpdate();
 
@@ -139,13 +147,23 @@ public abstract class SimpleApplication extends LegacyApplication {
         guiNode.updateGeometricState();
 
         // render states
-//        stateManager.render(renderManager);
+        stateManager.render(renderManager);
 
         renderManager.render(0, context.isRenderable());
         simpleRender(renderManager);
+        stateManager.postRender();
+    }
+
+    @Override
+    public void destroy() {
+        simpleDestroy();
+        super.destroy();
     }
 
     public abstract void simpleInitApp();
+
+    public void simpleDestroy() {
+    }
 
     public void simpleUpdate() {
     }

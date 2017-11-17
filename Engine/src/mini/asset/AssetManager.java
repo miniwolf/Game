@@ -7,6 +7,7 @@ import mini.scene.plugins.MTLLoader;
 import mini.scene.plugins.OBJLoader;
 import mini.shaders.plugins.GLSLLoader;
 import mini.textures.Texture;
+import mini.textures.plugins.AWTLoader;
 
 import java.io.IOException;
 
@@ -15,6 +16,7 @@ public class AssetManager {
 
     public AssetManager() {
         registerLoader(OBJLoader.class, "obj");
+        registerLoader(AWTLoader.class, "jpg", "png");
         registerLoader(MiniLoader.class, "mini", "minid");
         registerLoader(GLSLLoader.class, "frag", "vert");
         registerLoader(ShaderNodeDefinitionLoader.class, "minisn");
@@ -55,5 +57,11 @@ public class AssetManager {
 
     public Texture loadTexture(TextureKey textureKey) {
         return loadAsset(textureKey);
+    }
+
+    public Texture loadTexture(String name) {
+        TextureKey key = new TextureKey(name, true);
+        key.setGenerateMips(true);
+        return loadTexture(key);
     }
 }

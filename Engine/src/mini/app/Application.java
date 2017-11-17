@@ -1,5 +1,6 @@
 package mini.app;
 
+import mini.input.InputManager;
 import mini.renderer.Camera;
 import mini.renderer.RenderManager;
 import mini.renderer.Renderer;
@@ -11,6 +12,11 @@ import mini.system.ApplicationContext;
  * capabilities of a concrete application.
  */
 public interface Application {
+    /**
+     * @return the {@link InputManager input manager}.
+     */
+    InputManager getInputManager();
+
     /**
      * @return the {@link RenderManager render manager}
      */
