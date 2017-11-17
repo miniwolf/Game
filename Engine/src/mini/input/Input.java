@@ -42,4 +42,10 @@ public interface Input {
      * @param listener
      */
     void setInputListener(RawInputListener listener);
+
+    /**
+     * @return The current absolut time as nanoseconds. This time is expected to be relative to the
+     * time given in InputEvents time property.
+     */
+    long getInputTimeNanos();
 }

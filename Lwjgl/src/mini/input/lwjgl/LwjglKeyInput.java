@@ -4,7 +4,9 @@ import mini.input.KeyInput;
 import mini.input.RawInputListener;
 import mini.input.events.KeyInputEvent;
 import mini.system.lwjgl.LwjglAbstractDisplay;
+import mini.system.time.LwjglTimer;
 import org.lwjgl.LWJGLException;
+import org.lwjgl.Sys;
 import org.lwjgl.input.Keyboard;
 
 public class LwjglKeyInput implements KeyInput {
@@ -66,5 +68,10 @@ public class LwjglKeyInput implements KeyInput {
 
     public void setInputListener(RawInputListener listener) {
         this.listener = listener;
+    }
+
+    @Override
+    public long getInputTimeNanos() {
+        return Sys.getTime() * LwjglTimer.LWJGL_TIME_TO_NANOS;
     }
 }

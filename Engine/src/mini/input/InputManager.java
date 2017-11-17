@@ -670,15 +670,15 @@ public class InputManager implements RawInputListener {
      * This will query current input devices and send
      * appropriate events to registered listeners.
      */
-    public void update() {
-//        frameTPF = tpf;
-//
-//        // Activate safemode if the TPF value is so small
-//        // that rounding errors are inevitable
-//        safeMode = tpf < 0.015f;
+    public void update(float tpf) {
+        frameTPF = tpf;
 
-//        long currentTime = keys.getInputTimeNanos();
-//        frameDelta = currentTime - lastUpdateTime;
+        // Activate safemode if the TPF value is so small
+        // that rounding errors are inevitable
+        safeMode = tpf < 0.015f;
+
+        long currentTime = keys.getInputTimeNanos();
+        frameDelta = currentTime - lastUpdateTime;
 
         eventsPermitted = true;
 
@@ -690,7 +690,7 @@ public class InputManager implements RawInputListener {
         processQueue();
         invokeUpdateActions();
 
-//        lastLastUpdateTime = lastUpdateTime;
-//        lastUpdateTime = currentTime;
+        lastLastUpdateTime = lastUpdateTime;
+        lastUpdateTime = currentTime;
     }
 }

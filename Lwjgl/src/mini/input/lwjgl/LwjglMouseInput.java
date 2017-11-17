@@ -5,17 +5,16 @@ import mini.input.RawInputListener;
 import mini.input.events.MouseButtonEvent;
 import mini.input.events.MouseMotionEvent;
 import mini.system.lwjgl.LwjglAbstractDisplay;
+import mini.system.time.LwjglTimer;
 import org.lwjgl.LWJGLException;
+import org.lwjgl.Sys;
 import org.lwjgl.input.Mouse;
 
 
 public class LwjglMouseInput implements MouseInput {
     private LwjglAbstractDisplay context;
-
     private RawInputListener listener;
-
     private boolean cursorVisible = true;
-
     private int curX, curY, curWheel;
 
     public LwjglMouseInput(LwjglAbstractDisplay context) {
@@ -109,5 +108,10 @@ public class LwjglMouseInput implements MouseInput {
 
     public void setInputListener(RawInputListener listener) {
         this.listener = listener;
+    }
+
+    @Override
+    public long getInputTimeNanos() {
+        return Sys.getTime() * LwjglTimer.LWJGL_TIME_TO_NANOS;
     }
 }

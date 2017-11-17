@@ -14,6 +14,8 @@ import mini.renderer.ViewPort;
 import mini.system.ApplicationContext;
 import mini.system.ApplicationSystem;
 import mini.system.SystemListener;
+import mini.system.time.NanoTimer;
+import mini.system.time.Timer;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -33,6 +35,7 @@ public class LegacyApplication implements Application, SystemListener {
     protected ViewPort viewPort;
     protected ViewPort guiViewPort;
 
+    protected Timer timer = new NanoTimer();
     protected ApplicationContext context;
     protected Camera cam;
 
@@ -338,8 +341,10 @@ public class LegacyApplication implements Application, SystemListener {
      * Callback from ContextListener.
      */
     public void update() {
+        timer.update();
+
         if (inputEnabled) {
-            inputManager.update();
+            inputManager.update(timer.getTimePerFrame());
         }
     }
 
