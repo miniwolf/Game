@@ -1,5 +1,8 @@
 package mini.scene;
 
+import mini.bounding.BoundingVolume;
+import mini.collision.Collidable;
+import mini.collision.CollisionResults;
 import mini.material.Material;
 
 import java.util.ArrayList;
@@ -73,8 +76,9 @@ public class Node extends Spatial {
     protected void setTransformRefresh() {
         super.setTransformRefresh();
         for (Spatial child : children) {
-            if ((child.refreshFlags & RF_TRANSFORM) != 0)
+            if ((child.refreshFlags & RF_TRANSFORM) != 0) {
                 continue;
+            }
 
             child.setTransformRefresh();
         }
@@ -84,8 +88,9 @@ public class Node extends Spatial {
     protected void setLightListRefresh() {
         super.setLightListRefresh();
         for (Spatial child : children) {
-            if ((child.refreshFlags & RF_LIGHTLIST) != 0)
+            if ((child.refreshFlags & RF_LIGHTLIST) != 0) {
                 continue;
+            }
 
             child.setLightListRefresh();
         }
@@ -103,27 +108,26 @@ public class Node extends Spatial {
         }
     }
 
-//    @Override
-//    protected void updateWorldBound(){
-//        super.updateWorldBound();
-//        // for a node, the world bound is a combination of all it's children
-//        // bounds
-//        BoundingVolume resultBound = null;
-//        for (Spatial child : children.getArray()) {
-//            // child bound is assumed to be updated
-//            assert (child.refreshFlags & RF_BOUND) == 0;
-//            if (resultBound != null) {
-//                // merge current world bound with child world bound
-//                resultBound.mergeLocal(child.getWorldBound());
-//            } else {
-//                // set world bound to first non-null child world bound
-//                if (child.getWorldBound() != null) {
-//                    resultBound = child.getWorldBound().clone(this.worldBound);
-//                }
-//            }
-//        }
-//        this.worldBound = resultBound;
-//    }
+    @Override
+    protected void updateWorldBound() {
+        super.updateWorldBound();
+        // for a node, the world bound is a combination of all it's children bounds
+        BoundingVolume resultBound = null;
+        for (Spatial child : children) {
+            // child bound is assumed to be updated
+            assert (child.refreshFlags & RF_BOUND) == 0;
+            if (resultBound != null) {
+                // merge current world bound with child world bound
+                resultBound.mergeLocal(child.getWorldBound());
+            } else {
+                // set world bound to first non-null child world bound
+                if (child.getWorldBound() != null) {
+                    resultBound = child.getWorldBound().clone(this.worldBound);
+                }
+            }
+        }
+        this.worldBound = resultBound;
+    }
 
     @Override
     protected void setParent(Node parent) {
@@ -277,8 +281,9 @@ public class Node extends Spatial {
      * @throws NullPointerException if child is null.
      */
     public int attachChildAt(Spatial child, int index) {
-        if (child == null)
+        if (child == null) {
             throw new NullPointerException();
+        }
 
         if (child.getParent() != this && child != this) {
             if (child.getParent() != null) {
@@ -292,7 +297,8 @@ public class Node extends Spatial {
             child.setTransformRefresh();
             child.setLightListRefresh();
             child.setMatParamOverrideRefresh();
-            System.out.println("Child (" + child.getName() + ") attached to this node (" + getName() + ")");
+            System.out.println(
+                    "Child (" + child.getName() + ") attached to this node (" + getName() + ")");
             invalidateUpdateList();
         }
         return children.size();
@@ -492,6 +498,14 @@ public class Node extends Spatial {
         for (Spatial child : children) {
             child.setLodLevel(lod);
         }
+    }
+
+    public int collideWith(Collidable other, CollisionResults results) {
+        int total = 0;
+        for (Spatial child : children) {
+            total += child.collideWith(other, results);
+        }
+        return total;
     }
 
     public Node clone(boolean cloneMaterials) {

@@ -1,6 +1,7 @@
 package mini.scene;
 
 import mini.bounding.BoundingVolume;
+import mini.collision.Collidable;
 import mini.light.Light;
 import mini.light.LightList;
 import mini.material.MatParamOverride;
@@ -26,7 +27,7 @@ import java.util.List;
  *
  * @author miniwolf
  */
-public abstract class Spatial implements Cloneable {
+public abstract class Spatial implements Cloneable, Collidable {
     /**
      * Specifies how frustum culling should be handled by
      * this spatial.
@@ -633,9 +634,6 @@ public abstract class Spatial implements Cloneable {
 
             for (int j = i; j >= 0; j--) {
                 rootNode = stack[j];
-                //rootNode.worldTransform.set(rootNode.localTransform);
-                //rootNode.worldTransform.combineWithParent(rootNode.parent.worldTransform);
-                //rootNode.refreshFlags &= ~RF_TRANSFORM;
                 rootNode.updateWorldTransforms();
             }
         }

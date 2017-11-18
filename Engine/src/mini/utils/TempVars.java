@@ -1,6 +1,7 @@
 package mini.utils;
 
 import mini.collision.CollisionResults;
+import mini.collision.bih.BIHNode;
 import mini.math.ColorRGBA;
 import mini.math.Matrix3f;
 import mini.math.Matrix4f;
@@ -13,6 +14,8 @@ import mini.scene.Spatial;
 
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Temporary variables assigned to each thread. Engine classes may access
@@ -45,8 +48,8 @@ public class TempVars {
      * This ensures each thread has a single TempVarsStack that is
      * used only in method calls in that thread.
      */
-    private static final ThreadLocal<TempVarsStack> varsLocal =
-            ThreadLocal.withInitial(TempVarsStack::new);
+    private static final ThreadLocal<TempVarsStack> varsLocal = ThreadLocal
+            .withInitial(TempVarsStack::new);
 
     /**
      * This instance of TempVars has been retrieved but not released yet.
@@ -191,4 +194,5 @@ public class TempVars {
      */
     public final CollisionResults collisionResults = new CollisionResults();
     public final float[] bihSwapTmp = new float[9];
+    public final List<BIHNode.BIHStackData> bihStack = new ArrayList<>();
 }

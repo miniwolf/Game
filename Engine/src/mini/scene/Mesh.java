@@ -1,7 +1,13 @@
 package mini.scene;
 
+import mini.bounding.BoundingBox;
+import mini.bounding.BoundingVolume;
+import mini.collision.Collidable;
+import mini.collision.CollisionResults;
+import mini.collision.bih.BIHTree;
 import mini.material.Material;
 import mini.material.RenderState;
+import mini.math.Matrix4f;
 import mini.scene.mesh.IndexBuffer;
 import mini.utils.BufferUtils;
 
@@ -28,7 +34,6 @@ import java.util.Map;
  * </ul>
  */
 public class Mesh implements Cloneable {
-
     /**
      * The mode of the Mesh specifies both the type of primitive represented
      * by the mesh and how the data should be interpreted.
@@ -115,6 +120,13 @@ public class Mesh implements Cloneable {
             return listMode;
         }
     }
+
+    /**
+     * The bounding volume that contains the mesh entirely. By default a BoundingBox (AABB)
+     */
+    private BoundingVolume meshBound = new BoundingBox();
+
+    private CollisionData collisionTree = null;
 
     private List<VertexBuffer> buffersList = new ArrayList<>();
     private Map<Integer, VertexBuffer> buffers = new HashMap<>();
@@ -348,8 +360,9 @@ public class Mesh implements Cloneable {
      * {@link VertexBuffer vertex buffers} has been altered.
      */
     public void updateCounts() {
-        if (getBuffer(VertexBuffer.Type.InterleavedData) != null)
+        if (getBuffer(VertexBuffer.Type.InterleavedData) != null) {
             throw new IllegalStateException("Should update counts before interleave");
+        }
 
         VertexBuffer pb = getBuffer(VertexBuffer.Type.Position);
         VertexBuffer ib = getBuffer(VertexBuffer.Type.Index);
@@ -372,11 +385,13 @@ public class Mesh implements Cloneable {
      */
     public int getTriangleCount(int lod) {
         if (lodLevels != null) {
-            if (lod < 0)
+            if (lod < 0) {
                 throw new IllegalArgumentException("LOD level cannot be < 0");
+            }
 
-            if (lod >= lodLevels.length)
+            if (lod >= lodLevels.length) {
                 throw new IllegalArgumentException("LOD level " + lod + " does not exist!");
+            }
 
             return computeNumElements(lodLevels[lod].getData().limit());
         } else if (lod == 0) {
@@ -429,10 +444,30 @@ public class Mesh implements Cloneable {
      * Sets the mesh's VAO ID. Internal use only.
      */
     public void setId(int id) {
-        if (vertexArrayID != -1)
+        if (vertexArrayID != -1) {
             throw new IllegalStateException("ID has already been set.");
+        }
 
         vertexArrayID = id;
+    }
+
+    private void createCollisionData() {
+        BIHTree tree = new BIHTree(this);
+        tree.construct();
+        collisionTree = tree;
+    }
+
+    public int collideWith(Collidable other, Matrix4f worldMatrix, BoundingVolume worldBound,
+                           CollisionResults results) {
+        if (getVertexCount() == 0) {
+            return 0;
+        }
+
+        if (collisionTree == null) {
+            createCollisionData();
+        }
+
+        return collisionTree.collideWith(other, worldMatrix, worldBound, results);
     }
 
     /**
@@ -478,7 +513,8 @@ public class Mesh implements Cloneable {
      * @throws UnsupportedOperationException If the buffer already set is
      *                                       incompatible with the parameters given.
      */
-    public void setBuffer(VertexBuffer.Type type, int components, VertexBuffer.Format format, Buffer buf) {
+    public void setBuffer(VertexBuffer.Type type, int components, VertexBuffer.Format format,
+                          Buffer buf) {
         VertexBuffer vb = buffers.get(type.ordinal());
         if (vb == null) {
             vb = new VertexBuffer(type);
@@ -487,7 +523,7 @@ public class Mesh implements Cloneable {
         } else {
             if (vb.getNumComponents() != components || vb.getFormat() != format) {
                 throw new UnsupportedOperationException("The buffer already set "
-                        + "is incompatible with the given parameters");
+                                                        + "is incompatible with the given parameters");
             }
             vb.updateData(buf);
             updateCounts();
@@ -555,8 +591,9 @@ public class Mesh implements Cloneable {
      */
     public FloatBuffer getFloatBuffer(VertexBuffer.Type type) {
         VertexBuffer vb = getBuffer(type);
-        if (vb == null)
+        if (vb == null) {
             return null;
+        }
 
         return (FloatBuffer) vb.getData();
     }
@@ -570,8 +607,9 @@ public class Mesh implements Cloneable {
      */
     public ShortBuffer getShortBuffer(VertexBuffer.Type type) {
         VertexBuffer vb = getBuffer(type);
-        if (vb == null)
+        if (vb == null) {
             return null;
+        }
 
         return (ShortBuffer) vb.getData();
     }
@@ -585,10 +623,31 @@ public class Mesh implements Cloneable {
      */
     public IndexBuffer getIndexBuffer() {
         VertexBuffer vb = getBuffer(VertexBuffer.Type.Index);
-        if (vb == null)
+        if (vb == null) {
             return null;
+        }
 
         return IndexBuffer.wrapIndexBuffer(vb.getData());
+    }
+
+    /**
+     * Updates the bounding volume of this mesh.
+     * The method does nothing if the mesh has no {@link VertexBuffer.Type#Position} buffer.
+     * It is expected that the position buffer is a float buffer with 3 components.
+     */
+    public void updateBounds() {
+        VertexBuffer positionBuffer = getBuffer(VertexBuffer.Type.Position);
+        if (meshBound != null && positionBuffer != null) {
+            meshBound.computeFromPoints((FloatBuffer) positionBuffer.getData());
+        }
+    }
+
+    /**
+     * @return the {@link BoundingVolume} of this Mesh. By default the bounding volume is a
+     * {@link BoundingBox}
+     */
+    public BoundingVolume getBound() {
+        return meshBound;
     }
 
     /**

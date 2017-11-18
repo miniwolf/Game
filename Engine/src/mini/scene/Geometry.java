@@ -1,5 +1,7 @@
 package mini.scene;
 
+import mini.collision.Collidable;
+import mini.collision.CollisionResults;
 import mini.material.Material;
 import mini.math.Matrix4f;
 import mini.renderer.Camera;
@@ -228,19 +230,19 @@ public class Geometry extends Spatial {
     @Override
     protected void updateWorldBound() {
         super.updateWorldBound();
-//        if (mesh == null) {
-//            throw new NullPointerException("Geometry: " + getName() + " has null mesh");
-//        }
-//
-//        if (mesh.getBound() != null) {
-//            if (ignoreTransform) {
-//                // we do not transform the model bound by the world transform,
-//                // just use the model bound as-is
-//                worldBound = mesh.getBound().clone(worldBound);
-//            } else {
-//                worldBound = mesh.getBound().transform(worldTransform, worldBound);
-//            }
-//        }
+        if (mesh == null) {
+            throw new NullPointerException("Geometry: " + getName() + " has null mesh");
+        }
+
+        if (mesh.getBound() != null) {
+            if (ignoreTransform) {
+                // we do not transform the model bound by the world transform,
+                // just use the model bound as-is
+                worldBound = mesh.getBound().clone(worldBound);
+            } else {
+                worldBound = mesh.getBound().transform(worldTransform, worldBound);
+            }
+        }
     }
 
     @Override
@@ -328,6 +330,28 @@ public class Geometry extends Spatial {
      */
     public Matrix4f getWorldMatrix() {
         return cachedWorldMat;
+    }
+
+    @Override
+    public int collideWith(Collidable other, CollisionResults results) {
+        // Force bound to update
+        checkDoBoundUpdate();
+        // Update transform, and compute cache world matrix
+        computeWorldMatrix();
+
+        assert (refreshFlags & (RF_BOUND | RF_TRANSFORM)) == 0;
+
+        if (mesh == null) {
+            return 0;
+        }
+
+        int prevSize = results.size();
+        int added = mesh.collideWith(other, cachedWorldMat, worldBound, results);
+        int newSize = results.size();
+        for (int i = prevSize; i < newSize; i++) {
+            results.getCollisionDirect(i).setGeometry(this);
+        }
+        return added;
     }
 
     /**

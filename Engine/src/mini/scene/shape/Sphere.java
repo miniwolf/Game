@@ -253,7 +253,7 @@ public class Sphere extends Mesh {
             texBuf.put(0.5f).put(1.0f);
         }
 
-        //updateBound(); TODO: Implement boundingvolumes
+        updateBounds();
     }
 
     /**
