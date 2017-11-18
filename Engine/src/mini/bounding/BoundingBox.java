@@ -212,7 +212,7 @@ public class BoundingBox extends BoundingVolume {
             int bufferLength = Math.min(tmpArray.length, points.remaining());
             points.get(tmpArray, 0, bufferLength);
 
-            for (int j = 0; j < bufferLength; j++) {
+            for (int j = 0; j < bufferLength; j += 3) {
                 vars.vect1.x = tmpArray[j];
                 vars.vect1.y = tmpArray[j + 1];
                 vars.vect1.z = tmpArray[j + 2];
@@ -416,12 +416,12 @@ public class BoundingBox extends BoundingVolume {
         t[1] = Float.POSITIVE_INFINITY;
 
         float saveT0 = t[0], saveT1 = t[1];
-        boolean notEntirelyClipped = clip(direction.x, -diff.x - xExtent, t)
-                                     && clip(-direction.x, diff.x - xExtent, t)
-                                     && clip(direction.y, -diff.y - yExtent, t)
-                                     && clip(-direction.y, diff.y - yExtent, t)
-                                     && clip(direction.z, -diff.z - zExtent, t)
-                                     && clip(-direction.z, diff.z - zExtent, t);
+        boolean notEntirelyClipped = clip(+direction.x, -diff.x - xExtent, t)
+                                     && clip(-direction.x, +diff.x - xExtent, t)
+                                     && clip(+direction.y, -diff.y - yExtent, t)
+                                     && clip(-direction.y, +diff.y - yExtent, t)
+                                     && clip(+direction.z, -diff.z - zExtent, t)
+                                     && clip(-direction.z, +diff.z - zExtent, t);
 
         if (notEntirelyClipped && (t[0] != saveT0 || t[1] != saveT1)) {
             if (t[1] > t[0]) {

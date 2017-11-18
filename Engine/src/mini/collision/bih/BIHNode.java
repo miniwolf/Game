@@ -21,14 +21,14 @@ import static java.lang.Math.min;
  * Instant Ray Tracing: The Bounding Interval Hierachy
  * By Carsten Wächter and Alexander Keller
  */
-public class BIHNode {
-    private final int axis;
-    private int leftIndex;
-    private int rightIndex;
-    private float leftPlane;
-    private float rightPlane;
+public final class BIHNode {
+
+    private int leftIndex, rightIndex;
     private BIHNode left;
     private BIHNode right;
+    private float leftPlane;
+    private float rightPlane;
+    private int axis;
 
     public BIHNode(int l, int r) {
         leftIndex = l;
@@ -40,24 +40,44 @@ public class BIHNode {
         this.axis = axis;
     }
 
-    public void setLeftPlane(float leftPlane) {
-        this.leftPlane = leftPlane;
+    public BIHNode() {
+    }
+
+    public BIHNode getLeftChild() {
+        return left;
     }
 
     public void setLeftChild(BIHNode left) {
         this.left = left;
     }
 
-    public void setRightPlane(float rightPlane) {
-        this.rightPlane = rightPlane;
+    public float getLeftPlane() {
+        return leftPlane;
+    }
+
+    public void setLeftPlane(float leftPlane) {
+        this.leftPlane = leftPlane;
+    }
+
+    public BIHNode getRightChild() {
+        return right;
     }
 
     public void setRightChild(BIHNode right) {
         this.right = right;
     }
 
-    public int intersectWhere(Ray ray, Matrix4f worldMatrix, BIHTree tree, float sceneMin,
-                              float sceneMax, CollisionResults results) {
+    public float getRightPlane() {
+        return rightPlane;
+    }
+
+    public void setRightPlane(float rightPlane) {
+        this.rightPlane = rightPlane;
+    }
+
+    public final int intersectWhere(Ray ray, Matrix4f worldMatrix, BIHTree tree, float sceneMin,
+                                    float sceneMax, CollisionResults results) {
+
         TempVars vars = TempVars.get();
         List<BIHStackData> stack = vars.bihStack;
         stack.clear();
@@ -133,6 +153,7 @@ public class BIHNode {
                 }
             }
 
+            // a leaf
             for (int i = node.leftIndex; i <= node.rightIndex; i++) {
                 tree.getTriangle(i, v1, v2, v3);
 
@@ -147,11 +168,10 @@ public class BIHNode {
                     Vector3f contactPoint = new Vector3f(d).multLocal(t).addLocal(o);
                     float worldSpaceDist = o.distance(contactPoint);
 
-                    CollisionResult collisionResult = new CollisionResult(contactPoint,
-                                                                          worldSpaceDist);
-                    collisionResult.setContactNormal(contactNormal);
-                    collisionResult.setTriangleIndex(tree.getTriangleIndex(i));
-                    results.addCollision(collisionResult);
+                    CollisionResult cr = new CollisionResult(contactPoint, worldSpaceDist);
+                    cr.setContactNormal(contactNormal);
+                    cr.setTriangleIndex(tree.getTriangleIndex(i));
+                    results.addCollision(cr);
                     collisions++;
                 }
             }
@@ -164,10 +184,11 @@ public class BIHNode {
     }
 
     public static final class BIHStackData {
+
         private final BIHNode node;
         private final float min, max;
 
-        public BIHStackData(BIHNode node, float min, float max) {
+        BIHStackData(BIHNode node, float min, float max) {
             this.node = node;
             this.min = min;
             this.max = max;
