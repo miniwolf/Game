@@ -8,6 +8,7 @@ import mini.collision.bih.BIHTree;
 import mini.material.Material;
 import mini.material.RenderState;
 import mini.math.Matrix4f;
+import mini.math.Vector2f;
 import mini.scene.mesh.IndexBuffer;
 import mini.utils.BufferUtils;
 
@@ -628,6 +629,35 @@ public class Mesh implements Cloneable {
         }
 
         return IndexBuffer.wrapIndexBuffer(vb.getData());
+    }
+
+    public void scaleTextureCoordinates(Vector2f scaleFactor) {
+        VertexBuffer texBuffer = getBuffer(VertexBuffer.Type.TexCoord);
+        if (texBuffer == null) {
+            throw new IllegalStateException("The mesh has no texture coordinates");
+        }
+
+        if (texBuffer.getFormat() != VertexBuffer.Format.Float) {
+            throw new UnsupportedOperationException(
+                    "Only float texture coordinate format is supported");
+        }
+
+        if (texBuffer.getNumComponents() != 2) {
+            throw new UnsupportedOperationException("Only 2D texture coordinates are supported.");
+        }
+
+        FloatBuffer data = (FloatBuffer) texBuffer.getData();
+        data.clear();
+        for (int i = 0; i < data.limit() * 0.5f; i++) {
+            float x = data.get();
+            float y = data.get();
+            data.position(data.position() - 2);
+            x *= scaleFactor.getX();
+            y *= scaleFactor.getY();
+            data.put(x).put(y);
+        }
+        data.clear();
+        texBuffer.updateData(data);
     }
 
     /**

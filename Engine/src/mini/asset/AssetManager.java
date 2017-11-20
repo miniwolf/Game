@@ -1,6 +1,7 @@
 package mini.asset;
 
 import mini.asset.plugins.ClasspathLocator;
+import mini.material.Material;
 import mini.material.plugins.MiniLoader;
 import mini.material.plugins.ShaderNodeDefinitionLoader;
 import mini.scene.plugins.MTLLoader;
@@ -63,5 +64,9 @@ public class AssetManager {
         TextureKey key = new TextureKey(name, true);
         key.setGenerateMips(true);
         return loadTexture(key);
+    }
+
+    public Material loadMaterial(String name) {
+        return loadAsset(new MaterialKey(name));
     }
 }

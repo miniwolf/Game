@@ -15,6 +15,7 @@ import mini.renderer.Camera;
 import mini.renderer.queue.RenderQueue;
 import mini.utils.TempVars;
 import mini.utils.clone.Cloner;
+import mini.utils.clone.IdentityCloneFunction;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -1076,13 +1077,21 @@ public abstract class Spatial implements Cloneable, Collidable {
      * on the clone.
      * @see Mesh#cloneForAnim()
      */
-    @Override
-    public Spatial clone() {
+    public Spatial clone(boolean cloneMaterial) {
         // Setup the cloner for the type of cloning we want to do.
         Cloner cloner = new Cloner();
 
         // First, we definitely do not want to clone our own parent
         cloner.setClonedValue(parent, null);
+
+        // If we aren't cloning materials then we will make sure those aren't cloned
+        if (!cloneMaterial) {
+            cloner.setCloneFunction(Material.class, new IdentityCloneFunction<>());
+        }
+
+        // By default the meshes are not cloned. The geometry may choose to selectively force them
+        // to be cloned but normally they will be shared.
+        cloner.setCloneFunction(Mesh.class, new IdentityCloneFunction<>());
 
         // Clone it!
         Spatial clone = cloner.clone(this);

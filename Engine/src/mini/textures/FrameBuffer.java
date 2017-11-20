@@ -54,6 +54,37 @@ public class FrameBuffer extends NativeObject {
     private List<RenderBuffer> colorBufs = new ArrayList<>(); // TODO: Make sure this is not needed
     private RenderBuffer depthBuf = null;
     private boolean srgb;
+    private Texture2D depthTexture;
+
+    /**
+     * Creates a new <code>FrameBuffer</code> with the given width, height, and number of samples.
+     * If any textures are attached to this <code>FrameBuffer</code>, then they must have the same
+     * number of samples as given in this constructor.
+     * <p>
+     * Note that if the {@link mini.renderer.Renderer} does not expose the
+     * {@link Caps#NonPowerOfTwoTextures}, then an exception will be thrown if the width and height
+     * arguments are not power of two.
+     *
+     * @param width   The width to use
+     * @param height  The Height to use
+     * @param samples The number of samples to use for a multisampled framebuffer, or 1 if the
+     *                framebuffer should be singlesampled
+     * @throws IllegalArgumentException If width or height are not positive.
+     */
+    public FrameBuffer(int width, int height, int samples) {
+        super();
+        if (width <= 0 || height <= 0) {
+            throw new IllegalArgumentException("FrameBuffer must have valid size.");
+        }
+
+        this.width = width;
+        this.height = height;
+        this.samples = samples == 0 ? 1 : samples;
+    }
+
+    protected FrameBuffer(FrameBuffer src) {
+        super(src.id);
+    }
 
     /**
      * <code>RenderBuffer</code> represents either a texture or a
@@ -132,8 +163,40 @@ public class FrameBuffer extends NativeObject {
         }
     }
 
-    protected FrameBuffer(FrameBuffer src){
-        super(src.id);
+    public void setDepthTexture(Texture2D depthTexture) {
+        if (id != -1) {
+            throw new UnsupportedOperationException("FrameBuffer already initialized.");
+        }
+
+        Image img = depthTexture.getImage();
+        checkSetTexture(depthTexture, true);
+
+        depthBuf = new RenderBuffer();
+        depthBuf.slot = img.getFormat().isDepthStencilFormat() ? SLOT_DEPTH_STENCIL : SLOT_DEPTH;
+        depthBuf.tex = depthTexture;
+        depthBuf.format = img.getFormat();
+    }
+
+    private void checkSetTexture(Texture2D texture, boolean depth) {
+        Image img = texture.getImage();
+        if (img == null) {
+            throw new IllegalArgumentException("Texture not initialized with RTT.");
+        }
+
+        if (depth && !img.getFormat().isDepthFormat()) {
+            throw new IllegalArgumentException("Texture image format must be depth.");
+        } else if (!depth && img.getFormat().isDepthFormat()) {
+            throw new IllegalArgumentException("Texture image format must be color/luminance.");
+        }
+
+        if (width != img.width || height != img.height) {
+            throw new IllegalArgumentException(
+                    "Texture image resolution must match FB resolution.");
+        }
+
+        if (samples != texture.getImage().getMultiSamples()) {
+            throw new IllegalArgumentException("Texture samples must match framebuffer samples.");
+        }
     }
 
     public boolean isUpdateNeeded() {
@@ -224,8 +287,9 @@ public class FrameBuffer extends NativeObject {
      * If MRT is disabled, the first color buffer is returned.
      */
     public RenderBuffer getColorBuffer() {
-        if (colorBufs.isEmpty())
+        if (colorBufs.isEmpty()) {
             return null;
+        }
         if (colorBufIndex < 0 || colorBufIndex >= colorBufs.size()) {
             return colorBufs.get(0);
         }
@@ -312,20 +376,21 @@ public class FrameBuffer extends NativeObject {
             colorBuf.resetObject();
         }
 
-        if (depthBuf != null)
+        if (depthBuf != null) {
             depthBuf.resetObject();
+        }
 
         setUpdateNeeded();
     }
 
     @Override
     public long getUniqueId() {
-        return ((long)OBJTYPE_TEXTURE << 32) | ((long)id);
+        return ((long) OBJTYPE_TEXTURE << 32) | ((long) id);
     }
 
     @Override
     public void deleteObject(Object rendererObject) {
-        ((GLRenderer)rendererObject).deleteFrameBuffer(this);
+        ((GLRenderer) rendererObject).deleteFrameBuffer(this);
     }
 
     @Override

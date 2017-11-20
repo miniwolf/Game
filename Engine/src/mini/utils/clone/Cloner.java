@@ -3,6 +3,7 @@ package mini.utils.clone;
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -67,6 +68,7 @@ public class Cloner {
      * Cache the clone methods once for all cloners.
      */
     private static final Map<Class, Method> methodCache = new ConcurrentHashMap<>();
+    private Map<Class, CloneFunction> functions = new HashMap<>();
 
     /**
      * Convenience utility function that creates a new Cloner, uses it to
@@ -130,6 +132,23 @@ public class Cloner {
             return type.cast(clone);
         }
 
+        // See if there is a custom function... that trumps everything.
+        CloneFunction<T> func = getCloneFunction(type);
+        if (func != null) {
+            T result = func.cloneObject(this, object);
+
+            // Store the object in the identity map so that any circular references are resolved.
+            index.put(object, result);
+
+            func.cloneFields(this, result, object);
+
+            if (result == null) {
+                System.err.println("cloned " + object.getClass() + "@"
+                                   + System.identityHashCode(object) + " as transformed:null");
+            }
+            return result;
+        }
+
         if (object.getClass().isArray()) {
             // Perform an array clone
             clone = arrayClone(object);
@@ -156,6 +175,41 @@ public class Cloner {
                       + " as " + clone.getClass() + "@" + System.identityHashCode(clone));
         }
         return type.cast(clone);
+    }
+
+    /**
+     * @return a previously registered clone function for the specified type or null if there is no
+     * custom clone function for the type.
+     */
+    private <T> CloneFunction<T> getCloneFunction(Class<T> type) {
+        CloneFunction<T> cloneFunction = (CloneFunction<T>) functions.get(type);
+        if (cloneFunction != null) {
+            return cloneFunction;
+        }
+
+        // Exhaustive search
+        for (Map.Entry<Class, CloneFunction> entry : functions.entrySet()) {
+            if (entry.getKey().isAssignableFrom(type)) {
+                cloneFunction = entry.getValue();
+                break;
+            }
+        }
+        if (cloneFunction != null) {
+            // Cache polymorphy for later
+            functions.put(type, cloneFunction);
+        }
+        return cloneFunction;
+    }
+
+    /**
+     * Sets a custom CloneFunction for implementations of the specified Java type.
+     */
+    public <T> void setCloneFunction(Class<T> type, CloneFunction<T> function) {
+        if (function == null) {
+            functions.remove(type);
+        } else {
+            functions.put(type, function);
+        }
     }
 
     /**

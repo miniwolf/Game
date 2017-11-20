@@ -94,7 +94,6 @@ public class Geometry extends Spatial {
 
     /**
      * @return If ignoreTransform mode is set.
-     *
      * @see Geometry#setIgnoreTransform(boolean)
      */
     public boolean isIgnoreTransform() {
@@ -146,7 +145,6 @@ public class Geometry extends Spatial {
      * Returns this geometry's mesh vertex count.
      *
      * @return this geometry's mesh vertex count.
-     *
      * @see Mesh#getVertexCount()
      */
     public int getVertexCount() {
@@ -157,7 +155,6 @@ public class Geometry extends Spatial {
      * Returns this geometry's mesh triangle count.
      *
      * @return this geometry's mesh triangle count.
-     *
      * @see Mesh#getTriangleCount()
      */
     public int getTriangleCount() {
@@ -168,7 +165,6 @@ public class Geometry extends Spatial {
      * Sets the mesh to use for this geometry when rendering.
      *
      * @param mesh the mesh to use for this geometry
-     *
      * @throws IllegalArgumentException If mesh is null
      */
     public void setMesh(Mesh mesh) {
@@ -188,7 +184,6 @@ public class Geometry extends Spatial {
      * Returns the mesh to use for this geometry
      *
      * @return the mesh to use for this geometry
-     *
      * @see #setMesh(mini.scene.Mesh)
      */
     public Mesh getMesh() {
@@ -213,7 +208,6 @@ public class Geometry extends Spatial {
      * Returns the material that is used for this geometry.
      *
      * @return the material that is used for this geometry
-     *
      * @see #setMaterial(mini.material.Material)
      */
     public Material getMaterial() {
@@ -268,7 +262,7 @@ public class Geometry extends Spatial {
     /**
      * Removes the {@link GeometryGroupNode} association from this
      * <code>Geometry</code>.
-     *
+     * <p>
      * Should only be called by the parent {@link GeometryGroupNode}.
      */
     public void unassociateFromGroupNode() {
@@ -373,15 +367,25 @@ public class Geometry extends Spatial {
     }
 
     /**
-     * This version of clone is a shallow clone, in other words, the
-     * same mesh is referenced as the original geometry.
-     * Exception: if the mesh is marked as being a software
-     * animated mesh, (bind pose is set) then the positions
-     * and normals are deep copied.
+     * This version of clone is a shallow clone, in other words, the same mesh is referenced as the
+     * original geometry.
+     * Exception: if the mesh is marked as being a software animated mesh, (bind pose is set) then
+     * the positions and normals are deep copied.
+     */
+    @Override
+    public Geometry clone(boolean cloneMaterial) {
+        return (Geometry) super.clone(cloneMaterial);
+    }
+
+    /**
+     * This version of clone is a shallow clone, in other words, the same mesh is referenced as the
+     * original geometry.
+     * Exception: if the mesh is marked as being a software animated mesh, (bind pose is set) then
+     * the positions and normals are deep copied.
      */
     @Override
     public Geometry clone() {
-        return (Geometry) super.clone();
+        return clone(true);
     }
 
     /**
