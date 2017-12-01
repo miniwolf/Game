@@ -1,15 +1,22 @@
 package mini.asset;
 
+import mini.asset.cache.AssetCache;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * Manages the asset loader and asset locator implementations. This is done by keeping an instance
  * of each asset loader in a thread local.
  */
 public class ImplHandler {
+    private final ThreadLocal<AssetKey> parentAssetKey = new ThreadLocal<>();
+    private final ConcurrentMap<Class<? extends AssetCache>, AssetCache> classToCacheMap =
+            new ConcurrentHashMap<>();
     private Map<String, ImplThreadLocal<? extends AssetLoader>> extensionsToLoaderMap
             = new HashMap<>();
     private List<ImplThreadLocal<AssetLocator>> locatorList = new ArrayList<>();
@@ -19,9 +26,18 @@ public class ImplHandler {
         this.assetManager = assetManager;
     }
 
+    /**
+     * Returns the AssetLoader registered for the given extension of the current thread.
+     *
+     * @return AssetLoader registered with addLoader.
+     */
     public <T> AssetLoader<T> acquireLoader(AssetKey<T> key) {
         ImplThreadLocal<? extends AssetLoader> local = extensionsToLoaderMap
                 .get(key.getExtension());
+        if (local == null) {
+            throw new RuntimeException("No loader registered for type \"" + key.getExtension()
+                                       + "\"");
+        }
         return local.get();
     }
 
@@ -30,6 +46,7 @@ public class ImplHandler {
                                                                              extensions);
         for (String extension : extensions) {
             extension = extension.toLowerCase();
+
             extensionsToLoaderMap.put(extension, local);
         }
     }
@@ -38,6 +55,10 @@ public class ImplHandler {
         ImplThreadLocal<AssetLocator> implThreadLocal = new ImplThreadLocal<>(locatorType,
                                                                               rootPath);
         locatorList.add(implThreadLocal);
+    }
+
+    public AssetKey getParentKey() {
+        return parentAssetKey.get();
     }
 
     /**
@@ -58,7 +79,48 @@ public class ImplHandler {
         return null;
     }
 
-    class ImplThreadLocal<T> extends ThreadLocal<T> {
+    /**
+     * Establishes the asset key that is used for tracking dependent assets that have failed to load.
+     * When set, the {@link AssetManager} gets a hint that it should suppress {@link Exception}s and
+     * instead call the listener callback (if set).
+     *
+     * @param parentKey The parent key
+     */
+    public <T> void establishParentKey(AssetKey<T> parentKey) {
+        if (parentAssetKey.get() == null) {
+            parentAssetKey.set(parentKey);
+        }
+    }
+
+    public <T> void releaseParentKey(AssetKey<T> parentKey) {
+        if (parentAssetKey.get() == parentKey) {
+            parentAssetKey.set(null);
+        }
+    }
+
+    public <T extends AssetCache> T getCache(Class<T> cacheClass) {
+        if (cacheClass == null) {
+            return null;
+        }
+
+        T cache = (T) classToCacheMap.get(cacheClass);
+        if (cache != null) {
+            return cache;
+        }
+        // TODO: Does this have to be synchronized on the classToCacheMap?
+        try {
+            cache = cacheClass.newInstance();
+            classToCacheMap.put(cacheClass, cache);
+        } catch (InstantiationException ex) {
+            throw new IllegalArgumentException("The cache class cannot be created, ensure it has an"
+                                               + "empty constructor", ex);
+        } catch (IllegalAccessException ex) {
+            throw new IllegalArgumentException("The cache class cannot be accessed", ex);
+        }
+        return cache;
+    }
+
+    private static class ImplThreadLocal<T> extends ThreadLocal<T> {
         private final Class<? extends T> type;
         private final String path;
         private final String[] extension;

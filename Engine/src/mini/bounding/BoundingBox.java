@@ -536,4 +536,37 @@ public class BoundingBox extends BoundingVolume {
 
         return new BoundingBox(center.clone(), xExtent, yExtent, zExtent);
     }
+
+    public float getZExtent() {
+        return zExtent;
+    }
+
+    public void setZExtent(float zExtent) {
+        if (zExtent < 0) {
+            throw new IllegalArgumentException("zExtent has to be <= 0");
+        }
+        this.zExtent = zExtent;
+    }
+
+    public float getXExtent() {
+        return xExtent;
+    }
+
+    public void setXExtent(float xExtent) {
+        if (xExtent < 0) {
+            throw new IllegalArgumentException("zExtent has to be <= 0");
+        }
+        this.xExtent = xExtent;
+    }
+
+    public float getYExtent() {
+        return yExtent;
+    }
+
+    public void setYExtent(float yExtent) {
+        if (yExtent < 0) {
+            throw new IllegalArgumentException("zExtent has to be <= 0");
+        }
+        this.yExtent = yExtent;
+    }
 }

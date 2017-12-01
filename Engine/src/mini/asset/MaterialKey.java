@@ -1,5 +1,7 @@
 package mini.asset;
 
+import mini.asset.cache.AssetCache;
+import mini.asset.cache.WeakRefCloneAssetCache;
 import mini.material.Material;
 
 /**
@@ -16,5 +18,10 @@ public class MaterialKey extends AssetKey<Material> {
 
     public MaterialKey() {
         super();
+    }
+
+    @Override
+    public Class<? extends AssetCache> getCacheType() {
+        return WeakRefCloneAssetCache.class;
     }
 }

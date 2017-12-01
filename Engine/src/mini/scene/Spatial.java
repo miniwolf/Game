@@ -1,5 +1,7 @@
 package mini.scene;
 
+import mini.asset.AssetKey;
+import mini.asset.CloneableSmartAsset;
 import mini.bounding.BoundingVolume;
 import mini.collision.Collidable;
 import mini.light.Light;
@@ -16,6 +18,7 @@ import mini.renderer.queue.RenderQueue;
 import mini.utils.TempVars;
 import mini.utils.clone.Cloner;
 import mini.utils.clone.IdentityCloneFunction;
+import mini.utils.clone.MiniCloneable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +31,7 @@ import java.util.List;
  *
  * @author miniwolf
  */
-public abstract class Spatial implements Cloneable, Collidable {
+public abstract class Spatial implements Cloneable, CloneableSmartAsset, Collidable, MiniCloneable {
     /**
      * Specifies how frustum culling should be handled by
      * this spatial.
@@ -112,6 +115,13 @@ public abstract class Spatial implements Cloneable, Collidable {
     public transient float queueDistance = Float.NEGATIVE_INFINITY;
     protected Transform localTransform;
     protected Transform worldTransform;
+
+    /**
+     * Used for smart asset caching
+     *
+     * @see AssetKey
+     */
+    protected AssetKey key;
     /**
      * Spatial's parent, or null if it has none.
      */
@@ -161,6 +171,11 @@ public abstract class Spatial implements Cloneable, Collidable {
         localOverrides = new ArrayList<>();
         worldOverrides = new ArrayList<>();
         refreshFlags |= RF_BOUND;
+    }
+
+    @Override
+    public void setKey(AssetKey key) {
+        this.key = key;
     }
 
     /**
@@ -1127,6 +1142,33 @@ public abstract class Spatial implements Cloneable, Collidable {
         clone.setMatParamOverrideRefresh();
 
         return clone;
+    }
+
+    @Override
+    public Spatial miniClone() {
+        try {
+            return (Spatial) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError();
+        }
+    }
+
+    /**
+     * Called internally by mini.utils.clone.Cloner. Do not call directly.
+     */
+    @Override
+    public void cloneFields(Cloner cloner, Object original) {
+
+        // Potential sharing fields
+        this.parent = cloner.clone(parent);
+        this.worldBound = cloner.clone(worldBound);
+        this.worldLights = cloner.clone(worldLights);
+        this.localLights = cloner.clone(localLights);
+        this.worldTransform = cloner.clone(worldTransform);
+        this.localTransform = cloner.clone(localTransform);
+        this.worldOverrides = cloner.clone(worldOverrides);
+        this.localOverrides = cloner.clone(localOverrides);
+
     }
 
     /**

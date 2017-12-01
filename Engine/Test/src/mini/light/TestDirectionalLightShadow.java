@@ -69,7 +69,7 @@ public class TestDirectionalLightShadow extends SimpleApplication implements Act
         objects.add(cube);
 
         mats = new Material[2];
-        mats[0] = assetManager.loadMaterial("Materials/Redcolor.mini");
+        mats[0] = assetManager.loadMaterial("Materials/RedColor.mini");
         mats[1] = assetManager.loadMaterial("Textures/Terrain/Pond/Pond.mini");
         mats[1].setBoolean("UseMaterialColors", true);
         mats[1].setColor("Ambient", ColorRGBA.White);

@@ -11,6 +11,8 @@ import mini.math.Matrix4f;
 import mini.math.Vector2f;
 import mini.scene.mesh.IndexBuffer;
 import mini.utils.BufferUtils;
+import mini.utils.clone.Cloner;
+import mini.utils.clone.MiniCloneable;
 
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
@@ -34,7 +36,7 @@ import java.util.Map;
  * <li>Triangles - 3 vertices represent a solid triangle primitive. </li>
  * </ul>
  */
-public class Mesh implements Cloneable {
+public class Mesh implements Cloneable, MiniCloneable {
     /**
      * The mode of the Mesh specifies both the type of primitive represented
      * by the mesh and how the data should be interpreted.
@@ -178,6 +180,30 @@ public class Mesh implements Cloneable {
         } catch (CloneNotSupportedException ex) {
             throw new AssertionError();
         }
+    }
+
+    @Override
+    public Mesh miniClone() {
+        try {
+            Mesh clone = (Mesh) super.clone();
+            clone.vertexArrayID = -1;
+            return clone;
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError();
+        }
+    }
+
+    @Override
+    public void cloneFields(Cloner cloner, Object original) {
+        // Probably could clone this now but it will get regenerated anyway
+        this.collisionTree = null;
+
+        this.meshBound = cloner.clone(meshBound);
+        this.buffersList = cloner.clone(buffersList);
+        this.buffers = cloner.clone(buffers);
+        this.lodLevels = cloner.clone(lodLevels);
+        this.elementLengths = cloner.clone(elementLengths);
+        this.modeStart = cloner.clone(modeStart);
     }
 
     /**

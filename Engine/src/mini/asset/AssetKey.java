@@ -1,5 +1,7 @@
 package mini.asset;
 
+import mini.asset.cache.AssetCache;
+import mini.asset.cache.SimpleAssetCache;
 import mini.utils.MyFile;
 
 import java.util.Objects;
@@ -9,7 +11,7 @@ import java.util.Objects;
  * look up a resource from a cache.
  * This class should be immutable.
  */
-public class AssetKey<T> {
+public class AssetKey<T> implements Cloneable {
     protected MyFile file;
     protected String name;
     private String extension;
@@ -27,6 +29,15 @@ public class AssetKey<T> {
         this.file = key.file;
         this.extension = key.extension;
         this.name = key.name;
+    }
+
+    @Override
+    public AssetKey<T> clone() {
+        try {
+            return (AssetKey<T>) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError();
+        }
     }
 
     @Override
@@ -68,5 +79,13 @@ public class AssetKey<T> {
 
     public String getFolder() {
         return file.getDirectory();
+    }
+
+    /**
+     * @return The preferred cache class for this asset type. Specify <code>null</code> if caching
+     * is to be disabled. By default the {@link SimpleAssetCache} is returned.
+     */
+    public Class<? extends AssetCache> getCacheType() {
+        return SimpleAssetCache.class;
     }
 }

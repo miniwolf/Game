@@ -295,11 +295,7 @@ public final class GLRenderer implements Renderer {
         if(hasExtension("GL_EXT_texture_integer") || caps.contains(Caps.OpenGL30))
             caps.add(Caps.IntegerTexture);
 
-        if (hasExtension("GL_OES_depth_texture")) {
-            caps.add(Caps.DepthTexture);
-
-            // TODO: GL_OES_depth24
-        }
+        caps.add(Caps.DepthTexture);
 
         if (hasExtension("GL_OES_rgb8_rgba8") ||
                 hasExtension("GL_ARM_rgba8") ||

@@ -2,8 +2,16 @@ package mini.light;
 
 import mini.scene.Spatial;
 import mini.utils.SortUtil;
+import mini.utils.clone.Cloner;
+import mini.utils.clone.MiniCloneable;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.function.Consumer;
 
 /**
@@ -12,7 +20,7 @@ import java.util.function.Consumer;
  *
  * @author miniwolf
  */
-public class LightList implements Iterable<Light> {
+public class LightList implements Iterable<Light>, Cloneable, MiniCloneable {
     private Light[] list, tlist;
     private int listSize;
     private float[] distToOwner;
@@ -249,5 +257,23 @@ public class LightList implements Iterable<Light> {
     @Override
     public Spliterator<Light> spliterator() {
         return Spliterators.spliteratorUnknownSize(iterator(), 0);
+    }
+
+    @Override
+    public Object miniClone() {
+        try {
+            LightList clone = (LightList) super.clone();
+            clone.tlist = null; // List used for sorting only
+            return clone;
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError();
+        }
+    }
+
+    @Override
+    public void cloneFields(Cloner cloner, Object original) {
+        this.owner = cloner.clone(owner);
+        this.list = cloner.clone(list);
+        this.distToOwner = cloner.clone(distToOwner);
     }
 }

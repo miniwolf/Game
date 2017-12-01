@@ -1,5 +1,6 @@
 package mini.renderer;
 
+import mini.bounding.BoundingVolume;
 import mini.math.FastMath;
 import mini.math.Matrix4f;
 import mini.math.Plane;
@@ -961,6 +962,57 @@ public class Camera implements Cloneable {
      */
     public float distanceToNearPlane(Vector3f pos) {
         return worldPlane[NEAR_PLANE].pseudoDistance(pos);
+    }
+
+    /**
+     * <code>contains</code> tests a bounding volume against the planes of the camera's frustum. The
+     * frustum's planes are set such that the normals all face in towards the viewable scene.
+     * Therefore, if the bounding volume is on the negative side of the plane it can be culled out.
+     * <p>
+     * NOTE: This method is used internally for culling, for public usage, the plane state of the
+     * bounding volume must be saved and restored, e.g:
+     * <code>BoundingVolume bf;<br>
+     * Camera c;<br>
+     * int planeState = bv.getPlaneState();<br>
+     * bv.setPlaneState(0);<br>
+     * c.contains(bv);<br>
+     * bv.setPlaneState(planeState);<br>
+     * </code>
+     *
+     * @param bound the bound to check for culling
+     * @return the FrustumEnum specifying where the object is located
+     * @see FrustumIntersect
+     */
+    public FrustumIntersect contains(BoundingVolume bound) {
+        if (bound == null) {
+            return FrustumIntersect.Inside;
+        }
+
+        int mask;
+        FrustumIntersect value = FrustumIntersect.Inside;
+
+        for (int planeCounter = FRUSTUM_PLANES; planeCounter >= 0; planeCounter--) {
+            if (planeCounter == bound.getCheckPlane()) {
+                continue; // We have already checked this plane at first iteration
+            }
+
+            int planeId = (planeCounter == FRUSTUM_PLANES) ? bound.getCheckPlane() : planeCounter;
+            mask = 1 << planeId;
+            if ((planeState & mask) == 0) {
+                Plane.Side side = bound.whichSide(worldPlane[planeId]);
+                if (side == Plane.Side.Negative) { // Outside of frustum
+                    bound.setCheckPlane(planeId);
+                    return FrustumIntersect.Outside;
+                } else if (side
+                           == Plane.Side.Positive) { // Visible on *this* plane, mark to not recheck
+                    planeState |= mask;
+                } else {
+                    value = FrustumIntersect.Intersects;
+                }
+            }
+        }
+
+        return value;
     }
 
     public Plane getWorldPlane(int planeId) {

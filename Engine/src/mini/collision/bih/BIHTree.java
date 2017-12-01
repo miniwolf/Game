@@ -290,11 +290,8 @@ public class BIHTree implements CollisionData {
         triIndices[index2] = tmp2;
     }
 
-    private int collideWithRay(Ray r,
-                               Matrix4f worldMatrix,
-                               BoundingVolume worldBound,
+    private int collideWithRay(Ray r, Matrix4f worldMatrix, BoundingVolume worldBound,
                                CollisionResults results) {
-
         TempVars vars = TempVars.get();
         try {
             CollisionResults boundResults = vars.collisionResults;

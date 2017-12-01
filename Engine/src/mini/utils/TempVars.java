@@ -1,5 +1,6 @@
 package mini.utils;
 
+import mini.bounding.BoundingBox;
 import mini.collision.CollisionResults;
 import mini.collision.bih.BIHNode;
 import mini.math.ColorRGBA;
@@ -122,6 +123,10 @@ public class TempVars {
     public final IntBuffer intBuffer1 = BufferUtils.createIntBuffer(1);
     public final IntBuffer intBuffer16 = BufferUtils.createIntBuffer(16);
     public final FloatBuffer floatBuffer16 = BufferUtils.createFloatBuffer(16);
+    /**
+     * BoundingVolumes (for shadows etc.)
+     */
+    public final BoundingBox bbox = new BoundingBox();
     /**
      * Skinning buffers
      */

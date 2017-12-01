@@ -4,6 +4,7 @@ import mini.asset.AssetManager;
 import mini.material.Material;
 import mini.material.RenderState;
 import mini.math.ColorRGBA;
+import mini.math.Vector3f;
 import mini.renderer.queue.RenderQueue;
 import mini.scene.Geometry;
 import mini.scene.shape.Quad;
@@ -14,6 +15,9 @@ import mini.textures.Texture2D;
  * sprites or other background elements.
  */
 public class Picture extends Geometry {
+    private float width;
+    private float height;
+
     /**
      * Create a named picture.
      * <p>
@@ -71,5 +75,27 @@ public class Picture extends Geometry {
     public void setPosition(float x, float y) {
         float z = getLocalTranslation().getZ();
         setLocalTranslation(x, y, z);
+    }
+
+    /**
+     * Set the width in pixels of the picture, if the width does not match the texture's width, then
+     * the the texture will be scaled to fit the picture.
+     *
+     * @param width the width to set
+     */
+    public void setWidth(float width) {
+        this.width = width;
+        setLocalScale(new Vector3f(width, height, 1f));
+    }
+
+    /**
+     * Set the height in pixels of the picture, if the height does not match the texture's height,
+     * then the the texture will be scaled to fit the picture.
+     *
+     * @param width the width to set
+     */
+    public void setHeight(float height) {
+        this.height = height;
+        setLocalScale(new Vector3f(width, height, 1f));
     }
 }

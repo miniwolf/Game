@@ -4,6 +4,7 @@ import mini.bounding.BoundingVolume;
 import mini.collision.Collidable;
 import mini.collision.CollisionResults;
 import mini.material.Material;
+import mini.utils.clone.Cloner;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -509,13 +510,7 @@ public class Node extends Spatial {
     }
 
     public Node clone(boolean cloneMaterials) {
-        Node nodeClone = (Node) super.clone();
-//        nodeClone.children = new ArrayList<Spatial>();
-//        for (Spatial child : children){
-//            Spatial childClone = child.clone();
-//            childClone.parent = nodeClone;
-//            nodeClone.children.add(childClone);
-//        }
+        Node nodeClone = (Node) super.clone(cloneMaterials);
 
         // Reset the fields of the clone that should be in a 'new' state.
         nodeClone.updateList = null;
@@ -532,5 +527,14 @@ public class Node extends Spatial {
         nodeClone.updateListValid = false; // safe because parent is nulled out in super.clone()
 
         return nodeClone;
+    }
+
+    @Override
+    public void cloneFields(Cloner cloner, Object original) {
+        super.cloneFields(cloner, original);
+
+        this.children = cloner.clone(children);
+
+        this.updateList = cloner.clone(updateList);
     }
 }

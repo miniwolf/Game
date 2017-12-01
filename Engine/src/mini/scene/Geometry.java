@@ -6,6 +6,7 @@ import mini.material.Material;
 import mini.math.Matrix4f;
 import mini.renderer.Camera;
 import mini.utils.TempVars;
+import mini.utils.clone.Cloner;
 
 /**
  * <code>Geometry</code> defines a leaf node of the scene graph. The leaf node
@@ -395,5 +396,34 @@ public class Geometry extends Spatial {
     @Override
     public Spatial deepClone() {
         return super.deepClone();
+    }
+
+    /**
+     * Called internally by mini.utils.clone.Cloner. Do not call directly.
+     */
+    @Override
+    public void cloneFields(Cloner cloner, Object original) {
+        super.cloneFields(cloner, original);
+
+        if (groupNode != null) {
+            if (cloner.isCloned(groupNode)) {
+                this.groupNode = cloner.clone(groupNode);
+            } else {
+                // We are on our own
+                this.groupNode = null;
+                this.startIndex = -1;
+            }
+
+            // If we were cloning the hierachy that contained the parent group then it would have
+            // been shallow cloned before this child. Can't really be otherwise...
+        }
+
+        this.cachedWorldMat = cloner.clone(cachedWorldMat);
+
+        // TODO: Consider animation here, special cloning stage
+
+        this.mesh = cloner.clone(mesh);
+
+        this.material = cloner.clone(material);
     }
 }

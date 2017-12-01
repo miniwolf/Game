@@ -2,6 +2,7 @@ package mini.material;
 
 import mini.asset.AssetKey;
 import mini.asset.AssetManager;
+import mini.asset.CloneableSmartAsset;
 import mini.light.LightList;
 import mini.math.ColorRGBA;
 import mini.math.Matrix4f;
@@ -34,10 +35,8 @@ import java.util.Set;
  * Setting the parameters can modify the behavior of a
  * shader.
  * <p/>
- *
- * @author Kirill Vainer
  */
-public class Material implements Cloneable {
+public class Material implements CloneableSmartAsset, Cloneable {
 
     // Version #2: Fixed issue with RenderState.apply*** flags not getting exported
     public static final int SAVABLE_VERSION = 2;
@@ -108,6 +107,7 @@ public class Material implements Cloneable {
         this.name = name;
     }
 
+    @Override
     public void setKey(AssetKey key) {
         this.key = key;
     }

@@ -31,12 +31,11 @@ public class GLSLLoader implements AssetLoader {
             // and needs data as InputStream
             return reader;
         } else {
-            GLSLLoader loader = new GLSLLoader();
-            ShaderDependencyNode rootNode = loader.loadNode(reader, "[main]");
+            ShaderDependencyNode rootNode = loadNode(reader, "[main]");
             StringBuilder extensions = new StringBuilder();
-            String code = loader.resolveDependencies(rootNode, new HashSet<>(), extensions);
+            String code = resolveDependencies(rootNode, new HashSet<>(), extensions);
             extensions.append(code);
-            loader.dependCache.clear();
+            dependCache.clear();
             return extensions.toString();
         }
     }
@@ -77,7 +76,8 @@ public class GLSLLoader implements AssetLoader {
 
                         if (dependNode == null) {
                             Reader dependNodeReader = new InputStreamReader(
-                                    new MyFile(ln).getInputStream());
+                                    new MyFile(ln)
+                                            .getInputStream()); // TODO: This seems fishy. Should load asset using assetManager
                             dependNode = loadNode(dependNodeReader, ln);
                         }
 

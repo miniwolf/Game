@@ -154,6 +154,14 @@ public class Cloner {
             clone = arrayClone(object);
 
             // Array clone already indexes the clone
+        } else if (object instanceof MiniCloneable) {
+            clone = ((MiniCloneable) object).miniClone();
+
+            // Store the object in the identity map so that any circular references
+            // are resolvable
+            index.put(object, clone);
+
+            ((MiniCloneable) clone).cloneFields(this, object);
         } else if (object instanceof Cloneable) {
 
             // Perform a regular Java shallow clone

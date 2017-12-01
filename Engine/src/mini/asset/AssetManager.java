@@ -1,5 +1,6 @@
 package mini.asset;
 
+import mini.asset.cache.AssetCache;
 import mini.asset.plugins.ClasspathLocator;
 import mini.material.Material;
 import mini.material.plugins.MiniLoader;
@@ -17,31 +18,61 @@ public class AssetManager {
 
     public AssetManager() {
         registerLoader(OBJLoader.class, "obj");
-        registerLoader(AWTLoader.class, "jpg", "png");
-        registerLoader(MiniLoader.class, "mini", "minid");
-        registerLoader(GLSLLoader.class, "frag", "vert");
+        registerLoader(AWTLoader.class, "jpg", "png", "gif", "bmp", "jpeg");
+        registerLoader(MiniLoader.class, "mini");
+        registerLoader(MiniLoader.class, "minid");
+        registerLoader(GLSLLoader.class, "frag", "vert", "glsl", "glsllib");
         registerLoader(ShaderNodeDefinitionLoader.class, "minisn");
         registerLoader(MTLLoader.class, "mtl");
         registerLocator(ClasspathLocator.class, "/");
     }
 
     public <T> T loadAsset(AssetKey<T> key) {
-        AssetInfo info = handler.tryLocate(key);
-        return loadLocatedAsset(key,
-                                info); // TODO: Add to cache that we can later retrieve things from
+        if (key == null) {
+            throw new IllegalArgumentException("Key cannot be null");
+        }
+
+        AssetCache cache = handler.getCache(key.getCacheType());
+
+        T obj = cache != null ? cache.getFromCache(key) : null;
+        if (obj == null) {
+            AssetInfo info = handler.tryLocate(key);
+            if (info == null) {
+                if (handler.getParentKey() != null) {
+                    // Inform event listener that an asset has failed to load.
+                }
+            }
+            obj = loadLocatedAsset(key, info, cache);
+        }
+
+        // obj instance of CloneableSmartAsset then registerCloneSmartAsset
+
+        return obj;
     }
 
-    public <T> T loadLocatedAsset(AssetKey<T> key, AssetInfo info) {
+    public <T> T loadLocatedAsset(AssetKey<T> key, AssetInfo info, AssetCache cache) {
         AssetLoader<T> loader = handler.acquireLoader(key);
         T obj;
         try {
+            handler.establishParentKey(key);
             obj = loader.load(info);
         } catch (IOException e) {
             System.err.println(e.getMessage());
             e.printStackTrace();
             throw new RuntimeException("An exception has occurred while loading asset: " + key);
+        } finally {
+            handler.releaseParentKey(key);
         }
-        return obj;
+        if (obj == null) {
+            throw new RuntimeException("Error occurred while loading asset \"" + key + "\" using "
+                                       + loader.getClass().getSimpleName());
+        } else {
+            // Do caching with type T
+            if (cache != null) {
+                cache.addToCache(key, obj);
+            }
+            return obj;
+        }
     }
 
     public Object loadAsset(String name) {

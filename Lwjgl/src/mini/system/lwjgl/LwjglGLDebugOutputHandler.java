@@ -46,8 +46,7 @@ class LwjglGLDebugOutputHandler implements ARBDebugOutputCallback.Handler {
         String typeStr = constMap.get(type);
         String severityStr = constMap.get(severity);
 
-        System.out.println(
-                String.format(MESSAGE_FORMAT, id, sourceStr, typeStr, severityStr, message));
+        //System.out.println(String.format(MESSAGE_FORMAT, id, sourceStr, typeStr, severityStr, message));
         //Thread.dumpStack();
     }
 
