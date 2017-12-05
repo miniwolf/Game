@@ -7,6 +7,7 @@ import mini.math.Vector2f;
 import mini.math.Vector3f;
 import mini.math.Vector4f;
 import mini.renderer.Camera;
+import mini.system.time.Timer;
 
 import java.util.List;
 
@@ -46,6 +47,7 @@ public class UniformBindingManager {
     private Vector2f resolution = new Vector2f();
     private Vector2f resolutionInv = new Vector2f();
     private Vector2f nearFar = new Vector2f();
+    private Timer timer;
 
     /**
      * Internal use only.
@@ -218,6 +220,16 @@ public class UniformBindingManager {
         // time for this frame to avoid inter-frame drift.
 //        time = timer.getTimeInSeconds();
 //        tpf = timer.getTimePerFrame();
+    }
+
+    /**
+     * Set the timer that should be used to query the time based {@link UniformBinding}s for
+     * material world parameters.
+     *
+     * @param timer The timer to query time world parameters.
+     */
+    public void setTimer(Timer timer) {
+        this.timer = timer;
     }
 }
 

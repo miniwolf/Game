@@ -34,8 +34,9 @@ public interface SceneProcessor {
 
     /**
      * Called before a frame
+     * @param tpf
      */
-    void preFrame();
+    void preFrame(float tpf);
 
     /**
      * Called after the scene graph has been queued, but before it is flushed.

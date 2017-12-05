@@ -16,6 +16,8 @@ package mini.asset;
  * becomes unreachable and at that point it is removed from the smart asset cache.
  */
 public interface CloneableSmartAsset extends Cloneable {
+    Object clone();
+
     /**
      * Set by the {@link AssetManager} to track this asset.
      * <p>

@@ -3,29 +3,52 @@ package mini.app.state;
 import mini.app.Application;
 import mini.renderer.RenderManager;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
+/**
+ * The <code>ApplicationStateManager</code> holds a list of {@link ApplicationState}s which it will
+ * update and render.
+ * <p>
+ * When an {@link ApplicationState} is attached or detached, the
+ * {@link ApplicationState#stateAttached(ApplicationStateManager)} and
+ * {@link ApplicationState#stateDetached(ApplicationStateManager)} methods will called respectively.
+ * <p>
+ * <p>The lifecycle for an attached {@link ApplicationState} is as follows:</p>
+ * <ul>
+ * <li>stateAttached(): called when the state is attached on the thread on which the state was
+ * attached.</li>
+ * <li>initialize():    called ONCE on the render thread at the beginning of the next
+ * <code>ApplicationStateManager.update()</code>.</li>
+ * <li>stateDetached(): called when the state is detached on the thread of which the was
+ * detached. This is not necessarily on the render thread and it is not
+ * necessarily safe to modify the scene graph, etc..</li>
+ * <li>cleanup():       called ONCE on the render thread at the beginning of the next update
+ * after the state has been detached or when the application is
+ * terminating.</li>
+ * </ul>
+ */
 public class ApplicationStateManager {
     /**
      * Holds the active states once they are initialized
      */
-    private List<ApplicationState> states = new ArrayList<>();
+    private final List<ApplicationState> states = new CopyOnWriteArrayList<>();
 
     /**
      * Holds the attached application states that are pending initialization. Once initialized they
      * will be added to the running application states.
      */
-    private List<ApplicationState> initializing = new ArrayList<>();
+    private final List<ApplicationState> initializing = new CopyOnWriteArrayList<>();
 
     /**
      * Holds the detached application states that are pending cleanup.
      */
-    private List<ApplicationState> terminating = new ArrayList<>();
+    private final List<ApplicationState> terminating = new CopyOnWriteArrayList<>();
+
+    // All list above needs to be thread safe but access will be synchronized separately
 
     private Application application;
-    private Object termininating;
 
     public ApplicationStateManager(Application application) {
         this.application = application;
@@ -71,8 +94,10 @@ public class ApplicationStateManager {
 
     /**
      * Calls update for attached states, do not call directly.
+     *
+     * @param tpf Time per frame
      */
-    public void update() {
+    public void update(float tpf) {
         // Cleanup any states pending
         terminatePending();
 
@@ -82,7 +107,7 @@ public class ApplicationStateManager {
         // Update enabled states
         for (ApplicationState state : getStates()) {
             if (state.isEnabled()) {
-                state.update();
+                state.update(tpf);
             }
         }
     }
@@ -93,11 +118,9 @@ public class ApplicationStateManager {
      * @param renderManager The RenderManager
      */
     public void render(RenderManager renderManager) {
-        for (ApplicationState state : getStates()) {
-            if (state.isEnabled()) {
-                state.render(renderManager);
-            }
-        }
+        Arrays.stream(getStates())
+              .filter(ApplicationState::isEnabled)
+              .forEach(state -> state.render(renderManager));
     }
 
     /**
@@ -106,11 +129,9 @@ public class ApplicationStateManager {
      * @param renderManager The RenderManager
      */
     public void postRender() {
-        for (ApplicationState state : getStates()) {
-            if (state.isEnabled()) {
-                state.postRender();
-            }
-        }
+        Arrays.stream(getStates())
+              .filter(ApplicationState::isEnabled)
+              .forEach(ApplicationState::postRender);
     }
 
     private void initializePending() {
@@ -132,7 +153,7 @@ public class ApplicationStateManager {
     }
 
     private void terminatePending() {
-        ApplicationState[] array = getTermininating();
+        ApplicationState[] array = getTerminating();
         if (array.length == 0) {
             return;
         }
@@ -165,18 +186,27 @@ public class ApplicationStateManager {
         return null;
     }
 
-    protected ApplicationState[] getStates() {
+    private ApplicationState[] getStates() {
         ApplicationState[] appStates = new ApplicationState[states.size()];
         return states.toArray(appStates);
     }
 
-    public ApplicationState[] getInitializing() {
+    private ApplicationState[] getInitializing() {
         ApplicationState[] appStates = new ApplicationState[initializing.size()];
         return initializing.toArray(appStates);
     }
 
-    public ApplicationState[] getTermininating() {
+    private ApplicationState[] getTerminating() {
         ApplicationState[] appStates = new ApplicationState[terminating.size()];
         return terminating.toArray(appStates);
+    }
+
+    /**
+     * Calls cleanup on attached states, do not call directly.
+     */
+    public void cleanup() {
+        for (ApplicationState state : getStates()) {
+            state.cleanup();
+        }
     }
 }

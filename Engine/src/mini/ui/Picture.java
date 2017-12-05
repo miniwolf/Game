@@ -15,8 +15,8 @@ import mini.textures.Texture2D;
  * sprites or other background elements.
  */
 public class Picture extends Geometry {
-    private float width;
-    private float height;
+    private float width = 1;
+    private float height = 1;
 
     /**
      * Create a named picture.

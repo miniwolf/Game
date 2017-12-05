@@ -137,11 +137,16 @@ public abstract class SimpleApplication extends LegacyApplication {
             return;
         }
 
+        float tpf = timer.getTimePerFrame() * speed;
+
         // update states
-        stateManager.update();
+        stateManager.update(tpf);
 
         // simple update and root node
-        simpleUpdate();
+        simpleUpdate(tpf);
+
+        rootNode.updateLogicalState(tpf);
+        guiNode.updateLogicalState(tpf);
 
         rootNode.updateGeometricState();
         guiNode.updateGeometricState();
@@ -149,7 +154,7 @@ public abstract class SimpleApplication extends LegacyApplication {
         // render states
         stateManager.render(renderManager);
 
-        renderManager.render(0, context.isRenderable());
+        renderManager.render(tpf, context.isRenderable());
         simpleRender(renderManager);
         stateManager.postRender();
     }
@@ -165,7 +170,7 @@ public abstract class SimpleApplication extends LegacyApplication {
     public void simpleDestroy() {
     }
 
-    public void simpleUpdate() {
+    public void simpleUpdate(float tpf) {
     }
 
     public void simpleRender(RenderManager rm) {

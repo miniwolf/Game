@@ -87,6 +87,48 @@ public class FrameBuffer extends NativeObject {
     }
 
     /**
+     * Clears all color targets that were set or added previously.
+     */
+    public void clearColorTargets() {
+        colorBufs.clear();
+    }
+
+    /**
+     * Set the color texture to use for this framebuffer. This automatically clears all existing
+     * added previously and adds this texture as the only target.
+     *
+     * @param texture The color texture to set.
+     */
+    public void setColorTexture(Texture2D texture) {
+        clearColorTargets();
+        addColorTexture(texture);
+    }
+
+    /**
+     * Add a color texture to use for this <code>FrameBuffer</code>. If MultiRenderTarget(MRT) is
+     * enabled, then each subsequently added texture can be rendered to through a shader that writes
+     * to the array <code>gl_FragData</code>. If MRT is not enabled, then the index set with
+     * {@link FrameBuffer#setTargetIndex(int)} is rendered to by the shader.
+     *
+     * @param texture The texture array to add.
+     */
+    private void addColorTexture(Texture2D texture) {
+        if (id != -1) {
+            throw new UnsupportedOperationException("FrameBuffer already initialized");
+        }
+
+        Image img = texture.getImage();
+        checkSetTexture(texture, false);
+
+        RenderBuffer colorBuffer = new RenderBuffer();
+        colorBuffer.slot = colorBufs.size();
+        colorBuffer.tex = texture;
+        colorBuffer.format = img.getFormat();
+
+        colorBufs.add(colorBuffer);
+    }
+
+    /**
      * <code>RenderBuffer</code> represents either a texture or a
      * buffer that will be rendered to. <code>RenderBuffer</code>s
      * are attached to an attachment slot on a <code>FrameBuffer</code>.
@@ -163,6 +205,29 @@ public class FrameBuffer extends NativeObject {
         }
     }
 
+    /**
+     * Enables the use of a depth buffer for this <code>FrameBuffer</code>.
+     *
+     * @param format The format to use for the depth buffer.
+     */
+    public void setDepthBuffer(Image.Format format) {
+        if (id != -1) {
+            throw new UnsupportedOperationException("FrameBuffer already initialized.");
+        }
+        if (!format.isDepthFormat()) {
+            throw new IllegalArgumentException("Depth buffer format must be depth.");
+        }
+
+        depthBuf = new RenderBuffer();
+        depthBuf.slot = format.isDepthStencilFormat() ? SLOT_DEPTH_STENCIL : SLOT_DEPTH;
+        depthBuf.format = format;
+    }
+
+    /**
+     * Set the depth texture to use for this <code>FrameBuffer</code>.
+     *
+     * @param depthTexture The depth texture to set.
+     */
     public void setDepthTexture(Texture2D depthTexture) {
         if (id != -1) {
             throw new UnsupportedOperationException("FrameBuffer already initialized.");

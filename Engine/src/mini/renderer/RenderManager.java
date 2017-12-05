@@ -22,6 +22,7 @@ import mini.shaders.Shader;
 import mini.shaders.UniformBinding;
 import mini.shaders.UniformBindingManager;
 import mini.system.NullRenderer;
+import mini.system.time.Timer;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -1002,8 +1003,7 @@ public class RenderManager {
                 if (!proc.isInitialized()) {
                     proc.initialize(this, vp);
                 }
-                //proc.preFrame(tpf);
-                proc.preFrame();
+                proc.preFrame(tpf);
             }
         }
 
@@ -1013,9 +1013,7 @@ public class RenderManager {
             if (vp.isClearColor()) {
                 renderer.setBackgroundColor(vp.getBackgroundColor());
             }
-            renderer.clearBuffers(vp.isClearColor(),
-                                  vp.isClearDepth(),
-                                  vp.isClearStencil());
+            renderer.clearBuffers(vp.isClearColor(), vp.isClearDepth(), vp.isClearStencil());
         }
 
         List<Spatial> scenes = vp.getScenes();
@@ -1079,5 +1077,15 @@ public class RenderManager {
                 renderViewPort(vp, tpf);
             }
         }
+    }
+
+    /**
+     * Set the timer that should be used to query the timer based {@link UniformBinding}s for
+     * material world parameters.
+     *
+     * @param timer The timer to query time world parameters
+     */
+    public void setTimer(Timer timer) {
+        uniformBindingManager.setTimer(timer);
     }
 }

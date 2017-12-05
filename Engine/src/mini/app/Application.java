@@ -43,9 +43,9 @@ public interface Application {
     void start();
 
     /**
-     * Starts the application.
+     * Starts the application. Creating a rendering context.
      */
-    void start(boolean waitFor);
+    void start(ApplicationContext.Type contextType, boolean waitFor);
 
     /**
      * Restarts the context, applying any changed settings.

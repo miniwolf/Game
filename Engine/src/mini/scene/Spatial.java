@@ -15,6 +15,7 @@ import mini.math.Transform;
 import mini.math.Vector3f;
 import mini.renderer.Camera;
 import mini.renderer.queue.RenderQueue;
+import mini.scene.control.Control;
 import mini.utils.TempVars;
 import mini.utils.clone.Cloner;
 import mini.utils.clone.IdentityCloneFunction;
@@ -22,6 +23,7 @@ import mini.utils.clone.MiniCloneable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * <code>Spatial</code> defines the base class for scene graph nodes. It
@@ -115,6 +117,7 @@ public abstract class Spatial implements Cloneable, CloneableSmartAsset, Collida
     public transient float queueDistance = Float.NEGATIVE_INFINITY;
     protected Transform localTransform;
     protected Transform worldTransform;
+    protected List<Control> controls = new CopyOnWriteArrayList<>();
 
     /**
      * Used for smart asset caching
@@ -678,6 +681,26 @@ public abstract class Spatial implements Cloneable, CloneableSmartAsset, Collida
 
         // All children's bounds have been updated. Update my own now.
         updateWorldBound();
+    }
+
+    private void runControlUpdate(float tpf) {
+        if (controls.isEmpty()) {
+            return;
+        }
+
+        for (Control control : controls) {
+            control.update(tpf);
+        }
+    }
+
+    /**
+     * <code>updateLogicalState</code> call the <code>update()</code> method for all controls
+     * attached to this <code>Spatial</code>.
+     *
+     * @param tpf Time per frame
+     */
+    public void updateLogicalState(float tpf) {
+        runControlUpdate(tpf);
     }
 
     /**

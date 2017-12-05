@@ -1,10 +1,11 @@
 package mini.textures;
 
+import mini.asset.AssetProcessor;
 import mini.asset.TextureKey;
 
 import java.nio.ByteBuffer;
 
-public class TextureProcessor {
+public class TextureProcessor implements AssetProcessor {
 
     public static Object postProcess(TextureKey key, Object obj) {
         Image img = (Image) obj;

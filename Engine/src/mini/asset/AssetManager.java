@@ -12,9 +12,13 @@ import mini.textures.Texture;
 import mini.textures.plugins.AWTLoader;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class AssetManager {
     private ImplHandler handler = new ImplHandler(this);
+
+    private List<AssetEventListener> eventListeners = new CopyOnWriteArrayList<>();
 
     public AssetManager() {
         registerLoader(OBJLoader.class, "obj");
@@ -33,6 +37,7 @@ public class AssetManager {
         }
 
         AssetCache cache = handler.getCache(key.getCacheType());
+        AssetProcessor processor = handler.getProcessor(key.getProcessorType());
 
         T obj = cache != null ? cache.getFromCache(key) : null;
         if (obj == null) {
@@ -40,17 +45,51 @@ public class AssetManager {
             if (info == null) {
                 if (handler.getParentKey() != null) {
                     // Inform event listener that an asset has failed to load.
+                    for (AssetEventListener listener : eventListeners) {
+                        listener.assetDependencyNotFound(handler.getParentKey(), key);
+                    }
                 }
+                throw new AssetNotFoundException(key.toString());
             }
-            obj = loadLocatedAsset(key, info, cache);
+            obj = loadLocatedAsset(key, info, processor, cache);
         }
 
-        // obj instance of CloneableSmartAsset then registerCloneSmartAsset
+        if (obj instanceof CloneableSmartAsset) {
+            obj = registerAndCloneSmartAsset(key, obj, processor, cache);
+        }
 
         return obj;
     }
 
-    public <T> T loadLocatedAsset(AssetKey<T> key, AssetInfo info, AssetCache cache) {
+    /**
+     * Clones the asset using the given processor and registers the clone with the cache.
+     *
+     * @param key       The asset key
+     * @param obj       The asset to clone / register, must implement {@link CloneableSmartAsset}.
+     * @param processor The processor which will generate the clone, cannot be null.
+     * @param cache     The cache to register the clone with, cannot be null.
+     * @param <T>       The asset type.
+     * @return The cloned asset, cannot be the same as the given asset since it's a clone.
+     */
+    private <T> T registerAndCloneSmartAsset(AssetKey<T> key, T obj, AssetProcessor processor,
+                                             AssetCache cache) {
+        if (processor == null) {
+            throw new IllegalStateException("Asset implements CloneableSmartAsset but doesn't have"
+                                            + "processor to handle cloning");
+        } else {
+            T clone = processor.createClone(obj);
+            if (cache != null && clone != obj) {
+                cache.registerAssetClone(key, clone);
+            } else {
+                throw new IllegalStateException("Asset implements CloneSmartAsset but doesn't have"
+                                                + "cache or was not cloned");
+            }
+            return clone;
+        }
+    }
+
+    public <T> T loadLocatedAsset(AssetKey<T> key, AssetInfo info, AssetProcessor processor,
+                                  AssetCache cache) {
         AssetLoader<T> loader = handler.acquireLoader(key);
         T obj;
         try {

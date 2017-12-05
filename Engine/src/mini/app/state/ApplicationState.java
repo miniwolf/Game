@@ -31,6 +31,23 @@ public interface ApplicationState {
     void initialize(ApplicationStateManager manager, Application app);
 
     /**
+     * @return Whether {@link #initialize(ApplicationStateManager, Application)} was called on the
+     * state.
+     */
+    boolean isInitialized();
+
+    /**
+     * Enable or disable the functionality of the {@link ApplicationState}. The effect of this call
+     * depends on the implementation. An {@link ApplicationState} starts as being enabled by
+     * default. A disabled {@link ApplicationState}'s does not get calls to {@link #update(float)},
+     * {@link #render(RenderManager)}, or {@link #postRender()} from its
+     * {@link ApplicationStateManager}.
+     *
+     * @param active activate the {@link ApplicationState} or not
+     */
+    void setEnabled(boolean active);
+
+    /**
      * @return Whether the <code>ApplicationState</code> is enabled.
      */
     boolean isEnabled();
@@ -63,7 +80,7 @@ public interface ApplicationState {
      * Called to update the <code>ApplicationState</code>. This method will be called every render
      * pass if the <code>ApplicationState</code> is both attached and enabled.
      */
-    void update();
+    void update(float tpf);
 
     /**
      * Render the state. This method will be called every render pass if the

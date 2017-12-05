@@ -40,12 +40,13 @@ MaterialDef Post Shadow {
 
         Defines {
             HARDWARE_SHADOWS : HardwareShadows
-            SHADOWMAP_SIZE : ShadowMapSize
-            PSSM : Splits
-            POINTLIGHT : LightViewProjectionMatrix5
             FILTER_MODE : FilterMode
             PCFEDGE : PCFEdge
-            BACKFACE_SHADOWS : BackfaceShadows
+            SHADOWMAP_SIZE : ShadowMapSize
+            FADE : FadeInfo
+            PSSM : Splits
+            POINTLIGHT : LightViewProjectionMatrix5
+            BACKFACE_SHADOWS: BackfaceShadows
         }
 
         RenderState {

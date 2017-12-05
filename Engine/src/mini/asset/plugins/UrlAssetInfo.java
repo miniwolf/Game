@@ -9,6 +9,9 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 
+/**
+ * Handles loading of asset from a URL
+ */
 public class UrlAssetInfo extends AssetInfo {
     private URL url;
     private InputStream in;

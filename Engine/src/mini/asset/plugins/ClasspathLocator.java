@@ -10,24 +10,44 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 
+/**
+ * The <code>ClasspathLocator</code> looks up an asset in the classpath.
+ * <p>
+ * This locator is used by default in all projects (unless
+ * {@link AssetManager#registerLocator(Class, String)} is used to overwrite the locator).
+ * <p>
+ * Unlike Java's default resource loading mechanism, the <code>ClasspathLocator</code> enforces
+ * case-sensitivity on platforms which do not have it such as Windows. Therefore it is critical to
+ * provide a path matching the case of the filesystem. This also ensures the file can be loaded if
+ * it was later included in a <code>.jar</code> file instead of a folder.
+ */
 public class ClasspathLocator implements AssetLocator {
     private String root = "";
 
     @Override
+    public void setRootPath(String rootPath) {
+        this.root = rootPath;
+        if ("/".equals(root)) {
+            root = "";
+        } else if (root.length() > 1) {
+            if (root.startsWith("/")) {
+                root = root.substring(1);
+            }
+            if (!root.endsWith("/")) {
+                root += "/";
+            }
+        }
+    }
+
+    @Override
     public AssetInfo locate(AssetManager manager, AssetKey key) {
-        URL url;
         String name = key.getName();
         if (name.startsWith("/")) {
             name = name.substring(1);
         }
-
         name = root + name;
-//        if (!name.startsWith(root)){
-//            name = root + name;
-//        }
 
-        url = ClasspathLocator.class.getResource("/" + name);
-
+        URL url = ClasspathLocator.class.getResource("/" + name);
         if (url == null) {
             return null;
         }

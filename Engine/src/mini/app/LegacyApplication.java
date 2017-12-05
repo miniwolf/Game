@@ -88,6 +88,12 @@ public class LegacyApplication implements Application, SystemListener {
     private void initDisplay() {
         // aquire important objects
         // from the context
+
+        // Reset timer if a user has not already provided one
+        if (timer == null) {
+            timer = context.getTimer();
+        }
+
         renderer = context.getRenderer();
     }
 
@@ -123,6 +129,7 @@ public class LegacyApplication implements Application, SystemListener {
         cam.lookAt(new Vector3f(0f, 0f, 0f), Vector3f.UNIT_Y);
 
         renderManager = new RenderManager(renderer);
+        renderManager.setTimer(timer);
 
         viewPort = renderManager.createMainView("Default", cam);
         viewPort.setClearFlags(true, true, true);
@@ -169,27 +176,43 @@ public class LegacyApplication implements Application, SystemListener {
     }
 
     /**
-     * Starts the application.
+     * Starts the application in {@link mini.system.ApplicationContext.Type.Display} mode.
      *
-     * @see #start()
+     * @see #start(mini.system.ApplicationContext.Type)
      */
     public void start() {
-        start(false);
+        start(ApplicationContext.Type.Display, false);
     }
 
     /**
-     * Starts the application.
-     * Creating a rendering context and executing
-     * the main loop in a separate thread.
+     * Starts the application in {@link mini.system.ApplicationContext.Type.Display} mode.
+     *
+     * @see #start(mini.system.ApplicationContext.Type)
      */
     public void start(boolean waitFor) {
+        start(ApplicationContext.Type.Display, waitFor);
+    }
+
+    /**
+     * Starts the application. Creating a rendering context and executing the main loop in a
+     * separate thread.
+     */
+    public void start(ApplicationContext.Type contextType) {
+        start(contextType, false);
+    }
+
+    /**
+     * Starts the application. Creating a rendering context and executing the main loop in a
+     * separate thread.
+     */
+    public void start(ApplicationContext.Type contextType, boolean waitFor) {
         if (context != null && context.isCreated()) {
             System.err.println("start() called when application already created!");
             return;
         }
 
         System.out.println("Starting application: " + getClass().getName());
-        context = ApplicationSystem.newContext();
+        context = ApplicationSystem.newContext(contextType);
         context.setSystemListener(this);
         context.create(waitFor);
     }
@@ -216,7 +239,7 @@ public class LegacyApplication implements Application, SystemListener {
         }
 
         System.out.println("Starting application: " + getClass().getName());
-        context = ApplicationSystem.newContext();
+        context = ApplicationSystem.newContext(ApplicationContext.Type.Canvas);
         context.setSystemListener(this);
     }
 
@@ -304,6 +327,9 @@ public class LegacyApplication implements Application, SystemListener {
         if (inputEnabled) {
             initInput();
         }
+
+        timer.reset();
+
         // user code here..
     }
 
@@ -332,6 +358,20 @@ public class LegacyApplication implements Application, SystemListener {
     /**
      * Internal use only.
      */
+    public void gainFocus() {
+        // TODO: implement the lost and gained focus behaviour
+    }
+
+    /**
+     * Internal use only.
+     */
+    public void loseFocus() {
+        // TODO: implement the lost and gained focus behaviour
+    }
+
+    /**
+     * Internal use only.
+     */
     public void requestClose(boolean esc) {
         context.destroy(false);
     }
@@ -341,6 +381,10 @@ public class LegacyApplication implements Application, SystemListener {
      * Callback from ContextListener.
      */
     public void update() {
+        if (speed == 0 || paused) {
+            return;
+        }
+
         timer.update();
 
         if (inputEnabled) {
@@ -365,7 +409,11 @@ public class LegacyApplication implements Application, SystemListener {
      * Callback from ContextListener.
      */
     public void destroy() {
+        stateManager.cleanup();
+
         destroyInput();
+
+        timer.reset();
     }
 
     /**
@@ -392,7 +440,5 @@ public class LegacyApplication implements Application, SystemListener {
             runnable.run();
             return null;
         }
-
     }
-
 }

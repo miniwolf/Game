@@ -3,6 +3,10 @@ package mini.app.state;
 import mini.app.Application;
 import mini.renderer.RenderManager;
 
+/**
+ * <code>AbstractApplicationState</code> implements some common methods that makes creation of
+ * {@link ApplicationState} easier.
+ */
 public class AbstractApplicationState implements ApplicationState {
     /**
      * <code>initialized</code> is set to true when the method
@@ -19,6 +23,16 @@ public class AbstractApplicationState implements ApplicationState {
     }
 
     @Override
+    public boolean isInitialized() {
+        return initialized;
+    }
+
+    @Override
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    @Override
     public boolean isEnabled() {
         return enabled;
     }
@@ -32,7 +46,7 @@ public class AbstractApplicationState implements ApplicationState {
     }
 
     @Override
-    public void update() {
+    public void update(float tpf) {
     }
 
     @Override

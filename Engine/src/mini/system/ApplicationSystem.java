@@ -5,7 +5,7 @@ import mini.asset.AssetManager;
 public class ApplicationSystem {
     private static ApplicationSystemDelegate systemDelegate;
 
-    public static ApplicationContext newContext() {
+    public static ApplicationContext newContext(ApplicationContext.Type contextType) {
         checkDelegate();
         return systemDelegate.newContext();
     }

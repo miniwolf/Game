@@ -54,7 +54,7 @@ public class AssetKey<T> implements Cloneable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(name);
+        return name.hashCode();
     }
 
     @Override
@@ -87,5 +87,12 @@ public class AssetKey<T> implements Cloneable {
      */
     public Class<? extends AssetCache> getCacheType() {
         return SimpleAssetCache.class;
+    }
+
+    /**
+     * @return The preferred processor type for this asset type. Specify "null"
+     */
+    public Class<? extends AssetProcessor> getProcessorType() {
+        return null;
     }
 }

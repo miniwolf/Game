@@ -17,10 +17,14 @@ public class ImplHandler {
     private final ThreadLocal<AssetKey> parentAssetKey = new ThreadLocal<>();
     private final ConcurrentMap<Class<? extends AssetCache>, AssetCache> classToCacheMap =
             new ConcurrentHashMap<>();
+    private final ConcurrentMap<Class<? extends AssetProcessor>, AssetProcessor> classToProcessMap =
+            new ConcurrentHashMap<>();
     private Map<String, ImplThreadLocal<? extends AssetLoader>> extensionsToLoaderMap
             = new HashMap<>();
     private List<ImplThreadLocal<AssetLocator>> locatorList = new ArrayList<>();
     private AssetManager assetManager;
+    private final ConcurrentMap<Class<? extends AssetLoader>, ImplThreadLocal> classToLoaderMap
+            = new ConcurrentHashMap();
 
     public ImplHandler(AssetManager assetManager) {
         this.assetManager = assetManager;
@@ -47,14 +51,13 @@ public class ImplHandler {
         for (String extension : extensions) {
             extension = extension.toLowerCase();
 
+            classToLoaderMap.put(loaderType, local);
             extensionsToLoaderMap.put(extension, local);
         }
     }
 
     public void addLocator(Class<? extends AssetLocator> locatorType, String rootPath) {
-        ImplThreadLocal<AssetLocator> implThreadLocal = new ImplThreadLocal<>(locatorType,
-                                                                              rootPath);
-        locatorList.add(implThreadLocal);
+        locatorList.add(new ImplThreadLocal<>(locatorType, rootPath));
     }
 
     public AssetKey getParentKey() {
@@ -75,7 +78,8 @@ public class ImplHandler {
                 return info;
             }
         }
-
+        System.err.println("Warning: "
+                           + "There are no locators currently registered to support: " + key);
         return null;
     }
 
@@ -107,7 +111,7 @@ public class ImplHandler {
         if (cache != null) {
             return cache;
         }
-        // TODO: Does this have to be synchronized on the classToCacheMap?
+
         try {
             cache = cacheClass.newInstance();
             classToCacheMap.put(cacheClass, cache);
@@ -118,6 +122,28 @@ public class ImplHandler {
             throw new IllegalArgumentException("The cache class cannot be accessed", ex);
         }
         return cache;
+    }
+
+    public <T extends AssetProcessor> T getProcessor(Class<T> processorType) {
+        if (processorType == null) {
+            return null;
+        }
+
+        T process = (T) classToProcessMap.get(processorType);
+        if (process != null) {
+            return process;
+        }
+
+        try {
+            process = processorType.newInstance();
+            classToProcessMap.put(processorType, process);
+        } catch (InstantiationException ex) {
+            throw new IllegalArgumentException("The processor class cannot be created, ensure it "
+                                               + "has an empty constructor", ex);
+        } catch (IllegalAccessException ex) {
+            throw new IllegalArgumentException("The processor class cannot be accessed", ex);
+        }
+        return process;
     }
 
     private static class ImplThreadLocal<T> extends ThreadLocal<T> {

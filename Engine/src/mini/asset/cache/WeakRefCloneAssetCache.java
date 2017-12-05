@@ -18,10 +18,27 @@ import java.util.concurrent.ConcurrentMap;
  * from the cache.
  */
 public class WeakRefCloneAssetCache implements AssetCache {
+
+    @Override
+    public <T> void registerAssetClone(AssetKey<T> key, T clone) {
+        List<AssetKey> loadStack = assetLoadStack.get();
+        ((CloneableSmartAsset) clone).setKey(loadStack.remove(loadStack.size() - 1));
+    }
+
+    @Override
+    public boolean deleteFromCache(AssetKey key) {
+        List<AssetKey> loadStack = assetLoadStack.get();
+        if (!loadStack.isEmpty()) {
+            throw new UnsupportedOperationException(
+                    "Cache cannot be modified while assets are being"
+                    + " loaded");
+        }
+
+        return smartCache.remove(key) != null;
+    }
+
     private final ConcurrentMap<AssetKey, AssetRef> smartCache = new ConcurrentHashMap<>();
-
     private final ReferenceQueue<AssetKey> referenceQueue = new ReferenceQueue<>();
-
     private final ThreadLocal<List<AssetKey>> assetLoadStack =
             ThreadLocal.withInitial(ArrayList::new);
 

@@ -1,6 +1,9 @@
 package mini.asset;
 
+import mini.asset.cache.AssetCache;
+import mini.asset.cache.WeakRefCloneAssetCache;
 import mini.textures.Texture;
+import mini.textures.TextureProcessor;
 
 /**
  * Used to load textures from image files such as JPG or PNG.
@@ -51,6 +54,16 @@ public class TextureKey extends AssetKey<Texture> {
                 break;
         }
         return name + (flipY ? " (Flipped)" : "") + type + (generateMips ? " (Mipmapped)" : "");
+    }
+
+    @Override
+    public Class<? extends AssetCache> getCacheType() {
+        return WeakRefCloneAssetCache.class;
+    }
+
+    @Override
+    public Class<? extends AssetProcessor> getProcessorType() {
+        return TextureProcessor.class;
     }
 
     public boolean isFlipY() {

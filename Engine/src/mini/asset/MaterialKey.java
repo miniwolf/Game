@@ -24,4 +24,9 @@ public class MaterialKey extends AssetKey<Material> {
     public Class<? extends AssetCache> getCacheType() {
         return WeakRefCloneAssetCache.class;
     }
+
+    @Override
+    public Class<? extends AssetProcessor> getProcessorType() {
+        return CloneableAssetProcessor.class;
+    }
 }

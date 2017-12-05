@@ -17,4 +17,9 @@ public interface Timer {
      * @return Time between this call and the last one.
      */
     float getTimePerFrame();
+
+    /**
+     * Reset the timer to 0. Clear any tpf history.
+     */
+    void reset();
 }

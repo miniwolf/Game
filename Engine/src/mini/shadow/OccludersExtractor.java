@@ -3,9 +3,6 @@ package mini.shadow;
 import mini.bounding.BoundingBox;
 import mini.bounding.BoundingVolume;
 import mini.math.Matrix4f;
-import mini.math.Vector3f;
-import mini.renderer.Camera;
-import mini.renderer.ViewPort;
 import mini.renderer.queue.GeometryList;
 import mini.renderer.queue.RenderQueue;
 import mini.scene.Geometry;
@@ -14,37 +11,38 @@ import mini.scene.Spatial;
 import mini.utils.TempVars;
 
 /**
- * Helper class to collect splitOccluders from scene recursively. It utilizes the scene hierarchy,
- * instead of making the huge flat geometries list first. Instead of adding all geometries from
- * scene to the RenderQueue.shadowCast and checking all of them one by one against the camera
- * frustum the whole Node is checked first to hopefully avoid the check on its children.
+ * OccludersExtractor is a helper class to collect splitOccluders from scene recursively.
+ * It utilizes the scene hierarchy, instead of making the huge flat geometries list first.
+ * Instead of adding all geometries from scene to the RenderQueue.shadowCast and checking
+ * all of them one by one against camera frustum the whole Node is checked first
+ * to hopefully avoid the check on its children.
  */
 public class OccludersExtractor {
-    private Matrix4f viewProjectionMatrix;
-    private int casterCount;
-    private TempVars vars;
-    private BoundingBox splitBBox, casterBBox;
-    private GeometryList splitOccluders;
+    public Integer casterCount;
+    // global variables set in order not to have recursive process method with too many parameters
+    Matrix4f viewProjMatrix;
+    BoundingBox splitBB, casterBB;
+    GeometryList splitOccluders;
+    TempVars vars;
 
-    public OccludersExtractor(Matrix4f viewProjectionMatrix,
-                              BoundingBox splitBBox,
-                              BoundingBox casterBBox,
-                              GeometryList splitOccluders,
-                              TempVars vars) {
-        this.viewProjectionMatrix = viewProjectionMatrix;
-        this.splitBBox = splitBBox;
-        this.casterBBox = casterBBox;
-        this.splitOccluders = splitOccluders;
-        this.vars = vars;
+    public OccludersExtractor() {
+    }
+
+    // initialize the global OccludersExtractor variables
+    public OccludersExtractor(Matrix4f vpm, int cc, BoundingBox sBB, BoundingBox cBB,
+                              GeometryList sOCC, TempVars v) {
+        viewProjMatrix = vpm;
+        casterCount = cc;
+        splitBB = sBB;
+        casterBB = cBB;
+        splitOccluders = sOCC;
+        vars = v;
     }
 
     /**
-     * Check the rootScene against the camera furstum and if it intersects process it recursively.
+     * Check the rootScene against camera frustum and if intersects process it recursively.
      * The global OccludersExtractor variables need to be initialized first.
-     * Variables are updated and used in {@link ShadowUtils#updateShadowCamera(ViewPort, GeometryList, Camera, Vector3f[], GeometryList, int)}
-     * at last.
-     *
-     * @param scene rootNode
+     * Variables are updated and used in {@link ShadowUtil#updateShadowCamera} at last.
      */
     public int addOccluders(Spatial scene) {
         if (scene != null) {
@@ -60,63 +58,68 @@ public class OccludersExtractor {
 
         RenderQueue.ShadowMode shadowMode = scene.getShadowMode();
         if (scene instanceof Geometry) {
-            // Convert bounding box to light's viewproj space
+            // convert bounding box to light's viewproj space
             Geometry occluder = (Geometry) scene;
-            if (shadowMode == RenderQueue.ShadowMode.Off
-                || shadowMode == RenderQueue.ShadowMode.Receive
-                || occluder.isGrouped() || occluder.getWorldBound() == null) {
-                return;
-            }
+            if (shadowMode != RenderQueue.ShadowMode.Off
+                && shadowMode != RenderQueue.ShadowMode.Receive
+                && !occluder.isGrouped() && occluder.getWorldBound() != null) {
+                BoundingVolume bv = occluder.getWorldBound();
+                BoundingVolume occBox = bv.transform(viewProjMatrix, vars.bbox);
 
-            BoundingVolume bv = occluder.getWorldBound();
-            BoundingVolume occludersBV = bv.transform(viewProjectionMatrix, vars.bbox);
-
-            boolean intersects = splitBBox.intersects(occludersBV);
-            if (!intersects && occludersBV instanceof BoundingBox) {
-                BoundingBox occluderBBox = (BoundingBox) occludersBV;
-                // Extend the occluder further into the frustum, makes sure shadows doesn't
-                // disappear when caster itself is not in the view camera but its shadow is in the
-                // camera. Number is world units
-                occluderBBox.setZExtent(occluderBBox.getZExtent() + 50);
-                occluderBBox.setCenter(occluderBBox.getCenter().addLocal(0, 0, 25));
-                if (!splitBBox.intersects(occluderBBox)) {
-                    return;
-                }
-
-                if (!Float.isNaN(occluderBBox.getCenter().x) && !Float
-                        .isInfinite(occluderBBox.getCenter().x)) {
-                    // Prevent extending the depth range too much we return the bound to its former
-                    // shape before adding it
-                    occluderBBox.setZExtent(occluderBBox.getZExtent() - 50);
-                    occluderBBox.setCenter(occluderBBox.getCenter().subtractLocal(0, 0, 25));
-                    casterBBox.mergeLocal(occluderBBox);
+                boolean intersects = splitBB.intersects(occBox);
+                if (!intersects && occBox instanceof BoundingBox) {
+                    BoundingBox occBB = (BoundingBox) occBox;
+                    //Kirill 01/10/2011
+                    // Extend the occluder further into the frustum
+                    // This fixes shadow dissapearing issues when
+                    // the caster itself is not in the view camera
+                    // but its shadow is in the camera
+                    //      The number is in world units
+                    occBB.setZExtent(occBB.getZExtent() + 50);
+                    occBB.setCenter(occBB.getCenter().addLocal(0, 0, 25));
+                    if (splitBB.intersects(occBB)) {
+                        //Nehon : prevent NaN and infinity values to screw the final bounding box
+                        if (!Float.isNaN(occBox.getCenter().x) && !Float
+                                .isInfinite(occBox.getCenter().x)) {
+                            // To prevent extending the depth range too much
+                            // We return the bound to its former shape
+                            // Before adding it
+                            occBB.setZExtent(occBB.getZExtent() - 50);
+                            occBB.setCenter(occBB.getCenter().subtractLocal(0, 0, 25));
+                            casterBB.mergeLocal(occBox);
+                            casterCount++;
+                        }
+                        if (splitOccluders != null) {
+                            splitOccluders.add(occluder);
+                        }
+                    }
+                } else if (intersects) {
+                    casterBB.mergeLocal(occBox);
                     casterCount++;
-                }
-                if (splitOccluders != null) {
-                    splitOccluders.add(occluder);
-                }
-            } else if (intersects) {
-                casterBBox.mergeLocal(occludersBV);
-                casterCount++;
-                if (splitOccluders != null) {
-                    splitOccluders.add(occluder);
+                    if (splitOccluders != null) {
+                        splitOccluders.add(occluder);
+                    }
                 }
             }
         } else if (scene instanceof Node && scene.getWorldBound() != null) {
-            Node nodeOccluder = (Node) scene;
+            Node nodeOcc = (Node) scene;
+            boolean intersects = false;
+            // some
+            BoundingVolume bv = nodeOcc.getWorldBound();
+            BoundingVolume occBox = bv.transform(viewProjMatrix, vars.bbox);
 
-            BoundingVolume bv = nodeOccluder.getWorldBound();
-            BoundingVolume occluderBV = bv.transform(viewProjectionMatrix, vars.bbox);
-            boolean intersects = splitBBox.intersects(occluderBV);
-            if (!intersects && occluderBV instanceof BoundingBox) {
-                BoundingBox occluderBBox = (BoundingBox) occluderBV;
-
-                // Extend the occluder further into the frustum, makes sure shadows doesn't
-                // disappear when caster itself is not in the view camera but its shadow is in the
-                // camera. Number is world units
-                occluderBBox.setZExtent(occluderBBox.getZExtent() + 50);
-                occluderBBox.setCenter(occluderBBox.getCenter().addLocal(0, 0, 25));
-                intersects = splitBBox.intersects(occluderBBox);
+            intersects = splitBB.intersects(occBox);
+            if (!intersects && occBox instanceof BoundingBox) {
+                BoundingBox occBB = (BoundingBox) occBox;
+                //Kirill 01/10/2011
+                // Extend the occluder further into the frustum
+                // This fixes shadow dissapearing issues when
+                // the caster itself is not in the view camera
+                // but its shadow is in the camera
+                //      The number is in world units
+                occBB.setZExtent(occBB.getZExtent() + 50);
+                occBB.setCenter(occBB.getCenter().addLocal(0, 0, 25));
+                intersects = splitBB.intersects(occBB);
             }
 
             if (intersects) {
@@ -125,9 +128,5 @@ public class OccludersExtractor {
                 }
             }
         }
-    }
-
-    public int getCasterCount() {
-        return casterCount;
     }
 }

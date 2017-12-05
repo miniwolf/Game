@@ -18,6 +18,10 @@ public class FlyCamAppState extends AbstractApplicationState {
         this.flyCam = flyCam;
     }
 
+    public FlyByCamera getCamera() {
+        return flyCam;
+    }
+
     @Override
     public void initialize(ApplicationStateManager manager, Application app) {
         super.initialize(manager, app);
@@ -33,6 +37,13 @@ public class FlyCamAppState extends AbstractApplicationState {
         }
 
         flyCam.registerWithInput(app.getInputManager());
+    }
+
+    @Override
+    public void setEnabled(boolean enabled) {
+        super.setEnabled(enabled);
+
+        flyCam.setEnabled(enabled);
     }
 
     @Override

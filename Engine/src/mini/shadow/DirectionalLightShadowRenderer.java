@@ -12,8 +12,6 @@ import mini.scene.Node;
 import mini.scene.Spatial;
 import mini.utils.clone.Cloner;
 
-import java.util.Arrays;
-
 /**
  * DirectionalLightShadowRenderer renderer use Parallel Split Shadow Mapping technique (PSSM) <br>
  * It splits the view frustum in several parts and compute a shadow map for each one. <br> Splits
@@ -23,77 +21,83 @@ import java.util.Arrays;
  * NVidia article</a>
  */
 public class DirectionalLightShadowRenderer extends AbstractShadowRenderer {
-    private ColorRGBA splits;
-    private Camera shadowCam;
-    private float[] splitsArray;
-    private Vector3f[] points = new Vector3f[8];
-    private DirectionalLight light;
-    private float lambda;
 
-    /**
-     * Holding the info for fading shadows in the far distance
-     */
+    protected float lambda = 0.65f;
+    protected Camera shadowCam;
+    protected ColorRGBA splits;
+    protected float[] splitsArray;
+    protected DirectionalLight light;
+    protected Vector3f[] points = new Vector3f[8];
+    //Holding the info for fading shadows in the far distance
     private boolean stabilize = true;
 
     /**
-     * Create a DirectionalLightShadowRenderer.
-     *
-     * @param assetManager  the application asset manager.
-     * @param shadowmapSize the size of the renderered shadow maps (512, 1024, 2048, etc...)
-     * @param nbSplits      the number of shadow maps renderered (the more shadow maps the more quality,
-     *                      the less fps).
+     * Used for serialzation use
+     * DirectionalLightShadowRenderer#DirectionalLightShadowRenderer(AssetManager
+     * assetManager, int shadowMapSize, int nbSplits)
      */
-    public DirectionalLightShadowRenderer(AssetManager assetManager, int shadowmapSize,
-                                          int nbSplits) {
-        super(assetManager, shadowmapSize, nbSplits);
-        init(nbSplits);
-    }
-
-    @Override
-    protected Camera getShadowCam(int shadowMapIndex) {
-        return shadowCam;
-    }
-
-    @Override
-    protected GeometryList getOccludersToRender(int shadowMapIndex,
-                                                GeometryList shadowMapOccluders) {
-        ShadowUtils.updateFrustumPoints(viewPort.getCamera(), splitsArray[shadowMapIndex],
-                                        splitsArray[shadowMapIndex + 1], 1.0f, points);
-
-        if (lightReceivers.size() == 0) {
-            for (Spatial scene : viewPort.getScenes()) {
-                ShadowUtils.getGeometriesInCamFrustum(scene, viewPort.getCamera(),
-                                                      RenderQueue.ShadowMode.Receive,
-                                                      lightReceivers);
-            }
-        }
-        ShadowUtils
-                .updateShadowCamera(viewPort, lightReceivers, shadowCam, points, shadowMapOccluders,
-                                    stabilize ? shadowmapSize : 0);
-
-        return shadowMapOccluders;
-    }
-
-    @Override
-    protected void displayFrustumDebug(int shadowMapIndex) {
-        Node node = (Node) viewPort.getScenes().get(0);
-        node.attachChild(createFrustum(points, shadowMapIndex));
-        ShadowUtils.updateFrustumPoints(shadowCam, points);
-        node.attachChild(createFrustum(points, shadowMapIndex));
+    public DirectionalLightShadowRenderer() {
+        super();
     }
 
     /**
-     * Directional light are always in the view frustum
+     * Create a DirectionalLightShadowRenderer More info on the technique at <a
+     * href="http://http.developer.nvidia.com/GPUGems3/gpugems3_ch10.html">http://http.developer.nvidia.com/GPUGems3/gpugems3_ch10.html</a>
+     *
+     * @param assetManager the application asset manager
+     * @param shadowMapSize the size of the rendered shadowmaps (512,1024,2048,
+     * etc...)
+     * @param nbSplits the number of shadow maps rendered (the more shadow maps
+     * the more quality, the less fps).
      */
+    public DirectionalLightShadowRenderer(AssetManager assetManager, int shadowMapSize,
+                                          int nbSplits) {
+        super(assetManager, shadowMapSize, nbSplits);
+        init(nbSplits, shadowMapSize);
+    }
+
+    private void init(int nbSplits, int shadowMapSize) {
+        nbShadowMaps = Math.max(Math.min(nbSplits, 4), 1);
+        if (nbShadowMaps != nbSplits) {
+            throw new IllegalArgumentException(
+                    "Number of splits must be between 1 and 4. Given value : " + nbSplits);
+        }
+        splits = new ColorRGBA();
+        splitsArray = new float[nbSplits + 1];
+        shadowCam = new Camera(shadowMapSize, shadowMapSize);
+        shadowCam.setParallelProjection(true);
+        for (int i = 0; i < points.length; i++) {
+            points[i] = new Vector3f();
+        }
+    }
+
     @Override
-    protected boolean checkCulling(Camera camera) {
-        return true;
+    protected void initFrustumCam() {
+        //nothing to do
+    }
+
+    /**
+     * return the light used to cast shadows
+     *
+     * @return the DirectionalLight
+     */
+    public DirectionalLight getLight() {
+        return light;
+    }
+
+    /**
+     * Sets the light to use to cast shadows
+     *
+     * @param light a DirectionalLight
+     */
+    public void setLight(DirectionalLight light) {
+        this.light = light;
     }
 
     @Override
     protected void updateShadowCams(Camera viewCam) {
         if (light == null) {
-            System.err.println("Warning: The light cannot be null for a " + getClass().getName());
+            System.err.println("Warning: The light can't be null for a " + getClass().getName());
             return;
         }
 
@@ -102,21 +106,21 @@ public class DirectionalLightShadowRenderer extends AbstractShadowRenderer {
             zFar = viewCam.getFrustumFar();
         }
 
-        // Prevent computing the frustum points and splits with zeroed or negative near clip values
-        float frustumNear = Math.max(viewCam.getFrustumNear(), 0.0001f);
+        //We prevent computing the frustum points and splits with zeroed or negative near clip value
+        float frustumNear = Math.max(viewCam.getFrustumNear(), 0.001f);
         ShadowUtils.updateFrustumPoints(viewCam, frustumNear, zFar, 1.0f, points);
 
         shadowCam.setFrustumFar(zFar);
         shadowCam.getRotation().lookAt(light.getDirection(), shadowCam.getUp());
-
         shadowCam.update();
         shadowCam.updateViewProjection();
 
         PSSMShadowUtils.updateFrustumSplit(splitsArray, frustumNear, zFar, lambda);
 
+        // in parallel projection shadow position goe from 0 to 1
         if (viewCam.isParallelProjection()) {
-            for (int i = 0; i < nbSplits; i++) {
-                splitsArray[i] /= (zFar - frustumNear);
+            for (int i = 0; i < nbShadowMaps; i++) {
+                splitsArray[i] = splitsArray[i] / (zFar - frustumNear);
             }
         }
 
@@ -132,74 +136,125 @@ public class DirectionalLightShadowRenderer extends AbstractShadowRenderer {
                 splits.r = splitsArray[1];
                 break;
         }
+
     }
 
     @Override
-    protected void clearMaterialParameters(Material material) {
-        material.clearParam("Splits");
-        material.clearParam("LightDir");
+    protected GeometryList getOccludersToRender(int shadowMapIndex,
+                                                GeometryList shadowMapOccluders) {
+
+        // update frustum points based on current camera and split
+        ShadowUtils.updateFrustumPoints(viewPort.getCamera(), splitsArray[shadowMapIndex],
+                                        splitsArray[shadowMapIndex + 1], 1.0f, points);
+
+        //Updating shadow cam with curent split frustra
+        if (lightReceivers.size() == 0) {
+            for (Spatial scene : viewPort.getScenes()) {
+                ShadowUtils.getGeometriesInCamFrustum(scene, viewPort.getCamera(),
+                                                      RenderQueue.ShadowMode.Receive,
+                                                      lightReceivers);
+            }
+        }
+        ShadowUtils
+                .updateShadowCamera(viewPort, lightReceivers, shadowCam, points, shadowMapOccluders,
+                                    stabilize ? shadowMapSize : 0);
+
+        return shadowMapOccluders;
+    }
+
+    @Override
+    protected void getReceivers(GeometryList lightReceivers) {
+        if (lightReceivers.size() == 0) {
+            for (Spatial scene : viewPort.getScenes()) {
+                ShadowUtils.getGeometriesInCamFrustum(scene, viewPort.getCamera(),
+                                                      RenderQueue.ShadowMode.Receive,
+                                                      lightReceivers);
+            }
+        }
+    }
+
+    @Override
+    protected Camera getShadowCam(int shadowMapIndex) {
+        return shadowCam;
+    }
+
+    @Override
+    protected void displayFrustumDebug(int shadowMapIndex) {
+        ((Node) viewPort.getScenes().get(0)).attachChild(createFrustum(points, shadowMapIndex));
+        ShadowUtils.updateFrustumPoints(shadowCam, points);
+        ((Node) viewPort.getScenes().get(0)).attachChild(createFrustum(points, shadowMapIndex));
     }
 
     @Override
     protected void setMaterialParameters(Material material) {
         material.setColor("Splits", splits);
         material.setVector3("LightDir", light == null ? new Vector3f() : light.getDirection());
-        // FadeInfo
+        if (fadeInfo != null) {
+            material.setVector2("FadeInfo", fadeInfo);
+        }
     }
 
     @Override
-    protected void getReceivers(GeometryList lightReceivers) {
-        if (lightReceivers.size() != 0) {
-            return;
-        }
-
-        for (Spatial scene : viewPort.getScenes()) {
-            ShadowUtils.getGeometriesInCamFrustum(scene, viewPort.getCamera(),
-                                                  RenderQueue.ShadowMode.Receive, lightReceivers);
-        }
-    }
-
-    private void init(int nbSplits) {
-        this.nbSplits = Math.max(Math.min(nbSplits, 4), 1);
-        if (this.nbSplits != nbSplits) {
-            throw new IllegalArgumentException("Number of splits must be between 1 and 4."
-                                               + " Given value : " + nbSplits);
-        }
-
-        splits = new ColorRGBA();
-        splitsArray = new float[nbSplits + 1];
-        shadowCam = new Camera(shadowmapSize, shadowmapSize);
-        shadowCam.setParallelProjection(true);
-        Arrays.setAll(points, i -> new Vector3f());
+    protected void clearMaterialParameters(Material material) {
+        material.clearParam("Splits");
+        material.clearParam("FadeInfo");
+        material.clearParam("LightDir");
     }
 
     /**
-     * Sets the light to use to cast shadows
+     * returns the labda parameter see #setLambda(float lambda)
      *
-     * @param light a <code>DirectionalLight</code>
+     * @return lambda
      */
-    public void setLight(DirectionalLight light) {
-        this.light = light;
+    public float getLambda() {
+        return lambda;
     }
 
-    /**
-     * Adjust the repartition of the different shadow maps in the shadow extend usually goes from
-     * 0.0 to 1.0. A low value gives a more linear repartition resulting in a constant quality in
-     * shadow over the extends, but near the shadows could look very jagged. A high value gives a
-     * more logarithmic repartition resulting in a high quality for near shadows, but the quality
-     * quickly decrease over the extend. The default value (theoretical optimal value) is set to
-     * 0.65f
-     *
-     * @param lambda the lambda value
+    /*
+     * Adjust the repartition of the different shadow maps in the shadow extend
+     * usualy goes from 0.0 to 1.0
+     * a low value give a more linear repartition resulting in a constant quality in the shadow over the extends, but near shadows could look very jagged
+     * a high value give a more logarithmic repartition resulting in a high quality for near shadows, but the quality quickly decrease over the extend.
+     * the default value is set to 0.65f (theoric optimal value).
+     * @param lambda the lambda value.
      */
     public void setLambda(float lambda) {
         this.lambda = lambda;
     }
 
+    /**
+     * @return true if stabilization is enabled
+     */
+    public boolean isEnabledStabilization() {
+        return stabilize;
+    }
+
+    /**
+     * Enables the stabilization of the shadows's edges. (default is true)
+     * This prevents shadows' edges to flicker when the camera moves
+     * However it can lead to some shadow quality loss in some particular scenes.
+     *
+     * @param stabilize
+     */
+    public void setEnabledStabilization(boolean stabilize) {
+        this.stabilize = stabilize;
+    }
+
     @Override
-    public void cloneFields(Cloner cloner, Object original) {
+    public void cloneFields(final Cloner cloner, final Object original) {
         light = cloner.clone(light);
-        init(nbSplits);
+        init(nbShadowMaps, (int) shadowMapSize);
         super.cloneFields(cloner, original);
+    }
+
+    /**
+     * Directional light are always in the view frustum
+     *
+     * @param viewCam
+     * @return
+     */
+    @Override
+    protected boolean checkCulling(Camera viewCam) {
+        return true;
     }
 }
