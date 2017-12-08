@@ -4,6 +4,7 @@ import mini.asset.AssetKey;
 import mini.asset.CloneableSmartAsset;
 import mini.bounding.BoundingVolume;
 import mini.collision.Collidable;
+import mini.collision.CollisionResults;
 import mini.light.Light;
 import mini.light.LightList;
 import mini.material.MatParamOverride;
@@ -34,6 +35,11 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @author miniwolf
  */
 public abstract class Spatial implements Cloneable, CloneableSmartAsset, Collidable, MiniCloneable {
+    @Override
+    public int collideWith(Collidable other, CollisionResults results) {
+        return 0;
+    }
+
     /**
      * Specifies how frustum culling should be handled by
      * this spatial.
@@ -174,6 +180,11 @@ public abstract class Spatial implements Cloneable, CloneableSmartAsset, Collida
         localOverrides = new ArrayList<>();
         worldOverrides = new ArrayList<>();
         refreshFlags |= RF_BOUND;
+    }
+
+    @Override
+    public Object clone() {
+        return null;
     }
 
     @Override

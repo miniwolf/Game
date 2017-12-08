@@ -1,21 +1,70 @@
 package mini.textures;
 
 import mini.asset.AssetKey;
+import mini.asset.CloneableSmartAsset;
 import mini.asset.TextureKey;
 
 /**
- * <code>Texture</code> defines a texture object to be used to display an
- * image on a piece of geometry. The image to be displayed is defined by the
- * <code>Image</code> class. All attributes required for texture mapping are
- * contained within this class. This includes mipmapping if desired,
- * magnificationFilter options, apply options and correction options. Default
- * values are as follows: minificationFilter - NearestNeighborNoMipMaps,
- * magnificationFilter - NearestNeighbor, wrap - EdgeClamp on S,T and R, apply -
- * Modulate, environment - None.
+ * <code>Texture</code> defines a texture object to be used to display an image on a piece of
+ * geometry. The image to be displayed is defined by the <code>Image</code> class. All attributes
+ * required for texture mapping are contained within this class. This includes mipmapping if
+ * desired, magnificationFilter options, apply options and correction options.
+ * <p>
+ * Default values are as follows: minificationFilter - NearestNeighborNoMipMaps,
+ * magnificationFilter - NearestNeighbor, wrap - EdgeClamp on S,T and R, apply - Modulate,
+ * environment - None.
  *
  * @see mini.textures.Image
  */
-public abstract class Texture implements Cloneable {
+public abstract class Texture implements CloneableSmartAsset, Cloneable {
+
+    /**
+     * @return A cloned Texture object.
+     */
+    @Override
+    public Texture clone() {
+        try {
+            return (Texture) super.clone();
+        } catch (CloneNotSupportedException ex) {
+            throw new AssertionError();
+        }
+    }
+
+    /**
+     * @param minificationFilter the new MinificationFilterMode for this texture.
+     * @throws IllegalArgumentException if minificationFilter is null
+     */
+    public void setMinFilter(MinFilter minificationFilter) {
+        if (minificationFilter == null) {
+            throw new IllegalArgumentException(
+                    "minificationFilter can not be null.");
+        }
+        this.minificationFilter = minificationFilter;
+        if (minificationFilter.usesMipMapLevels() && image != null && !image
+                .isGeneratedMipmapsRequired() && !image.hasMipmaps()) {
+            image.setNeedGeneratedMipmaps();
+        }
+    }
+
+    /**
+     * @param magnificationFilter the new MagnificationFilter for this texture.
+     * @throws IllegalArgumentException if magnificationFilter is null
+     */
+    public void setMagFilter(MagFilter magnificationFilter) {
+        if (magnificationFilter == null) {
+            throw new IllegalArgumentException(
+                    "magnificationFilter can not be null.");
+        }
+        this.magnificationFilter = magnificationFilter;
+    }
+
+    /**
+     * @return The ShadowCompareMode of this texture.
+     * @see ShadowCompareMode
+     */
+    public ShadowCompareMode getShadowCompareMode() {
+        return shadowCompareMode;
+    }
 
     @Override
     public boolean equals(Object obj) {
@@ -52,8 +101,130 @@ public abstract class Texture implements Cloneable {
         return hash;
     }
 
-    public enum Type {
+    /**
+     * The name of the texture (if loaded as a resource).
+     */
+    private String name = null;
 
+    /**
+     * The image stored in the texture
+     */
+    private Image image = null;
+
+    /**
+     * The texture key allows to reload a texture from a file
+     * if needed.
+     */
+    private TextureKey key = null;
+
+    private MinFilter minificationFilter = MinFilter.BilinearNoMipMaps;
+    private MagFilter magnificationFilter = MagFilter.Bilinear;
+    private ShadowCompareMode shadowCompareMode = ShadowCompareMode.Off;
+    private int anisotropicFilter;
+
+    /**
+     * @param compareMode the new ShadowCompareMode for this texture.
+     * @throws IllegalArgumentException if compareMode is null
+     * @see ShadowCompareMode
+     */
+    public void setShadowCompareMode(ShadowCompareMode compareMode) {
+        if (compareMode == null) {
+            throw new IllegalArgumentException(
+                    "compareMode can not be null.");
+        }
+        this.shadowCompareMode = compareMode;
+    }
+
+    /**
+     * Constructor instantiates a new <code>Texture</code> object with default
+     * attributes.
+     */
+    public Texture() {
+    }
+
+    /**
+     * @return the MinificationFilterMode of this texture.
+     */
+    public MinFilter getMinFilter() {
+        return minificationFilter;
+    }
+
+    /**
+     * <code>setImage</code> sets the image object that defines the texture.
+     *
+     * @param image the image that defines the texture.
+     */
+    public void setImage(Image image) {
+        this.image = image;
+
+        // Test if mipmap generation required.
+        setMinFilter(getMinFilter());
+    }
+
+    /**
+     * @return the MagnificationFilterMode of this texture.
+     */
+    public MagFilter getMagFilter() {
+        return magnificationFilter;
+    }
+
+    public AssetKey getKey() {
+        return this.key;
+    }
+
+    /**
+     * @param key The texture key that was used to load this texture
+     */
+    public void setKey(AssetKey key) {
+        this.key = (TextureKey) key;
+    }
+
+    /**
+     * <code>setWrap</code> sets the wrap mode of this texture for a
+     * particular axis.
+     *
+     * @param axis the texture axis to define a wrapmode on.
+     * @param mode the wrap mode for the given axis of the texture.
+     * @throws IllegalArgumentException if axis or mode are null or invalid for this type of texture
+     */
+    public abstract void setWrap(WrapAxis axis, WrapMode mode);
+
+    /**
+     * <code>setWrap</code> sets the wrap mode of this texture for all axis.
+     *
+     * @param mode the wrap mode for the given axis of the texture.
+     * @throws IllegalArgumentException if mode is null or invalid for this type of texture
+     */
+    public abstract void setWrap(WrapMode mode);
+
+    /**
+     * <code>getWrap</code> returns the wrap mode for a given coordinate axis
+     * on this texture.
+     *
+     * @param axis the axis to return for
+     * @return the wrap mode of the texture.
+     * @throws IllegalArgumentException if axis is null or invalid for this type of texture
+     */
+    public abstract WrapMode getWrap(WrapAxis axis);
+
+    /**
+     * @param level the anisotropic filtering level for this texture.
+     */
+    public void setAnisotropicFilter(int level) {
+        anisotropicFilter = Math.max(0, level);
+    }
+
+    /**
+     * <code>getImage</code> returns the image data that makes up this
+     * texture. If no image data has been set, this will return null.
+     *
+     * @return the image data that makes up the texture.
+     */
+    public Image getImage() {
+        return image;
+    }
+
+    public enum Type {
         /**
          * Two dimensional texture (default). A rectangle.
          */
@@ -169,6 +340,25 @@ public abstract class Texture implements Cloneable {
 
     }
 
+    public abstract Type getType();
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
+     * @return the anisotropic filtering level for this texture. Default value
+     * is 0 (use value from config),
+     * 1 means 1x (no anisotropy), 2 means x2, 4 is x4, etc.
+     */
+    public int getAnisotropicFilter() {
+        return anisotropicFilter;
+    }
+
     /**
      * If this texture is a depth texture (the format is Depth*) then
      * this value may be used to compare the texture depth to the R texture
@@ -198,210 +388,6 @@ public abstract class Texture implements Cloneable {
          * smoother results in the range [0, 1].
          */
         GreaterOrEqual
-    }
-
-    /**
-     * The name of the texture (if loaded as a resource).
-     */
-    private String name = null;
-
-    /**
-     * The image stored in the texture
-     */
-    private Image image = null;
-
-    /**
-     * The texture key allows to reload a texture from a file
-     * if needed.
-     */
-    private TextureKey key = null;
-
-    private MinFilter minificationFilter = MinFilter.BilinearNoMipMaps;
-    private MagFilter magnificationFilter = MagFilter.Bilinear;
-    private ShadowCompareMode shadowCompareMode = ShadowCompareMode.Off;
-    private int anisotropicFilter;
-
-    /**
-     * @return A cloned Texture object.
-     */
-    @Override
-    public Texture clone(){
-        try {
-            return (Texture) super.clone();
-        } catch (CloneNotSupportedException ex) {
-            throw new AssertionError();
-        }
-    }
-
-    /**
-     * Constructor instantiates a new <code>Texture</code> object with default
-     * attributes.
-     */
-    public Texture() {
-    }
-
-    /**
-     * @return the MinificationFilterMode of this texture.
-     */
-    public MinFilter getMinFilter() {
-        return minificationFilter;
-    }
-
-    /**
-     * @param minificationFilter
-     *            the new MinificationFilterMode for this texture.
-     * @throws IllegalArgumentException
-     *             if minificationFilter is null
-     */
-    public void setMinFilter(MinFilter minificationFilter) {
-        if (minificationFilter == null) {
-            throw new IllegalArgumentException(
-                    "minificationFilter can not be null.");
-        }
-        this.minificationFilter = minificationFilter;
-        if (minificationFilter.usesMipMapLevels() && image != null && !image.isGeneratedMipmapsRequired() && !image.hasMipmaps()) {
-            image.setNeedGeneratedMipmaps();
-        }
-    }
-
-    /**
-     * @return the MagnificationFilterMode of this texture.
-     */
-    public MagFilter getMagFilter() {
-        return magnificationFilter;
-    }
-
-    /**
-     * @param magnificationFilter
-     *            the new MagnificationFilter for this texture.
-     * @throws IllegalArgumentException
-     *             if magnificationFilter is null
-     */
-    public void setMagFilter(MagFilter magnificationFilter) {
-        if (magnificationFilter == null) {
-            throw new IllegalArgumentException(
-                    "magnificationFilter can not be null.");
-        }
-        this.magnificationFilter = magnificationFilter;
-    }
-
-    /**
-     * @return The ShadowCompareMode of this texture.
-     * @see ShadowCompareMode
-     */
-    public ShadowCompareMode getShadowCompareMode(){
-        return shadowCompareMode;
-    }
-
-    /**
-     * @param compareMode
-     *            the new ShadowCompareMode for this texture.
-     * @throws IllegalArgumentException
-     *             if compareMode is null
-     * @see ShadowCompareMode
-     */
-    public void setShadowCompareMode(ShadowCompareMode compareMode){
-        if (compareMode == null){
-            throw new IllegalArgumentException(
-                    "compareMode can not be null.");
-        }
-        this.shadowCompareMode = compareMode;
-    }
-
-    /**
-     * <code>setImage</code> sets the image object that defines the texture.
-     *
-     * @param image
-     *            the image that defines the texture.
-     */
-    public void setImage(Image image) {
-        this.image = image;
-
-        // Test if mipmap generation required.
-        setMinFilter(getMinFilter());
-    }
-
-    /**
-     * @param key The texture key that was used to load this texture
-     */
-    public void setKey(AssetKey key){
-        this.key = (TextureKey) key;
-    }
-
-    public AssetKey getKey(){
-        return this.key;
-    }
-
-    /**
-     * <code>getImage</code> returns the image data that makes up this
-     * texture. If no image data has been set, this will return null.
-     *
-     * @return the image data that makes up the texture.
-     */
-    public Image getImage() {
-        return image;
-    }
-
-    /**
-     * <code>setWrap</code> sets the wrap mode of this texture for a
-     * particular axis.
-     *
-     * @param axis
-     *            the texture axis to define a wrapmode on.
-     * @param mode
-     *            the wrap mode for the given axis of the texture.
-     * @throws IllegalArgumentException
-     *             if axis or mode are null or invalid for this type of texture
-     */
-    public abstract void setWrap(WrapAxis axis, WrapMode mode);
-
-    /**
-     * <code>setWrap</code> sets the wrap mode of this texture for all axis.
-     *
-     * @param mode
-     *            the wrap mode for the given axis of the texture.
-     * @throws IllegalArgumentException
-     *             if mode is null or invalid for this type of texture
-     */
-    public abstract void setWrap(WrapMode mode);
-
-    /**
-     * <code>getWrap</code> returns the wrap mode for a given coordinate axis
-     * on this texture.
-     *
-     * @param axis
-     *            the axis to return for
-     * @return the wrap mode of the texture.
-     * @throws IllegalArgumentException
-     *             if axis is null or invalid for this type of texture
-     */
-    public abstract WrapMode getWrap(WrapAxis axis);
-
-    public abstract Type getType();
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    /**
-     * @return the anisotropic filtering level for this texture. Default value
-     * is 0 (use value from config),
-     * 1 means 1x (no anisotropy), 2 means x2, 4 is x4, etc.
-     */
-    public int getAnisotropicFilter() {
-        return anisotropicFilter;
-    }
-
-    /**
-     * @param level
-     *            the anisotropic filtering level for this texture.
-     */
-    public void setAnisotropicFilter(int level) {
-        anisotropicFilter = Math.max(0, level);
     }
 
     @Override

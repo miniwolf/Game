@@ -10,4 +10,9 @@ public class CloneableAssetProcessor implements AssetProcessor {
         CloneableSmartAsset asset = (CloneableSmartAsset) obj;
         return asset.clone();
     }
+
+    @Override
+    public <T> T postProcess(AssetKey<T> key, T obj) {
+        return obj;
+    }
 }

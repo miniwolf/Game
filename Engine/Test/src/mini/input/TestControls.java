@@ -13,8 +13,6 @@ public class TestControls extends SimpleApplication {
             .println(name + " = " + value);
 
     public static void main(String[] args) {
-        System.setProperty("org.lwjgl.librarypath",
-                           "C:/Users/miniwolf/Engine/Engine/lib/native/windows/");
         TestControls app = new TestControls();
         app.start();
     }

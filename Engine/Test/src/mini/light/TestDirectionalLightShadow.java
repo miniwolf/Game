@@ -36,8 +36,6 @@ public class TestDirectionalLightShadow extends SimpleApplication
     private float frustumSize = 100;
 
     public static void main(String[] args) {
-        System.setProperty("org.lwjgl.librarypath",
-                           "C:/Users/miniwolf/Engine/Engine/lib/native/windows/");
         TestDirectionalLightShadow app = new TestDirectionalLightShadow();
         app.start();
     }

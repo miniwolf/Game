@@ -2,8 +2,6 @@ package mini.system;
 
 /**
  * Holds information about a native library for a particular platform.
- *
- * @author Kirill Vainer
  */
 final class NativeLibrary {
 

@@ -20,6 +20,12 @@ public class NanoTimer implements Timer {
         return tpf;
     }
 
+    @Override
+    public void reset() {
+        startTime = System.nanoTime();
+        previousTime = getTime();
+    }
+
     public float getFrameRate() {
         return fps;
     }

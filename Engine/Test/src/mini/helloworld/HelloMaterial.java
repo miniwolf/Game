@@ -20,8 +20,6 @@ import mini.utils.TangentBinormalGenerator;
  */
 public class HelloMaterial extends SimpleApplication {
     public static void main(String[] args) {
-        System.setProperty("org.lwjgl.librarypath",
-                           "C:/Users/miniwolf/Engine/Engine/lib/native/windows/");
         HelloMaterial app = new HelloMaterial();
         app.start();
     }

@@ -17,4 +17,11 @@ public interface AssetEventListener {
      * @param dependentAssetKey The asset key of the dependent asset that has failed to load.
      */
     void assetDependencyNotFound(AssetKey parentKey, AssetKey dependentAssetKey);
+
+    /**
+     * Called when an asset has been automatically loaded (e.g. loaded from file system and parsed).
+     *
+     * @param key the <code>AssetKey</code> for the asset loaded.
+     */
+    <T> void assetLoaded(AssetKey<T> key);
 }

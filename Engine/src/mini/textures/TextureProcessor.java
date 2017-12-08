@@ -1,21 +1,23 @@
 package mini.textures;
 
+import mini.asset.AssetKey;
 import mini.asset.AssetProcessor;
 import mini.asset.TextureKey;
 
 import java.nio.ByteBuffer;
 
 public class TextureProcessor implements AssetProcessor {
-
-    public static Object postProcess(TextureKey key, Object obj) {
+    @Override
+    public <T> T postProcess(AssetKey<T> key, T obj) {
         Image img = (Image) obj;
         if (img == null) {
             return null;
         }
 
+        TextureKey texKey = (TextureKey) key;
         Texture tex;
-        if (key.getTextureTypeHint() == Texture.Type.CubeMap) {
-            if (key.isFlipY()) {
+        if (texKey.getTextureTypeHint() == Texture.Type.CubeMap) {
+            if (texKey.isFlipY()) {
                 // also flip -y and +y image in cubemap
                 ByteBuffer pos_y = img.getData(2);
                 img.setData(2, img.getData(3));
@@ -30,14 +32,14 @@ public class TextureProcessor implements AssetProcessor {
 
         // enable mipmaps if image has them
         // or generate them if requested by user
-        if (img.hasMipmaps() || key.isGenerateMips()) {
+        if (img.hasMipmaps() || texKey.isGenerateMips()) {
             tex.setMinFilter(Texture.MinFilter.Trilinear);
         }
 
-        tex.setAnisotropicFilter(key.getAnisotropy());
+        tex.setAnisotropicFilter(texKey.getAnisotropy());
         tex.setName(key.getName());
         tex.setImage(img);
-        return tex;
+        return (T) tex;
     }
 
     public Object createClone(Object obj) {

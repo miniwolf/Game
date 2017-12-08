@@ -31,4 +31,10 @@ public class LwjglTimer implements Timer {
     public float getTimePerFrame() {
         return lastTPF;
     }
+
+    @Override
+    public void reset() {
+        startTime = Sys.getTime();
+        oldTime = getTime();
+    }
 }

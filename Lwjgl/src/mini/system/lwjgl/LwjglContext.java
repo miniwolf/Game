@@ -6,6 +6,7 @@ import mini.renderer.opengl.GLRenderer;
 import mini.system.ApplicationContext;
 import mini.system.NativeLibraryLoader;
 import mini.system.SystemListener;
+import mini.system.time.Timer;
 import org.lwjgl.LWJGLException;
 import org.lwjgl.Sys;
 import org.lwjgl.opengl.ARBDebugOutput;
@@ -19,7 +20,6 @@ import org.lwjgl.opengl.GLContext;
 import org.lwjgl.opengl.Pbuffer;
 import org.lwjgl.opengl.PixelFormat;
 
-import java.util.Timer;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -50,7 +50,7 @@ public abstract class LwjglContext implements ApplicationContext {
     }
 
     protected ContextAttribs createContextAttribs() {
-        ContextAttribs attr = new ContextAttribs(3, 2);
+        ContextAttribs attr = new ContextAttribs(4, 5);
         attr = attr.withProfileCore(true).withForwardCompatible(true)
                 .withProfileCompatibility(false).withDebug(true);
         return attr;
@@ -182,5 +182,10 @@ public abstract class LwjglContext implements ApplicationContext {
 
     public GLRenderer getRenderer() {
         return renderer;
+    }
+
+    @Override
+    public Timer getTimer() {
+        return timer;
     }
 }

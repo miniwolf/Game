@@ -18,4 +18,13 @@ public interface AssetProcessor {
      * @return The cloned asset, or the same as the given argument if no clone is needed.
      */
     Object createClone(Object obj);
+
+    /**
+     * Applies post processing to an asset. The method may return an object that is not the same
+     * instance as the parameter object, and it could be from a different class.
+     *
+     * @param obj The asset that was loaded from an {@link AssetLoader}
+     * @return Either the same object with processing applied, or an instance of a new object.
+     */
+    <T> T postProcess(AssetKey<T> key, T obj);
 }

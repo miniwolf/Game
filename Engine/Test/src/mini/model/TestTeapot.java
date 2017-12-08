@@ -16,8 +16,6 @@ public class TestTeapot extends SimpleApplication {
     private Spatial lightMdl;
 
     public static void main(String[] args) {
-        System.setProperty("org.lwjgl.librarypath",
-                           "C:/Users/miniwolf/Engine/Engine/lib/native/windows/");
         TestTeapot app = new TestTeapot();
         app.start();
     }

@@ -1,10 +1,10 @@
 package mini.textures.plugins;
 
 import mini.asset.AssetInfo;
+import mini.asset.AssetLoadException;
 import mini.asset.AssetLoader;
 import mini.asset.TextureKey;
 import mini.textures.Image;
-import mini.textures.TextureProcessor;
 import mini.textures.image.ColorSpace;
 import mini.utils.BufferUtils;
 
@@ -19,7 +19,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 /**
- * Created by miniwolf on 22-04-2017.
+ * @author miniwolf
  */
 public class AWTLoader implements AssetLoader {
     private Object extractImageData(BufferedImage img) {
@@ -35,31 +35,32 @@ public class AWTLoader implements AssetLoader {
         return null;
     }
 
-    public Image load(BufferedImage img) {
+    private void flipImage(byte[] img, int width, int height, int bpp) {
+        int scSz = (width * bpp) / 8;
+        byte[] sln = new byte[scSz];
+        int j;
+        for (int i = 0; i < height * 0.5; i++) {
+            j = height - i - 1;
+            System.arraycopy(img, i * scSz, sln, 0, scSz);
+            System.arraycopy(img, j * scSz, img, i * scSz, scSz);
+            System.arraycopy(sln, 0, img, j * scSz, scSz);
+        }
+    }
+
+    public Image load(BufferedImage img, boolean flipY) {
         int width = img.getWidth();
         int height = img.getHeight();
 
         switch (img.getType()) {
-            case BufferedImage.TYPE_4BYTE_ABGR: // most common in PNG images w/ alpha
-                byte[] dataBuf1 = (byte[]) extractImageData(img);
-
-                ByteBuffer data1 = BufferUtils
-                        .createByteBuffer(img.getWidth() * img.getHeight() * 4);
-                data1.put(dataBuf1);
-                return new Image(Image.Format.ABGR8, width, height, data1, null, ColorSpace.sRGB);
-            case BufferedImage.TYPE_3BYTE_BGR: // most common in JPEG images
-                byte[] dataBuf2 = (byte[]) extractImageData(img);
-
-                ByteBuffer data2 = BufferUtils
-                        .createByteBuffer(img.getWidth() * img.getHeight() * 3);
-                data2.put(dataBuf2);
-                return new Image(Image.Format.BGR8, width, height, data2, null, ColorSpace.sRGB);
-            case BufferedImage.TYPE_BYTE_GRAY: // grayscale fonts
-                byte[] dataBuf3 = (byte[]) extractImageData(img);
-                ByteBuffer data3 = BufferUtils.createByteBuffer(img.getWidth() * img.getHeight());
-                data3.put(dataBuf3);
-                return new Image(Image.Format.Luminance8, width, height, data3, null,
-                                 ColorSpace.sRGB);
+            case BufferedImage.TYPE_4BYTE_ABGR: { // most common in PNG images w/ alpha
+                return getImage(img, flipY, width, height, 32, Image.Format.ABGR8, 4);
+            }
+            case BufferedImage.TYPE_3BYTE_BGR: {// most common in JPEG images
+                return getImage(img, flipY, width, height, 24, Image.Format.BGR8, 3);
+            }
+            case BufferedImage.TYPE_BYTE_GRAY: {// grayscale fonts
+                return getImage(img, flipY, width, height, 8, Image.Format.Luminance8, 1);
+            }
             default:
                 break;
         }
@@ -96,31 +97,48 @@ public class AWTLoader implements AssetLoader {
         }
     }
 
-    private Image load(InputStream in) throws IOException {
+    private Image getImage(BufferedImage img, boolean flipY, int width, int height, int bpp,
+                           Image.Format format, int bufferMultiplier) {
+        byte[] dataBuf = (byte[]) extractImageData(img);
+        if (flipY) {
+            flipImage(dataBuf, width, height, bpp);
+        }
+
+        ByteBuffer data = BufferUtils
+                .createByteBuffer(img.getWidth() * img.getHeight() * bufferMultiplier);
+        data.put(dataBuf);
+        return new Image(format, width, height, data, null, ColorSpace.sRGB);
+    }
+
+    public Object load(AssetInfo info) throws IOException {
+        if (ImageIO.getImageReadersBySuffix(info.getKey().getExtension()) != null) {
+            InputStream in = null;
+            try {
+                boolean flipY = ((TextureKey) info.getKey()).isFlipY();
+                in = info.openStream();
+                Image img = load(in, flipY);
+                if (img == null) {
+                    throw new AssetLoadException("The given image cannot be loaded "
+                                                 + info.getKey().getName());
+                }
+                return img;
+            } finally {
+                if (in != null) {
+                    in.close();
+                }
+            }
+        } else {
+            throw new AssetLoadException("The extension " + info.getKey().getExtension()
+                                         + " is not supported");
+        }
+    }
+
+    private Image load(InputStream in, boolean flipY) throws IOException {
         ImageIO.setUseCache(false);
         BufferedImage img = ImageIO.read(in);
         if (img == null) {
             return null;
         }
-        return load(img);
-    }
-
-    public Object load(AssetInfo info) {
-        TextureKey key = (TextureKey) info.getKey();
-        if (ImageIO.getImageReadersBySuffix(key.getName().split("\\.")[1]) != null) {
-            try {
-                Image img = load(info.openStream());
-                if (img == null) {
-                    throw new RuntimeException("The given image cannot be loaded " + key.getName());
-                }
-                return TextureProcessor.postProcess(key, img);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        } else {
-            throw new IllegalArgumentException(
-                    "The extension " + key.getName().split(".")[1] + " is not supported");
-        }
-        return null;
+        return load(img, flipY);
     }
 }

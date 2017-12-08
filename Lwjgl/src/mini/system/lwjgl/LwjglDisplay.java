@@ -22,10 +22,10 @@ public class LwjglDisplay extends LwjglAbstractDisplay {
         try {
             DisplayMode[] modes = Display.getAvailableDisplayModes();
             for (DisplayMode mode : modes) {
-                if (mode.getWidth() == width
-                        && mode.getHeight() == height
-                        && (mode.getBitsPerPixel() == bpp || (bpp == 24 && mode.getBitsPerPixel() == 32))
-                        && (mode.getFrequency() == freq || (freq == 60 && mode.getFrequency() == 59))) {
+                if (mode.getWidth() == width && mode.getHeight() == height
+                    && (mode.getBitsPerPixel() == bpp
+                        || (bpp == 24 && mode.getBitsPerPixel() == 32))
+                    && (mode.getFrequency() == freq || (freq == 60 && mode.getFrequency() == 59))) {
                     return mode;
                 }
             }
@@ -47,10 +47,10 @@ public class LwjglDisplay extends LwjglAbstractDisplay {
 
         boolean pixelFormatChanged = false;
         if (created.get() && (pixelFormat.getBitsPerPixel() != pf.getBitsPerPixel()
-                || pixelFormat.getAlphaBits() != pf.getAlphaBits()
-                || pixelFormat.getDepthBits() != pf.getDepthBits()
-                || pixelFormat.getStencilBits() != pf.getStencilBits()
-                || pixelFormat.getSamples() != pf.getSamples())) {
+                              || pixelFormat.getAlphaBits() != pf.getAlphaBits()
+                              || pixelFormat.getDepthBits() != pf.getDepthBits()
+                              || pixelFormat.getStencilBits() != pf.getStencilBits()
+                              || pixelFormat.getSamples() != pf.getSamples())) {
             renderer.resetGLObjects();
             Display.destroy();
             pixelFormatChanged = true;
@@ -79,7 +79,7 @@ public class LwjglDisplay extends LwjglAbstractDisplay {
             renderable.set(true);
 
             if (pixelFormatChanged && pixelFormat.getSamples() > 1
-                    && GLContext.getCapabilities().GL_ARB_multisample) {
+                && GLContext.getCapabilities().GL_ARB_multisample) {
                 GL11.glEnable(ARBMultisample.GL_MULTISAMPLE_ARB);
             }
         }
@@ -102,8 +102,9 @@ public class LwjglDisplay extends LwjglAbstractDisplay {
         }
 
         new Thread(this, THREAD_NAME).start();
-        if (waitFor)
+        if (waitFor) {
             waitFor(true);
+        }
     }
 
     @Override
@@ -136,8 +137,9 @@ public class LwjglDisplay extends LwjglAbstractDisplay {
     }
 
     public void setTitle(String title) {
-        if (created.get())
+        if (created.get()) {
             Display.setTitle(title);
+        }
     }
 
     private ByteBuffer[] imagesToByteBuffers(Object[] images) {
@@ -151,13 +153,14 @@ public class LwjglDisplay extends LwjglAbstractDisplay {
 
     private ByteBuffer imageToByteBuffer(BufferedImage image) {
         if (image.getType() != BufferedImage.TYPE_INT_ARGB_PRE) {
-            BufferedImage convertedImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB_PRE);
+            BufferedImage convertedImage = new BufferedImage(image.getWidth(), image.getHeight(),
+                                                             BufferedImage.TYPE_INT_ARGB_PRE);
             Graphics2D g = convertedImage.createGraphics();
             double width = image.getWidth() * (double) 1;
             double height = image.getHeight() * (double) 1;
             g.drawImage(image, (int) ((convertedImage.getWidth() - width) / 2),
-                    (int) ((convertedImage.getHeight() - height) / 2),
-                    (int) (width), (int) (height), null);
+                        (int) ((convertedImage.getHeight() - height) / 2),
+                        (int) (width), (int) (height), null);
             g.dispose();
             image = convertedImage;
         }
@@ -176,5 +179,4 @@ public class LwjglDisplay extends LwjglAbstractDisplay {
         }
         return ByteBuffer.wrap(imageBuffer);
     }
-
 }

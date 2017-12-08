@@ -16,8 +16,6 @@ public class TestMousePicker extends SimpleApplication {
     private Node shootables;
 
     public static void main(String[] args) {
-        System.setProperty("org.lwjgl.librarypath",
-                           "C:/Users/miniwolf/Engine/Engine/lib/native/windows/");
         TestMousePicker app = new TestMousePicker();
         app.start();
     }
@@ -40,7 +38,7 @@ public class TestMousePicker extends SimpleApplication {
     }
 
     @Override
-    public void simpleUpdate() {
+    public void simpleUpdate(float tpf) {
         Vector3f origin = cam.getWorldCoordinates(inputManager.getCursorPosition(), 0.0f);
         Vector3f direction = cam.getWorldCoordinates(inputManager.getCursorPosition(), 0.3f);
         direction.subtractLocal(origin).normalizeLocal();

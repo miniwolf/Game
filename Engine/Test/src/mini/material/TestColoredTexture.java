@@ -9,8 +9,6 @@ import mini.scene.shape.Quad;
 public class TestColoredTexture extends SimpleApplication {
 
     public static void main(String[] args) {
-        System.setProperty("org.lwjgl.librarypath",
-                           "C:/Users/miniwolf/Engine/Engine/lib/native/windows/");
         TestColoredTexture app = new TestColoredTexture();
         app.start();
     }

@@ -21,8 +21,6 @@ public class TestApplicationStateLifeCycle extends SimpleApplication {
     private InOrder inOrder;
 
     public static void main(String[] args) {
-        System.setProperty("org.lwjgl.librarypath",
-                           "C:/Users/miniwolf/Engine/Engine/lib/native/windows/");
         TestApplicationStateLifeCycle app = new TestApplicationStateLifeCycle();
         app.start();
     }
@@ -48,14 +46,14 @@ public class TestApplicationStateLifeCycle extends SimpleApplication {
     public void simpleDestroy() {
         inOrder.verify(mock).stateAttached(any(ApplicationStateManager.class));
         inOrder.verify(mock).initialize(any(ApplicationStateManager.class), any(Application.class));
-        inOrder.verify(mock).update();
+        inOrder.verify(mock).update(any());
         inOrder.verify(mock).stateDetached(any(ApplicationStateManager.class));
         inOrder.verify(mock).cleanup();
         super.simpleDestroy();
     }
 
     @Override
-    public void simpleUpdate() {
+    public void simpleUpdate(float tpf) {
         if (stateManager.getState(TestState.class) != null) {
             System.out.println("Detaching test state.");
             stateManager.detach(stateManager.getState(TestState.class));
@@ -77,8 +75,8 @@ public class TestApplicationStateLifeCycle extends SimpleApplication {
         }
 
         @Override
-        public void update() {
-            super.update();
+        public void update(float tpf) {
+            super.update(tpf);
             System.out.println("Update");
         }
 

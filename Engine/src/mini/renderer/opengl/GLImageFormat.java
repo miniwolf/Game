@@ -1,7 +1,9 @@
 package mini.renderer.opengl;
 
 /**
- * Created by miniwolf on 25-04-2017.
+ * Describes an OpenGL image format.
+ *
+ * @author miniwolf
  */
 public class GLImageFormat {
     public final int internalFormat;

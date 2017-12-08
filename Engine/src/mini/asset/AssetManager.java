@@ -77,7 +77,7 @@ public class AssetManager {
             throw new IllegalStateException("Asset implements CloneableSmartAsset but doesn't have"
                                             + "processor to handle cloning");
         } else {
-            T clone = processor.createClone(obj);
+            T clone = (T) processor.createClone(obj);
             if (cache != null && clone != obj) {
                 cache.registerAssetClone(key, clone);
             } else {
@@ -106,9 +106,17 @@ public class AssetManager {
             throw new RuntimeException("Error occurred while loading asset \"" + key + "\" using "
                                        + loader.getClass().getSimpleName());
         } else {
+            if (processor != null) {
+                obj = processor.postProcess(key, obj);
+            }
+
             // Do caching with type T
             if (cache != null) {
                 cache.addToCache(key, obj);
+            }
+
+            for (AssetEventListener listener : eventListeners) {
+                listener.assetLoaded(key);
             }
             return obj;
         }
