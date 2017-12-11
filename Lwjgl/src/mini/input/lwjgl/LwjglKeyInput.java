@@ -4,7 +4,7 @@ import mini.input.KeyInput;
 import mini.input.RawInputListener;
 import mini.input.events.KeyInputEvent;
 import mini.system.lwjgl.LwjglAbstractDisplay;
-import mini.system.time.LwjglTimer;
+import mini.system.lwjgl.LwjglTimer;
 import org.lwjgl.LWJGLException;
 import org.lwjgl.Sys;
 import org.lwjgl.input.Keyboard;

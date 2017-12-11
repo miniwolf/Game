@@ -9,6 +9,13 @@ import mini.system.time.Timer;
 public interface ApplicationContext {
 
     /**
+     * @return The current display settings. Note that they might be
+     * different from the ones set with setDisplaySettings() if the context
+     * was restarted or the settings changed internally.
+     */
+    ApplicationSettings getSettings();
+
+    /**
      * @return True if the context contains a valid render surface, if any of the rendering methods
      * in {@link GLRenderer} are called while this is <code>false</code>, then the result is
      * undefined.
@@ -48,24 +55,48 @@ public interface ApplicationContext {
     KeyInput getKeyInput();
 
     /**
+     * @param settings the display settings to use for the created context. If
+     *                 the context has already been created, then <code>restart()</code> must be called
+     *                 for the changes to be applied.
+     */
+    void setSettings(ApplicationSettings settings);
+
+    /**
      * The type of context.
      */
     enum Type {
         /**
-         * A display can represent a window or a fullscreen-exclusive display. If windowed, the
-         * graphics are rendered to a new on-screen surface enclosed in a window defined by the
-         * operating system. Implementations are encouraged to not use AWT or Swing to create the
-         * OpenGL display but rather use native operating system functions to set up a native
+         * A display can represent a windowed or a fullscreen-exclusive display.
+         * If windowed, the graphics are rendered to a new on-screen surface
+         * enclosed in a window defined by the operating system. Implementations
+         * are encouraged to not use AWT or Swing to create the OpenGL display
+         * but rather use native operating system functions to set up a native
          * display with the windowing system.
          */
         Display,
 
         /**
-         * A canvas type context makes a rendering surface available as an AWT
-         * {@link java.awt.Canvas} object that can be embedded in a Swing/AWT frame. To retrieve the
-         * Canvas object, you should cast the context to ApplicationCanvasContext.
+         * A canvas type context makes a rendering surface available as an
+         * AWT {@link java.awt.Canvas} object that can be embedded in a Swing/AWT
+         * frame. To retrieve the Canvas object, you should cast the context
+         * to {@link ApplicationCanvasContext}.
          */
-        Canvas
+        Canvas,
+
+        /**
+         * An <code>OffscreenSurface</code> is a context that is not visible
+         * by the user. The application can use the offscreen surface to do
+         * General Purpose GPU computations or render a scene into a buffer
+         * in order to save it as a screenshot, video or send through a network.
+         */
+        OffscreenSurface,
+
+        /**
+         * A <code>Headless</code> context is not visible and does not have
+         * any drawable surface. The implementation does not provide any
+         * display, input, or sound support.
+         */
+        Headless
     }
 
     /**

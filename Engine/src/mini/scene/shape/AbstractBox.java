@@ -12,9 +12,6 @@ import mini.scene.Mesh;
  * <p>
  * This class does not control how the geometry data is generated, see {@link Box}
  * for that.
- *
- * @author <a href="mailto:ianp@ianp.org">Ian Phillips</a>
- * @version $Revision: 4131 $, $Date: 2009-03-19 16:15:28 -0400 (Thu, 19 Mar 2009) $
  */
 public abstract class AbstractBox extends Mesh {
 

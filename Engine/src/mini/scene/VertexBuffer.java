@@ -517,7 +517,7 @@ public class VertexBuffer extends NativeObject implements Cloneable {
 
     /**
      * Called to update the data in the buffer with new data. Can only
-     * be called after {@link VertexBuffer#setupData(com.jme3.scene.VertexBuffer.Usage, int, com.jme3.scene.VertexBuffer.Format, java.nio.Buffer) }
+     * be called after {@link VertexBuffer#setupData(mini.scene.VertexBuffer.Usage, int, mini.scene.VertexBuffer.Format, java.nio.Buffer) }
      * has been called. Note that it is fine to call this method on the
      * data already set, e.g. vb.updateData(vb.getData()), this will just
      * set the proper update flag indicating the data should be sent to the GPU

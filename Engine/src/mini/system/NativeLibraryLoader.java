@@ -93,12 +93,13 @@ public final class NativeLibraryLoader {
 
     static {
         // LWJGL
-        registerNativeLibrary("lwjgl", Platform.Windows32, "lib/native/windows/lwjgl.dll");
+        //registerNativeLibrary("lwjgl", Platform.Windows32, "lib/native/windows/lwjgl.dll");
         registerNativeLibrary("lwjgl", Platform.Windows64, "lib/native/windows/lwjgl64.dll");
         registerNativeLibrary("lwjgl", Linux32, "lib/native/linux/liblwjgl.so");
         registerNativeLibrary("lwjgl", Linux64, "lib/native/linux/liblwjgl64.so");
         registerNativeLibrary("lwjgl", MacOSX32, "lib/native/macosx/liblwjgl.dylib");
         registerNativeLibrary("lwjgl", MacOSX64, "lib/native/macosx/liblwjgl.dylib");
+        registerNativeLibrary("lwjgl3", Platform.Windows64, "lib/lwjgl3/lwjgl_opengl.dll");
     }
 
     private NativeLibraryLoader() {

@@ -11,8 +11,6 @@ import java.util.List;
  * This is the most basic strategy : The fastest and the easiest.
  * Though it has severe graphical draw backs as there might be very visible seams
  * on static object and some "poping" on dynamic objects.
- *
- * @author Nehon
  */
 public class BasicProbeBlendingStrategy implements LightProbeBlendingStrategy {
     List<LightProbe> lightProbes = new ArrayList<>();

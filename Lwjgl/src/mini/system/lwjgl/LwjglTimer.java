@@ -1,5 +1,6 @@
-package mini.system.time;
+package mini.system.lwjgl;
 
+import mini.system.time.Timer;
 import org.lwjgl.Sys;
 
 public class LwjglTimer implements Timer {

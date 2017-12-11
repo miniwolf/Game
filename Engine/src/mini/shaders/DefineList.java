@@ -5,8 +5,6 @@ import java.util.List;
 
 /**
  * The new define list.
- *
- * @author Kirill Vainer
  */
 public final class DefineList {
 

@@ -2,6 +2,7 @@ package mini.system.lwjgl;
 
 import mini.input.lwjgl.LwjglKeyInput;
 import mini.input.lwjgl.LwjglMouseInput;
+import mini.renderer.Renderer;
 import mini.renderer.opengl.GLRenderer;
 import mini.system.ApplicationContext;
 import mini.system.NativeLibraryLoader;
@@ -31,7 +32,7 @@ public abstract class LwjglContext implements ApplicationContext {
     protected AtomicBoolean renderable = new AtomicBoolean(false);
     protected final Object createdLock = new Object();
 
-    protected GLRenderer renderer;
+    protected Renderer renderer;
     protected LwjglKeyInput keyInput;
     protected LwjglMouseInput mouseInput;
     protected Timer timer;
@@ -180,7 +181,7 @@ public abstract class LwjglContext implements ApplicationContext {
         return renderable.get();
     }
 
-    public GLRenderer getRenderer() {
+    public Renderer getRenderer() {
         return renderer;
     }
 

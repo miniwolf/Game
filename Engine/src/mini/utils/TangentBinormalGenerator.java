@@ -26,10 +26,6 @@ import static mini.utils.BufferUtils.destroyDirectBuffer;
 import static mini.utils.BufferUtils.populateFromBuffer;
 import static mini.utils.BufferUtils.setInBuffer;
 
-/**
- *
- * @author Lex (Aleksey Nikiforov)
- */
 public class TangentBinormalGenerator {
 
     private static final float ZERO_TOLERANCE = 0.0000001f;

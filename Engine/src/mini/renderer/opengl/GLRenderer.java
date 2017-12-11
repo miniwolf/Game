@@ -12,6 +12,7 @@ import mini.renderer.IDList;
 import mini.renderer.Limits;
 import mini.renderer.RenderContext;
 import mini.renderer.Renderer;
+import mini.renderer.RendererException;
 import mini.scene.Mesh;
 import mini.scene.VertexBuffer;
 import mini.shaders.Attribute;
@@ -25,31 +26,8 @@ import mini.textures.Texture;
 import mini.textures.image.LastTextureState;
 import mini.utils.BufferUtils;
 import mini.utils.MipMapGenerator;
-import org.lwjgl.opengl.AMDSeamlessCubemapPerTexture;
-import org.lwjgl.opengl.ARBDrawBuffers;
-import org.lwjgl.opengl.ARBFramebufferObject;
-import org.lwjgl.opengl.ARBGetProgramBinary;
-import org.lwjgl.opengl.ARBMultisample;
-import org.lwjgl.opengl.ARBTextureMultisample;
-import org.lwjgl.opengl.ARBVertexArrayObject;
-import org.lwjgl.opengl.EXTFramebufferBlit;
-import org.lwjgl.opengl.EXTFramebufferMultisample;
-import org.lwjgl.opengl.EXTFramebufferObject;
-import org.lwjgl.opengl.EXTTextureFilterAnisotropic;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
-import org.lwjgl.opengl.GL13;
-import org.lwjgl.opengl.GL14;
-import org.lwjgl.opengl.GL15;
-import org.lwjgl.opengl.GL20;
-import org.lwjgl.opengl.GL30;
-import org.lwjgl.opengl.GL31;
-import org.lwjgl.opengl.GL32;
-import org.lwjgl.opengl.GL33;
-import org.lwjgl.opengl.GL40;
-import org.lwjgl.opengl.GL41;
+import mini.utils.NativeObjectManager;
 
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
@@ -60,23 +38,22 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * @author miniwolf
- */
 public final class GLRenderer implements Renderer {
     private static final boolean VALIDATE_SHADER = false;
     private static final Pattern GLVERSION_PATTERN = Pattern.compile(".*?(\\d+)\\.(\\d+).*");
 
+    private final ByteBuffer nameBuf = BufferUtils.createByteBuffer(250);
     private final StringBuilder stringBuf = new StringBuilder(250);
     private final IntBuffer intBuf1 = BufferUtils.createIntBuffer(1);
     private final IntBuffer intBuf16 = BufferUtils.createIntBuffer(16);
+    private final FloatBuffer floatBuf16 = BufferUtils.createFloatBuffer(16);
     private final RenderContext context = new RenderContext();
-    private final Set<Caps> caps = EnumSet.noneOf(Caps.class);
-    private final Map<Limits, Integer> limits = new EnumMap<>(Limits.class);
+    private final NativeObjectManager objManager = new NativeObjectManager();
+    private final EnumSet<Caps> caps = EnumSet.noneOf(Caps.class);
+    private final EnumMap<Limits, Integer> limits = new EnumMap<Limits, Integer>(Limits.class);
 
     private FrameBuffer mainFbOverride = null;
     private int vpX, vpY, vpW, vpH;
@@ -85,29 +62,47 @@ public final class GLRenderer implements Renderer {
     private boolean linearizeSrgbImages;
     private HashSet<String> extensions;
 
-    private final TextureUtil texUtil = new TextureUtil();
+    private final GL gl;
+    private final GL2 gl2;
+    private final GL3 gl3;
+    private final GL4 gl4;
+    private final GLExt glext;
+    private final GLFbo glfbo;
+    private final TextureUtil texUtil;
 
-    public Set<Caps> getCaps() {
+    public GLRenderer(GL gl, GLExt glext, GLFbo glfbo) {
+        this.gl = gl;
+        this.gl2 = gl instanceof GL2 ? (GL2) gl : null;
+        this.gl3 = gl instanceof GL3 ? (GL3) gl : null;
+        this.gl4 = gl instanceof GL4 ? (GL4) gl : null;
+        this.glfbo = glfbo;
+        this.glext = glext;
+        this.texUtil = new TextureUtil(gl, gl2, glext);
+    }
+
+    @Override
+    public EnumSet<Caps> getCaps() {
         return caps;
     }
 
     // Not making public yet ...
-    public Map<Limits, Integer> getLimits() {
+    public EnumMap<Limits, Integer> getLimits() {
         return limits;
     }
 
     private HashSet<String> loadExtensions() {
-        HashSet<String> extensionSet = new HashSet<>(64);
+        HashSet<String> extensionSet = new HashSet<String>(64);
         if (caps.contains(Caps.OpenGL30)) {
             // If OpenGL3+ is available, use the non-deprecated way
             // of getting supported extensions.
-            int extensionCount = GL11.glGetInteger(GL30.GL_NUM_EXTENSIONS);
+            gl3.glGetInteger(GL3.GL_NUM_EXTENSIONS, intBuf16);
+            int extensionCount = intBuf16.get(0);
             for (int i = 0; i < extensionCount; i++) {
-                String extension = GL30.glGetStringi(GL11.GL_EXTENSIONS, i);
+                String extension = gl3.glGetString(GL.GL_EXTENSIONS, i);
                 extensionSet.add(extension);
             }
         } else {
-            extensionSet.addAll(Arrays.asList(GL11.glGetString(GL11.GL_EXTENSIONS).split(" ")));
+            extensionSet.addAll(Arrays.asList(gl.glGetString(GL.GL_EXTENSIONS).split(" ")));
         }
         return extensionSet;
     }
@@ -140,7 +135,7 @@ public final class GLRenderer implements Renderer {
     }
 
     private void loadCapabilitiesGL2() {
-        int oglVer = extractVersion(GL11.glGetString(GL11.GL_VERSION));
+        int oglVer = extractVersion(gl.glGetString(GL.GL_VERSION));
 
         if (oglVer >= 200) {
             caps.add(Caps.OpenGL20);
@@ -181,7 +176,7 @@ public final class GLRenderer implements Renderer {
             }
         }
 
-        int glslVer = extractVersion(GL11.glGetString(GL20.GL_SHADING_LANGUAGE_VERSION));
+        int glslVer = extractVersion(gl.glGetString(GL.GL_SHADING_LANGUAGE_VERSION));
 
         switch (glslVer) {
             default:
@@ -226,8 +221,8 @@ public final class GLRenderer implements Renderer {
 
         // Fix issue in TestRenderToMemory when GL.GL_FRONT is the main
         // buffer being used.
-        context.initialDrawBuf = getInteger(GL11.GL_DRAW_BUFFER);
-        context.initialReadBuf = getInteger(GL11.GL_READ_BUFFER);
+        context.initialDrawBuf = getInteger(GL2.GL_DRAW_BUFFER);
+        context.initialReadBuf = getInteger(GL2.GL_READ_BUFFER);
 
         // XXX: This has to be GL.GL_BACK for canvas on Mac
         // Since initialDrawBuf is GL.GL_FRONT for pbuffer, gotta
@@ -239,31 +234,36 @@ public final class GLRenderer implements Renderer {
     private void loadCapabilitiesCommon() {
         extensions = loadExtensions();
 
-        limits.put(Limits.VertexTextureUnits, getInteger(GL20.GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS));
+        limits.put(Limits.VertexTextureUnits, getInteger(GL.GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS));
         if (limits.get(Limits.VertexTextureUnits) > 0) {
             caps.add(Caps.VertexTextureFetch);
         }
 
-        limits.put(Limits.FragmentTextureUnits, getInteger(GL20.GL_MAX_TEXTURE_IMAGE_UNITS));
+        limits.put(Limits.FragmentTextureUnits, getInteger(GL.GL_MAX_TEXTURE_IMAGE_UNITS));
 
         if (caps.contains(Caps.OpenGLES20)) {
-            limits.put(Limits.FragmentUniformVectors, getInteger(GL41.GL_MAX_FRAGMENT_UNIFORM_VECTORS));
-            limits.put(Limits.VertexUniformVectors, getInteger(GL41.GL_MAX_VERTEX_UNIFORM_VECTORS));
+            limits.put(Limits.FragmentUniformVectors,
+                       getInteger(GL.GL_MAX_FRAGMENT_UNIFORM_VECTORS));
+            limits.put(Limits.VertexUniformVectors, getInteger(GL.GL_MAX_VERTEX_UNIFORM_VECTORS));
         } else {
-            limits.put(Limits.FragmentUniformVectors, getInteger(GL20.GL_MAX_FRAGMENT_UNIFORM_COMPONENTS) / 4);
-            limits.put(Limits.VertexUniformVectors, getInteger(GL20.GL_MAX_VERTEX_UNIFORM_COMPONENTS) / 4);
+            limits.put(Limits.FragmentUniformVectors,
+                       getInteger(GL.GL_MAX_FRAGMENT_UNIFORM_COMPONENTS) / 4);
+            limits.put(Limits.VertexUniformVectors,
+                       getInteger(GL.GL_MAX_VERTEX_UNIFORM_COMPONENTS) / 4);
         }
 
-        limits.put(Limits.VertexAttributes, getInteger(GL20.GL_MAX_VERTEX_ATTRIBS));
-        limits.put(Limits.TextureSize, getInteger(GL11.GL_MAX_TEXTURE_SIZE));
-        limits.put(Limits.CubemapSize, getInteger(GL13.GL_MAX_CUBE_MAP_TEXTURE_SIZE));
+        limits.put(Limits.VertexAttributes, getInteger(GL.GL_MAX_VERTEX_ATTRIBS));
+        limits.put(Limits.TextureSize, getInteger(GL.GL_MAX_TEXTURE_SIZE));
+        limits.put(Limits.CubemapSize, getInteger(GL.GL_MAX_CUBE_MAP_TEXTURE_SIZE));
 
         if (hasExtension("GL_ARB_draw_instanced") &&
-                hasExtension("GL_ARB_instanced_arrays")) {
+            hasExtension("GL_ARB_instanced_arrays")) {
             caps.add(Caps.MeshInstancing);
         }
 
-        caps.add(Caps.IntegerIndexBuffer);
+        if (hasExtension("GL_OES_element_index_uint") || gl2 != null) {
+            caps.add(Caps.IntegerIndexBuffer);
+        }
 
         if (hasExtension("GL_ARB_texture_buffer_object")) {
             caps.add(Caps.TextureBuffer);
@@ -274,11 +274,11 @@ public final class GLRenderer implements Renderer {
         boolean hasFloatTexture;
 
         hasFloatTexture = hasExtension("GL_OES_texture_half_float") &&
-                hasExtension("GL_OES_texture_float");
+                          hasExtension("GL_OES_texture_float");
 
         if (!hasFloatTexture) {
             hasFloatTexture = hasExtension("GL_ARB_texture_float") &&
-                    hasExtension("GL_ARB_half_float_pixel");
+                              hasExtension("GL_ARB_half_float_pixel");
 
             if (!hasFloatTexture) {
                 hasFloatTexture = caps.contains(Caps.OpenGL30);
@@ -290,14 +290,19 @@ public final class GLRenderer implements Renderer {
         }
 
         // integer texture format extensions
-        if(hasExtension("GL_EXT_texture_integer") || caps.contains(Caps.OpenGL30))
+        if (hasExtension("GL_EXT_texture_integer") || caps.contains(Caps.OpenGL30)) {
             caps.add(Caps.IntegerTexture);
+        }
 
-        caps.add(Caps.DepthTexture);
+        if (hasExtension("GL_OES_depth_texture") || gl2 != null) {
+            caps.add(Caps.DepthTexture);
+
+            // TODO: GL_OES_depth24
+        }
 
         if (hasExtension("GL_OES_rgb8_rgba8") ||
-                hasExtension("GL_ARM_rgba8") ||
-                hasExtension("GL_EXT_texture_format_BGRA8888")) {
+            hasExtension("GL_ARM_rgba8") ||
+            hasExtension("GL_EXT_texture_format_BGRA8888")) {
             caps.add(Caps.Rgba8);
         }
 
@@ -306,7 +311,7 @@ public final class GLRenderer implements Renderer {
         }
 
         if (hasExtension("GL_ARB_color_buffer_float") &&
-                hasExtension("GL_ARB_half_float_pixel")) {
+            hasExtension("GL_ARB_half_float_pixel")) {
             // XXX: Require both 16 and 32 bit float support for FloatColorBuffer.
             caps.add(Caps.FloatColorBuffer);
         }
@@ -316,7 +321,7 @@ public final class GLRenderer implements Renderer {
         }
 
         if ((hasExtension("GL_EXT_packed_float") && hasFloatTexture) ||
-                caps.contains(Caps.OpenGL30)) {
+            caps.contains(Caps.OpenGL30)) {
             // Either OpenGL3 is available or both packed_float & half_float_pixel.
             caps.add(Caps.PackedFloatColorBuffer);
             caps.add(Caps.PackedFloatTexture);
@@ -344,8 +349,8 @@ public final class GLRenderer implements Renderer {
         }
 
         if (hasExtension("GL_ARB_texture_non_power_of_two") ||
-                hasExtension("GL_OES_texture_npot") ||
-                caps.contains(Caps.OpenGL30)) {
+            hasExtension("GL_OES_texture_npot") ||
+            caps.contains(Caps.OpenGL30)) {
             caps.add(Caps.NonPowerOfTwoTextures);
         } else {
             System.err.println("Your graphics card does not "
@@ -364,16 +369,18 @@ public final class GLRenderer implements Renderer {
 
         if (hasExtension("GL_EXT_texture_filter_anisotropic")) {
             caps.add(Caps.TextureFilterAnisotropic);
-            limits.put(Limits.TextureAnisotropy, getInteger(EXTTextureFilterAnisotropic.GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT));
+            limits.put(Limits.TextureAnisotropy,
+                       getInteger(GLExt.GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT));
         }
 
         if (hasExtension("GL_EXT_framebuffer_object")
-                || caps.contains(Caps.OpenGL30)
-                || caps.contains(Caps.OpenGLES20)) {
+            || caps.contains(Caps.OpenGL30)
+            || caps.contains(Caps.OpenGLES20)) {
             caps.add(Caps.FrameBuffer);
 
-            limits.put(Limits.RenderBufferSize, getInteger(EXTFramebufferObject.GL_MAX_RENDERBUFFER_SIZE_EXT));
-            limits.put(Limits.FrameBufferAttachments, getInteger(EXTFramebufferObject.GL_MAX_COLOR_ATTACHMENTS_EXT));
+            limits.put(Limits.RenderBufferSize, getInteger(GLFbo.GL_MAX_RENDERBUFFER_SIZE_EXT));
+            limits.put(Limits.FrameBufferAttachments,
+                       getInteger(GLFbo.GL_MAX_COLOR_ATTACHMENTS_EXT));
 
             if (hasExtension("GL_EXT_framebuffer_blit") || caps.contains(Caps.OpenGL30)) {
                 caps.add(Caps.FrameBufferBlit);
@@ -381,13 +388,15 @@ public final class GLRenderer implements Renderer {
 
             if (hasExtension("GL_EXT_framebuffer_multisample")) {
                 caps.add(Caps.FrameBufferMultisample);
-                limits.put(Limits.FrameBufferSamples, getInteger(EXTFramebufferMultisample.GL_MAX_SAMPLES_EXT));
+                limits.put(Limits.FrameBufferSamples, getInteger(GLExt.GL_MAX_SAMPLES_EXT));
             }
 
             if (hasExtension("GL_ARB_texture_multisample")) {
                 caps.add(Caps.TextureMultisample);
-                limits.put(Limits.ColorTextureSamples, getInteger(GL32.GL_MAX_COLOR_TEXTURE_SAMPLES));
-                limits.put(Limits.DepthTextureSamples, getInteger(GL32.GL_MAX_DEPTH_TEXTURE_SAMPLES));
+                limits.put(Limits.ColorTextureSamples,
+                           getInteger(GLExt.GL_MAX_COLOR_TEXTURE_SAMPLES));
+                limits.put(Limits.DepthTextureSamples,
+                           getInteger(GLExt.GL_MAX_DEPTH_TEXTURE_SAMPLES));
                 if (!limits.containsKey(Limits.FrameBufferSamples)) {
                     // In case they want to query samples on main FB ...
                     limits.put(Limits.FrameBufferSamples, limits.get(Limits.ColorTextureSamples));
@@ -395,7 +404,8 @@ public final class GLRenderer implements Renderer {
             }
 
             if (hasExtension("GL_ARB_draw_buffers") || caps.contains(Caps.OpenGL30)) {
-                limits.put(Limits.FrameBufferMrtAttachments, getInteger(ARBDrawBuffers.GL_MAX_DRAW_BUFFERS_ARB));
+                limits.put(Limits.FrameBufferMrtAttachments,
+                           getInteger(GLExt.GL_MAX_DRAW_BUFFERS_ARB));
                 if (limits.get(Limits.FrameBufferMrtAttachments) > 1) {
                     caps.add(Caps.FrameBufferMRT);
                 }
@@ -405,21 +415,21 @@ public final class GLRenderer implements Renderer {
         }
 
         if (hasExtension("GL_ARB_multisample")) {
-            boolean available = getInteger(ARBMultisample.GL_SAMPLE_BUFFERS_ARB) != 0;
-            int samples = getInteger(ARBMultisample.GL_SAMPLES_ARB);
+            boolean available = getInteger(GLExt.GL_SAMPLE_BUFFERS_ARB) != 0;
+            int samples = getInteger(GLExt.GL_SAMPLES_ARB);
             System.out.println("Samples: " + samples);
-            boolean enabled = GL11.glIsEnabled(ARBMultisample.GL_MULTISAMPLE_ARB);
+            boolean enabled = gl.glIsEnabled(GLExt.GL_MULTISAMPLE_ARB);
             if (samples > 0 && available && !enabled) {
                 // Doesn't seem to be neccessary .. OGL spec says its always
                 // set by default?
-                GL11.glEnable(ARBMultisample.GL_MULTISAMPLE_ARB);
+                gl.glEnable(GLExt.GL_MULTISAMPLE_ARB);
             }
             caps.add(Caps.Multisample);
         }
 
         // Supports sRGB pipeline.
-        if ( (hasExtension("GL_ARB_framebuffer_sRGB") && hasExtension("GL_EXT_texture_sRGB"))
-                || caps.contains(Caps.OpenGL30) ) {
+        if ((hasExtension("GL_ARB_framebuffer_sRGB") && hasExtension("GL_EXT_texture_sRGB"))
+            || caps.contains(Caps.OpenGL30)) {
             caps.add(Caps.Srgb);
         }
 
@@ -433,7 +443,7 @@ public final class GLRenderer implements Renderer {
         }
 
         if (hasExtension("GL_ARB_get_program_binary")) {
-            int binaryFormats = getInteger(ARBGetProgramBinary.GL_NUM_PROGRAM_BINARY_FORMATS);
+            int binaryFormats = getInteger(GLExt.GL_NUM_PROGRAM_BINARY_FORMATS);
             if (binaryFormats > 0) {
                 caps.add(Caps.BinaryShader);
             }
@@ -441,53 +451,35 @@ public final class GLRenderer implements Renderer {
 
         // Print context information
         System.out.println("OpenGL Renderer Information\n" +
-                        " * Vendor: " + GL11.glGetString(GL11.GL_VENDOR) + "\n" +
-                        " * Renderer: " + GL11.glGetString(GL11.GL_RENDERER) + "\n" +
-                        " * OpenGL Version: " + GL11.glGetString(GL11.GL_VERSION) + "\n" +
-                        " * GLSL Version: " + GL11.glGetString(GL20.GL_SHADING_LANGUAGE_VERSION) + "\n" +
-                        " * Profile: " + (caps.contains(Caps.CoreProfile) ? "Core" : "Compatibility")
-                );
-
-        // Print capabilities (if fine logging is enabled)
-        //if (logger.isLoggable(Level.FINE)) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("Supported capabilities: \n");
-            for (Caps cap : caps)
-            {
-                sb.append("\t").append(cap.toString()).append("\n");
-            }
-
-            sb.append("\nHardware limits: \n");
-            for (Limits limit : Limits.values()) {
-                Integer value = limits.get(limit);
-                if (value == null) {
-                    value = 0;
-                }
-                sb.append("\t").append(limit.name()).append(" = ")
-                        .append(value).append("\n");
-            }
-
-        System.out.println(sb.toString());
-        //}
+                           " * Vendor: " + gl.glGetString(GL.GL_VENDOR) + "\n" +
+                           " * Renderer: " + gl.glGetString(GL.GL_RENDERER) + "\n" +
+                           " * OpenGL Version: " + gl.glGetString(GL.GL_VERSION) + "\n" +
+                           " * GLSL Version: " + gl.glGetString(GL.GL_SHADING_LANGUAGE_VERSION)
+                           + "\n" +
+                           " * Profile: " + (caps.contains(Caps.CoreProfile) ? "Core" :
+                                             "Compatibility"));
 
         texUtil.initialize(caps);
     }
 
     private void loadCapabilities() {
-//        if (gl2 != null) {
+        if (gl2 != null) {
             loadCapabilitiesGL2();
-//        } else {
-//            loadCapabilitiesES();
-//        }
+        } else {
+            loadCapabilitiesES();
+        }
         loadCapabilitiesCommon();
     }
 
     private int getInteger(int en) {
-        return GL11.glGetInteger(en);
+        intBuf16.clear();
+        gl.glGetInteger(en, intBuf16);
+        return intBuf16.get(0);
     }
 
     private boolean getBoolean(int en) {
-        return GL11.glGetBoolean(en);
+        gl.glGetBoolean(en, nameBuf);
+        return nameBuf.get(0) != (byte) 0;
     }
 
     @SuppressWarnings("fallthrough")
@@ -495,43 +487,42 @@ public final class GLRenderer implements Renderer {
         loadCapabilities();
 
         // Initialize default state..
-        GL11.glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 1);
+        gl.glPixelStorei(GL.GL_UNPACK_ALIGNMENT, 1);
 
         if (caps.contains(Caps.SeamlessCubemap)) {
             // Enable this globally. Should be OK.
-            GL11.glEnable(AMDSeamlessCubemapPerTexture.GL_TEXTURE_CUBE_MAP_SEAMLESS);
+            gl.glEnable(GLExt.GL_TEXTURE_CUBE_MAP_SEAMLESS);
         }
 
         if (caps.contains(Caps.CoreProfile)) {
             // Core Profile requires VAO to be bound.
-            int vaoId = ARBVertexArrayObject.glGenVertexArrays();
-            ARBVertexArrayObject.glBindVertexArray(vaoId);
+            gl3.glGenVertexArrays(intBuf16);
+            int vaoId = intBuf16.get(0);
+            gl3.glBindVertexArray(vaoId);
         }
-
-        GL11.glEnable(GL20.GL_VERTEX_PROGRAM_POINT_SIZE);
-        if (!caps.contains(Caps.CoreProfile)) {
-            GL11.glEnable(GL20.GL_POINT_SPRITE);
+        if (gl2 != null) {
+            gl2.glEnable(GL2.GL_VERTEX_PROGRAM_POINT_SIZE);
+            if (!caps.contains(Caps.CoreProfile)) {
+                gl2.glEnable(GL2.GL_POINT_SPRITE);
+            }
         }
     }
 
     public void invalidateState() {
         context.reset();
-        context.initialDrawBuf = getInteger(GL11.GL_DRAW_BUFFER);
-        context.initialReadBuf = getInteger(GL11.GL_READ_BUFFER);
+        if (gl2 != null) {
+            context.initialDrawBuf = getInteger(GL2.GL_DRAW_BUFFER);
+            context.initialReadBuf = getInteger(GL2.GL_READ_BUFFER);
+        }
     }
 
     public void resetGLObjects() {
-        System.out.println("Reseting objects and invalidating state");
-//        objManager.resetObjects();
-//        statistics.clearMemory();
+        objManager.resetObjects();
         invalidateState();
     }
 
     public void cleanup() {
-        System.out.println("Deleting objects and invalidating state");
-//        objManager.deleteAllObjects(this);
-//        OpenCLObjectManager.getInstance().deleteAllObjects();
-//        statistics.clearMemory();
+        objManager.deleteAllObjects(this);
         invalidateState();
     }
 
@@ -539,18 +530,18 @@ public final class GLRenderer implements Renderer {
      |* Render State                                                      *|
      \*********************************************************************/
     public void setDepthRange(float start, float end) {
-        GL11.glDepthRange(start, end);
+        gl.glDepthRange(start, end);
     }
 
     public void clearBuffers(boolean color, boolean depth, boolean stencil) {
         int bits = 0;
         if (color) {
-            // See explanations of the depth below, we must enable color write to be able to clear the color buffer
+            //See explanations of the depth below, we must enable color write to be able to clear the color buffer
             if (!context.colorWriteEnabled) {
-                GL11.glColorMask(true, true, true, true);
+                gl.glColorMask(true, true, true, true);
                 context.colorWriteEnabled = true;
             }
-            bits = GL11.GL_COLOR_BUFFER_BIT;
+            bits = GL.GL_COLOR_BUFFER_BIT;
         }
         if (depth) {
             // glClear(GL.GL_DEPTH_BUFFER_BIT) seems to not work when glDepthMask is false
@@ -558,28 +549,29 @@ public final class GLRenderer implements Renderer {
             // http://www.opengl.org/discussion_boards/ubbthreads.php?ubb=showflat&Number=257223
             // if depth clear is requested, we enable the depthMask
             if (!context.depthWriteEnabled) {
-                GL11.glDepthMask(true);
+                gl.glDepthMask(true);
                 context.depthWriteEnabled = true;
             }
-            bits |= GL11.GL_DEPTH_BUFFER_BIT;
+            bits |= GL.GL_DEPTH_BUFFER_BIT;
         }
         if (stencil) {
             // May need to set glStencilMask(0xFF) here if we ever allow users
             // to change the stencil mask.
-            bits |= GL11.GL_STENCIL_BUFFER_BIT;
+            bits |= GL.GL_STENCIL_BUFFER_BIT;
         }
         if (bits != 0) {
-            GL11.glClear(bits);
+            gl.glClear(bits);
         }
     }
 
     public void setBackgroundColor(ColorRGBA color) {
         if (!context.clearColor.equals(color)) {
-            GL11.glClearColor(color.r, color.g, color.b, color.a);
+            gl.glClearColor(color.r, color.g, color.b, color.a);
             context.clearColor.set(color);
         }
     }
 
+    @Override
     public void setDefaultAnisotropicFilter(int level) {
         if (level < 1) {
             throw new IllegalArgumentException("level cannot be less than 1");
@@ -590,70 +582,72 @@ public final class GLRenderer implements Renderer {
     public void setAlphaToCoverage(boolean value) {
         if (caps.contains(Caps.Multisample)) {
             if (value) {
-                GL11.glEnable(ARBMultisample.GL_SAMPLE_ALPHA_TO_COVERAGE_ARB);
+                gl.glEnable(GLExt.GL_SAMPLE_ALPHA_TO_COVERAGE_ARB);
             } else {
-                GL11.glDisable(ARBMultisample.GL_SAMPLE_ALPHA_TO_COVERAGE_ARB);
+                gl.glDisable(GLExt.GL_SAMPLE_ALPHA_TO_COVERAGE_ARB);
             }
         }
     }
 
     public void applyRenderState(RenderState state) {
-        if (state.isWireframe() && !context.wireframe) {
-            GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_LINE);
-            context.wireframe = true;
-        } else if (!state.isWireframe() && context.wireframe) {
-            GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_FILL);
-            context.wireframe = false;
+        if (gl2 != null) {
+            if (state.isWireframe() && !context.wireframe) {
+                gl2.glPolygonMode(GL.GL_FRONT_AND_BACK, GL2.GL_LINE);
+                context.wireframe = true;
+            } else if (!state.isWireframe() && context.wireframe) {
+                gl2.glPolygonMode(GL.GL_FRONT_AND_BACK, GL2.GL_FILL);
+                context.wireframe = false;
+            }
         }
 
         if (state.isDepthTest() && !context.depthTestEnabled) {
-            GL11.glEnable(GL11.GL_DEPTH_TEST);
+            gl.glEnable(GL.GL_DEPTH_TEST);
             context.depthTestEnabled = true;
         } else if (!state.isDepthTest() && context.depthTestEnabled) {
-            GL11.glDisable(GL11.GL_DEPTH_TEST);
+            gl.glDisable(GL.GL_DEPTH_TEST);
             context.depthTestEnabled = false;
         }
         if (state.isDepthTest() && state.getDepthFunc() != context.depthFunc) {
-            GL11.glDepthFunc(convertTestFunction(state.getDepthFunc()));
+            gl.glDepthFunc(convertTestFunction(state.getDepthFunc()));
             context.depthFunc = state.getDepthFunc();
         }
 
         if (state.isDepthWrite() && !context.depthWriteEnabled) {
-            GL11.glDepthMask(true);
+            gl.glDepthMask(true);
             context.depthWriteEnabled = true;
         } else if (!state.isDepthWrite() && context.depthWriteEnabled) {
-            GL11.glDepthMask(false);
+            gl.glDepthMask(false);
             context.depthWriteEnabled = false;
         }
 
         if (state.isColorWrite() && !context.colorWriteEnabled) {
-            GL11.glColorMask(true, true, true, true);
+            gl.glColorMask(true, true, true, true);
             context.colorWriteEnabled = true;
         } else if (!state.isColorWrite() && context.colorWriteEnabled) {
-            GL11.glColorMask(false, false, false, false);
+            gl.glColorMask(false, false, false, false);
             context.colorWriteEnabled = false;
         }
 
         if (state.isPolyOffset()) {
             if (!context.polyOffsetEnabled) {
-                GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);
-                GL11.glPolygonOffset(state.getPolyOffsetFactor(),
-                        state.getPolyOffsetUnits());
+                gl.glEnable(GL.GL_POLYGON_OFFSET_FILL);
+                gl.glPolygonOffset(state.getPolyOffsetFactor(),
+                                   state.getPolyOffsetUnits());
                 context.polyOffsetEnabled = true;
                 context.polyOffsetFactor = state.getPolyOffsetFactor();
                 context.polyOffsetUnits = state.getPolyOffsetUnits();
             } else {
                 if (state.getPolyOffsetFactor() != context.polyOffsetFactor
-                        || state.getPolyOffsetUnits() != context.polyOffsetUnits) {
-                    GL11.glPolygonOffset(state.getPolyOffsetFactor(),
-                            state.getPolyOffsetUnits());
+                    || state.getPolyOffsetUnits() != context.polyOffsetUnits) {
+                    gl.glPolygonOffset(state.getPolyOffsetFactor(),
+                                       state.getPolyOffsetUnits());
                     context.polyOffsetFactor = state.getPolyOffsetFactor();
                     context.polyOffsetUnits = state.getPolyOffsetUnits();
                 }
             }
         } else {
             if (context.polyOffsetEnabled) {
-                GL11.glDisable(GL11.GL_POLYGON_OFFSET_FILL);
+                gl.glDisable(GL.GL_POLYGON_OFFSET_FILL);
                 context.polyOffsetEnabled = false;
                 context.polyOffsetFactor = 0;
                 context.polyOffsetUnits = 0;
@@ -662,26 +656,26 @@ public final class GLRenderer implements Renderer {
 
         if (state.getFaceCullMode() != context.cullMode) {
             if (state.getFaceCullMode() == RenderState.FaceCullMode.Off) {
-                GL11.glDisable(GL11.GL_CULL_FACE);
+                gl.glDisable(GL.GL_CULL_FACE);
             } else {
-                GL11.glEnable(GL11.GL_CULL_FACE);
+                gl.glEnable(GL.GL_CULL_FACE);
             }
 
             switch (state.getFaceCullMode()) {
                 case Off:
                     break;
                 case Back:
-                    GL11.glCullFace(GL11.GL_BACK);
+                    gl.glCullFace(GL.GL_BACK);
                     break;
                 case Front:
-                    GL11.glCullFace(GL11.GL_FRONT);
+                    gl.glCullFace(GL.GL_FRONT);
                     break;
                 case FrontAndBack:
-                    GL11.glCullFace(GL11.GL_FRONT_AND_BACK);
+                    gl.glCullFace(GL.GL_FRONT_AND_BACK);
                     break;
                 default:
                     throw new UnsupportedOperationException("Unrecognized face cull mode: "
-                            + state.getFaceCullMode());
+                                                            + state.getFaceCullMode());
             }
 
             context.cullMode = state.getFaceCullMode();
@@ -689,41 +683,41 @@ public final class GLRenderer implements Renderer {
 
         if (state.getBlendMode() != context.blendMode) {
             if (state.getBlendMode() == RenderState.BlendMode.Off) {
-                GL11.glDisable(GL11.GL_BLEND);
+                gl.glDisable(GL.GL_BLEND);
             } else {
                 if (context.blendMode == RenderState.BlendMode.Off) {
-                    GL11.glEnable(GL11.GL_BLEND);
+                    gl.glEnable(GL.GL_BLEND);
                 }
                 switch (state.getBlendMode()) {
                     case Off:
                         break;
                     case Additive:
-                        GL11.glBlendFunc(GL11.GL_ONE, GL11.GL_ONE);
+                        gl.glBlendFunc(GL.GL_ONE, GL.GL_ONE);
                         break;
                     case AlphaAdditive:
-                        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
+                        gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE);
                         break;
                     case Alpha:
-                        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+                        gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
                         break;
                     case PremultAlpha:
-                        GL11.glBlendFunc(GL11.GL_ONE, GL11.GL_ONE_MINUS_SRC_ALPHA);
+                        gl.glBlendFunc(GL.GL_ONE, GL.GL_ONE_MINUS_SRC_ALPHA);
                         break;
                     case Modulate:
-                        GL11.glBlendFunc(GL11.GL_DST_COLOR, GL11.GL_ZERO);
+                        gl.glBlendFunc(GL.GL_DST_COLOR, GL.GL_ZERO);
                         break;
                     case ModulateX2:
-                        GL11.glBlendFunc(GL11.GL_DST_COLOR, GL11.GL_SRC_COLOR);
+                        gl.glBlendFunc(GL.GL_DST_COLOR, GL.GL_SRC_COLOR);
                         break;
                     case Color:
                     case Screen:
-                        GL11.glBlendFunc(GL11.GL_ONE, GL11.GL_ONE_MINUS_SRC_COLOR);
+                        gl.glBlendFunc(GL.GL_ONE, GL.GL_ONE_MINUS_SRC_COLOR);
                         break;
                     case Exclusion:
-                        GL11.glBlendFunc(GL11.GL_ONE_MINUS_DST_COLOR, GL11.GL_ONE_MINUS_SRC_COLOR);
+                        gl.glBlendFunc(GL.GL_ONE_MINUS_DST_COLOR, GL.GL_ONE_MINUS_SRC_COLOR);
                         break;
                     case Custom:
-                        GL14.glBlendFuncSeparate(
+                        gl.glBlendFuncSeparate(
                                 convertBlendFunc(state.getCustomSfactorRGB()),
                                 convertBlendFunc(state.getCustomDfactorRGB()),
                                 convertBlendFunc(state.getCustomSfactorAlpha()),
@@ -731,18 +725,20 @@ public final class GLRenderer implements Renderer {
                         break;
                     default:
                         throw new UnsupportedOperationException("Unrecognized blend mode: "
-                                + state.getBlendMode());
+                                                                + state.getBlendMode());
                 }
 
-                if (state.getBlendEquation() != context.blendEquation || state.getBlendEquationAlpha() != context.blendEquationAlpha) {
+                if (state.getBlendEquation() != context.blendEquation
+                    || state.getBlendEquationAlpha() != context.blendEquationAlpha) {
                     int colorMode = convertBlendEquation(state.getBlendEquation());
                     int alphaMode;
-                    if (state.getBlendEquationAlpha() == RenderState.BlendEquationAlpha.InheritColor) {
+                    if (state.getBlendEquationAlpha()
+                        == RenderState.BlendEquationAlpha.InheritColor) {
                         alphaMode = colorMode;
                     } else {
                         alphaMode = convertBlendEquationAlpha(state.getBlendEquationAlpha());
                     }
-                    GL20.glBlendEquationSeparate(colorMode, alphaMode);
+                    gl.glBlendEquationSeparate(colorMode, alphaMode);
                     context.blendEquation = state.getBlendEquation();
                     context.blendEquationAlpha = state.getBlendEquationAlpha();
                 }
@@ -752,16 +748,18 @@ public final class GLRenderer implements Renderer {
         }
 
         if (context.stencilTest != state.isStencilTest()
-                || context.frontStencilStencilFailOperation != state.getFrontStencilStencilFailOperation()
-                || context.frontStencilDepthFailOperation != state.getFrontStencilDepthFailOperation()
-                || context.frontStencilDepthPassOperation != state.getFrontStencilDepthPassOperation()
-                || context.backStencilStencilFailOperation != state.getBackStencilStencilFailOperation()
-                || context.backStencilDepthFailOperation != state.getBackStencilDepthFailOperation()
-                || context.backStencilDepthPassOperation != state.getBackStencilDepthPassOperation()
-                || context.frontStencilFunction != state.getFrontStencilFunction()
-                || context.backStencilFunction != state.getBackStencilFunction()) {
+            || context.frontStencilStencilFailOperation != state
+                .getFrontStencilStencilFailOperation()
+            || context.frontStencilDepthFailOperation != state.getFrontStencilDepthFailOperation()
+            || context.frontStencilDepthPassOperation != state.getFrontStencilDepthPassOperation()
+            || context.backStencilStencilFailOperation != state.getBackStencilStencilFailOperation()
+            || context.backStencilDepthFailOperation != state.getBackStencilDepthFailOperation()
+            || context.backStencilDepthPassOperation != state.getBackStencilDepthPassOperation()
+            || context.frontStencilFunction != state.getFrontStencilFunction()
+            || context.backStencilFunction != state.getBackStencilFunction()) {
 
-            context.frontStencilStencilFailOperation = state.getFrontStencilStencilFailOperation();   //terrible looking, I know
+            context.frontStencilStencilFailOperation = state
+                    .getFrontStencilStencilFailOperation();   //terrible looking, I know
             context.frontStencilDepthFailOperation = state.getFrontStencilDepthFailOperation();
             context.frontStencilDepthPassOperation = state.getFrontStencilDepthPassOperation();
             context.backStencilStencilFailOperation = state.getBackStencilStencilFailOperation();
@@ -771,27 +769,33 @@ public final class GLRenderer implements Renderer {
             context.backStencilFunction = state.getBackStencilFunction();
 
             if (state.isStencilTest()) {
-                GL11.glEnable(GL11.GL_STENCIL_TEST);
-                GL20.glStencilOpSeparate(GL11.GL_FRONT,
-                        convertStencilOperation(state.getFrontStencilStencilFailOperation()),
-                        convertStencilOperation(state.getFrontStencilDepthFailOperation()),
-                        convertStencilOperation(state.getFrontStencilDepthPassOperation()));
-                GL20.glStencilOpSeparate(GL11.GL_BACK,
-                        convertStencilOperation(state.getBackStencilStencilFailOperation()),
-                        convertStencilOperation(state.getBackStencilDepthFailOperation()),
-                        convertStencilOperation(state.getBackStencilDepthPassOperation()));
-                GL20.glStencilFuncSeparate(GL11.GL_FRONT,
-                        convertTestFunction(state.getFrontStencilFunction()),
-                        0, Integer.MAX_VALUE);
-                GL20.glStencilFuncSeparate(GL11.GL_BACK,
-                        convertTestFunction(state.getBackStencilFunction()),
-                        0, Integer.MAX_VALUE);
+                gl.glEnable(GL.GL_STENCIL_TEST);
+                gl.glStencilOpSeparate(GL.GL_FRONT,
+                                       convertStencilOperation(
+                                               state.getFrontStencilStencilFailOperation()),
+                                       convertStencilOperation(
+                                               state.getFrontStencilDepthFailOperation()),
+                                       convertStencilOperation(
+                                               state.getFrontStencilDepthPassOperation()));
+                gl.glStencilOpSeparate(GL.GL_BACK,
+                                       convertStencilOperation(
+                                               state.getBackStencilStencilFailOperation()),
+                                       convertStencilOperation(
+                                               state.getBackStencilDepthFailOperation()),
+                                       convertStencilOperation(
+                                               state.getBackStencilDepthPassOperation()));
+                gl.glStencilFuncSeparate(GL.GL_FRONT,
+                                         convertTestFunction(state.getFrontStencilFunction()),
+                                         0, Integer.MAX_VALUE);
+                gl.glStencilFuncSeparate(GL.GL_BACK,
+                                         convertTestFunction(state.getBackStencilFunction()),
+                                         0, Integer.MAX_VALUE);
             } else {
-                GL11.glDisable(GL11.GL_STENCIL_TEST);
+                gl.glDisable(GL.GL_STENCIL_TEST);
             }
         }
         if (context.lineWidth != state.getLineWidth()) {
-            GL11.glLineWidth(state.getLineWidth());
+            gl.glLineWidth(state.getLineWidth());
             context.lineWidth = state.getLineWidth();
         }
     }
@@ -799,17 +803,18 @@ public final class GLRenderer implements Renderer {
     private int convertBlendEquation(RenderState.BlendEquation blendEquation) {
         switch (blendEquation) {
             case Add:
-                return GL14.GL_FUNC_ADD;
+                return GL2.GL_FUNC_ADD;
             case Subtract:
-                return GL14.GL_FUNC_SUBTRACT;
+                return GL2.GL_FUNC_SUBTRACT;
             case ReverseSubtract:
-                return GL14.GL_FUNC_REVERSE_SUBTRACT;
+                return GL2.GL_FUNC_REVERSE_SUBTRACT;
             case Min:
-                return GL14.GL_MIN;
+                return GL2.GL_MIN;
             case Max:
-                return GL14.GL_MAX;
+                return GL2.GL_MAX;
             default:
-                throw new UnsupportedOperationException("Unrecognized blend operation: " + blendEquation);
+                throw new UnsupportedOperationException(
+                        "Unrecognized blend operation: " + blendEquation);
         }
     }
 
@@ -817,90 +822,93 @@ public final class GLRenderer implements Renderer {
         //Note: InheritColor mode should already be handled, that is why it does not belong the the switch case.
         switch (blendEquationAlpha) {
             case Add:
-                return GL14.GL_FUNC_ADD;
+                return GL2.GL_FUNC_ADD;
             case Subtract:
-                return GL14.GL_FUNC_SUBTRACT;
+                return GL2.GL_FUNC_SUBTRACT;
             case ReverseSubtract:
-                return GL14.GL_FUNC_REVERSE_SUBTRACT;
+                return GL2.GL_FUNC_REVERSE_SUBTRACT;
             case Min:
-                return GL14.GL_MIN;
+                return GL2.GL_MIN;
             case Max:
-                return GL14.GL_MAX;
+                return GL2.GL_MAX;
             default:
-                throw new UnsupportedOperationException("Unrecognized alpha blend operation: " + blendEquationAlpha);
+                throw new UnsupportedOperationException(
+                        "Unrecognized alpha blend operation: " + blendEquationAlpha);
         }
     }
 
     private int convertBlendFunc(RenderState.BlendFunc blendFunc) {
         switch (blendFunc) {
             case Zero:
-                return GL11.GL_ZERO;
+                return GL.GL_ZERO;
             case One:
-                return GL11.GL_ONE;
+                return GL.GL_ONE;
             case Src_Color:
-                return GL11.GL_SRC_COLOR;
+                return GL.GL_SRC_COLOR;
             case One_Minus_Src_Color:
-                return GL11.GL_ONE_MINUS_SRC_COLOR;
+                return GL.GL_ONE_MINUS_SRC_COLOR;
             case Dst_Color:
-                return GL11.GL_DST_COLOR;
+                return GL.GL_DST_COLOR;
             case One_Minus_Dst_Color:
-                return GL11.GL_ONE_MINUS_DST_COLOR;
+                return GL.GL_ONE_MINUS_DST_COLOR;
             case Src_Alpha:
-                return GL11.GL_SRC_ALPHA;
+                return GL.GL_SRC_ALPHA;
             case One_Minus_Src_Alpha:
-                return GL11.GL_ONE_MINUS_SRC_ALPHA;
+                return GL.GL_ONE_MINUS_SRC_ALPHA;
             case Dst_Alpha:
-                return GL11.GL_DST_ALPHA;
+                return GL.GL_DST_ALPHA;
             case One_Minus_Dst_Alpha:
-                return GL11.GL_ONE_MINUS_DST_ALPHA;
+                return GL.GL_ONE_MINUS_DST_ALPHA;
             case Src_Alpha_Saturate:
-                return GL11.GL_SRC_ALPHA_SATURATE;
+                return GL.GL_SRC_ALPHA_SATURATE;
             default:
-                throw new UnsupportedOperationException("Unrecognized blend function operation: " + blendFunc);
+                throw new UnsupportedOperationException(
+                        "Unrecognized blend function operation: " + blendFunc);
         }
     }
 
     private int convertStencilOperation(RenderState.StencilOperation stencilOp) {
         switch (stencilOp) {
             case Keep:
-                return GL11.GL_KEEP;
+                return GL.GL_KEEP;
             case Zero:
-                return GL11.GL_ZERO;
+                return GL.GL_ZERO;
             case Replace:
-                return GL11.GL_REPLACE;
+                return GL.GL_REPLACE;
             case Increment:
-                return GL11.GL_INCR;
+                return GL.GL_INCR;
             case IncrementWrap:
-                return GL14.GL_INCR_WRAP;
+                return GL.GL_INCR_WRAP;
             case Decrement:
-                return GL11.GL_DECR;
+                return GL.GL_DECR;
             case DecrementWrap:
-                return GL14.GL_DECR_WRAP;
+                return GL.GL_DECR_WRAP;
             case Invert:
-                return GL11.GL_INVERT;
+                return GL.GL_INVERT;
             default:
-                throw new UnsupportedOperationException("Unrecognized stencil operation: " + stencilOp);
+                throw new UnsupportedOperationException(
+                        "Unrecognized stencil operation: " + stencilOp);
         }
     }
 
     private int convertTestFunction(RenderState.TestFunction testFunc) {
         switch (testFunc) {
             case Never:
-                return GL11.GL_NEVER;
+                return GL.GL_NEVER;
             case Less:
-                return GL11.GL_LESS;
+                return GL.GL_LESS;
             case LessOrEqual:
-                return GL11.GL_LEQUAL;
+                return GL.GL_LEQUAL;
             case Greater:
-                return GL11.GL_GREATER;
+                return GL.GL_GREATER;
             case GreaterOrEqual:
-                return GL11.GL_GEQUAL;
+                return GL.GL_GEQUAL;
             case Equal:
-                return GL11.GL_EQUAL;
+                return GL.GL_EQUAL;
             case NotEqual:
-                return GL11.GL_NOTEQUAL;
+                return GL.GL_NOTEQUAL;
             case Always:
-                return GL11.GL_ALWAYS;
+                return GL.GL_ALWAYS;
             default:
                 throw new UnsupportedOperationException("Unrecognized test function: " + testFunc);
         }
@@ -911,7 +919,7 @@ public final class GLRenderer implements Renderer {
      \*********************************************************************/
     public void setViewPort(int x, int y, int w, int h) {
         if (x != vpX || vpY != y || vpW != w || vpH != h) {
-            GL11.glViewport(x, y, w, h);
+            gl.glViewport(x, y, w, h);
             vpX = x;
             vpY = y;
             vpW = w;
@@ -921,11 +929,11 @@ public final class GLRenderer implements Renderer {
 
     public void setClipRect(int x, int y, int width, int height) {
         if (!context.clipRectEnabled) {
-            GL11.glEnable(GL11.GL_SCISSOR_TEST);
+            gl.glEnable(GL.GL_SCISSOR_TEST);
             context.clipRectEnabled = true;
         }
         if (clipX != x || clipY != y || clipW != width || clipH != height) {
-            GL11.glScissor(x, y, width, height);
+            gl.glScissor(x, y, width, height);
             clipX = x;
             clipY = y;
             clipW = width;
@@ -935,7 +943,7 @@ public final class GLRenderer implements Renderer {
 
     public void clearClipRect() {
         if (context.clipRectEnabled) {
-            GL11.glDisable(GL11.GL_SCISSOR_TEST);
+            gl.glDisable(GL.GL_SCISSOR_TEST);
             context.clipRectEnabled = false;
 
             clipX = 0;
@@ -946,20 +954,21 @@ public final class GLRenderer implements Renderer {
     }
 
     public void postFrame() {
-//        objManager.deleteUnused(this);
-//        OpenCLObjectManager.getInstance().deleteUnusedObjects();
-//        gl.resetStats();
+        objManager.deleteUnused(this);
+        gl.resetStats();
     }
 
     /*********************************************************************\
      |* Shaders                                                           *|
      \*********************************************************************/
     protected void updateUniformLocation(Shader shader, Uniform uniform) {
-        int loc = GL20.glGetUniformLocation(shader.getId(), uniform.getName());
+        int loc = gl.glGetUniformLocation(shader.getId(), uniform.getName());
         if (loc < 0) {
             uniform.setLocation(-1);
             // uniform is not declared in shader
-            System.out.println("Uniform " + uniform.getName() + " is not declared in shader " + shader.getSources() + ".");
+            System.out.println(
+                    "Uniform " + uniform.getName() + " is not declared in shader " + shader
+                            .getSources() + ".");
         } else {
             uniform.setLocation(loc);
         }
@@ -968,12 +977,10 @@ public final class GLRenderer implements Renderer {
     protected void bindProgram(Shader shader) {
         int shaderId = shader.getId();
         if (context.boundShaderProgram != shaderId) {
-            GL20.glUseProgram(shaderId);
-            //statistics.onShaderUse(shader, true);
+            gl.glUseProgram(shaderId);
             context.boundShader = shader;
             context.boundShaderProgram = shaderId;
         } else {
-            //statistics.onShaderUse(shader, false);
         }
     }
 
@@ -1004,7 +1011,6 @@ public final class GLRenderer implements Renderer {
         if (uniform.getVarType() == null) {
             return; // value not set yet..
         }
-        //statistics.onUniformSet();
 
         uniform.clearUpdateNeeded();
         FloatBuffer fb;
@@ -1012,83 +1018,74 @@ public final class GLRenderer implements Renderer {
         switch (uniform.getVarType()) {
             case Float:
                 Float f = (Float) uniform.getValue();
-                GL20.glUniform1f(loc, f);
+                gl.glUniform1f(loc, f.floatValue());
                 break;
             case Vector2f:
                 Vector2f v2 = (Vector2f) uniform.getValue();
-                GL20.glUniform2f(loc, v2.getX(), v2.getY());
+                gl.glUniform2f(loc, v2.getX(), v2.getY());
                 break;
             case Vector3f:
                 Vector3f v3 = (Vector3f) uniform.getValue();
-                GL20.glUniform3f(loc, v3.getX(), v3.getY(), v3.getZ());
+                gl.glUniform3f(loc, v3.getX(), v3.getY(), v3.getZ());
                 break;
             case Vector4f:
                 Object val = uniform.getValue();
                 if (val instanceof ColorRGBA) {
                     ColorRGBA c = (ColorRGBA) val;
-                    GL20.glUniform4f(loc, c.r, c.g, c.b, c.a);
+                    gl.glUniform4f(loc, c.r, c.g, c.b, c.a);
                 } else if (val instanceof Vector4f) {
                     Vector4f c = (Vector4f) val;
-                    GL20.glUniform4f(loc, c.x, c.y, c.z, c.w);
+                    gl.glUniform4f(loc, c.x, c.y, c.z, c.w);
                 } else {
                     Quaternion c = (Quaternion) uniform.getValue();
-                    GL20.glUniform4f(loc, c.getX(), c.getY(), c.getZ(), c.getW());
+                    gl.glUniform4f(loc, c.getX(), c.getY(), c.getZ(), c.getW());
                 }
                 break;
             case Boolean:
                 Boolean b = (Boolean) uniform.getValue();
-                GL20.glUniform1i(loc, b ? GL11.GL_TRUE : GL11.GL_FALSE);
+                gl.glUniform1i(loc, b.booleanValue() ? GL.GL_TRUE : GL.GL_FALSE);
                 break;
             case Matrix3f:
                 fb = uniform.getMultiData();
                 assert fb.remaining() == 9;
-                GL20.glUniformMatrix3(loc, false, fb);
+                gl.glUniformMatrix3(loc, false, fb);
                 break;
             case Matrix4f:
                 fb = uniform.getMultiData();
                 assert fb.remaining() == 16;
-                GL20.glUniformMatrix4(loc, false, fb);
+                gl.glUniformMatrix4(loc, false, fb);
                 break;
             case IntArray:
                 ib = (IntBuffer) uniform.getValue();
-                GL20.glUniform1(loc, ib);
+                gl.glUniform1(loc, ib);
                 break;
             case FloatArray:
                 fb = uniform.getMultiData();
-                GL20.glUniform1(loc, fb);
+                gl.glUniform1(loc, fb);
                 break;
             case Vector2fArray:
                 fb = uniform.getMultiData();
-                GL20.glUniform2(loc, fb);
+                gl.glUniform2(loc, fb);
                 break;
             case Vector3fArray:
                 fb = uniform.getMultiData();
-                GL20.glUniform3(loc, fb);
+                gl.glUniform3(loc, fb);
                 break;
             case Vector4fArray:
                 fb = uniform.getMultiData();
-                GL20.glUniform4(loc, fb);
-                break;
-            case Matrix3fArray:
+                gl.glUniform4(loc, fb);
                 break;
             case Matrix4fArray:
                 fb = uniform.getMultiData();
-                GL20.glUniformMatrix4(loc, false, fb);
+                gl.glUniformMatrix4(loc, false, fb);
                 break;
             case Int:
                 Integer i = (Integer) uniform.getValue();
-                GL20.glUniform1i(loc, i);
-                break;
-            case Texture2D:
-                break;
-            case Texture3D:
-                break;
-            case TextureArray:
-                break;
-            case TextureCubeMap:
+                gl.glUniform1i(loc, i.intValue());
                 break;
             default:
-                throw new UnsupportedOperationException("Unsupported uniform type: " + uniform.getVarType());
+                throw new UnsupportedOperationException(
+                        "Unsupported uniform type: " + uniform.getVarType());
         }
     }
 
@@ -1111,29 +1108,17 @@ public final class GLRenderer implements Renderer {
     public int convertShaderType(Shader.ShaderType type) {
         switch (type) {
             case Fragment:
-                return GL20.GL_FRAGMENT_SHADER;
+                return GL.GL_FRAGMENT_SHADER;
             case Vertex:
-                return GL20.GL_VERTEX_SHADER;
+                return GL.GL_VERTEX_SHADER;
             case Geometry:
-                return GL32.GL_GEOMETRY_SHADER;
+                return GL3.GL_GEOMETRY_SHADER;
             case TessellationControl:
-                return GL40.GL_TESS_CONTROL_SHADER;
+                return GL4.GL_TESS_CONTROL_SHADER;
             case TessellationEvaluation:
-                return GL40.GL_TESS_EVALUATION_SHADER;
+                return GL4.GL_TESS_EVALUATION_SHADER;
             default:
                 throw new UnsupportedOperationException("Unrecognized shader type.");
-        }
-    }
-
-    private static void checkLimit(Buffer buffer) {
-        if (buffer == null) {
-            return;
-        }
-        if (buffer.limit() == 0) {
-            throw new RuntimeException("Attempting to upload empty buffer (limit = 0), that's an error");
-        }
-        if (buffer.remaining() == 0) {
-            throw new RuntimeException("Attempting to upload empty buffer (remaining = 0), that's an error");
         }
     }
 
@@ -1141,22 +1126,22 @@ public final class GLRenderer implements Renderer {
         int id = source.getId();
         if (id == -1) {
             // Create id
-            id = GL20.glCreateShader(convertShaderType(source.getType()));
+            id = gl.glCreateShader(convertShaderType(source.getType()));
             if (id <= 0) {
-                throw new RuntimeException("Invalid ID received when trying to create shader.");
+                throw new RendererException("Invalid ID received when trying to create shader.");
             }
 
             source.setId(id);
         } else {
-            throw new RuntimeException("Cannot recompile shader source");
+            throw new RendererException("Cannot recompile shader source");
         }
 
         boolean gles2 = caps.contains(Caps.OpenGLES20);
         String language = source.getLanguage();
 
         if (gles2 && !language.equals("GLSL100")) {
-            throw new RuntimeException("This shader cannot run in OpenGL ES 2. "
-                    + "Only GLSL 1.00 shaders are supported.");
+            throw new RendererException("This shader cannot run in OpenGL ES 2. "
+                                        + "Only GLSL 1.00 shaders are supported.");
         }
 
         // Upload shader source.
@@ -1192,27 +1177,30 @@ public final class GLRenderer implements Renderer {
         if (linearizeSrgbImages) {
             stringBuf.append("#define SRGB 1\n");
         }
-        stringBuf.append("#define ").append(source.getType().name().toUpperCase()).append("_SHADER 1\n");
+        stringBuf.append("#define ").append(source.getType().name().toUpperCase())
+                 .append("_SHADER 1\n");
 
         stringBuf.append(source.getDefines());
         stringBuf.append(source.getSource());
 
         intBuf1.clear();
         intBuf1.put(0, stringBuf.length());
-        checkLimit(intBuf1);
-        GL20.glShaderSource(id, new String[]{ stringBuf.toString() });
-        GL20.glCompileShader(id);
+        gl.glShaderSource(id, new String[]{stringBuf.toString()}, intBuf1);
+        gl.glCompileShader(id);
 
-        boolean compiledOK = GL20.glGetShaderi(id, GL20.GL_COMPILE_STATUS) == GL11.GL_TRUE;
+        gl.glGetShader(id, GL.GL_COMPILE_STATUS, intBuf1);
+
+        boolean compiledOK = intBuf1.get(0) == GL.GL_TRUE;
         String infoLog = null;
 
         if (VALIDATE_SHADER || !compiledOK) {
             // even if compile succeeded, check
             // log for warnings
-            int length = GL20.glGetShaderi(id, GL20.GL_INFO_LOG_LENGTH);
+            gl.glGetShader(id, GL.GL_INFO_LOG_LENGTH, intBuf1);
+            int length = intBuf1.get(0);
             if (length > 3) {
                 // get infos
-                infoLog = GL20.glGetShaderInfoLog(id, length);
+                infoLog = gl.glGetShaderInfoLog(id, length);
             }
         }
 
@@ -1226,9 +1214,10 @@ public final class GLRenderer implements Renderer {
         } else {
             System.err.println("Bad compile of:\n" + ShaderDebug.formatShaderSource(stringBuf.toString()));
             if (infoLog != null) {
-                throw new RuntimeException("compile error in: " + source + "\n" + infoLog);
+                throw new RendererException("compile error in: " + source + "\n" + infoLog);
             } else {
-                throw new RuntimeException("compile error in: " + source + "\nerror: <not provided>");
+                throw new RendererException(
+                        "compile error in: " + source + "\nerror: <not provided>");
             }
         }
     }
@@ -1238,9 +1227,10 @@ public final class GLRenderer implements Renderer {
         boolean needRegister = false;
         if (id == -1) {
             // create program
-            id = GL20.glCreateProgram();
+            id = gl.glCreateProgram();
             if (id == 0) {
-                throw new RuntimeException("Invalid ID (" + id + ") received when trying to create shader program.");
+                throw new RendererException(
+                        "Invalid ID (" + id + ") received when trying to create shader program.");
             }
 
             shader.setId(id);
@@ -1256,33 +1246,35 @@ public final class GLRenderer implements Renderer {
                 updateShaderSourceData(source);
             }
             if (source.getType() == Shader.ShaderType.Fragment
-                    && source.getLanguage().equals("GLSL150")) {
+                && source.getLanguage().equals("GLSL150")) {
                 bindFragDataRequired = true;
             }
-            GL20.glAttachShader(id, source.getId());
+            gl.glAttachShader(id, source.getId());
         }
 
         if (bindFragDataRequired) {
             // Check if GLSL version is 1.5 for shader
-            GL30.glBindFragDataLocation(id, 0, "outFragColor");
+            gl3.glBindFragDataLocation(id, 0, "outFragColor");
             // For MRT
             for (int i = 0; i < limits.get(Limits.FrameBufferMrtAttachments); i++) {
-                GL30.glBindFragDataLocation(id, i, "outFragData[" + i + "]");
+                gl3.glBindFragDataLocation(id, i, "outFragData[" + i + "]");
             }
         }
 
         // Link shaders to program
-        GL20.glLinkProgram(id);
+        gl.glLinkProgram(id);
 
         // Check link status
-        boolean linkOK = GL20.glGetProgrami(id, GL20.GL_LINK_STATUS) == GL11.GL_TRUE;
+        gl.glGetProgram(id, GL.GL_LINK_STATUS, intBuf1);
+        boolean linkOK = intBuf1.get(0) == GL.GL_TRUE;
         String infoLog = null;
 
         if (VALIDATE_SHADER || !linkOK) {
-            int length = GL20.glGetProgrami(id, GL20.GL_INFO_LOG_LENGTH);
+            gl.glGetProgram(id, GL.GL_INFO_LOG_LENGTH, intBuf1);
+            int length = intBuf1.get(0);
             if (length > 3) {
                 // get infos
-                infoLog = GL20.glGetProgramInfoLog(id, length);
+                infoLog = gl.glGetProgramInfoLog(id, length);
             }
         }
 
@@ -1295,17 +1287,18 @@ public final class GLRenderer implements Renderer {
             shader.clearUpdateNeeded();
             if (needRegister) {
                 // Register shader for clean up if it was created in this method.
-//                objManager.registerObject(shader);
-//                statistics.onNewShader();
+                objManager.registerObject(shader);
             } else {
                 // OpenGL spec: uniform locations may change after re-link
                 resetUniformLocations(shader);
             }
         } else {
             if (infoLog != null) {
-                throw new RuntimeException("Shader failed to link, shader:" + shader + "\n" + infoLog);
+                throw new RendererException(
+                        "Shader failed to link, shader:" + shader + "\n" + infoLog);
             } else {
-                throw new RuntimeException("Shader failed to link, shader:" + shader + "\ninfo: <not provided>");
+                throw new RendererException(
+                        "Shader failed to link, shader:" + shader + "\ninfo: <not provided>");
             }
         }
     }
@@ -1334,7 +1327,7 @@ public final class GLRenderer implements Renderer {
             return;
         }
         source.clearUpdateNeeded();
-        GL20.glDeleteShader(source.getId());
+        gl.glDeleteShader(source.getId());
         source.resetObject();
     }
 
@@ -1346,13 +1339,12 @@ public final class GLRenderer implements Renderer {
 
         for (ShaderSource source : shader.getSources()) {
             if (source.getId() != -1) {
-                GL20.glDetachShader(shader.getId(), source.getId());
+                gl.glDetachShader(shader.getId(), source.getId());
                 deleteShaderSource(source);
             }
         }
 
-        GL20.glDeleteProgram(shader.getId());
-//        statistics.onDeleteShader();
+        gl.glDeleteProgram(shader.getId());
         shader.resetObject();
     }
 
@@ -1395,90 +1387,91 @@ public final class GLRenderer implements Renderer {
             }
 
             if (src == null) {
-                EXTFramebufferObject.glBindFramebufferEXT(EXTFramebufferBlit.GL_READ_FRAMEBUFFER_EXT, 0);
+                glfbo.glBindFramebufferEXT(GLFbo.GL_READ_FRAMEBUFFER_EXT, 0);
                 srcX0 = vpX;
                 srcY0 = vpY;
                 srcX1 = vpX + vpW;
                 srcY1 = vpY + vpH;
             } else {
-                EXTFramebufferObject.glBindFramebufferEXT(EXTFramebufferBlit.GL_READ_FRAMEBUFFER_EXT, src.getId());
+                glfbo.glBindFramebufferEXT(GLFbo.GL_READ_FRAMEBUFFER_EXT, src.getId());
                 srcX1 = src.getWidth();
                 srcY1 = src.getHeight();
             }
             if (dst == null) {
-                EXTFramebufferObject.glBindFramebufferEXT(EXTFramebufferBlit.GL_DRAW_FRAMEBUFFER_EXT, 0);
+                glfbo.glBindFramebufferEXT(GLFbo.GL_DRAW_FRAMEBUFFER_EXT, 0);
                 dstX0 = vpX;
                 dstY0 = vpY;
                 dstX1 = vpX + vpW;
                 dstY1 = vpY + vpH;
             } else {
-                EXTFramebufferObject.glBindFramebufferEXT(EXTFramebufferBlit.GL_DRAW_FRAMEBUFFER_EXT, dst.getId());
+                glfbo.glBindFramebufferEXT(GLFbo.GL_DRAW_FRAMEBUFFER_EXT, dst.getId());
                 dstX1 = dst.getWidth();
                 dstY1 = dst.getHeight();
             }
-            int mask = GL11.GL_COLOR_BUFFER_BIT;
+            int mask = GL.GL_COLOR_BUFFER_BIT;
             if (copyDepth) {
-                mask |= GL11.GL_DEPTH_BUFFER_BIT;
+                mask |= GL.GL_DEPTH_BUFFER_BIT;
             }
-            EXTFramebufferBlit.glBlitFramebufferEXT(srcX0, srcY0, srcX1, srcY1,
-                    dstX0, dstY0, dstX1, dstY1, mask,
-                    GL11.GL_NEAREST);
+            glfbo.glBlitFramebufferEXT(srcX0, srcY0, srcX1, srcY1,
+                                       dstX0, dstY0, dstX1, dstY1, mask,
+                                       GL.GL_NEAREST);
 
-
-            EXTFramebufferObject.glBindFramebufferEXT(EXTFramebufferObject.GL_FRAMEBUFFER_EXT, prevFBO);
+            glfbo.glBindFramebufferEXT(GLFbo.GL_FRAMEBUFFER_EXT, prevFBO);
         } else {
-            throw new RuntimeException("Framebuffer blitting not supported by the video hardware");
+            throw new RendererException("Framebuffer blitting not supported by the video hardware");
         }
     }
 
     private void checkFrameBufferError() {
-        int status = EXTFramebufferObject.glCheckFramebufferStatusEXT(EXTFramebufferObject.GL_FRAMEBUFFER_EXT);
+        int status = glfbo.glCheckFramebufferStatusEXT(GLFbo.GL_FRAMEBUFFER_EXT);
         switch (status) {
-            case EXTFramebufferObject.GL_FRAMEBUFFER_COMPLETE_EXT:
+            case GLFbo.GL_FRAMEBUFFER_COMPLETE_EXT:
                 break;
-            case EXTFramebufferObject.GL_FRAMEBUFFER_UNSUPPORTED_EXT:
+            case GLFbo.GL_FRAMEBUFFER_UNSUPPORTED_EXT:
                 //Choose different formats
                 throw new IllegalStateException("Framebuffer object format is "
-                        + "unsupported by the video hardware.");
-            case EXTFramebufferObject.GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT_EXT:
+                                                + "unsupported by the video hardware.");
+            case GLFbo.GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT_EXT:
                 throw new IllegalStateException("Framebuffer has erronous attachment.");
-            case EXTFramebufferObject.GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT_EXT:
-                throw new IllegalStateException("Framebuffer doesn't have any renderbuffers attached.");
-            case EXTFramebufferObject.GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT:
-                throw new IllegalStateException("Framebuffer attachments must have same dimensions.");
-            case EXTFramebufferObject.GL_FRAMEBUFFER_INCOMPLETE_FORMATS_EXT:
+            case GLFbo.GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT_EXT:
+                throw new IllegalStateException(
+                        "Framebuffer doesn't have any renderbuffers attached.");
+            case GLFbo.GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT:
+                throw new IllegalStateException(
+                        "Framebuffer attachments must have same dimensions.");
+            case GLFbo.GL_FRAMEBUFFER_INCOMPLETE_FORMATS_EXT:
                 throw new IllegalStateException("Framebuffer attachments must have same formats.");
-            case EXTFramebufferObject.GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER_EXT:
+            case GLFbo.GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER_EXT:
                 throw new IllegalStateException("Incomplete draw buffer.");
-            case EXTFramebufferObject.GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER_EXT:
+            case GLFbo.GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER_EXT:
                 throw new IllegalStateException("Incomplete read buffer.");
-            case EXTFramebufferMultisample.GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE_EXT:
+            case GLFbo.GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE_EXT:
                 throw new IllegalStateException("Incomplete multisample buffer.");
             default:
                 //Programming error; will fail on all hardware
                 throw new IllegalStateException("Some video driver error "
-                        + "or programming error occured. "
-                        + "Framebuffer object status is invalid. ");
+                                                + "or programming error occured. "
+                                                + "Framebuffer object status is invalid. ");
         }
     }
 
     private void updateRenderBuffer(FrameBuffer fb, FrameBuffer.RenderBuffer rb) {
         int id = rb.getId();
         if (id == -1) {
-            EXTFramebufferObject.glGenRenderbuffersEXT(intBuf1);
+            glfbo.glGenRenderbuffersEXT(intBuf1);
             id = intBuf1.get(0);
             rb.setId(id);
         }
 
         if (context.boundRB != id) {
-            EXTFramebufferObject.glBindRenderbufferEXT(EXTFramebufferObject.GL_RENDERBUFFER_EXT, id);
+            glfbo.glBindRenderbufferEXT(GLFbo.GL_RENDERBUFFER_EXT, id);
             context.boundRB = id;
         }
 
         int rbSize = limits.get(Limits.RenderBufferSize);
         if (fb.getWidth() > rbSize || fb.getHeight() > rbSize) {
-            throw new RuntimeException("Resolution " + fb.getWidth()
-                    + ":" + fb.getHeight() + " is not supported.");
+            throw new RendererException("Resolution " + fb.getWidth()
+                                        + ":" + fb.getHeight() + " is not supported.");
         }
 
         GLImageFormat glFmt = texUtil.getImageFormatWithError(rb.getFormat(), fb.isSrgb());
@@ -1489,32 +1482,33 @@ public final class GLRenderer implements Renderer {
             if (maxSamples < samples) {
                 samples = maxSamples;
             }
-            EXTFramebufferMultisample.glRenderbufferStorageMultisampleEXT(EXTFramebufferObject.GL_RENDERBUFFER_EXT,
-                    samples,
-                    glFmt.internalFormat,
-                    fb.getWidth(),
-                    fb.getHeight());
+            glfbo.glRenderbufferStorageMultisampleEXT(GLFbo.GL_RENDERBUFFER_EXT,
+                                                      samples,
+                                                      glFmt.internalFormat,
+                                                      fb.getWidth(),
+                                                      fb.getHeight());
         } else {
-            EXTFramebufferObject.glRenderbufferStorageEXT(EXTFramebufferObject.GL_RENDERBUFFER_EXT,
-                    glFmt.internalFormat,
-                    fb.getWidth(),
-                    fb.getHeight());
+            glfbo.glRenderbufferStorageEXT(GLFbo.GL_RENDERBUFFER_EXT,
+                                           glFmt.internalFormat,
+                                           fb.getWidth(),
+                                           fb.getHeight());
         }
     }
 
     private int convertAttachmentSlot(int attachmentSlot) {
         // can also add support for stencil here
         if (attachmentSlot == FrameBuffer.SLOT_DEPTH) {
-            return EXTFramebufferObject.GL_DEPTH_ATTACHMENT_EXT;
+            return GLFbo.GL_DEPTH_ATTACHMENT_EXT;
         } else if (attachmentSlot == FrameBuffer.SLOT_DEPTH_STENCIL) {
             // NOTE: Using depth stencil format requires GL3, this is already
             // checked via render caps.
-            return GL30.GL_DEPTH_STENCIL_ATTACHMENT;
+            return GL3.GL_DEPTH_STENCIL_ATTACHMENT;
         } else if (attachmentSlot < 0 || attachmentSlot >= 16) {
-            throw new UnsupportedOperationException("Invalid FBO attachment slot: " + attachmentSlot);
+            throw new UnsupportedOperationException(
+                    "Invalid FBO attachment slot: " + attachmentSlot);
         }
 
-        return EXTFramebufferObject.GL_COLOR_ATTACHMENT0_EXT + attachmentSlot;
+        return GLFbo.GL_COLOR_ATTACHMENT0_EXT + attachmentSlot;
     }
 
     public void updateRenderTexture(FrameBuffer fb, FrameBuffer.RenderBuffer rb) {
@@ -1532,18 +1526,20 @@ public final class GLRenderer implements Renderer {
             setupTextureParams(0, tex);
         }
 
-        if (rb.getLayer() < 0){
-            EXTFramebufferObject.glFramebufferTexture2DEXT(EXTFramebufferObject.GL_FRAMEBUFFER_EXT,
-                    convertAttachmentSlot(rb.getSlot()),
-                    convertTextureType(tex.getType(), image.getMultiSamples(), rb.getFace()),
-                    image.getId(),
-                    0);
+        if (rb.getLayer() < 0) {
+            glfbo.glFramebufferTexture2DEXT(GLFbo.GL_FRAMEBUFFER_EXT,
+                                            convertAttachmentSlot(rb.getSlot()),
+                                            convertTextureType(tex.getType(),
+                                                               image.getMultiSamples(),
+                                                               rb.getFace()),
+                                            image.getId(),
+                                            0);
         } else {
-            GL30.glFramebufferTextureLayer(EXTFramebufferObject.GL_FRAMEBUFFER_EXT,
-                    convertAttachmentSlot(rb.getSlot()),
-                    image.getId(),
-                    0,
-                    rb.getLayer());
+            gl3.glFramebufferTextureLayer(GLFbo.GL_FRAMEBUFFER_EXT,
+                                          convertAttachmentSlot(rb.getSlot()),
+                                          image.getId(),
+                                          0,
+                                          rb.getLayer());
         }
     }
 
@@ -1558,30 +1554,26 @@ public final class GLRenderer implements Renderer {
             updateRenderTexture(fb, rb);
         }
         if (needAttach) {
-            EXTFramebufferObject.glFramebufferRenderbufferEXT(EXTFramebufferObject.GL_FRAMEBUFFER_EXT,
-                    convertAttachmentSlot(rb.getSlot()),
-                    EXTFramebufferObject.GL_RENDERBUFFER_EXT,
-                    rb.getId());
+            glfbo.glFramebufferRenderbufferEXT(GLFbo.GL_FRAMEBUFFER_EXT,
+                                               convertAttachmentSlot(rb.getSlot()),
+                                               GLFbo.GL_RENDERBUFFER_EXT,
+                                               rb.getId());
         }
     }
 
     private void bindFrameBuffer(FrameBuffer fb) {
         if (fb == null) {
             if (context.boundFBO != 0) {
-                EXTFramebufferObject.glBindFramebufferEXT(EXTFramebufferObject.GL_FRAMEBUFFER_EXT, 0);
-//                statistics.onFrameBufferUse(null, true);
+                glfbo.glBindFramebufferEXT(GLFbo.GL_FRAMEBUFFER_EXT, 0);
                 context.boundFBO = 0;
                 context.boundFB = null;
             }
         } else {
             assert fb.getId() != -1 && fb.getId() != 0;
             if (context.boundFBO != fb.getId()) {
-                EXTFramebufferObject.glBindFramebufferEXT(EXTFramebufferObject.GL_FRAMEBUFFER_EXT, fb.getId());
+                glfbo.glBindFramebufferEXT(GLFbo.GL_FRAMEBUFFER_EXT, fb.getId());
                 context.boundFBO = fb.getId();
                 context.boundFB = fb;
-//                statistics.onFrameBufferUse(fb, true);
-            } else {
-//                statistics.onFrameBufferUse(fb, false);
             }
         }
     }
@@ -1589,15 +1581,15 @@ public final class GLRenderer implements Renderer {
     public void updateFrameBuffer(FrameBuffer fb) {
         if (fb.getNumColorBuffers() == 0 && fb.getDepthBuffer() == null) {
             throw new IllegalArgumentException("The framebuffer: " + fb
-                    + "\nDoesn't have any color/depth buffers");
+                                               + "\nDoesn't have any color/depth buffers");
         }
 
         int id = fb.getId();
         if (id == -1) {
-            id = GL30.glGenFramebuffers();
+            glfbo.glGenFramebuffersEXT(intBuf1);
+            id = intBuf1.get(0);
             fb.setId(id);
-//            objManager.registerObject(fb);
-//            statistics.onNewFrameBuffer();
+            objManager.registerObject(fb);
         }
 
         bindFrameBuffer(fb);
@@ -1623,7 +1615,7 @@ public final class GLRenderer implements Renderer {
             throw new IllegalArgumentException("Framebuffer must be multisampled");
         }
         if (!caps.contains(Caps.TextureMultisample)) {
-            throw new RuntimeException("Multisampled textures are not supported");
+            throw new RendererException("Multisampled textures are not supported");
         }
 
         setFrameBuffer(fb);
@@ -1631,10 +1623,10 @@ public final class GLRenderer implements Renderer {
         Vector2f[] samplePositions = new Vector2f[fb.getSamples()];
         FloatBuffer samplePos = BufferUtils.createFloatBuffer(2);
         for (int i = 0; i < samplePositions.length; i++) {
-            GL32.glGetMultisample(ARBTextureMultisample.GL_SAMPLE_POSITION, i, samplePos);
+            glext.glGetMultisample(GLExt.GL_SAMPLE_POSITION, i, samplePos);
             samplePos.clear();
             samplePositions[i] = new Vector2f(samplePos.get(0) - 0.5f,
-                    samplePos.get(1) - 0.5f);
+                                              samplePos.get(1) - 0.5f);
         }
         return samplePositions;
     }
@@ -1649,18 +1641,22 @@ public final class GLRenderer implements Renderer {
     }
 
     public void setReadDrawBuffers(FrameBuffer fb) {
-        final int NONE    = -2;
+        if (gl2 == null) {
+            return;
+        }
+
+        final int NONE = -2;
         final int INITIAL = -1;
         final int MRT_OFF = 100;
 
         if (fb == null) {
             // Set Read/Draw buffers to initial value.
             if (context.boundDrawBuf != INITIAL) {
-                GL11.glDrawBuffer(context.initialDrawBuf);
+                gl2.glDrawBuffer(context.initialDrawBuf);
                 context.boundDrawBuf = INITIAL;
             }
             if (context.boundReadBuf != INITIAL) {
-                GL11.glReadBuffer(context.initialReadBuf);
+                gl2.glReadBuffer(context.initialReadBuf);
                 context.boundReadBuf = INITIAL;
             }
         } else {
@@ -1668,44 +1664,44 @@ public final class GLRenderer implements Renderer {
                 // make sure to select NONE as draw buf
                 // no color buffer attached.
                 if (context.boundDrawBuf != NONE) {
-                    GL11.glDrawBuffer(GL11.GL_NONE);
+                    gl2.glDrawBuffer(GL.GL_NONE);
                     context.boundDrawBuf = NONE;
                 }
                 if (context.boundReadBuf != NONE) {
-                    GL11.glReadBuffer(GL11.GL_NONE);
+                    gl2.glReadBuffer(GL.GL_NONE);
                     context.boundReadBuf = NONE;
                 }
             } else {
                 if (fb.getNumColorBuffers() > limits.get(Limits.FrameBufferAttachments)) {
-                    throw new RuntimeException("Framebuffer has more color "
-                            + "attachments than are supported"
-                            + " by the video hardware!");
+                    throw new RendererException("Framebuffer has more color "
+                                                + "attachments than are supported"
+                                                + " by the video hardware!");
                 }
                 if (fb.isMultiTarget()) {
                     if (!caps.contains(Caps.FrameBufferMRT)) {
-                        throw new RuntimeException("Multiple render targets "
-                                + " are not supported by the video hardware");
+                        throw new RendererException("Multiple render targets "
+                                                    + " are not supported by the video hardware");
                     }
                     if (fb.getNumColorBuffers() > limits.get(Limits.FrameBufferMrtAttachments)) {
-                        throw new RuntimeException("Framebuffer has more"
-                                + " multi targets than are supported"
-                                + " by the video hardware!");
+                        throw new RendererException("Framebuffer has more"
+                                                    + " multi targets than are supported"
+                                                    + " by the video hardware!");
                     }
 
                     intBuf16.clear();
                     for (int i = 0; i < fb.getNumColorBuffers(); i++) {
-                        intBuf16.put(ARBFramebufferObject.GL_COLOR_ATTACHMENT0 + i);
+                        intBuf16.put(GLFbo.GL_COLOR_ATTACHMENT0_EXT + i);
                     }
 
                     intBuf16.flip();
-                    GL20.glDrawBuffers(intBuf16);
+                    glext.glDrawBuffers(intBuf16);
                     context.boundDrawBuf = MRT_OFF + fb.getNumColorBuffers();
 
                 } else {
                     FrameBuffer.RenderBuffer rb = fb.getColorBuffer(fb.getTargetIndex());
                     // select this draw buffer
                     if (context.boundDrawBuf != rb.getSlot()) {
-                        GL11.glDrawBuffer(ARBFramebufferObject.GL_COLOR_ATTACHMENT0 + rb.getSlot());
+                        gl2.glDrawBuffer(GLFbo.GL_COLOR_ATTACHMENT0_EXT + rb.getSlot());
                         context.boundDrawBuf = rb.getSlot();
                     }
                 }
@@ -1726,8 +1722,8 @@ public final class GLRenderer implements Renderer {
         }
 
         if (!caps.contains(Caps.FrameBuffer)) {
-            throw new RuntimeException("Framebuffer objects are not supported"
-                    + " by the video hardware");
+            throw new RendererException("Framebuffer objects are not supported"
+                                        + " by the video hardware");
         }
 
         // generate mipmaps for last FB if needed
@@ -1736,11 +1732,13 @@ public final class GLRenderer implements Renderer {
                 FrameBuffer.RenderBuffer rb = context.boundFB.getColorBuffer(i);
                 Texture tex = rb.getTexture();
                 if (tex != null
-                        && tex.getMinFilter().usesMipMapLevels()) {
+                    && tex.getMinFilter().usesMipMapLevels()) {
                     setTexture(0, rb.getTexture());
 
-                    int textureType = convertTextureType(tex.getType(), tex.getImage().getMultiSamples(), rb.getFace());
-                    ARBFramebufferObject.glGenerateMipmap(textureType);
+                    int textureType = convertTextureType(tex.getType(),
+                                                         tex.getImage().getMultiSamples(),
+                                                         rb.getFace());
+                    glfbo.glGenerateMipmapEXT(textureType);
                 }
             }
         }
@@ -1767,27 +1765,30 @@ public final class GLRenderer implements Renderer {
     }
 
     public void readFrameBuffer(FrameBuffer fb, ByteBuffer byteBuf) {
-        readFrameBufferWithGLFormat(fb, byteBuf, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE);
+        readFrameBufferWithGLFormat(fb, byteBuf, GL.GL_RGBA, GL.GL_UNSIGNED_BYTE);
     }
 
-    private void readFrameBufferWithGLFormat(FrameBuffer fb, ByteBuffer byteBuf, int glFormat, int dataType) {
+    private void readFrameBufferWithGLFormat(FrameBuffer fb, ByteBuffer byteBuf, int glFormat,
+                                             int dataType) {
         if (fb != null) {
             FrameBuffer.RenderBuffer rb = fb.getColorBuffer();
             if (rb == null) {
                 throw new IllegalArgumentException("Specified framebuffer"
-                        + " does not have a colorbuffer");
+                                                   + " does not have a colorbuffer");
             }
 
             setFrameBuffer(fb);
-            if (context.boundReadBuf != rb.getSlot()) {
-                GL11.glReadBuffer(ARBFramebufferObject.GL_COLOR_ATTACHMENT0 + rb.getSlot());
-                context.boundReadBuf = rb.getSlot();
+            if (gl2 != null) {
+                if (context.boundReadBuf != rb.getSlot()) {
+                    gl2.glReadBuffer(GLFbo.GL_COLOR_ATTACHMENT0_EXT + rb.getSlot());
+                    context.boundReadBuf = rb.getSlot();
+                }
             }
         } else {
             setFrameBuffer(null);
         }
 
-        GL11.glReadPixels(vpX, vpY, vpW, vpH, glFormat, dataType, byteBuf);
+        gl.glReadPixels(vpX, vpY, vpW, vpH, glFormat, dataType, byteBuf);
     }
 
     public void readFrameBufferWithFormat(FrameBuffer fb, ByteBuffer byteBuf, Image.Format format) {
@@ -1796,13 +1797,14 @@ public final class GLRenderer implements Renderer {
     }
 
     private void deleteRenderBuffer(FrameBuffer fb, FrameBuffer.RenderBuffer rb) {
-        ARBFramebufferObject.glDeleteRenderbuffers(rb.getId());
+        intBuf1.put(0, rb.getId());
+        glfbo.glDeleteRenderbuffersEXT(intBuf1);
     }
 
     public void deleteFrameBuffer(FrameBuffer fb) {
         if (fb.getId() != -1) {
             if (context.boundFBO == fb.getId()) {
-                ARBFramebufferObject.glBindFramebuffer(ARBFramebufferObject.GL_FRAMEBUFFER, 0);
+                glfbo.glBindFramebufferEXT(GLFbo.GL_FRAMEBUFFER_EXT, 0);
                 context.boundFBO = 0;
             }
 
@@ -1813,10 +1815,9 @@ public final class GLRenderer implements Renderer {
                 deleteRenderBuffer(fb, fb.getColorBuffer());
             }
 
-            ARBFramebufferObject.glDeleteFramebuffers(fb.getId());
+            intBuf1.put(0, fb.getId());
+            glfbo.glDeleteFramebuffersEXT(intBuf1);
             fb.resetObject();
-
-//            statistics.onDeleteFrameBuffer();
         }
     }
 
@@ -1825,38 +1826,38 @@ public final class GLRenderer implements Renderer {
      \*********************************************************************/
     private int convertTextureType(Texture.Type type, int samples, int face) {
         if (samples > 1 && !caps.contains(Caps.TextureMultisample)) {
-            throw new RuntimeException("Multisample textures are not supported" +
-                    " by the video hardware.");
+            throw new RendererException("Multisample textures are not supported" +
+                                        " by the video hardware.");
         }
 
         switch (type) {
             case TwoDimensional:
                 if (samples > 1) {
-                    return GL32.GL_TEXTURE_2D_MULTISAMPLE;
+                    return GLExt.GL_TEXTURE_2D_MULTISAMPLE;
                 } else {
-                    return GL11.GL_TEXTURE_2D;
+                    return GL.GL_TEXTURE_2D;
                 }
             case TwoDimensionalArray:
                 if (!caps.contains(Caps.TextureArray)) {
-                    throw new RuntimeException("Array textures are not supported"
-                            + " by the video hardware.");
+                    throw new RendererException("Array textures are not supported"
+                                                + " by the video hardware.");
                 }
                 if (samples > 1) {
-                    return GL32.GL_TEXTURE_2D_MULTISAMPLE_ARRAY;
+                    return GLExt.GL_TEXTURE_2D_MULTISAMPLE_ARRAY;
                 } else {
-                    return GL30.GL_TEXTURE_2D_ARRAY;
+                    return GLExt.GL_TEXTURE_2D_ARRAY_EXT;
                 }
             case ThreeDimensional:
                 if (!caps.contains(Caps.OpenGL20)) {
-                    throw new RuntimeException("3D textures are not supported" +
-                            " by the video hardware.");
+                    throw new RendererException("3D textures are not supported" +
+                                                " by the video hardware.");
                 }
-                return GL12.GL_TEXTURE_3D;
+                return GL2.GL_TEXTURE_3D;
             case CubeMap:
                 if (face < 0) {
-                    return GL13.GL_TEXTURE_CUBE_MAP;
+                    return GL.GL_TEXTURE_CUBE_MAP;
                 } else if (face < 6) {
-                    return GL13.GL_TEXTURE_CUBE_MAP_POSITIVE_X + face;
+                    return GL.GL_TEXTURE_CUBE_MAP_POSITIVE_X + face;
                 } else {
                     throw new UnsupportedOperationException("Invalid cube map face index: " + face);
                 }
@@ -1868,29 +1869,29 @@ public final class GLRenderer implements Renderer {
     private int convertMagFilter(Texture.MagFilter filter) {
         switch (filter) {
             case Bilinear:
-                return GL11.GL_LINEAR;
+                return GL.GL_LINEAR;
             case Nearest:
-                return GL11.GL_NEAREST;
+                return GL.GL_NEAREST;
             default:
                 throw new UnsupportedOperationException("Unknown mag filter: " + filter);
         }
     }
 
     private int convertMinFilter(Texture.MinFilter filter, boolean haveMips) {
-        if (haveMips){
+        if (haveMips) {
             switch (filter) {
                 case Trilinear:
-                    return GL11.GL_LINEAR_MIPMAP_LINEAR;
+                    return GL.GL_LINEAR_MIPMAP_LINEAR;
                 case BilinearNearestMipMap:
-                    return GL11.GL_LINEAR_MIPMAP_NEAREST;
+                    return GL.GL_LINEAR_MIPMAP_NEAREST;
                 case NearestLinearMipMap:
-                    return GL11.GL_NEAREST_MIPMAP_LINEAR;
+                    return GL.GL_NEAREST_MIPMAP_LINEAR;
                 case NearestNearestMipMap:
-                    return GL11.GL_NEAREST_MIPMAP_NEAREST;
+                    return GL.GL_NEAREST_MIPMAP_NEAREST;
                 case BilinearNoMipMaps:
-                    return GL11.GL_LINEAR;
+                    return GL.GL_LINEAR;
                 case NearestNoMipMaps:
-                    return GL11.GL_NEAREST;
+                    return GL.GL_NEAREST;
                 default:
                     throw new UnsupportedOperationException("Unknown min filter: " + filter);
             }
@@ -1899,11 +1900,11 @@ public final class GLRenderer implements Renderer {
                 case Trilinear:
                 case BilinearNearestMipMap:
                 case BilinearNoMipMaps:
-                    return GL11.GL_LINEAR;
+                    return GL.GL_LINEAR;
                 case NearestLinearMipMap:
                 case NearestNearestMipMap:
                 case NearestNoMipMaps:
-                    return GL11.GL_NEAREST;
+                    return GL.GL_NEAREST;
                 default:
                     throw new UnsupportedOperationException("Unknown min filter: " + filter);
             }
@@ -1912,15 +1913,15 @@ public final class GLRenderer implements Renderer {
 
     private int convertWrapMode(Texture.WrapMode mode) {
         switch (mode) {
-//            case BorderClamp:
-//            case Clamp:
+            case BorderClamp:
+            case Clamp:
             case EdgeClamp:
                 // Falldown intentional.
-                return GL12.GL_CLAMP_TO_EDGE;
+                return GL.GL_CLAMP_TO_EDGE;
             case Repeat:
-                return GL11.GL_REPEAT;
+                return GL.GL_REPEAT;
             case MirroredRepeat:
-                return GL14.GL_MIRRORED_REPEAT;
+                return GL.GL_MIRRORED_REPEAT;
             default:
                 throw new UnsupportedOperationException("Unknown wrap mode: " + mode);
         }
@@ -1929,7 +1930,8 @@ public final class GLRenderer implements Renderer {
     @SuppressWarnings("fallthrough")
     private void setupTextureParams(int unit, Texture tex) {
         Image image = tex.getImage();
-        int target = convertTextureType(tex.getType(), image != null ? image.getMultiSamples() : 1, -1);
+        int target = convertTextureType(tex.getType(), image != null ? image.getMultiSamples() : 1,
+                                        -1);
 
         boolean haveMips = true;
         if (image != null) {
@@ -1940,35 +1942,37 @@ public final class GLRenderer implements Renderer {
 
         if (curState.magFilter != tex.getMagFilter()) {
             bindTextureAndUnit(target, image, unit);
-            GL11.glTexParameteri(target, GL11.GL_TEXTURE_MAG_FILTER, convertMagFilter(tex.getMagFilter()));
+            gl.glTexParameteri(target, GL.GL_TEXTURE_MAG_FILTER,
+                               convertMagFilter(tex.getMagFilter()));
             curState.magFilter = tex.getMagFilter();
         }
         if (curState.minFilter != tex.getMinFilter()) {
             bindTextureAndUnit(target, image, unit);
-            GL11.glTexParameteri(target, GL11.GL_TEXTURE_MIN_FILTER, convertMinFilter(tex.getMinFilter(), haveMips));
+            gl.glTexParameteri(target, GL.GL_TEXTURE_MIN_FILTER,
+                               convertMinFilter(tex.getMinFilter(), haveMips));
             curState.minFilter = tex.getMinFilter();
         }
 
-        int desiredAnisoFilter = defaultAnisotropicFilter;
-//        int desiredAnisoFilter = tex.getAnisotropicFilter() == 0
-//                ? defaultAnisotropicFilter
-//                : tex.getAnisotropicFilter();
+        int desiredAnisoFilter = tex.getAnisotropicFilter() == 0
+                                 ? defaultAnisotropicFilter
+                                 : tex.getAnisotropicFilter();
 
         if (caps.contains(Caps.TextureFilterAnisotropic)
-                && curState.anisoFilter != desiredAnisoFilter) {
+            && curState.anisoFilter != desiredAnisoFilter) {
             bindTextureAndUnit(target, image, unit);
-            GL11.glTexParameterf(target,
-                    EXTTextureFilterAnisotropic.GL_TEXTURE_MAX_ANISOTROPY_EXT,
-                    desiredAnisoFilter);
+            gl.glTexParameterf(target,
+                               GLExt.GL_TEXTURE_MAX_ANISOTROPY_EXT,
+                               desiredAnisoFilter);
             curState.anisoFilter = desiredAnisoFilter;
         }
 
         switch (tex.getType()) {
             case ThreeDimensional:
             case CubeMap: // cubemaps use 3D coords
-                if (curState.rWrap != tex.getWrap(Texture.WrapAxis.R)) {
+                if (gl2 != null && curState.rWrap != tex.getWrap(Texture.WrapAxis.R)) {
                     bindTextureAndUnit(target, image, unit);
-                    GL11.glTexParameteri(target, GL12.GL_TEXTURE_WRAP_R, convertWrapMode(tex.getWrap(Texture.WrapAxis.R)));
+                    gl2.glTexParameteri(target, GL2.GL_TEXTURE_WRAP_R,
+                                        convertWrapMode(tex.getWrap(Texture.WrapAxis.R)));
                     curState.rWrap = tex.getWrap(Texture.WrapAxis.R);
                 }
                 //There is no break statement on purpose here
@@ -1976,12 +1980,14 @@ public final class GLRenderer implements Renderer {
             case TwoDimensionalArray:
                 if (curState.tWrap != tex.getWrap(Texture.WrapAxis.T)) {
                     bindTextureAndUnit(target, image, unit);
-                    GL11.glTexParameteri(target, GL11.GL_TEXTURE_WRAP_T, convertWrapMode(tex.getWrap(Texture.WrapAxis.T)));
+                    gl.glTexParameteri(target, GL.GL_TEXTURE_WRAP_T,
+                                       convertWrapMode(tex.getWrap(Texture.WrapAxis.T)));
                     image.getLastTextureState().tWrap = tex.getWrap(Texture.WrapAxis.T);
                 }
                 if (curState.sWrap != tex.getWrap(Texture.WrapAxis.S)) {
                     bindTextureAndUnit(target, image, unit);
-                    GL11.glTexParameteri(target, GL11.GL_TEXTURE_WRAP_S, convertWrapMode(tex.getWrap(Texture.WrapAxis.S)));
+                    gl.glTexParameteri(target, GL.GL_TEXTURE_WRAP_S,
+                                       convertWrapMode(tex.getWrap(Texture.WrapAxis.S)));
                     curState.sWrap = tex.getWrap(Texture.WrapAxis.S);
                 }
                 break;
@@ -1989,21 +1995,22 @@ public final class GLRenderer implements Renderer {
                 throw new UnsupportedOperationException("Unknown texture type: " + tex.getType());
         }
 
-//        ShadowCompareMode texCompareMode = tex.getShadowCompareMode();
-//        if (gl2 != null && curState.shadowCompareMode != texCompareMode) {
-//            bindTextureAndUnit(target, image, unit);
-//            if (texCompareMode != ShadowCompareMode.Off) {
-//                gl2.glTexParameteri(target, GL2.GL_TEXTURE_COMPARE_MODE, GL2.GL_COMPARE_REF_TO_TEXTURE);
-//                if (texCompareMode == ShadowCompareMode.GreaterOrEqual) {
-//                    gl2.glTexParameteri(target, GL2.GL_TEXTURE_COMPARE_FUNC, GL.GL_GEQUAL);
-//                } else {
-//                    gl2.glTexParameteri(target, GL2.GL_TEXTURE_COMPARE_FUNC, GL.GL_LEQUAL);
-//                }
-//            } else {
-//                gl2.glTexParameteri(target, GL2.GL_TEXTURE_COMPARE_MODE, GL.GL_NONE);
-//            }
-//            curState.shadowCompareMode = texCompareMode;
-//        }
+        Texture.ShadowCompareMode texCompareMode = tex.getShadowCompareMode();
+        if (gl2 != null && curState.shadowCompareMode != texCompareMode) {
+            bindTextureAndUnit(target, image, unit);
+            if (texCompareMode != Texture.ShadowCompareMode.Off) {
+                gl2.glTexParameteri(target, GL2.GL_TEXTURE_COMPARE_MODE,
+                                    GL2.GL_COMPARE_REF_TO_TEXTURE);
+                if (texCompareMode == Texture.ShadowCompareMode.GreaterOrEqual) {
+                    gl2.glTexParameteri(target, GL2.GL_TEXTURE_COMPARE_FUNC, GL.GL_GEQUAL);
+                } else {
+                    gl2.glTexParameteri(target, GL2.GL_TEXTURE_COMPARE_FUNC, GL.GL_LEQUAL);
+                }
+            } else {
+                gl2.glTexParameteri(target, GL2.GL_TEXTURE_COMPARE_MODE, GL.GL_NONE);
+            }
+            curState.shadowCompareMode = texCompareMode;
+        }
 
         // If at this point we didn't bind the texture, bind it now
         bindTextureOnly(target, image, unit);
@@ -2017,7 +2024,7 @@ public final class GLRenderer implements Renderer {
      * texturing features are used.
      *
      * @param tex The texture to validate.
-     * @throws RuntimeException If the texture is not supported by the hardware
+     * @throws RendererException If the texture is not supported by the hardware
      */
     private void checkNonPowerOfTwo(Texture tex) {
         if (!tex.getImage().isNPOT()) {
@@ -2033,30 +2040,30 @@ public final class GLRenderer implements Renderer {
         // Maybe we have some / partial support for NPOT?
         if (!caps.contains(Caps.PartialNonPowerOfTwoTextures)) {
             // Cannot use any type of NPOT texture (uncommon)
-            throw new RuntimeException("non-power-of-2 textures are not "
-                    + "supported by the video hardware");
+            throw new RendererException("non-power-of-2 textures are not "
+                                        + "supported by the video hardware");
         }
 
         // Partial NPOT supported..
         if (tex.getMinFilter().usesMipMapLevels()) {
-            throw new RuntimeException("non-power-of-2 textures with mip-maps "
-                    + "are not supported by the video hardware");
+            throw new RendererException("non-power-of-2 textures with mip-maps "
+                                        + "are not supported by the video hardware");
         }
 
         switch (tex.getType()) {
             case CubeMap:
             case ThreeDimensional:
                 if (tex.getWrap(Texture.WrapAxis.R) != Texture.WrapMode.EdgeClamp) {
-                    throw new RuntimeException("repeating non-power-of-2 textures "
-                            + "are not supported by the video hardware");
+                    throw new RendererException("repeating non-power-of-2 textures "
+                                                + "are not supported by the video hardware");
                 }
                 // fallthrough intentional!!!
             case TwoDimensionalArray:
             case TwoDimensional:
                 if (tex.getWrap(Texture.WrapAxis.S) != Texture.WrapMode.EdgeClamp
-                        || tex.getWrap(Texture.WrapAxis.T) != Texture.WrapMode.EdgeClamp) {
-                    throw new RuntimeException("repeating non-power-of-2 textures "
-                            + "are not supported by the video hardware");
+                    || tex.getWrap(Texture.WrapAxis.T) != Texture.WrapMode.EdgeClamp) {
+                    throw new RendererException("repeating non-power-of-2 textures "
+                                                + "are not supported by the video hardware");
                 }
                 break;
             default:
@@ -2069,20 +2076,17 @@ public final class GLRenderer implements Renderer {
      * and that the unit is currently active (for modification).
      *
      * @param target The texture target, one of GL_TEXTURE_***
-     * @param img The image texture to bind
-     * @param unit At what unit to bind the texture.
+     * @param img    The image texture to bind
+     * @param unit   At what unit to bind the texture.
      */
     private void bindTextureAndUnit(int target, Image img, int unit) {
         if (context.boundTextureUnit != unit) {
-            GL13.glActiveTexture(GL13.GL_TEXTURE0 + unit);
+            gl.glActiveTexture(GL.GL_TEXTURE0 + unit);
             context.boundTextureUnit = unit;
         }
         if (context.boundTextures[unit] != img) {
-            GL11.glBindTexture(target, img.getId());
+            gl.glBindTexture(target, img.getId());
             context.boundTextures[unit] = img;
-//            statistics.onTextureUse(img, true);
-        } else {
-//            statistics.onTextureUse(img, false);
         }
     }
 
@@ -2091,40 +2095,37 @@ public final class GLRenderer implements Renderer {
      * but does not care if the unit is active (for rendering).
      *
      * @param target The texture target, one of GL_TEXTURE_***
-     * @param img The image texture to bind
-     * @param unit At what unit to bind the texture.
+     * @param img    The image texture to bind
+     * @param unit   At what unit to bind the texture.
      */
     private void bindTextureOnly(int target, Image img, int unit) {
         if (context.boundTextures[unit] != img) {
             if (context.boundTextureUnit != unit) {
-                GL13.glActiveTexture(GL13.GL_TEXTURE0 + unit);
+                gl.glActiveTexture(GL.GL_TEXTURE0 + unit);
                 context.boundTextureUnit = unit;
             }
-            GL11.glBindTexture(target, img.getId());
+            gl.glBindTexture(target, img.getId());
             context.boundTextures[unit] = img;
-//            statistics.onTextureUse(img, true);
-        } else {
-//            statistics.onTextureUse(img, false);
         }
     }
 
     /**
      * Uploads the given image to the GL driver.
      *
-     * @param img The image to upload
-     * @param type How the data in the image argument should be interpreted.
-     * @param unit The texture slot to be used to upload the image, not important
+     * @param img        The image to upload
+     * @param type       How the data in the image argument should be interpreted.
+     * @param unit       The texture slot to be used to upload the image, not important
      * @param scaleToPot If true, the image will be scaled to power-of-2 dimensions
-     * before being uploaded.
+     *                   before being uploaded.
      */
     public void updateTexImageData(Image img, Texture.Type type, int unit, boolean scaleToPot) {
         int texId = img.getId();
         if (texId == -1) {
             // create texture
-            texId = GL11.glGenTextures();
+            gl.glGenTextures(intBuf1);
+            texId = intBuf1.get(0);
             img.setId(texId);
-//            objManager.registerObject(img);
-//            statistics.onNewTexture();
+            objManager.registerObject(img);
         }
 
         // bind texture
@@ -2135,8 +2136,8 @@ public final class GLRenderer implements Renderer {
             // Image does not have mipmaps, but they are required.
             // Generate from base level.
 
-            if (!caps.contains(Caps.FrameBuffer)) {
-                GL11.glTexParameteri(target, GL14.GL_GENERATE_MIPMAP, GL11.GL_TRUE);
+            if (!caps.contains(Caps.FrameBuffer) && gl2 != null) {
+                gl2.glTexParameteri(target, GL2.GL_GENERATE_MIPMAP, GL.GL_TRUE);
                 img.setMipmapsGenerated(true);
             } else {
                 // For OpenGL3 and up.
@@ -2145,11 +2146,11 @@ public final class GLRenderer implements Renderer {
         } else if (img.hasMipmaps()) {
             // Image already has mipmaps, set the max level based on the
             // number of mipmaps we have.
-            GL11.glTexParameteri(target, GL12.GL_TEXTURE_MAX_LEVEL, img.getMipMapSizes().length - 1);
+            gl.glTexParameteri(target, GL.GL_TEXTURE_MAX_LEVEL, img.getMipMapSizes().length - 1);
         } else {
             // Image does not have mipmaps and they are not required.
             // Specify that that the texture has no mipmaps.
-            GL11.glTexParameteri(target, GL12.GL_TEXTURE_MAX_LEVEL, 0);
+            gl.glTexParameteri(target, GL.GL_TEXTURE_MAX_LEVEL, 0);
         }
 
         int imageSamples = img.getMultiSamples();
@@ -2164,28 +2165,33 @@ public final class GLRenderer implements Renderer {
         // Check if graphics card doesn't support multisample textures
         if (!caps.contains(Caps.TextureMultisample)) {
             if (img.getMultiSamples() > 1) {
-                throw new RuntimeException("Multisample textures are not supported by the video hardware");
+                throw new RendererException(
+                        "Multisample textures are not supported by the video hardware");
             }
         }
 
         // Check if graphics card doesn't support depth textures
         if (img.getFormat().isDepthFormat() && !caps.contains(Caps.DepthTexture)) {
-            throw new RuntimeException("Depth textures are not supported by the video hardware");
+            throw new RendererException("Depth textures are not supported by the video hardware");
         }
 
-        if (target == GL13.GL_TEXTURE_CUBE_MAP) {
+        if (target == GL.GL_TEXTURE_CUBE_MAP) {
             // Check max texture size before upload
             int cubeSize = limits.get(Limits.CubemapSize);
             if (img.getWidth() > cubeSize || img.getHeight() > cubeSize) {
-                throw new RuntimeException("Cannot upload cubemap " + img + ". The maximum supported cubemap resolution is " + cubeSize);
+                throw new RendererException("Cannot upload cubemap " + img
+                                            + ". The maximum supported cubemap resolution is "
+                                            + cubeSize);
             }
             if (img.getWidth() != img.getHeight()) {
-                throw new RuntimeException("Cubemaps must have square dimensions");
+                throw new RendererException("Cubemaps must have square dimensions");
             }
         } else {
             int texSize = limits.get(Limits.TextureSize);
             if (img.getWidth() > texSize || img.getHeight() > texSize) {
-                throw new RuntimeException("Cannot upload texture " + img + ". The maximum supported texture resolution is " + texSize);
+                throw new RendererException("Cannot upload texture " + img
+                                            + ". The maximum supported texture resolution is "
+                                            + texSize);
             }
         }
 
@@ -2195,7 +2201,7 @@ public final class GLRenderer implements Renderer {
         } else {
             imageForUpload = img;
         }
-        if (target == GL13.GL_TEXTURE_CUBE_MAP) {
+        if (target == GL.GL_TEXTURE_CUBE_MAP) {
             List<ByteBuffer> data = imageForUpload.getData();
             if (data.size() != 6) {
                 System.err.println("Invalid texture: " + img + "\n"
@@ -2203,11 +2209,12 @@ public final class GLRenderer implements Renderer {
                 return;
             }
             for (int i = 0; i < 6; i++) {
-                texUtil.uploadTexture(imageForUpload, GL13.GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, i, linearizeSrgbImages);
+                texUtil.uploadTexture(imageForUpload, GL.GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, i,
+                                      linearizeSrgbImages);
             }
-        } else if (target == GL30.GL_TEXTURE_2D_ARRAY) {
+        } else if (target == GLExt.GL_TEXTURE_2D_ARRAY_EXT) {
             if (!caps.contains(Caps.TextureArray)) {
-                throw new RuntimeException("Texture arrays not supported by graphics hardware");
+                throw new RendererException("Texture arrays not supported by graphics hardware");
             }
 
             List<ByteBuffer> data = imageForUpload.getData();
@@ -2228,9 +2235,9 @@ public final class GLRenderer implements Renderer {
             img.setMultiSamples(imageSamples);
         }
 
-        if (caps.contains(Caps.FrameBuffer)) {
+        if (caps.contains(Caps.FrameBuffer) || gl2 == null) {
             if (!img.hasMipmaps() && img.isGeneratedMipmapsRequired() && img.getData(0) != null) {
-                ARBFramebufferObject.glGenerateMipmap(target);
+                glfbo.glGenerateMipmapEXT(target);
                 img.setMipmapsGenerated(true);
             }
         }
@@ -2238,20 +2245,24 @@ public final class GLRenderer implements Renderer {
         img.clearUpdateNeeded();
     }
 
+    @Override
     public void setTexture(int unit, Texture tex) {
         Image image = tex.getImage();
-        if (image.isUpdateNeeded() || (image.isGeneratedMipmapsRequired() && !image.isMipmapsGenerated())) {
+        if (image.isUpdateNeeded() || (image.isGeneratedMipmapsRequired() && !image
+                .isMipmapsGenerated())) {
             // Check NPOT requirements
             boolean scaleToPot = false;
 
             try {
                 checkNonPowerOfTwo(tex);
-            } catch (RuntimeException ex) {
+            } catch (RendererException ex) {
                 int nextWidth = FastMath.nearestPowerOfTwo(tex.getImage().getWidth());
                 int nextHeight = FastMath.nearestPowerOfTwo(tex.getImage().getHeight());
                 System.err.println("Non-power-of-2 textures are not supported! Scaling texture '" + tex.getName() +
-                                    "' of size " + tex.getImage().getWidth() + "x" + tex.getImage().getHeight() +
-                                    " to " + nextWidth + "x" + nextHeight);
+                                   "' of size " + tex.getImage().getWidth() + "x" + tex.getImage()
+                                                                                       .getHeight()
+                                   +
+                                   " to " + nextWidth + "x" + nextHeight);
                 scaleToPot = true;
             }
 
@@ -2273,10 +2284,10 @@ public final class GLRenderer implements Renderer {
     public void deleteImage(Image image) {
         int texId = image.getId();
         if (texId != -1) {
-            GL11.glDeleteTextures(texId);
+            intBuf1.put(0, texId);
+            intBuf1.position(0).limit(1);
+            gl.glDeleteTextures(intBuf1);
             image.resetObject();
-
-            //statistics.onDeleteTexture();
         }
     }
 
@@ -2286,11 +2297,11 @@ public final class GLRenderer implements Renderer {
     private int convertUsage(VertexBuffer.Usage usage) {
         switch (usage) {
             case Static:
-                return GL15.GL_STATIC_DRAW;
+                return GL.GL_STATIC_DRAW;
             case Dynamic:
-                return GL15.GL_DYNAMIC_DRAW;
+                return GL.GL_DYNAMIC_DRAW;
             case Stream:
-                return GL15.GL_STREAM_DRAW;
+                return GL.GL_STREAM_DRAW;
             default:
                 throw new UnsupportedOperationException("Unknown usage type.");
         }
@@ -2299,21 +2310,21 @@ public final class GLRenderer implements Renderer {
     private int convertFormat(VertexBuffer.Format format) {
         switch (format) {
             case Byte:
-                return GL11.GL_BYTE;
+                return GL.GL_BYTE;
             case UnsignedByte:
-                return GL11.GL_UNSIGNED_BYTE;
+                return GL.GL_UNSIGNED_BYTE;
             case Short:
-                return GL11.GL_SHORT;
+                return GL.GL_SHORT;
             case UnsignedShort:
-                return GL11.GL_UNSIGNED_SHORT;
+                return GL.GL_UNSIGNED_SHORT;
             case Int:
-                return GL11.GL_INT;
+                return GL.GL_INT;
             case UnsignedInt:
-                return GL11.GL_UNSIGNED_INT;
+                return GL.GL_UNSIGNED_INT;
             case Float:
-                return GL11.GL_FLOAT;
+                return GL.GL_FLOAT;
             case Double:
-                return GL11.GL_DOUBLE;
+                return GL.GL_DOUBLE;
             default:
                 throw new UnsupportedOperationException("Unknown buffer format.");
 
@@ -2322,24 +2333,29 @@ public final class GLRenderer implements Renderer {
 
     public void updateBufferData(VertexBuffer vb) {
         int bufId = vb.getId();
+        boolean created = false;
         if (bufId == -1) {
             // create buffer
-            bufId = GL15.glGenBuffers();
+            gl.glGenBuffers(intBuf1);
+            bufId = intBuf1.get(0);
             vb.setId(bufId);
+            objManager.registerObject(vb);
+
+            created = true;
         }
 
         // bind buffer
         int target;
         if (vb.getBufferType() == VertexBuffer.Type.Index) {
-            target = GL15.GL_ELEMENT_ARRAY_BUFFER;
+            target = GL.GL_ELEMENT_ARRAY_BUFFER;
             if (context.boundElementArrayVBO != bufId) {
-                GL15.glBindBuffer(target, bufId);
+                gl.glBindBuffer(target, bufId);
                 context.boundElementArrayVBO = bufId;
             }
         } else {
-            target = GL15.GL_ARRAY_BUFFER;
+            target = GL.GL_ARRAY_BUFFER;
             if (context.boundArrayVBO != bufId) {
-                GL15.glBindBuffer(target, bufId);
+                gl.glBindBuffer(target, bufId);
                 context.boundArrayVBO = bufId;
             }
         }
@@ -2350,18 +2366,18 @@ public final class GLRenderer implements Renderer {
         switch (vb.getFormat()) {
             case Byte:
             case UnsignedByte:
-                GL15.glBufferData(target, (ByteBuffer) vb.getData(), usage);
+                gl.glBufferData(target, (ByteBuffer) vb.getData(), usage);
                 break;
             case Short:
             case UnsignedShort:
-                GL15.glBufferData(target, (ShortBuffer) vb.getData(), usage);
+                gl.glBufferData(target, (ShortBuffer) vb.getData(), usage);
                 break;
             case Int:
             case UnsignedInt:
-                GL15.glBufferData(target, (IntBuffer) vb.getData(), usage);
+                glext.glBufferData(target, (IntBuffer) vb.getData(), usage);
                 break;
             case Float:
-                GL15.glBufferData(target, (FloatBuffer) vb.getData(), usage);
+                gl.glBufferData(target, (FloatBuffer) vb.getData(), usage);
                 break;
             default:
                 throw new UnsupportedOperationException("Unknown buffer format.");
@@ -2376,7 +2392,7 @@ public final class GLRenderer implements Renderer {
             // delete buffer
             intBuf1.put(0, bufId);
             intBuf1.position(0).limit(1);
-            GL15.glDeleteBuffers(intBuf1);
+            gl.glDeleteBuffers(intBuf1);
             vb.resetObject();
 
             //statistics.onDeleteVertexBuffer();
@@ -2387,9 +2403,9 @@ public final class GLRenderer implements Renderer {
         IDList attribList = context.attribIndexList;
         for (int i = 0; i < attribList.oldLen; i++) {
             int idx = attribList.oldList[i];
-            GL20.glDisableVertexAttribArray(idx);
+            gl.glDisableVertexAttribArray(idx);
             if (context.boundAttribs[idx].isInstanced()) {
-                GL33.glVertexAttribDivisor(idx, 0);
+                glext.glVertexAttribDivisorARB(idx, 0);
             }
             context.boundAttribs[idx] = null;
         }
@@ -2398,7 +2414,8 @@ public final class GLRenderer implements Renderer {
 
     public void setVertexAttrib(VertexBuffer vb, VertexBuffer idb) {
         if (vb.getBufferType() == VertexBuffer.Type.Index) {
-            throw new IllegalArgumentException("Index buffers not allowed to be set to vertex attrib");
+            throw new IllegalArgumentException(
+                    "Index buffers not allowed to be set to vertex attrib");
         }
 
         if (context.boundShaderProgram <= 0) {
@@ -2411,7 +2428,8 @@ public final class GLRenderer implements Renderer {
             return; // not defined
         }
         if (loc == -2) {
-            loc = GL20.glGetAttribLocation(context.boundShaderProgram, "in" + vb.getBufferType().name());
+            loc = gl.glGetAttribLocation(context.boundShaderProgram,
+                                         "in" + vb.getBufferType().name());
 
             // not really the name of it in the shader (inPosition) but
             // the internal name of the enum (Position).
@@ -2425,16 +2443,16 @@ public final class GLRenderer implements Renderer {
 
         if (vb.isInstanced()) {
             if (!caps.contains(Caps.MeshInstancing)) {
-                throw new RuntimeException("Instancing is required, "
-                        + "but not supported by the "
-                        + "graphics hardware");
+                throw new RendererException("Instancing is required, "
+                                            + "but not supported by the "
+                                            + "graphics hardware");
             }
         }
         int slotsRequired = 1;
         if (vb.getNumComponents() > 4) {
             if (vb.getNumComponents() % 4 != 0) {
-                throw new RuntimeException("Number of components in multi-slot "
-                        + "buffers must be divisible by 4");
+                throw new RendererException("Number of components in multi-slot "
+                                            + "buffers must be divisible by 4");
             }
             slotsRequired = vb.getNumComponents() / 4;
         }
@@ -2446,7 +2464,7 @@ public final class GLRenderer implements Renderer {
         VertexBuffer[] attribs = context.boundAttribs;
         for (int i = 0; i < slotsRequired; i++) {
             if (!context.attribIndexList.moveToNew(loc + i)) {
-                GL20.glEnableVertexAttribArray(loc + i);
+                gl.glEnableVertexAttribArray(loc + i);
             }
         }
         if (attribs[loc] != vb) {
@@ -2454,20 +2472,17 @@ public final class GLRenderer implements Renderer {
             int bufId = idb != null ? idb.getId() : vb.getId();
             assert bufId != -1;
             if (context.boundArrayVBO != bufId) {
-                GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, bufId);
+                gl.glBindBuffer(GL.GL_ARRAY_BUFFER, bufId);
                 context.boundArrayVBO = bufId;
-                //statistics.onVertexBufferUse(vb, true);
-            } else {
-                //statistics.onVertexBufferUse(vb, false);
             }
 
             if (slotsRequired == 1) {
-                GL20.glVertexAttribPointer(loc,
-                        vb.getNumComponents(),
-                        convertFormat(vb.getFormat()),
-                        vb.isNormalized(),
-                        vb.getStride(),
-                        vb.getOffset());
+                gl.glVertexAttribPointer(loc,
+                                         vb.getNumComponents(),
+                                         convertFormat(vb.getFormat()),
+                                         vb.isNormalized(),
+                                         vb.getStride(),
+                                         vb.getOffset());
             } else {
                 for (int i = 0; i < slotsRequired; i++) {
                     // The pointer maps the next 4 floats in the slot.
@@ -2478,12 +2493,12 @@ public final class GLRenderer implements Renderer {
                     // P4: ____________XXXX____________XXXX
                     // stride = 4 bytes in float * 4 floats in slot * num slots
                     // offset = 4 bytes in float * 4 floats in slot * slot index
-                    GL20.glVertexAttribPointer(loc + i,
-                            4,
-                            convertFormat(vb.getFormat()),
-                            vb.isNormalized(),
-                            4 * 4 * slotsRequired,
-                            4 * 4 * i);
+                    gl.glVertexAttribPointer(loc + i,
+                                             4,
+                                             convertFormat(vb.getFormat()),
+                                             vb.isNormalized(),
+                                             4 * 4 * slotsRequired,
+                                             4 * 4 * i);
                 }
             }
 
@@ -2491,10 +2506,11 @@ public final class GLRenderer implements Renderer {
                 int slot = loc + i;
                 if (vb.isInstanced() && (attribs[slot] == null || !attribs[slot].isInstanced())) {
                     // non-instanced -> instanced
-                    GL33.glVertexAttribDivisor(slot, vb.getInstanceSpan());
-                } else if (!vb.isInstanced() && attribs[slot] != null && attribs[slot].isInstanced()) {
+                    glext.glVertexAttribDivisorARB(slot, vb.getInstanceSpan());
+                } else if (!vb.isInstanced() && attribs[slot] != null && attribs[slot]
+                        .isInstanced()) {
                     // instanced -> non-instanced
-                    GL33.glVertexAttribDivisor(slot, 0);
+                    glext.glVertexAttribDivisorARB(slot, 0);
                 }
                 attribs[slot] = vb;
             }
@@ -2508,10 +2524,10 @@ public final class GLRenderer implements Renderer {
     public void drawTriangleArray(Mesh.Mode mode, int count, int vertCount) {
         boolean useInstancing = count > 1 && caps.contains(Caps.MeshInstancing);
         if (useInstancing) {
-            GL31.glDrawArraysInstanced(convertElementMode(mode), 0,
-                    vertCount, count);
+            glext.glDrawArraysInstancedARB(convertElementMode(mode), 0,
+                                           vertCount, count);
         } else {
-            GL11.glDrawArrays(convertElementMode(mode), 0, vertCount);
+            gl.glDrawArrays(convertElementMode(mode), 0, vertCount);
         }
     }
 
@@ -2525,14 +2541,16 @@ public final class GLRenderer implements Renderer {
                 // OK: Works on all platforms.
                 break;
             case UnsignedInt:
-                // Requires extension on OpenGL ES 2.
+                // Requres extension on OpenGL ES 2.
                 if (!caps.contains(Caps.IntegerIndexBuffer)) {
-                    throw new RuntimeException("32-bit index buffers are not supported by the video hardware");
+                    throw new RendererException(
+                            "32-bit index buffers are not supported by the video hardware");
                 }
                 break;
             default:
                 // What is this?
-                throw new RuntimeException("Unexpected format for index buffer: " + indexBuf.getFormat());
+                throw new RendererException(
+                        "Unexpected format for index buffer: " + indexBuf.getFormat());
         }
 
         if (indexBuf.isUpdateNeeded()) {
@@ -2543,7 +2561,7 @@ public final class GLRenderer implements Renderer {
         assert bufId != -1;
 
         if (context.boundElementArrayVBO != bufId) {
-            GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, bufId);
+            gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, bufId);
             context.boundElementArrayVBO = bufId;
             //statistics.onVertexBufferUse(indexBuf, true);
         } else {
@@ -2553,58 +2571,58 @@ public final class GLRenderer implements Renderer {
         int vertCount = mesh.getVertexCount();
         boolean useInstancing = count > 1 && caps.contains(Caps.MeshInstancing);
 
-//        if (mesh.getMode() == Mesh.Mode.Hybrid) {
-//            int[] modeStart = mesh.getModeStart();
-//            int[] elementLengths = mesh.getElementLengths();
-//
-//            int elMode = convertElementMode(Mesh.Mode.Triangles);
-//            int fmt = convertFormat(indexBuf.getFormat());
-//            int elSize = indexBuf.getFormat().getComponentSize();
-//            int listStart = modeStart[0];
-//            int stripStart = modeStart[1];
-//            int fanStart = modeStart[2];
-//            int curOffset = 0;
-//            for (int i = 0; i < elementLengths.length; i++) {
-//                if (i == stripStart) {
-//                    elMode = convertElementMode(Mode.TriangleStrip);
-//                } else if (i == fanStart) {
-//                    elMode = convertElementMode(Mode.TriangleFan);
-//                }
-//                int elementLength = elementLengths[i];
-//
-//                if (useInstancing) {
-//                    glext.glDrawElementsInstancedARB(elMode,
-//                            elementLength,
-//                            fmt,
-//                            curOffset,
-//                            count);
-//                } else {
-//                    gl.glDrawRangeElements(elMode,
-//                            0,
-//                            vertCount,
-//                            elementLength,
-//                            fmt,
-//                            curOffset);
-//                }
-//
-//                curOffset += elementLength * elSize;
-//            }
-//        } else {
-            if (useInstancing) {
-                GL31.glDrawElementsInstanced(convertElementMode(mesh.getMode()),
-                        indexBuf.getData().limit(),
-                        convertFormat(indexBuf.getFormat()),
-                        0,
-                        count);
-            } else {
-                GL12.glDrawRangeElements(convertElementMode(mesh.getMode()),
-                        0,
-                        vertCount,
-                        indexBuf.getData().limit(),
-                        convertFormat(indexBuf.getFormat()),
-                        0);
+        if (mesh.getMode() == Mesh.Mode.Hybrid) {
+            int[] modeStart = mesh.getModeStart();
+            int[] elementLengths = mesh.getElementLengths();
+
+            int elMode = convertElementMode(Mesh.Mode.Triangles);
+            int fmt = convertFormat(indexBuf.getFormat());
+            int elSize = indexBuf.getFormat().getComponentSize();
+            int listStart = modeStart[0];
+            int stripStart = modeStart[1];
+            int fanStart = modeStart[2];
+            int curOffset = 0;
+            for (int i = 0; i < elementLengths.length; i++) {
+                if (i == stripStart) {
+                    elMode = convertElementMode(Mesh.Mode.TriangleStrip);
+                } else if (i == fanStart) {
+                    elMode = convertElementMode(Mesh.Mode.TriangleFan);
+                }
+                int elementLength = elementLengths[i];
+
+                if (useInstancing) {
+                    glext.glDrawElementsInstancedARB(elMode,
+                                                     elementLength,
+                                                     fmt,
+                                                     curOffset,
+                                                     count);
+                } else {
+                    gl.glDrawRangeElements(elMode,
+                                           0,
+                                           vertCount,
+                                           elementLength,
+                                           fmt,
+                                           curOffset);
+                }
+
+                curOffset += elementLength * elSize;
             }
-//        }
+        } else {
+            if (useInstancing) {
+                glext.glDrawElementsInstancedARB(convertElementMode(mesh.getMode()),
+                                                 indexBuf.getData().limit(),
+                                                 convertFormat(indexBuf.getFormat()),
+                                                 0,
+                                                 count);
+            } else {
+                gl.glDrawRangeElements(convertElementMode(mesh.getMode()),
+                                       0,
+                                       vertCount,
+                                       indexBuf.getData().limit(),
+                                       convertFormat(indexBuf.getFormat()),
+                                       0);
+            }
+        }
     }
 
     /*********************************************************************\
@@ -2612,22 +2630,22 @@ public final class GLRenderer implements Renderer {
      \*********************************************************************/
     public int convertElementMode(Mesh.Mode mode) {
         switch (mode) {
-//            case Points:
-//                return GL.GL_POINTS;
+            case Points:
+                return GL.GL_POINTS;
             case Lines:
-                return GL11.GL_LINES;
-//            case LineLoop:
-//                return GL.GL_LINE_LOOP;
-//            case LineStrip:
-//                return GL.GL_LINE_STRIP;
+                return GL.GL_LINES;
+            case LineLoop:
+                return GL.GL_LINE_LOOP;
+            case LineStrip:
+                return GL.GL_LINE_STRIP;
             case Triangles:
-                return GL11.GL_TRIANGLES;
-//            case TriangleFan:
-//                return GL.GL_TRIANGLE_FAN;
-//            case TriangleStrip:
-//                return GL.GL_TRIANGLE_STRIP;
-//            case Patch:
-//                return GL4.GL_PATCHES;
+                return GL.GL_TRIANGLES;
+            case TriangleFan:
+                return GL.GL_TRIANGLE_FAN;
+            case TriangleStrip:
+                return GL.GL_TRIANGLE_STRIP;
+            case Patch:
+                return GL4.GL_PATCHES;
             default:
                 throw new UnsupportedOperationException("Unrecognized mesh mode: " + mode);
         }
@@ -2637,13 +2655,13 @@ public final class GLRenderer implements Renderer {
         int id = mesh.getId();
         if (id == -1) {
             IntBuffer temp = intBuf1;
-            GL30.glGenVertexArrays(temp);
+            gl3.glGenVertexArrays(temp);
             id = temp.get(0);
             mesh.setId(id);
         }
 
         if (context.boundVertexArray != id) {
-            GL30.glBindVertexArray(id);
+            gl3.glBindVertexArray(id);
             context.boundVertexArray = id;
         }
 
@@ -2658,8 +2676,8 @@ public final class GLRenderer implements Renderer {
 
         for (VertexBuffer vb : mesh.getBufferList()) {
             if (vb.getBufferType() == VertexBuffer.Type.InterleavedData
-                    || vb.getUsage() == VertexBuffer.Usage.CpuOnly // ignore cpu-only buffers
-                    || vb.getBufferType() == VertexBuffer.Type.Index) {
+                || vb.getUsage() == VertexBuffer.Usage.CpuOnly // ignore cpu-only buffers
+                || vb.getBufferType() == VertexBuffer.Type.Index) {
                 continue;
             }
 
@@ -2681,17 +2699,17 @@ public final class GLRenderer implements Renderer {
         }
 
         if (context.boundVertexArray != mesh.getId()) {
-            GL30.glBindVertexArray(mesh.getId());
+            gl3.glBindVertexArray(mesh.getId());
             context.boundVertexArray = mesh.getId();
         }
 
 //        IntMap<VertexBuffer> buffers = mesh.getBuffers();
         VertexBuffer indices;
-//        if (mesh.getNumLodLevels() > 0) {
-//            indices = mesh.getLodLevel(lod);
-//        } else {
+        if (mesh.getNumLodLevels() > 0) {
+            indices = mesh.getLodLevel(lod);
+        } else {
             indices = mesh.getBuffer(VertexBuffer.Type.Index);
-//        }
+        }
         if (indices != null) {
             drawTriangleList(indices, mesh, count);
         } else {
@@ -2712,11 +2730,11 @@ public final class GLRenderer implements Renderer {
         }
 
         VertexBuffer indices;
-//        if (mesh.getNumLodLevels() > 0) {
-//            indices = mesh.getLodLevel(lod);
-//        } else {
+        if (mesh.getNumLodLevels() > 0) {
+            indices = mesh.getLodLevel(lod);
+        } else {
             indices = mesh.getBuffer(VertexBuffer.Type.Index);
-//        }
+        }
 
         if (instanceData != null) {
             for (VertexBuffer vb : instanceData) {
@@ -2726,8 +2744,8 @@ public final class GLRenderer implements Renderer {
 
         for (VertexBuffer vb : mesh.getBufferList()) {
             if (vb.getBufferType() == VertexBuffer.Type.InterleavedData
-                    || vb.getUsage() == VertexBuffer.Usage.CpuOnly // ignore cpu-only buffers
-                    || vb.getBufferType() == VertexBuffer.Type.Index) {
+                || vb.getUsage() == VertexBuffer.Usage.CpuOnly // ignore cpu-only buffers
+                || vb.getBufferType() == VertexBuffer.Type.Index) {
                 continue;
             }
 
@@ -2755,18 +2773,17 @@ public final class GLRenderer implements Renderer {
         }
 
         if (count > 1 && !caps.contains(Caps.MeshInstancing)) {
-            throw new RuntimeException("Mesh instancing is not supported by the video hardware");
+            throw new RendererException("Mesh instancing is not supported by the video hardware");
         }
 
-//        if (mesh.getLineWidth() != 1f && context.lineWidth != mesh.getLineWidth()) {
-//            gl.glLineWidth(mesh.getLineWidth());
-//            context.lineWidth = mesh.getLineWidth();
-//        }
+        if (mesh.getLineWidth() != 1f && context.lineWidth != mesh.getLineWidth()) {
+            gl.glLineWidth(mesh.getLineWidth());
+            context.lineWidth = mesh.getLineWidth();
+        }
 
-//        if (mesh.getMode().equals(Mode.Patch)) {
-//            gl4.glPatchParameter(mesh.getPatchVertexCount());
-//        }
-//        statistics.onMeshDrawn(mesh, lod, count);
+        if (gl4 != null && mesh.getMode().equals(Mesh.Mode.Patch)) {
+            gl4.glPatchParameter(mesh.getPatchVertexCount());
+        }
 //        if (ctxCaps.GL_ARB_vertex_array_object){
 //            renderMeshVertexArray(mesh, lod, count);
 //        }else{
@@ -2787,16 +2804,16 @@ public final class GLRenderer implements Renderer {
         setFrameBuffer(null);
 
         if (enableSrgb) {
-//            if (!getBoolean(ARBFramebufferSRGB.GL_FRAMEBUFFER_SRGB_CAPABLE)) {
-//                System.err.println("Driver claims that default framebuffer "
-//                        + "is not sRGB capable. Enabling anyway.");
-//            }
+            if (!getBoolean(GLExt.GL_FRAMEBUFFER_SRGB_CAPABLE_EXT)) {
+                System.err.println("Driver claims that default framebuffer "
+                                   + "is not sRGB capable. Enabling anyway.");
+            }
 
-            GL11.glEnable(GL30.GL_FRAMEBUFFER_SRGB);
+            gl.glEnable(GLExt.GL_FRAMEBUFFER_SRGB_EXT);
 
             System.out.println("SRGB FrameBuffer enabled (Gamma Correction)");
         } else {
-            GL11.glDisable(GL30.GL_FRAMEBUFFER_SRGB);
+            gl.glDisable(GLExt.GL_FRAMEBUFFER_SRGB_EXT);
         }
     }
 

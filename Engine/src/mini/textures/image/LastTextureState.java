@@ -12,6 +12,7 @@ public final class LastTextureState {
     public Texture.MagFilter magFilter;
     public Texture.MinFilter minFilter;
     public int anisoFilter;
+    public Texture.ShadowCompareMode shadowCompareMode;
 
     public LastTextureState() {
         reset();
@@ -24,5 +25,9 @@ public final class LastTextureState {
         magFilter = null;
         minFilter = null;
         anisoFilter = 1;
+
+        // The default in OpenGL is OFF, so we avoid setting this per texture
+        // if its not used.
+        shadowCompareMode = Texture.ShadowCompareMode.Off;
     }
 }

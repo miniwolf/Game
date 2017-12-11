@@ -5,8 +5,6 @@ package mini.renderer;
  * {@link mini.renderer.opengl.GLRenderer}.
  * <p>
  * For example, maximum texture sizes or number of samples.
- *
- * @author Kirill Vainer
  */
 public enum Limits {
     /**

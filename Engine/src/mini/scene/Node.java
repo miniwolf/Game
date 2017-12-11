@@ -14,10 +14,6 @@ import java.util.List;
  * node maintains a collection of children and handles merging said children
  * into a single bound to allow for very fast culling of multiple nodes. Node
  * allows for any number of children to be attached.
- *
- * @author Mark Powell
- * @author Gregg Patton
- * @author Joshua Slack
  */
 public class Node extends Spatial {
     /**

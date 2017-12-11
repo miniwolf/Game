@@ -5,8 +5,6 @@ import java.util.logging.Logger;
 
 /**
  * The factory of buffer allocators.
- *
- * @author JavaSaBR
  */
 public class BufferAllocatorFactory {
     public static final String PROPERTY_BUFFER_ALLOCATOR_IMPLEMENTATION

@@ -140,6 +140,6 @@ public class Box extends AbstractBox {
                 v[0].x, v[0].y, v[0].z, v[5].x, v[5].y, v[5].z, v[4].x, v[4].y, v[4].z, v[1].x, v[1].y, v[1].z  // bottom
         });
         setBuffer(VertexBuffer.Type.Position, 3, fpb);
-        updateBounds();
+        updateBound();
     }
 }

@@ -3,6 +3,8 @@ package mini.system;
 import mini.asset.AssetManager;
 
 public abstract class ApplicationSystemDelegate {
+    private boolean lowPermissions = false;
+
     public abstract ApplicationContext newContext();
 
     public abstract void showErrorDialog(String message);
@@ -51,5 +53,9 @@ public abstract class ApplicationSystemDelegate {
 
     public AssetManager newAssetManager() {
         return new AssetManager();
+    }
+
+    public boolean isLowPermissions() {
+        return lowPermissions;
     }
 }

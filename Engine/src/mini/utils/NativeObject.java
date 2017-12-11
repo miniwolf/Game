@@ -22,6 +22,11 @@ public abstract class NativeObject implements Cloneable {
             OBJTYPE_FILTER = 8;
 
     /**
+     * The object manager to which this NativeObject is registered to.
+     */
+    protected NativeObjectManager objectManager = null;
+
+    /**
      * The ID of the object, usually depends on its type.
      * Typically returned from calls like glGenTextures, glGenBuffers, etc.
      */
@@ -56,6 +61,10 @@ public abstract class NativeObject implements Cloneable {
      */
     protected NativeObject(int id) {
         this.id = id;
+    }
+
+    void setNativeObjectManager(NativeObjectManager objectManager) {
+        this.objectManager = objectManager;
     }
 
     /**

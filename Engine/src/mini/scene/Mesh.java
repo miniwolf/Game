@@ -8,14 +8,21 @@ import mini.collision.bih.BIHTree;
 import mini.material.Material;
 import mini.material.RenderState;
 import mini.math.Matrix4f;
+import mini.math.Triangle;
 import mini.math.Vector2f;
+import mini.math.Vector3f;
 import mini.scene.mesh.IndexBuffer;
+import mini.scene.mesh.IndexIntBuffer;
+import mini.scene.mesh.IndexShortBuffer;
+import mini.scene.mesh.VirtualIndexBuffer;
+import mini.scene.mesh.WrappedIndexBuffer;
 import mini.utils.BufferUtils;
 import mini.utils.clone.Cloner;
 import mini.utils.clone.MiniCloneable;
 
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
+import java.nio.DoubleBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
@@ -30,13 +37,15 @@ import java.util.Map;
  * All visible elements in a scene are represented by meshes.
  * Meshes may contain three types of geometric primitives:
  * <ul>
- * <li>Points - Every vertex represents a single point in space.</li>
+ * <li>Points - Every vertex represents a single point in space.
+ * Points can also be used for {@link RenderState#setPointSprite(boolean) point sprite} mode.</li>
  * <li>Lines - 2 vertices represent a line segment, with the width specified
  * via {@link Material#getAdditionalRenderState()} and {@link RenderState#setLineWidth(float)}.</li>
  * <li>Triangles - 3 vertices represent a solid triangle primitive. </li>
  * </ul>
  */
 public class Mesh implements Cloneable, MiniCloneable {
+
     /**
      * The mode of the Mesh specifies both the type of primitive represented
      * by the mesh and how the data should be interpreted.
@@ -125,7 +134,8 @@ public class Mesh implements Cloneable, MiniCloneable {
     }
 
     /**
-     * The bounding volume that contains the mesh entirely. By default a BoundingBox (AABB)
+     * The bounding volume that contains the mesh entirely.
+     * By default a BoundingBox (AABB).
      */
     private BoundingVolume meshBound = new BoundingBox();
 
@@ -167,6 +177,8 @@ public class Mesh implements Cloneable, MiniCloneable {
     public Mesh clone() {
         try {
             Mesh clone = (Mesh) super.clone();
+            clone.meshBound = meshBound.clone();
+            clone.collisionTree = collisionTree;
             clone.buffers = new HashMap<>(buffers);
             clone.buffersList = new ArrayList<>(buffersList);
             clone.vertexArrayID = -1;
@@ -182,20 +194,104 @@ public class Mesh implements Cloneable, MiniCloneable {
         }
     }
 
+    /**
+     * Creates a deep clone of this mesh.
+     * The {@link VertexBuffer vertex buffers} and the data inside them
+     * is cloned.
+     *
+     * @return a deep clone of this mesh.
+     */
+    public Mesh deepClone() {
+        try {
+            Mesh clone = (Mesh) super.clone();
+            clone.meshBound = meshBound != null ? meshBound.clone() : null;
+
+            // TODO: Collision tree cloning
+            //clone.collisionTree = collisionTree != null ? collisionTree : null;
+            clone.collisionTree = null; // it will get re-generated in any case
+
+            clone.buffers = new HashMap<>();
+            clone.buffersList = new ArrayList<>();
+            for (VertexBuffer vb : buffersList) {
+                VertexBuffer bufClone = vb.clone();
+                clone.buffers.put(vb.getBufferType().ordinal(), bufClone);
+                clone.buffersList.add(bufClone);
+            }
+
+            clone.vertexArrayID = -1;
+            clone.vertCount = vertCount;
+            clone.elementCount = elementCount;
+            clone.instanceCount = instanceCount;
+
+            // although this could change
+            // if the bone weight/index buffers are modified
+            clone.maxNumWeights = maxNumWeights;
+
+            clone.elementLengths = elementLengths != null ? elementLengths.clone() : null;
+            clone.modeStart = modeStart != null ? modeStart.clone() : null;
+            return clone;
+        } catch (CloneNotSupportedException ex) {
+            throw new AssertionError();
+        }
+    }
+
+    /**
+     * Clone the mesh for animation use.
+     * This creates a shallow clone of the mesh, sharing most
+     * of the {@link VertexBuffer vertex buffer} data, however the
+     * {@link Type#Position}, {@link Type#Normal}, and {@link Type#Tangent} buffers
+     * are deeply cloned.
+     *
+     * @return A clone of the mesh for animation use.
+     */
+    public Mesh cloneForAnim() {
+        Mesh clone = clone();
+        if (getBuffer(VertexBuffer.Type.BindPosePosition) != null) {
+            VertexBuffer oldPos = getBuffer(VertexBuffer.Type.Position);
+
+            // NOTE: creates deep clone
+            VertexBuffer newPos = oldPos.clone();
+            clone.clearBuffer(VertexBuffer.Type.Position);
+            clone.setBuffer(newPos);
+
+            if (getBuffer(VertexBuffer.Type.BindPoseNormal) != null) {
+                VertexBuffer oldNorm = getBuffer(VertexBuffer.Type.Normal);
+                VertexBuffer newNorm = oldNorm.clone();
+                clone.clearBuffer(VertexBuffer.Type.Normal);
+                clone.setBuffer(newNorm);
+
+                if (getBuffer(VertexBuffer.Type.BindPoseTangent) != null) {
+                    VertexBuffer oldTang = getBuffer(VertexBuffer.Type.Tangent);
+                    VertexBuffer newTang = oldTang.clone();
+                    clone.clearBuffer(VertexBuffer.Type.Tangent);
+                    clone.setBuffer(newTang);
+                }
+            }
+        }
+        return clone;
+    }
+
+    /**
+     * Called internally by mini.util.clone.Cloner.  Do not call directly.
+     */
     @Override
     public Mesh miniClone() {
         try {
             Mesh clone = (Mesh) super.clone();
             clone.vertexArrayID = -1;
             return clone;
-        } catch (CloneNotSupportedException e) {
+        } catch (CloneNotSupportedException ex) {
             throw new AssertionError();
         }
     }
 
+    /**
+     * Called internally by mini.util.clone.Cloner.  Do not call directly.
+     */
     @Override
     public void cloneFields(Cloner cloner, Object original) {
-        // Probably could clone this now but it will get regenerated anyway
+
+        // Probably could clone this now but it will get regenerated anyway.
         this.collisionTree = null;
 
         this.meshBound = cloner.clone(meshBound);
@@ -204,6 +300,152 @@ public class Mesh implements Cloneable, MiniCloneable {
         this.lodLevels = cloner.clone(lodLevels);
         this.elementLengths = cloner.clone(elementLengths);
         this.modeStart = cloner.clone(modeStart);
+    }
+
+    /**
+     * Generates the {@link Type#BindPosePosition}, {@link Type#BindPoseNormal},
+     * and {@link Type#BindPoseTangent}
+     * buffers for this mesh by duplicating them based on the position and normal
+     * buffers already set on the mesh.
+     * This method does nothing if the mesh has no bone weight or index
+     * buffers.
+     *
+     * @param forSoftwareAnim Should be true if the bind pose is to be generated.
+     */
+    public void generateBindPose(boolean forSoftwareAnim) {
+        if (forSoftwareAnim) {
+            VertexBuffer pos = getBuffer(VertexBuffer.Type.Position);
+            if (pos == null || getBuffer(VertexBuffer.Type.BoneIndex) == null) {
+                // ignore, this mesh doesn't have positional data
+                // or it doesn't have bone-vertex assignments, so its not animated
+                return;
+            }
+
+            VertexBuffer bindPos = new VertexBuffer(VertexBuffer.Type.BindPosePosition);
+            bindPos.setupData(VertexBuffer.Usage.CpuOnly,
+                              pos.getNumComponents(),
+                              pos.getFormat(),
+                              BufferUtils.clone(pos.getData()));
+            setBuffer(bindPos);
+
+            // XXX: note that this method also sets stream mode
+            // so that animation is faster. this is not needed for hardware skinning
+            pos.setUsage(VertexBuffer.Usage.Stream);
+
+            VertexBuffer norm = getBuffer(VertexBuffer.Type.Normal);
+            if (norm != null) {
+                VertexBuffer bindNorm = new VertexBuffer(VertexBuffer.Type.BindPoseNormal);
+                bindNorm.setupData(VertexBuffer.Usage.CpuOnly,
+                                   norm.getNumComponents(),
+                                   norm.getFormat(),
+                                   BufferUtils.clone(norm.getData()));
+                setBuffer(bindNorm);
+                norm.setUsage(VertexBuffer.Usage.Stream);
+            }
+
+            VertexBuffer tangents = getBuffer(VertexBuffer.Type.Tangent);
+            if (tangents != null) {
+                VertexBuffer bindTangents = new VertexBuffer(VertexBuffer.Type.BindPoseTangent);
+                bindTangents.setupData(VertexBuffer.Usage.CpuOnly,
+                                       tangents.getNumComponents(),
+                                       tangents.getFormat(),
+                                       BufferUtils.clone(tangents.getData()));
+                setBuffer(bindTangents);
+                tangents.setUsage(VertexBuffer.Usage.Stream);
+            }// else hardware setup does nothing, mesh already in bind pose
+        }
+    }
+
+    /**
+     * Prepares the mesh for software skinning by converting the bone index
+     * and weight buffers to heap buffers.
+     *
+     * @param forSoftwareAnim Should be true to enable the conversion.
+     */
+    public void prepareForAnim(boolean forSoftwareAnim) {
+        if (forSoftwareAnim) {
+            // convert indices to ubytes on the heap
+            VertexBuffer indices = getBuffer(VertexBuffer.Type.BoneIndex);
+            if (!indices.getData().hasArray()) {
+                ByteBuffer originalIndex = (ByteBuffer) indices.getData();
+                ByteBuffer arrayIndex = ByteBuffer.allocate(originalIndex.capacity());
+                originalIndex.clear();
+                arrayIndex.put(originalIndex);
+                indices.updateData(arrayIndex);
+            }
+            indices.setUsage(VertexBuffer.Usage.CpuOnly);
+
+            // convert weights on the heap
+            VertexBuffer weights = getBuffer(VertexBuffer.Type.BoneWeight);
+            if (!weights.getData().hasArray()) {
+                FloatBuffer originalWeight = (FloatBuffer) weights.getData();
+                FloatBuffer arrayWeight = FloatBuffer.allocate(originalWeight.capacity());
+                originalWeight.clear();
+                arrayWeight.put(originalWeight);
+                weights.updateData(arrayWeight);
+            }
+            weights.setUsage(VertexBuffer.Usage.CpuOnly);
+            // position, normal, and tanget buffers to be in "Stream" mode
+            VertexBuffer positions = getBuffer(VertexBuffer.Type.Position);
+            VertexBuffer normals = getBuffer(VertexBuffer.Type.Normal);
+            VertexBuffer tangents = getBuffer(VertexBuffer.Type.Tangent);
+            positions.setUsage(VertexBuffer.Usage.Stream);
+            if (normals != null) {
+                normals.setUsage(VertexBuffer.Usage.Stream);
+            }
+            if (tangents != null) {
+                tangents.setUsage(VertexBuffer.Usage.Stream);
+            }
+        } else {
+            //if HWBoneIndex and HWBoneWeight are empty, we setup them as direct
+            //buffers with software anim buffers data
+            VertexBuffer indicesHW = getBuffer(VertexBuffer.Type.HWBoneIndex);
+            if (indicesHW.getData() == null) {
+                VertexBuffer indices = getBuffer(VertexBuffer.Type.BoneIndex);
+                ByteBuffer originalIndex = (ByteBuffer) indices.getData();
+                ByteBuffer directIndex = BufferUtils.createByteBuffer(originalIndex.capacity());
+                originalIndex.clear();
+                directIndex.put(originalIndex);
+                indicesHW.setupData(VertexBuffer.Usage.Static, indices.getNumComponents(),
+                                    indices.getFormat(), directIndex);
+            }
+
+            VertexBuffer weightsHW = getBuffer(VertexBuffer.Type.HWBoneWeight);
+            if (weightsHW.getData() == null) {
+                VertexBuffer weights = getBuffer(VertexBuffer.Type.BoneWeight);
+                FloatBuffer originalWeight = (FloatBuffer) weights.getData();
+                FloatBuffer directWeight = BufferUtils.createFloatBuffer(originalWeight.capacity());
+                originalWeight.clear();
+                directWeight.put(originalWeight);
+                weightsHW.setupData(VertexBuffer.Usage.Static, weights.getNumComponents(),
+                                    weights.getFormat(), directWeight);
+            }
+
+            // position, normal, and tanget buffers to be in "Static" mode
+            VertexBuffer positions = getBuffer(VertexBuffer.Type.Position);
+            VertexBuffer normals = getBuffer(VertexBuffer.Type.Normal);
+            VertexBuffer tangents = getBuffer(VertexBuffer.Type.Tangent);
+
+            VertexBuffer positionsBP = getBuffer(VertexBuffer.Type.BindPosePosition);
+            VertexBuffer normalsBP = getBuffer(VertexBuffer.Type.BindPoseNormal);
+            VertexBuffer tangentsBP = getBuffer(VertexBuffer.Type.BindPoseTangent);
+
+            positions.setUsage(VertexBuffer.Usage.Static);
+            positionsBP.copyElements(0, positions, 0, positionsBP.getNumElements());
+            positions.setUpdateNeeded();
+
+            if (normals != null) {
+                normals.setUsage(VertexBuffer.Usage.Static);
+                normalsBP.copyElements(0, normals, 0, normalsBP.getNumElements());
+                normals.setUpdateNeeded();
+            }
+
+            if (tangents != null) {
+                tangents.setUsage(VertexBuffer.Usage.Static);
+                tangentsBP.copyElements(0, tangents, 0, tangentsBP.getNumElements());
+                tangents.setUpdateNeeded();
+            }
+        }
     }
 
     /**
@@ -314,8 +556,55 @@ public class Mesh implements Cloneable, MiniCloneable {
     }
 
     /**
+     * @return <code>1.0</code>
+     * @see #setPointSize(float)
+     * @deprecated Always returns <code>1.0</code> since point size is
+     * determined in the vertex shader.
+     */
+    @Deprecated
+    public float getPointSize() {
+        return 1.0f;
+    }
+
+    /**
+     * @param pointSize ignored
+     * @deprecated Does nothing, since the size of {@link Mode#Points points} is
+     * determined via the vertex shader's <code>gl_PointSize</code> output.
+     */
+    @Deprecated
+    public void setPointSize(float pointSize) {
+    }
+
+    /**
+     * Returns the line width for line meshes.
+     *
+     * @return the line width
+     * @deprecated use {@link Material#getAdditionalRenderState()} and {@link RenderState#getLineWidth()}
+     */
+    @Deprecated
+    public float getLineWidth() {
+        return lineWidth;
+    }
+
+    /**
+     * Specify the line width for meshes of the line modes, such
+     * as {@link Mode#Lines}. The line width is specified as on-screen pixels,
+     * the default value is 1.0.
+     *
+     * @param lineWidth The line width
+     * @deprecated use {@link Material#getAdditionalRenderState()} and {@link RenderState#setLineWidth(float)}
+     */
+    @Deprecated
+    public void setLineWidth(float lineWidth) {
+        if (lineWidth < 1f) {
+            throw new IllegalArgumentException("lineWidth must be greater than or equal to 1.0");
+        }
+        this.lineWidth = lineWidth;
+    }
+
+    /**
      * Indicates to the GPU that this mesh will not be modified (a hint).
-     * Sets the usage mode to {@link VertexBuffer.Usage#Static}
+     * Sets the usage mode to {@link Usage#Static}
      * for all {@link VertexBuffer vertex buffers} on this Mesh.
      */
     public void setStatic() {
@@ -326,7 +615,7 @@ public class Mesh implements Cloneable, MiniCloneable {
 
     /**
      * Indicates to the GPU that this mesh will be modified occasionally (a hint).
-     * Sets the usage mode to {@link VertexBuffer.Usage#Dynamic}
+     * Sets the usage mode to {@link Usage#Dynamic}
      * for all {@link VertexBuffer vertex buffers} on this Mesh.
      */
     public void setDynamic() {
@@ -337,12 +626,91 @@ public class Mesh implements Cloneable, MiniCloneable {
 
     /**
      * Indicates to the GPU that this mesh will be modified every frame (a hint).
-     * Sets the usage mode to {@link VertexBuffer.Usage#Stream}
+     * Sets the usage mode to {@link Usage#Stream}
      * for all {@link VertexBuffer vertex buffers} on this Mesh.
      */
     public void setStreamed() {
         for (VertexBuffer vb : buffersList) {
             vb.setUsage(VertexBuffer.Usage.Stream);
+        }
+    }
+
+    /**
+     * Interleaves the data in this mesh. This operation cannot be reversed.
+     * Some GPUs may prefer the data in this format, however it is a good idea
+     * to <em>avoid</em> using this method as it disables some engine features.
+     */
+    @Deprecated
+    public void setInterleaved() {
+        List<VertexBuffer> vbs = new ArrayList<>(buffersList);
+
+//        ArrayList<VertexBuffer> vbs = new ArrayList<VertexBuffer>(buffers.values());
+        // index buffer not included when interleaving
+        vbs.remove(getBuffer(VertexBuffer.Type.Index));
+
+        int stride = 0; // aka bytes per vertex
+        for (VertexBuffer vb : vbs) {
+            stride += vb.componentsLength;
+            vb.getData().clear(); // reset position & limit (used later)
+        }
+
+        VertexBuffer allData = new VertexBuffer(VertexBuffer.Type.InterleavedData);
+        ByteBuffer dataBuf = BufferUtils.createByteBuffer(stride * getVertexCount());
+        allData.setupData(VertexBuffer.Usage.Static, 1, VertexBuffer.Format.UnsignedByte, dataBuf);
+
+        // adding buffer directly so that no update counts is forced
+        buffers.put(VertexBuffer.Type.InterleavedData.ordinal(), allData);
+        buffersList.add(allData);
+
+        for (int vert = 0; vert < getVertexCount(); vert++) {
+            for (VertexBuffer vb : vbs) {
+                switch (vb.getFormat()) {
+                    case Float:
+                        FloatBuffer fb = (FloatBuffer) vb.getData();
+                        for (int comp = 0; comp < vb.components; comp++) {
+                            dataBuf.putFloat(fb.get());
+                        }
+                        break;
+                    case Byte:
+                    case UnsignedByte:
+                        ByteBuffer bb = (ByteBuffer) vb.getData();
+                        for (int comp = 0; comp < vb.components; comp++) {
+                            dataBuf.put(bb.get());
+                        }
+                        break;
+                    case Half:
+                    case Short:
+                    case UnsignedShort:
+                        ShortBuffer sb = (ShortBuffer) vb.getData();
+                        for (int comp = 0; comp < vb.components; comp++) {
+                            dataBuf.putShort(sb.get());
+                        }
+                        break;
+                    case Int:
+                    case UnsignedInt:
+                        IntBuffer ib = (IntBuffer) vb.getData();
+                        for (int comp = 0; comp < vb.components; comp++) {
+                            dataBuf.putInt(ib.get());
+                        }
+                        break;
+                    case Double:
+                        DoubleBuffer db = (DoubleBuffer) vb.getData();
+                        for (int comp = 0; comp < vb.components; comp++) {
+                            dataBuf.putDouble(db.get());
+                        }
+                        break;
+                }
+            }
+        }
+
+        int offset = 0;
+        for (VertexBuffer vb : vbs) {
+            vb.setOffset(offset);
+            vb.setStride(stride);
+
+            vb.updateData(null);
+            //vb.setupData(vb.usage, vb.components, vb.format, null);
+            offset += vb.componentsLength;
         }
     }
 
@@ -385,6 +753,9 @@ public class Mesh implements Cloneable, MiniCloneable {
      * based on the current data. This method should be called
      * after the {@link Buffer#capacity() capacities} of the mesh's
      * {@link VertexBuffer vertex buffers} has been altered.
+     *
+     * @throws IllegalStateException If this mesh is in
+     *                               {@link #setInterleaved() interleaved} format.
      */
     public void updateCounts() {
         if (getBuffer(VertexBuffer.Type.InterleavedData) != null) {
@@ -461,6 +832,71 @@ public class Mesh implements Cloneable, MiniCloneable {
     }
 
     /**
+     * Gets the triangle vertex positions at the given triangle index
+     * and stores them into the v1, v2, v3 arguments.
+     *
+     * @param index The index of the triangle.
+     *              Should be between 0 and {@link #getTriangleCount()}.
+     * @param v1    Vector to contain first vertex position
+     * @param v2    Vector to contain second vertex position
+     * @param v3    Vector to contain third vertex position
+     */
+    public void getTriangle(int index, Vector3f v1, Vector3f v2, Vector3f v3) {
+        VertexBuffer pb = getBuffer(VertexBuffer.Type.Position);
+        IndexBuffer ib = getIndicesAsList();
+        if (pb != null && pb.getFormat() == VertexBuffer.Format.Float
+            && pb.getNumComponents() == 3) {
+            FloatBuffer fpb = (FloatBuffer) pb.getData();
+
+            // aquire triangle's vertex indices
+            int vertIndex = index * 3;
+            int vert1 = ib.get(vertIndex);
+            int vert2 = ib.get(vertIndex + 1);
+            int vert3 = ib.get(vertIndex + 2);
+
+            BufferUtils.populateFromBuffer(v1, fpb, vert1);
+            BufferUtils.populateFromBuffer(v2, fpb, vert2);
+            BufferUtils.populateFromBuffer(v3, fpb, vert3);
+        } else {
+            throw new UnsupportedOperationException("Position buffer not set or "
+                                                    + " has incompatible format");
+        }
+    }
+
+    /**
+     * Gets the triangle vertex positions at the given triangle index
+     * and stores them into the {@link Triangle} argument.
+     * Also sets the triangle index to the <code>index</code> argument.
+     *
+     * @param index The index of the triangle.
+     *              Should be between 0 and {@link #getTriangleCount()}.
+     * @param tri   The triangle to store the positions in
+     */
+    public void getTriangle(int index, Triangle tri) {
+        getTriangle(index, tri.get1(), tri.get2(), tri.get3());
+        tri.setIndex(index);
+        tri.setNormal(null);
+    }
+
+    /**
+     * Gets the triangle vertex indices at the given triangle index
+     * and stores them into the given int array.
+     *
+     * @param index   The index of the triangle.
+     *                Should be between 0 and {@link #getTriangleCount()}.
+     * @param indices Indices of the triangle's vertices
+     */
+    public void getTriangle(int index, int[] indices) {
+        IndexBuffer ib = getIndicesAsList();
+
+        // acquire triangle's vertex indices
+        int vertIndex = index * 3;
+        indices[0] = ib.get(vertIndex);
+        indices[1] = ib.get(vertIndex + 1);
+        indices[2] = ib.get(vertIndex + 2);
+    }
+
+    /**
      * Returns the mesh's VAO ID. Internal use only.
      */
     public int getId() {
@@ -478,14 +914,38 @@ public class Mesh implements Cloneable, MiniCloneable {
         vertexArrayID = id;
     }
 
-    private void createCollisionData() {
+    /**
+     * Generates a collision tree for the mesh.
+     * Called automatically by {@link #collideWith(mini.collision.Collidable,
+     * mini.math.Matrix4f,
+     * mini.bounding.BoundingVolume,
+     * mini.collision.CollisionResults) }.
+     */
+    public void createCollisionData() {
         BIHTree tree = new BIHTree(this);
         tree.construct();
         collisionTree = tree;
     }
 
-    public int collideWith(Collidable other, Matrix4f worldMatrix, BoundingVolume worldBound,
+    /**
+     * Clears any previously generated collision data.  Use this if
+     * the mesh has changed in some way that invalidates any previously
+     * generated BIHTree.
+     */
+    public void clearCollisionData() {
+        collisionTree = null;
+    }
+
+    /**
+     * Handles collision detection, internal use only.
+     * User code should only use collideWith() on scene
+     * graph elements such as {@link Spatial}s.
+     */
+    public int collideWith(Collidable other,
+                           Matrix4f worldMatrix,
+                           BoundingVolume worldBound,
                            CollisionResults results) {
+
         if (getVertexCount() == 0) {
             return 0;
         }
@@ -561,7 +1021,7 @@ public class Mesh implements Cloneable, MiniCloneable {
      * Set a floating point {@link VertexBuffer} on the mesh.
      *
      * @param type       The type of {@link VertexBuffer},
-     *                   e.g. {@link VertexBuffer.Type#Position}, {@link VertexBuffer.Type#Normal}, etc.
+     *                   e.g. {@link Type#Position}, {@link Type#Normal}, etc.
      * @param components Number of components on the vertex buffer, should
      *                   be between 1 and 4.
      * @param buf        The floating point data to contain
@@ -642,11 +1102,39 @@ public class Mesh implements Cloneable, MiniCloneable {
     }
 
     /**
+     * Acquires an index buffer that will read the vertices on the mesh
+     * as a list.
+     *
+     * @return A virtual or wrapped index buffer to read the data as a list
+     */
+    public IndexBuffer getIndicesAsList() {
+        if (mode == Mode.Hybrid) {
+            throw new UnsupportedOperationException("Hybrid mode not supported");
+        }
+
+        IndexBuffer ib = getIndexBuffer();
+        if (ib != null) {
+            if (mode.isListMode()) {
+                // already in list mode
+                return ib;
+            } else {
+                // not in list mode but it does have an index buffer
+                // wrap it so the data is converted to list format
+                return new WrappedIndexBuffer(this);
+            }
+        } else {
+            // return a virtual index buffer that will supply
+            // "fake" indices in list format
+            return new VirtualIndexBuffer(vertCount, mode);
+        }
+    }
+
+    /**
      * Get the index buffer for this mesh.
      * Will return <code>null</code> if no index buffer is set.
      *
      * @return The index buffer of this mesh.
-     * @see VertexBuffer.Type#Index
+     * @see Type#Index
      */
     public IndexBuffer getIndexBuffer() {
         VertexBuffer vb = getBuffer(VertexBuffer.Type.Index);
@@ -657,59 +1145,200 @@ public class Mesh implements Cloneable, MiniCloneable {
         return IndexBuffer.wrapIndexBuffer(vb.getData());
     }
 
+    /**
+     * Extracts the vertex attributes from the given mesh into
+     * this mesh, by using this mesh's {@link #getIndexBuffer() index buffer}
+     * to index into the attributes of the other mesh.
+     * Note that this will also change this mesh's index buffer so that
+     * the references to the vertex data match the new indices.
+     *
+     * @param other The mesh to extract the vertex data from
+     */
+    public void extractVertexData(Mesh other) {
+        // Determine the number of unique vertices need to
+        // be created. Also determine the mappings
+        // between old indices to new indices (since we avoid duplicating
+        // vertices, this is a map and not an array).
+        VertexBuffer oldIdxBuf = getBuffer(VertexBuffer.Type.Index);
+        IndexBuffer indexBuf = getIndexBuffer();
+        int numIndices = indexBuf.size();
+
+        Map<Integer, Integer> oldIndicesToNewIndices = new HashMap<>(numIndices);
+        ArrayList<Integer> newIndicesToOldIndices = new ArrayList<Integer>();
+        int newIndex = 0;
+
+        for (int i = 0; i < numIndices; i++) {
+            int oldIndex = indexBuf.get(i);
+
+            if (!oldIndicesToNewIndices.containsKey(oldIndex)) {
+                // this vertex has not been added, so allocate a
+                // new index for it and add it to the map
+                oldIndicesToNewIndices.put(oldIndex, newIndex);
+                newIndicesToOldIndices.add(oldIndex);
+
+                // increment to have the next index
+                newIndex++;
+            }
+        }
+
+        // Number of unique verts to be created now available
+        int newNumVerts = newIndicesToOldIndices.size();
+
+        if (newIndex != newNumVerts) {
+            throw new AssertionError();
+        }
+
+        // Create the new index buffer.
+        // Do not overwrite the old one because we might be able to
+        // convert from int index buffer to short index buffer
+        IndexBuffer newIndexBuf;
+        if (newNumVerts >= 65536) {
+            newIndexBuf = new IndexIntBuffer(BufferUtils.createIntBuffer(numIndices));
+        } else {
+            newIndexBuf = new IndexShortBuffer(BufferUtils.createShortBuffer(numIndices));
+        }
+
+        for (int i = 0; i < numIndices; i++) {
+            // Map the old indices to the new indices
+            int oldIndex = indexBuf.get(i);
+            newIndex = oldIndicesToNewIndices.get(oldIndex);
+
+            newIndexBuf.put(i, newIndex);
+        }
+
+        VertexBuffer newIdxBuf = new VertexBuffer(VertexBuffer.Type.Index);
+        newIdxBuf.setupData(oldIdxBuf.getUsage(),
+                            oldIdxBuf.getNumComponents(),
+                            newIndexBuf instanceof IndexIntBuffer ?
+                            VertexBuffer.Format.UnsignedInt : VertexBuffer.Format.UnsignedShort,
+                            newIndexBuf.getBuffer());
+        clearBuffer(VertexBuffer.Type.Index);
+        setBuffer(newIdxBuf);
+
+        // Now, create the vertex buffers
+        List<VertexBuffer> oldVertexData = other.getBufferList();
+        for (VertexBuffer oldVb : oldVertexData) {
+            if (oldVb.getBufferType() == VertexBuffer.Type.Index) {
+                // ignore the index buffer
+                continue;
+            }
+
+            VertexBuffer newVb = new VertexBuffer(oldVb.getBufferType());
+            newVb.setNormalized(oldVb.isNormalized());
+            //check for data before copying, some buffers are just empty shells
+            //for caching purpose (HW skinning buffers), and will be filled when
+            //needed
+            if (oldVb.getData() != null) {
+                // Create a new vertex buffer with similar configuration, but
+                // with the capacity of number of unique vertices
+                Buffer buffer = VertexBuffer
+                        .createBuffer(oldVb.getFormat(), oldVb.getNumComponents(), newNumVerts);
+                newVb.setupData(oldVb.getUsage(), oldVb.getNumComponents(), oldVb.getFormat(),
+                                buffer);
+
+                // Copy the vertex data from the old buffer into the new buffer
+                for (int i = 0; i < newNumVerts; i++) {
+                    int oldIndex = newIndicesToOldIndices.get(i);
+
+                    // Copy the vertex attribute from the old index
+                    // to the new index
+                    oldVb.copyElement(oldIndex, newVb, i);
+                }
+            }
+
+            // Set the buffer on the mesh
+            clearBuffer(newVb.getBufferType());
+            setBuffer(newVb);
+        }
+
+        // Copy max weights per vertex as well
+        setMaxNumWeights(other.getMaxNumWeights());
+
+        // The data has been copied over, update informations
+        updateCounts();
+        updateBound();
+    }
+
+    /**
+     * Scales the texture coordinate buffer on this mesh by the given
+     * scale factor.
+     * <p>
+     * Note that values above 1 will cause the
+     * texture to tile, while values below 1 will cause the texture
+     * to stretch.
+     * </p>
+     *
+     * @param scaleFactor The scale factor to scale by. Every texture
+     *                    coordinate is multiplied by this vector to get the result.
+     * @throws IllegalStateException         If there's no texture coordinate
+     *                                       buffer on the mesh
+     * @throws UnsupportedOperationException If the texture coordinate
+     *                                       buffer is not in 2D float format.
+     */
     public void scaleTextureCoordinates(Vector2f scaleFactor) {
-        VertexBuffer texBuffer = getBuffer(VertexBuffer.Type.TexCoord);
-        if (texBuffer == null) {
+        VertexBuffer tc = getBuffer(VertexBuffer.Type.TexCoord);
+        if (tc == null) {
             throw new IllegalStateException("The mesh has no texture coordinates");
         }
 
-        if (texBuffer.getFormat() != VertexBuffer.Format.Float) {
-            throw new UnsupportedOperationException(
-                    "Only float texture coordinate format is supported");
+        if (tc.getFormat() != VertexBuffer.Format.Float) {
+            throw new UnsupportedOperationException("Only float texture coord format is supported");
         }
 
-        if (texBuffer.getNumComponents() != 2) {
-            throw new UnsupportedOperationException("Only 2D texture coordinates are supported.");
+        if (tc.getNumComponents() != 2) {
+            throw new UnsupportedOperationException("Only 2D texture coords are supported");
         }
 
-        FloatBuffer data = (FloatBuffer) texBuffer.getData();
-        data.clear();
-        for (int i = 0; i < data.limit() * 0.5f; i++) {
-            float x = data.get();
-            float y = data.get();
-            data.position(data.position() - 2);
+        FloatBuffer fb = (FloatBuffer) tc.getData();
+        fb.clear();
+        for (int i = 0; i < fb.limit() / 2; i++) {
+            float x = fb.get();
+            float y = fb.get();
+            fb.position(fb.position() - 2);
             x *= scaleFactor.getX();
             y *= scaleFactor.getY();
-            data.put(x).put(y);
+            fb.put(x).put(y);
         }
-        data.clear();
-        texBuffer.updateData(data);
+        fb.clear();
+        tc.updateData(fb);
     }
 
     /**
      * Updates the bounding volume of this mesh.
-     * The method does nothing if the mesh has no {@link VertexBuffer.Type#Position} buffer.
+     * The method does nothing if the mesh has no {@link Type#Position} buffer.
      * It is expected that the position buffer is a float buffer with 3 components.
      */
-    public void updateBounds() {
-        VertexBuffer positionBuffer = getBuffer(VertexBuffer.Type.Position);
-        if (meshBound != null && positionBuffer != null) {
-            meshBound.computeFromPoints((FloatBuffer) positionBuffer.getData());
+    public void updateBound() {
+        VertexBuffer posBuf = getBuffer(VertexBuffer.Type.Position);
+        if (meshBound != null && posBuf != null) {
+            meshBound.computeFromPoints((FloatBuffer) posBuf.getData());
         }
     }
 
     /**
-     * @return the {@link BoundingVolume} of this Mesh. By default the bounding volume is a
-     * {@link BoundingBox}
+     * Returns the {@link BoundingVolume} of this Mesh.
+     * By default the bounding volume is a {@link BoundingBox}.
+     *
+     * @return the bounding volume of this mesh
      */
     public BoundingVolume getBound() {
         return meshBound;
     }
 
     /**
+     * Sets the {@link BoundingVolume} for this Mesh.
+     * The bounding volume is recomputed by calling {@link #updateBound() }.
+     *
+     * @param modelBound The model bound to set
+     */
+    public void setBound(BoundingVolume modelBound) {
+        meshBound = modelBound;
+    }
+
+    /**
      * Returns a map of all {@link VertexBuffer vertex buffers} on this Mesh.
      * The integer key for the map is the {@link Enum#ordinal() ordinal}
-     * of the vertex buffer's {@link VertexBuffer.Type}.
+     * of the vertex buffer's {@link Type}.
      * Note that the returned map is a reference to the map used internally,
      * modifying it will cause undefined results.
      *
@@ -730,6 +1359,58 @@ public class Mesh implements Cloneable, MiniCloneable {
      */
     public List<VertexBuffer> getBufferList() {
         return buffersList;
+    }
+
+    /**
+     * Determines if the mesh uses bone animation.
+     * <p>
+     * A mesh uses bone animation if it has bone index / weight buffers
+     * such as {@link Type#BoneIndex} or {@link Type#HWBoneIndex}.
+     *
+     * @return true if the mesh uses bone animation, false otherwise
+     */
+    public boolean isAnimated() {
+        return getBuffer(VertexBuffer.Type.BoneIndex) != null ||
+               getBuffer(VertexBuffer.Type.HWBoneIndex) != null;
+    }
+
+    /**
+     * Test whether the specified bone animates this mesh.
+     *
+     * @param boneIndex the bone's index in its skeleton
+     * @return true if the specified bone animates this mesh, otherwise false
+     */
+    public boolean isAnimatedByBone(int boneIndex) {
+        VertexBuffer biBuf = getBuffer(VertexBuffer.Type.BoneIndex);
+        VertexBuffer wBuf = getBuffer(VertexBuffer.Type.BoneWeight);
+        if (biBuf == null || wBuf == null) {
+            return false; // no bone animation data
+        }
+
+        ByteBuffer boneIndexBuffer = (ByteBuffer) biBuf.getData();
+        boneIndexBuffer.rewind();
+        int numBoneIndices = boneIndexBuffer.remaining();
+        assert numBoneIndices % 4 == 0 : numBoneIndices;
+        int numVertices = boneIndexBuffer.remaining() / 4;
+
+        FloatBuffer weightBuffer = (FloatBuffer) wBuf.getData();
+        weightBuffer.rewind();
+        int numWeights = weightBuffer.remaining();
+        assert numWeights == numVertices * 4 : numWeights;
+        /*
+         * Test each vertex to determine whether the bone affects it.
+         */
+        byte biByte = (byte) boneIndex; // bone indices wrap after 127
+        for (int vIndex = 0; vIndex < numVertices; vIndex++) {
+            for (int wIndex = 0; wIndex < 4; wIndex++) {
+                byte bIndex = boneIndexBuffer.get();
+                float weight = weightBuffer.get();
+                if (wIndex < maxNumWeights && bIndex == biByte && weight != 0f) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**

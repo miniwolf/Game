@@ -40,6 +40,11 @@ public class ApplicationSystem {
         ApplicationSystem.systemDelegate = systemDelegate;
     }
 
+    public static boolean isLowPermissions() {
+        checkDelegate();
+        return systemDelegate.isLowPermissions();
+    }
+
     @SuppressWarnings("unchecked")
     private static void checkDelegate() {
         if (systemDelegate == null) {

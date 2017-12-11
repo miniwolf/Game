@@ -13,8 +13,6 @@ import mini.utils.clone.Cloner;
  * contains the geometric data for rendering objects. It manages all rendering
  * information such as a {@link Material} object to define how the surface
  * should be shaded and the {@link Mesh} data to contain the actual geometry.
- *
- * @author Kirill Vainer
  */
 public class Geometry extends Spatial {
 

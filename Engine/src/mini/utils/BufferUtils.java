@@ -53,8 +53,6 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * <code>BufferUtils</code> is a helper class for generating nio buffers from
  * data classes such as Vectors and ColorRGBA.
- *
- * @author Joshua Slack and Miniwolf
  */
 public final class BufferUtils {
     /**

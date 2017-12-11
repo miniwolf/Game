@@ -492,7 +492,7 @@ public final class OBJLoader implements AssetLoader {
         // index buffer and others were set on creation
 
         m.setStatic();
-        m.updateBounds();
+        m.updateBound();
         m.updateCounts();
         //m.setInterleaved();
 

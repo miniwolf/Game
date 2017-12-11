@@ -5,7 +5,7 @@ import mini.input.RawInputListener;
 import mini.input.events.MouseButtonEvent;
 import mini.input.events.MouseMotionEvent;
 import mini.system.lwjgl.LwjglAbstractDisplay;
-import mini.system.time.LwjglTimer;
+import mini.system.lwjgl.LwjglTimer;
 import org.lwjgl.LWJGLException;
 import org.lwjgl.Sys;
 import org.lwjgl.input.Mouse;

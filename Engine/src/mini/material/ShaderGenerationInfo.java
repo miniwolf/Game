@@ -9,8 +9,6 @@ import java.util.List;
  * this class is basically a struct that contains the ShaderNodes informations
  * in an appropriate way to ease the shader generation process and make it
  * faster.
- *
- * @author Nehon
  */
 public class ShaderGenerationInfo implements Cloneable {
 
