@@ -51,7 +51,7 @@ public class Material implements CloneableSmartAsset, Cloneable {
     private RenderState mergedRenderState = new RenderState();
     private boolean transparent = false;
     private boolean receivesShadows = false;
-    private int sortingId = -1;
+    private long sortingId = -1;
 
     public Material(MaterialDef def) {
         if (def == null) {
@@ -125,30 +125,32 @@ public class Material implements CloneableSmartAsset, Cloneable {
      *
      * @return The sorting ID used for sorting geometries for rendering.
      */
-    public int getSortId() {
-        if (sortingId == -1 && technique != null) {
-            sortingId = technique.getSortId() << 16;
-            int texturesSortId = 17;
-            for (MatParam param : paramValues.values()) {
-                if (!param.getVarType().isTextureType()) {
-                    continue;
-                }
-                Texture texture = (Texture) param.getValue();
-                if (texture == null) {
-                    continue;
-                }
-                Image image = texture.getImage();
-                if (image == null) {
-                    continue;
-                }
-                int textureId = image.getId();
-                if (textureId == -1) {
-                    textureId = 0;
-                }
-                texturesSortId = texturesSortId * 23 + textureId;
-            }
-            sortingId |= texturesSortId & 0xFFFF;
+    public long getSortId() {
+        if (sortingId != -1 || technique == null) {
+            return sortingId;
         }
+
+        sortingId = technique.getSortId() << 16;
+        int texturesSortId = 17;
+        for (MatParam param : paramValues.values()) {
+            if (!param.getVarType().isTextureType()) {
+                continue;
+            }
+            Texture texture = (Texture) param.getValue();
+            if (texture == null) {
+                continue;
+            }
+            Image image = texture.getImage();
+            if (image == null) {
+                continue;
+            }
+            int textureId = image.getId();
+            if (textureId == -1) {
+                textureId = 0;
+            }
+            texturesSortId = texturesSortId * 23 + textureId;
+        }
+        sortingId |= texturesSortId & 0xFFFF;
         return sortingId;
     }
 

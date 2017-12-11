@@ -39,7 +39,7 @@ public class OpaqueComparator implements GeometryComparator {
         Material m1 = o1.getMaterial();
         Material m2 = o2.getMaterial();
 
-        int compareResult = Integer.compare(m1.getSortId(), m2.getSortId());
+        int compareResult = Long.compare(m1.getSortId(), m2.getSortId());
         if (compareResult == 0) {
             // use the same shader.
             // sort front-to-back then.

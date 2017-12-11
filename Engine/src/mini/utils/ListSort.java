@@ -26,11 +26,15 @@ import java.util.Comparator;
  * is twice faster than val / 2 in java 6 and has similar perf in java 7. The
  * following code uses val >>> 1 when ever a value needs to be divided by 2 and
  * rounded to its floor
+ *
+ * @author Nehon
  */
 public class ListSort<T> {
+
     /**
      * Threshold for binary sort vs merge. Original algorithm use 64, java7
-     * TimSort uses 32 and I used 128.
+     * TimSort uses 32 and I used 128, see this post for explanations :
+     * http://hub.jmonkeyengine.org/groups/development-discussion-jme3/forum/topic/i-got-that-sorted-out-huhuhu/
      */
     private static final int MIN_SIZE = 128;
     private T[] array;
@@ -146,42 +150,6 @@ public class ListSort<T> {
             runsIndices[i] = 0;
             runsLength[i] = 0;
         }
-    }
-
-    /**
-     * Reverse an array from firstId to lastId
-     *
-     * @param array   the array to reverse
-     * @param firstId the index where to start to reverse
-     * @param lastId  the index where to stop to reverse
-     */
-    private static void reverseArray(Object[] array, int firstId, int lastId) {
-        lastId--;
-        while (firstId < lastId) {
-            Object o = array[firstId];
-            array[firstId] = array[lastId];
-            array[lastId] = o;
-            firstId++;
-            lastId--;
-        }
-    }
-
-    /*
-     * test case
-     */
-    public static void main(String[] argv) {
-        Integer[] arr = new Integer[]{5, 6, 2, 9, 10, 11, 12, 8, 3, 12, 3, 7, 12, 32, 458, 12, 5, 3,
-                                      78, 45, 12, 32, 58, 45, 65, 45, 98, 45, 65, 2, 3, 47, 21, 35};
-        ListSort ls = new ListSort();
-        ls.allocateStack(34);
-        ls.sort(arr, (Comparator<Integer>) (o1, o2) -> {
-            int x = o1 - o2;
-            return Integer.compare(x, 0);
-        });
-        for (Integer integer : arr) {
-            System.err.print(integer + ",");
-        }
-        System.err.println();
     }
 
     /**
@@ -363,6 +331,47 @@ public class ListSort<T> {
     }
 
     /**
+     * Reverse an array from firstId to lastId
+     *
+     * @param array   the array to reverse
+     * @param firstId the index where to start to reverse
+     * @param lastId  the index where to stop to reverse
+     */
+    private static void reverseArray(Object[] array, int firstId, int lastId) {
+        lastId--;
+        while (firstId < lastId) {
+            Object o = array[firstId];
+            array[firstId] = array[lastId];
+            array[lastId] = o;
+            firstId++;
+            lastId--;
+        }
+    }
+
+    /**
+     * returns the minimum run length for merging
+     * <p>
+     * see http://svn.python.org/projects/python/trunk/Objects/listobject.c
+     * almost exact copy of merge_compute_minrun function
+     * <p>
+     * If n &lt; MIN_SIZE, return n (it's too small to bother with fancy stuff).
+     * Else if n is an exact power of 2, return MIN_SIZE / 2. Else return an int
+     * k, MIN_SIZE / 2 &lt;= k &lt;= MIN_SIZE , such that n/k is close to, but
+     * strictly less than, an exact power of 2.
+     *
+     * @param n length of the array
+     * @return the minimum run length for
+     */
+    private int mergeComputeMinRun(int n) {
+        int r = 0;      /* becomes 1 if any 1 bits are shifted off */
+        while (n >= MIN_SIZE) {
+            r |= (n & 1);
+            n >>= 1;
+        }
+        return n + r;
+    }
+
+    /**
      * Merge all the remaining runs to merge
      */
     private void mergeForceCollapse() {
@@ -425,58 +434,6 @@ public class ListSort<T> {
             mergeLow(indexA, lenA, indexB, lenB);
         } else {
             mergeHigh(indexA, lenA, indexB, lenB);
-        }
-    }
-
-    /**
-     * returns the minimum run length for merging
-     * <p>
-     * see http://svn.python.org/projects/python/trunk/Objects/listobject.c
-     * almost exact copy of merge_compute_minrun function
-     * <p>
-     * If n &lt; MIN_SIZE, return n (it's too small to bother with fancy stuff).
-     * Else if n is an exact power of 2, return MIN_SIZE / 2. Else return an int
-     * k, MIN_SIZE / 2 &lt;= k &lt;= MIN_SIZE , such that n/k is close to, but
-     * strictly less than, an exact power of 2.
-     *
-     * @param n length of the array
-     * @return the minimum run length for
-     */
-    private int mergeComputeMinRun(int n) {
-        int r = 0;      /* becomes 1 if any 1 bits are shifted off */
-        while (n >= MIN_SIZE) {
-            r |= (n & 1);
-            n >>= 1;
-        }
-        return n + r;
-    }
-
-    /**
-     * Examine the stack of runs waiting to be merged, merging adjacent runs
-     * until the stack invariants are re-established:
-     * <p>
-     * 1. len[-3] > len[-2] + len[-1] 2. len[-2] > len[-1]
-     * <p>
-     * See http://svn.python.org/projects/python/trunk/Objects/listobject.c very
-     * similar to merge_collapse
-     * <p>
-     * see http://svn.python.org/projects/python/trunk/Objects/listsort.txt
-     * search for The Merge Pattern
-     */
-    private void mergeCollapse() {
-        while (nbRuns > 1) {
-            int n = nbRuns - 2;
-            //searching for runs to merge from the end of the stack
-            if (n > 0 && runsLength[n - 1] <= runsLength[n] + runsLength[n + 1]) {
-                if (runsLength[n - 1] < runsLength[n + 1]) {
-                    n--;
-                }
-                mergeRuns(n);
-            } else if (runsLength[n] <= runsLength[n + 1]) {
-                mergeRuns(n);
-            } else {
-                break;
-            }
         }
     }
 
@@ -664,48 +621,31 @@ public class ListSort<T> {
     }
 
     /**
-     * Merge the lenA elements starting at idxA with the lenB elements starting
-     * at idxB in a stable way, in-place. lenA and lenBb must be > 0, and idxA +
-     * lenAa == idxB. Must also have that array[idxB] < array[idxA], that
-     * array[idxA + Len1 - 1] belongs at the end of the merge, and should have
-     * lenA >= lenB. See listsort.txt for more info.
-     *
-     * @param idxA index of first element in run A
-     * @param lenA length of run A
-     * @param idxB index of first element in run B
-     * @param lenB length of run B
+     * Examine the stack of runs waiting to be merged, merging adjacent runs
+     * until the stack invariants are re-established:
+     * <p>
+     * 1. len[-3] > len[-2] + len[-1] 2. len[-2] > len[-1]
+     * <p>
+     * See http://svn.python.org/projects/python/trunk/Objects/listobject.c very
+     * similar to merge_collapse
+     * <p>
+     * see http://svn.python.org/projects/python/trunk/Objects/listsort.txt
+     * search for The Merge Pattern
      */
-    private void mergeHigh(int idxA, int lenA, int idxB, int lenB) {
-
-        lengthA = lenA;
-        lengthB = lenB;
-        iterA = idxA + lengthA - 1;
-        iterB = lengthB - 1;
-        dest = idxB + lengthB - 1;
-        Comparator<T> comp = this.comparator;
-
-        T[] arr = this.array;
-        T[] tempArray = tmpArray;
-        System.arraycopy(arr, idxB, tempArray, 0, lengthB);
-
-        arr[dest] = arr[iterA];
-        dest--;
-        iterA--;
-        innerMergeHigh(comp, tempArray, arr, idxA);
-        //minGallop shouldn't be < 1;
-        minGallop = minGallop < 1 ? 1 : minGallop;
-
-        if (lengthB == 1) {//CopyA label
-            dest -= lengthA;
-            iterA -= lengthA;
-            System.arraycopy(arr, iterA + 1, arr, dest + 1, lengthA);
-            // The first element of run B belongs at the front of the merge.
-            arr[dest] = tempArray[iterB];
-        } else if (lengthB == 0) {
-            throw new UnsupportedOperationException("Compare function result changed! " +
-                                                    "Make sure you do not modify the scene from another thread!");
-        } else {//Fail label
-            System.arraycopy(tempArray, 0, arr, dest - (lengthB - 1), lengthB);
+    private void mergeCollapse() {
+        while (nbRuns > 1) {
+            int n = nbRuns - 2;
+            //searching for runs to merge from the end of the stack
+            if (n > 0 && runsLength[n - 1] <= runsLength[n] + runsLength[n + 1]) {
+                if (runsLength[n - 1] < runsLength[n + 1]) {
+                    n--;
+                }
+                mergeRuns(n);
+            } else if (runsLength[n] <= runsLength[n + 1]) {
+                mergeRuns(n);
+            } else {
+                break;
+            }
         }
     }
 
@@ -716,10 +656,10 @@ public class ListSort<T> {
      * array[idxA+lenA - 1] belongs at the end of the merge, and should have
      * lenA <= lenB. See listsort.txt for more info.
      *
-     * @param idxA index of first element in run A
-     * @param lenA length of run A
-     * @param idxB index of first element in run B
-     * @param lenB length of run B
+     * @param idxA    index of first element in run A
+     * @param lengthA length of run A
+     * @param idxB    index of first element in run B
+     * @param lengthB length of run B
      */
     private void mergeLow(int idxA, int lenA, int idxB, int lenB) {
 
@@ -818,10 +758,10 @@ public class ListSort<T> {
                     iterA += aWins;
                     lengthA -= aWins;
                     /* lengthA==0 is impossible now if the comparison
-                    * function is consistent, but we can't assume
-                    * that it is.
-                    * a propper error will be thrown in mergeLow if lengthA == 0
-                    */
+                     * function is consistent, but we can't assume
+                     * that it is.
+                     * a propper error will be thrown in mergeLow if lengthA == 0
+                     */
                     if (lengthA <= 1) {
                         return;
                     }
@@ -862,6 +802,52 @@ public class ListSort<T> {
     }
 
     /**
+     * Merge the lenA elements starting at idxA with the lenB elements starting
+     * at idxB in a stable way, in-place. lenA and lenBb must be > 0, and idxA +
+     * lenAa == idxB. Must also have that array[idxB] < array[idxA], that
+     * array[idxA + Len1 - 1] belongs at the end of the merge, and should have
+     * lenA >= lenB. See listsort.txt for more info.
+     *
+     * @param idxA    index of first element in run A
+     * @param lengthA length of run A
+     * @param idxB    index of first element in run B
+     * @param lengthB length of run B
+     */
+    private void mergeHigh(int idxA, int lenA, int idxB, int lenB) {
+
+        lengthA = lenA;
+        lengthB = lenB;
+        iterA = idxA + lengthA - 1;
+        iterB = lengthB - 1;
+        dest = idxB + lengthB - 1;
+        Comparator<T> comp = this.comparator;
+
+        T[] arr = this.array;
+        T[] tempArray = tmpArray;
+        System.arraycopy(arr, idxB, tempArray, 0, lengthB);
+
+        arr[dest] = arr[iterA];
+        dest--;
+        iterA--;
+        innerMergeHigh(comp, tempArray, arr, idxA);
+        //minGallop shouldn't be < 1;
+        minGallop = minGallop < 1 ? 1 : minGallop;
+
+        if (lengthB == 1) {//CopyA label
+            dest -= lengthA;
+            iterA -= lengthA;
+            System.arraycopy(arr, iterA + 1, arr, dest + 1, lengthA);
+            // The first element of run B belongs at the front of the merge.
+            arr[dest] = tempArray[iterB];
+        } else if (lengthB == 0) {
+            throw new UnsupportedOperationException("Compare function result changed! " +
+                                                    "Make sure you do not modify the scene from another thread!");
+        } else {//Fail label
+            System.arraycopy(tempArray, 0, arr, dest - (lengthB - 1), lengthB);
+        }
+    }
+
+    /**
      * Attempt to unroll "goto" style original implementation.
      * this method uses and change temp attributes of the class
      *
@@ -873,9 +859,6 @@ public class ListSort<T> {
     public void innerMergeHigh(Comparator<T> comp, T[] tempArray, T[] arr, int idxA) {
         lengthA--;
         if (lengthA == 0 || lengthB == 1) {
-            return;
-        }
-        if (lengthB == 1) {
             return;
         }
         while (true) {
@@ -943,11 +926,10 @@ public class ListSort<T> {
                     iterB -= bWins;
                     lengthB -= bWins;
                     System.arraycopy(tempArray, iterB + 1, arr, dest + 1, bWins);
-                    /* lengthB==0 is impossible now if the comparison
-                    * function is consistent, but we can't assume
-                    * that it is.
-                    * a propper error will be thrown in mergeLow if lengthB == 0
-                    */
+                    /* lengthB==0 is impossible now if the comparison function is consistent, but we
+                     * can't assume that it is. A proper error will be thrown in mergeLow if
+                     * lengthB == 0
+                     */
                     if (lengthB <= 1) {
                         return;
                     }

@@ -1,5 +1,6 @@
 package mini.renderer;
 
+import mini.bounding.BoundingBox;
 import mini.bounding.BoundingVolume;
 import mini.math.FastMath;
 import mini.math.Matrix4f;
@@ -27,9 +28,6 @@ import mini.utils.TempVars;
  * the camera frustum, and thus to avoid rendering objects that are outside
  * the frustum
  * </p>
- *
- * @author Mark Powell
- * @author Joshua Slack
  */
 public class Camera implements Cloneable {
 
@@ -169,6 +167,7 @@ public class Camera implements Cloneable {
     protected Matrix4f viewMatrix = new Matrix4f();
     protected Matrix4f projectionMatrix = new Matrix4f();
     protected Matrix4f viewProjectionMatrix = new Matrix4f();
+    private BoundingBox guiBounding = new BoundingBox();
     /**
      * The camera's name.
      */
@@ -707,12 +706,10 @@ public class Camera implements Cloneable {
      * @param right  the right plane.
      * @param top    the top plane.
      * @param bottom the bottom plane.
-     * @see Camera#setFrustum(float, float, float, float,
-     * float, float)
+     * @see Camera#setFrustum(float, float, float, float, float, float)
      */
-    public void setFrustum(float near, float far, float left, float right,
-                           float top, float bottom) {
-
+    public void setFrustum(float near, float far, float left, float right, float top,
+                           float bottom) {
         frustumNear = near;
         frustumFar = far;
         frustumLeft = left;
@@ -731,8 +728,7 @@ public class Camera implements Cloneable {
      * @param near   Near view plane distance
      * @param far    Far view plane distance
      */
-    public void setFrustumPerspective(float fovY, float aspect, float near,
-                                      float far) {
+    public void setFrustumPerspective(float fovY, float aspect, float near, float far) {
         if (Float.isNaN(aspect) || Float.isInfinite(aspect)) {
             // ignore.
             System.err.println("Invalid aspect given to setFrustumPerspective: " + aspect);
@@ -764,8 +760,7 @@ public class Camera implements Cloneable {
      * @see Camera#setFrame(mini.math.Vector3f,
      * mini.math.Vector3f, mini.math.Vector3f, mini.math.Vector3f)
      */
-    public void setFrame(Vector3f location, Vector3f left, Vector3f up,
-                         Vector3f direction) {
+    public void setFrame(Vector3f location, Vector3f left, Vector3f up, Vector3f direction) {
 
         this.location = location;
         this.rotation.fromAxes(left, up, direction);
@@ -1003,8 +998,7 @@ public class Camera implements Cloneable {
                 if (side == Plane.Side.Negative) { // Outside of frustum
                     bound.setCheckPlane(planeId);
                     return FrustumIntersect.Outside;
-                } else if (side
-                           == Plane.Side.Positive) { // Visible on *this* plane, mark to not recheck
+                } else if (side == Plane.Side.Positive) { // Visible on plane, mark to not recheck
                     planeState |= mask;
                 } else {
                     value = FrustumIntersect.Intersects;
@@ -1114,6 +1108,10 @@ public class Camera implements Cloneable {
         float ey = height * viewPortTop;
         float xExtent = Math.max(0f, (ex - sx) / 2f);
         float yExtent = Math.max(0f, (ey - sy) / 2f);
+        guiBounding.setCenter(sx + xExtent, sy + yExtent, 0);
+        guiBounding.setXExtent(xExtent);
+        guiBounding.setYExtent(yExtent);
+        guiBounding.setZExtent(Float.MAX_VALUE);
     }
 
     /**
@@ -1301,8 +1299,8 @@ public class Camera implements Cloneable {
     /**
      * @see Camera#getWorldCoordinates
      */
-    public Vector3f getWorldCoordinates(Vector2f screenPosition,
-                                        float projectionZPos, Vector3f store) {
+    public Vector3f getWorldCoordinates(Vector2f screenPosition, float projectionZPos,
+                                        Vector3f store) {
         if (store == null) {
             store = new Vector3f();
         }
@@ -1310,12 +1308,11 @@ public class Camera implements Cloneable {
         Matrix4f inverseMat = new Matrix4f(viewProjectionMatrix);
         inverseMat.invertLocal();
 
-        store.set(
-                (screenPosition.x / getWidth() - viewPortLeft) / (viewPortRight - viewPortLeft) * 2
-                - 1,
-                (screenPosition.y / getHeight() - viewPortBottom) / (viewPortTop - viewPortBottom)
-                * 2 - 1,
-                projectionZPos * 2 - 1);
+        store.set((screenPosition.x / getWidth() - viewPortLeft) /
+                  (viewPortRight - viewPortLeft) * 2 - 1,
+                  (screenPosition.y / getHeight() - viewPortBottom) /
+                  (viewPortTop - viewPortBottom) * 2 - 1,
+                  projectionZPos * 2 - 1);
 
         float w = inverseMat.multProj(store, store);
         store.multLocal(1f / w);

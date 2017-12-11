@@ -23,13 +23,14 @@ public interface Renderer {
 
     /**
      * Detects available capabilities of the GPU.
-     *
+     * <p>
      * Must be called prior to any other Renderer methods.
      */
     void initialize();
 
     /**
      * Get the capabilities of the renderer.
+     *
      * @return The capabilities of the renderer.
      */
     Set<Caps> getCaps();
@@ -50,10 +51,10 @@ public interface Renderer {
     /**
      * Clears certain channels of the currently bound framebuffer.
      *
-     * @param color True if to clear colors (RGBA)
-     * @param depth True if to clear depth/z
+     * @param color   True if to clear colors (RGBA)
+     * @param depth   True if to clear depth/z
      * @param stencil True if to clear stencil buffer (if available, otherwise
-     * ignored)
+     *                ignored)
      */
     void clearBuffers(boolean color, boolean depth, boolean stencil);
 
@@ -75,13 +76,13 @@ public interface Renderer {
      * objects will have their depth clamped to this range.
      *
      * @param start The range start
-     * @param end The range end
+     * @param end   The range end
      */
     void setDepthRange(float start, float end);
 
     /**
      * Called when a new frame has been rendered.
-     *
+     * <p>
      * Currently, this will simply delete any OpenGL objects from the GPU
      * which have been garbage collected by the GC.
      */
@@ -90,9 +91,9 @@ public interface Renderer {
     /**
      * Set the viewport location and resolution on the screen.
      *
-     * @param x The x coordinate of the viewport
-     * @param y The y coordinate of the viewport
-     * @param width Width of the viewport
+     * @param x      The x coordinate of the viewport
+     * @param y      The y coordinate of the viewport
+     * @param width  Width of the viewport
      * @param height Height of the viewport
      */
     void setViewPort(int x, int y, int width, int height);
@@ -102,9 +103,9 @@ public interface Renderer {
      * For all future rendering commands, no pixels will be allowed
      * to be rendered outside of the clip rectangle.
      *
-     * @param x The x coordinate of the clip rect
-     * @param y The y coordinate of the clip rect
-     * @param width Width of the clip rect
+     * @param x      The x coordinate of the clip rect
+     * @param y      The y coordinate of the clip rect
+     * @param width  Width of the clip rect
      * @param height Height of the clip rect
      */
     void setClipRect(int x, int y, int width, int height);
@@ -149,7 +150,7 @@ public interface Renderer {
 
     /**
      * Sets the framebuffer that will be drawn to.
-     *
+     * <p>
      * If the framebuffer has not been initialized yet, it will be created
      * and its render surfaces and attached textures will be allocated.
      *
@@ -172,7 +173,7 @@ public interface Renderer {
      * per component. The given byte buffer should have at least
      * fb.getWidth() * fb.getHeight() * 4 bytes remaining.
      *
-     * @param fb The framebuffer to read from
+     * @param fb      The framebuffer to read from
      * @param byteBuf The bytebuffer to transfer color data to
      */
     void readFrameBuffer(FrameBuffer fb, ByteBuffer byteBuf);
@@ -184,9 +185,9 @@ public interface Renderer {
      * The given byte buffer should have at least
      * fb.getWidth() * fb.getHeight() * 4 bytes remaining.
      *
-     * @param fb The framebuffer to read from
+     * @param fb      The framebuffer to read from
      * @param byteBuf The bytebuffer to transfer color data to
-     * @param format the image format to use when reading the frameBuffer.
+     * @param format  the image format to use when reading the frameBuffer.
      */
     void readFrameBufferWithFormat(FrameBuffer fb, ByteBuffer byteBuf, Image.Format format);
 
@@ -203,13 +204,13 @@ public interface Renderer {
     /**
      * Modify the given Texture with the given Image.
      * The image will be put at x and y into the texture.
-     *
+     * <p>
      * NOTE: this is only supported for uncompressed 2D images without mipmaps.
      *
-     * @param tex the Texture that will be modified
+     * @param tex    the Texture that will be modified
      * @param pixels the source Image data to copy data from
-     * @param x the x position to put the image into the texture
-     * @param y the y position to put the image into the texture
+     * @param x      the x position to put the image into the texture
+     * @param y      the y position to put the image into the texture
      */
     void modifyTexture(Texture tex, Image pixels, int x, int y);
 
@@ -227,6 +228,7 @@ public interface Renderer {
 
     /**
      * Deletes a vertex buffer from the GPU.
+     *
      * @param vb The vertex buffer to delete
      */
     void deleteBuffer(VertexBuffer vb);
@@ -242,9 +244,9 @@ public interface Renderer {
      * If the instance data is non-null, then it is submitted as a
      * per-instance vertex attribute to the shader.
      *
-     * @param mesh The mesh to render
-     * @param lod The LOD level to use, see {@link Mesh#setLodLevels(mini.scene.VertexBuffer[]) }.
-     * @param count Number of mesh instances to render
+     * @param mesh         The mesh to render
+     * @param lod          The LOD level to use, see {@link Mesh#setLodLevels(mini.scene.VertexBuffer[]) }.
+     * @param count        Number of mesh instances to render
      * @param instanceData When count is greater than 1, these buffers provide
      *                     the per-instance attributes.
      */
@@ -271,14 +273,13 @@ public interface Renderer {
 
     /**
      * Set the default anisotropic filter level for textures.
-     *
+     * <p>
      * If the
      * {@link Texture#setAnisotropicFilter(int) texture anisotropic filter} is
      * set to 0, then the default level is used. Otherwise if the texture level
      * is 1 or greater, then the texture's value overrides the default value.
      *
      * @param level The default anisotropic filter level to use. Default: 1.
-     *
      * @throws IllegalArgumentException If level is less than 1.
      */
     void setDefaultAnisotropicFilter(int level);
@@ -301,19 +302,18 @@ public interface Renderer {
     /**
      * If enabled, color values rendered to the main framebuffer undergo
      * linear -&gt; sRGB conversion.
-     *
+     * <p>
      * This is identical to {@link FrameBuffer#setSrgb(boolean)} except it is toggled
      * for the main framebuffer instead of an offscreen buffer.
-     *
+     * <p>
      * This should be set together with {@link Renderer#setLinearizeSrgbImages(boolean)}
-     *
+     * <p>
      * As a shorthand, the user can set {@link AppSettings#setGammaCorrection(boolean)} to true
      * to toggle both {@link Renderer#setLinearizeSrgbImages(boolean)} and
      * {@link Renderer#setMainFrameBufferSrgb(boolean)} if the
      * {@link Caps#Srgb} is supported by the GPU.
      *
      * @throws RendererException If the GPU hardware does not support sRGB.
-     *
      * @see FrameBuffer#setSrgb(boolean)
      * @see Caps#Srgb
      */
@@ -322,21 +322,19 @@ public interface Renderer {
     /**
      * If enabled, all {@link Image images} with the {@link Image#setColorSpace(mini.textures.image.ColorSpace) sRGB flag}
      * set shall undergo an sRGB to linear RGB color conversion when read by a shader.
-     *
+     * <p>
      * The conversion is performed for the following formats:
-     *  - {@link Image.Format#RGB8}
-     *  - {@link Image.Format#RGBA8}
-     *  - {@link Image.Format#Luminance8}
-     *  - {@link Image.Format#Luminance8Alpha8}
-     *
+     * - {@link Image.Format#RGB8}
+     * - {@link Image.Format#RGBA8}
+     * - {@link Image.Format#Luminance8}
+     * - {@link Image.Format#Luminance8Alpha8}
+     * <p>
      * For all other formats, no conversion is performed.
-     *
+     * <p>
      * If this option is toggled at runtime, textures must be reloaded for the change to take effect.
      *
-     * @throws RendererException If the GPU hardware does not support sRGB.
-     *
      * @param linearize If sRGB images undergo sRGB -&gt; linear conversion prior to rendering.
-     *
+     * @throws RendererException If the GPU hardware does not support sRGB.
      * @see Caps#Srgb
      */
     void setLinearizeSrgbImages(boolean linearize);

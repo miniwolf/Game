@@ -8,12 +8,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 /**
- * This class is a special purpose list of {@link Geometry} objects for render
- * queuing.
- *
- * @author Jack Lindamood
- * @author Three Rings - better sorting alg.
- * @author Kirill Vainer
+ * This class is a special purpose list of {@link Geometry} objects for render queuing.
  */
 public class GeometryList implements Iterable<Geometry> {
     private static final int DEFAULT_SIZE = 32;

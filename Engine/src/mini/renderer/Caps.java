@@ -11,8 +11,6 @@ import java.util.Collection;
 /**
  * <code>Caps</code> is an enum specifying a capability that the {@link Renderer}
  * supports.
- *
- * @author Kirill Vainer
  */
 public enum Caps {
 

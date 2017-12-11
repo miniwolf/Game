@@ -105,11 +105,6 @@ public class RenderContext {
      */
     public FrameBuffer boundFB;
 
-//    /**
-//     * @see Renderer#setFrameBuffer(mini.texture.FrameBuffer)
-//     */
-//    public FrameBuffer boundFB;
-
     /**
      * Currently bound Renderbuffer
      *
@@ -245,7 +240,7 @@ public class RenderContext {
         boundShaderProgram = 0;
         boundShader = null;
         boundFBO = 0;
-        //boundFB = null;
+        boundFB = null;
         boundRB = 0;
         boundDrawBuf = -1;
         boundReadBuf = -1;

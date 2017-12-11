@@ -33,6 +33,9 @@ public abstract class AbstractShadowRenderer implements SceneProcessor, MiniClon
     protected int nbShadowMaps = 1;
     protected float shadowMapSize;
     protected float shadowIntensity = 0.7f;
+    protected float edgesThickness = 1.0f;
+    protected boolean renderBackFacesShadows = true;
+    protected boolean debug = true;
     protected RenderManager renderManager;
     protected ViewPort viewPort;
     protected FrameBuffer[] shadowFB;
@@ -41,13 +44,10 @@ public abstract class AbstractShadowRenderer implements SceneProcessor, MiniClon
     protected Material postshadowMat;
     protected Matrix4f[] lightViewProjectionsMatrices;
     protected AssetManager assetManager;
-    protected boolean debug = true;
-    protected float edgesThickness = 1.0f;
     protected EdgeFilteringMode edgeFilteringMode = EdgeFilteringMode.Bilinear;
     protected CompareMode shadowCompareMode = CompareMode.Hardware;
     protected Picture[] dispPic;
     protected RenderState forcedRenderState = new RenderState();
-    protected boolean renderBackFacesShadows = true;
 
     /**
      * true if the fallback material should be used, otherwise false

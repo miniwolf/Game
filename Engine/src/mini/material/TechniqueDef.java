@@ -107,7 +107,7 @@ public class TechniqueDef implements Cloneable {
     private final EnumSet<Caps> requiredCaps = EnumSet.noneOf(Caps.class);
     private final HashMap<DefineList, Shader> definesToShaderMap;
     private String name;
-    private int sortId;
+    private long sortId;
     private boolean usesNodes = false;
     private boolean noRender = false;
     //used to find the best fit technique
@@ -142,7 +142,7 @@ public class TechniqueDef implements Cloneable {
      *
      * @param name The name of the technique
      */
-    public TechniqueDef(String name, int sortId) {
+    public TechniqueDef(String name, long sortId) {
         this();
         this.sortId = sortId;
         this.name = name;
@@ -164,7 +164,7 @@ public class TechniqueDef implements Cloneable {
      * @return A unique sort ID.
      * No other technique definition can have the same ID.
      */
-    public int getSortId() {
+    public long getSortId() {
         return sortId;
     }
 

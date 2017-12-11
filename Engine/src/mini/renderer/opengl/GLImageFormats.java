@@ -16,7 +16,7 @@ import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL41;
 import org.lwjgl.opengl.GL43;
 
-import java.util.EnumSet;
+import java.util.Set;
 
 /**
  * Generates a table of supported image format for a given renderer caps.
@@ -69,7 +69,7 @@ public final class GLImageFormats {
      * @param caps The capabilities for which to determine supported formats.
      * @return An 2D array containing supported texture formats.
      */
-    public static GLImageFormat[][] getFormatsForCaps(EnumSet<Caps> caps) {
+    public static GLImageFormat[][] getFormatsForCaps(Set<Caps> caps) {
         GLImageFormat[][] formatToGL = new GLImageFormat[2][Image.Format.values().length];
 
         // Core Profile Formats (supported by both OpenGL Core 3.3 and OpenGL ES 3.0+)

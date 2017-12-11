@@ -11,7 +11,7 @@ import org.lwjgl.opengl.GL32;
 import org.lwjgl.opengl.GL33;
 
 import java.nio.ByteBuffer;
-import java.util.EnumSet;
+import java.util.Set;
 
 /**
  * Created by miniwolf on 25-04-2017.
@@ -210,7 +210,7 @@ public class TextureUtil {
         }
     }
 
-    public void initialize(EnumSet<Caps> caps) {
+    public void initialize(Set<Caps> caps) {
         this.formats = GLImageFormats.getFormatsForCaps(caps);
         StringBuilder sb = new StringBuilder();
         sb.append("Supported texture formats: \n");

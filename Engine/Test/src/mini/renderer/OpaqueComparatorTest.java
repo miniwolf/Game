@@ -74,7 +74,7 @@ public class OpaqueComparatorTest {
 
         for (int i = 0; i < gl.size(); i++) {
             Material mat = gl.get(i).getMaterial();
-            String sortId = Integer.toHexString(mat.getSortId()).toUpperCase();
+            String sortId = Long.toHexString(mat.getSortId()).toUpperCase();
             System.out.print(sortId + "\t");
             System.out.println(mat);
         }
@@ -114,7 +114,7 @@ public class OpaqueComparatorTest {
         particleMat.setName("MatParticle");
         unshadedMat.setName("MatUnshaded");
         skyMat.setName("MatSky");
-        testSort(skyMat, lightingMat, particleMat, unshadedMat);
+        testSort(unshadedMat, skyMat, particleMat, lightingMat);
     }
 
     @Test

@@ -138,5 +138,4 @@ public final class ReflectionAllocator implements BufferAllocator {
     public ByteBuffer allocate(int size) {
         return ByteBuffer.allocateDirect(size);
     }
-
 }

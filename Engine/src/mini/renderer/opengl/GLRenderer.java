@@ -75,7 +75,7 @@ public final class GLRenderer implements Renderer {
     private final IntBuffer intBuf1 = BufferUtils.createIntBuffer(1);
     private final IntBuffer intBuf16 = BufferUtils.createIntBuffer(16);
     private final RenderContext context = new RenderContext();
-    private final EnumSet<Caps> caps = EnumSet.noneOf(Caps.class);
+    private final Set<Caps> caps = EnumSet.noneOf(Caps.class);
     private final Map<Limits, Integer> limits = new EnumMap<>(Limits.class);
 
     private FrameBuffer mainFbOverride = null;
@@ -263,9 +263,7 @@ public final class GLRenderer implements Renderer {
             caps.add(Caps.MeshInstancing);
         }
 
-        if (hasExtension("GL_OES_element_index_uint")) {
-            caps.add(Caps.IntegerIndexBuffer);
-        }
+        caps.add(Caps.IntegerIndexBuffer);
 
         if (hasExtension("GL_ARB_texture_buffer_object")) {
             caps.add(Caps.TextureBuffer);
@@ -547,7 +545,7 @@ public final class GLRenderer implements Renderer {
     public void clearBuffers(boolean color, boolean depth, boolean stencil) {
         int bits = 0;
         if (color) {
-            //See explanations of the depth below, we must enable color write to be able to clear the color buffer
+            // See explanations of the depth below, we must enable color write to be able to clear the color buffer
             if (!context.colorWriteEnabled) {
                 GL11.glColorMask(true, true, true, true);
                 context.colorWriteEnabled = true;
