@@ -301,7 +301,7 @@ public class BoundingBox extends BoundingVolume {
                 low = center.x - xExtent;
             }
             float high = this.center.x + this.xExtent;
-            if (high > center.x + xExtent) {
+            if (high < center.x + xExtent) {
                 high = center.x + xExtent;
             }
             this.center.x = (low + high) / 2;
@@ -317,7 +317,7 @@ public class BoundingBox extends BoundingVolume {
                 low = center.y - yExtent;
             }
             float high = this.center.y + this.yExtent;
-            if (high > center.y + yExtent) {
+            if (high < center.y + yExtent) {
                 high = center.y + yExtent;
             }
             this.center.y = (low + high) / 2;
@@ -333,7 +333,7 @@ public class BoundingBox extends BoundingVolume {
                 low = center.z - zExtent;
             }
             float high = this.center.z + this.zExtent;
-            if (high > center.z + zExtent) {
+            if (high < center.z + zExtent) {
                 high = center.z + zExtent;
             }
             this.center.z = (low + high) / 2;

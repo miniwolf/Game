@@ -159,8 +159,8 @@ public final class ApplicationSettings extends HashMap<String, Object> {
     private static final ApplicationSettings defaults = new ApplicationSettings(false);
 
     static {
-        defaults.put("Width", 640);
-        defaults.put("Height", 480);
+        defaults.put("Width", 1280);
+        defaults.put("Height", 768);
         defaults.put("BitsPerPixel", 24);
         defaults.put("Frequency", 60);
         defaults.put("DepthBits", 24);

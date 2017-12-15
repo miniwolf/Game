@@ -42,9 +42,9 @@ public class RenderManager {
 
     private final Renderer renderer;
     private final UniformBindingManager uniformBindingManager = new UniformBindingManager();
-    private final ArrayList<ViewPort> preViewPorts = new ArrayList<>();
-    private final ArrayList<ViewPort> viewPorts = new ArrayList<>();
-    private final ArrayList<ViewPort> postViewPorts = new ArrayList<>();
+    private final List<ViewPort> preViewPorts = new ArrayList<>();
+    private final List<ViewPort> viewPorts = new ArrayList<>();
+    private final List<ViewPort> postViewPorts = new ArrayList<>();
     private Camera prevCam = null;
     private Material forcedMaterial = null;
     private String forcedTechnique = null;

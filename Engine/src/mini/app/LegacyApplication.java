@@ -122,7 +122,7 @@ public class LegacyApplication implements Application, SystemListener {
      * units respectively.
      */
     private void initCamera() {
-        cam = new Camera(1024, 768);
+        cam = new Camera(1280, 768);
 
         cam.setFrustumPerspective(45f, (float) cam.getWidth() / cam.getHeight(), 1f, 1000f);
         cam.setLocation(new Vector3f(0f, 0f, 10f));
@@ -135,7 +135,7 @@ public class LegacyApplication implements Application, SystemListener {
         viewPort.setClearFlags(true, true, true);
 
         // Create a new cam for the gui
-        Camera guiCam = new Camera(1024, 768);
+        Camera guiCam = new Camera(1280, 768);
         guiViewPort = renderManager.createPostView("Gui Default", guiCam);
         guiViewPort.setClearFlags(false, false, false);
     }

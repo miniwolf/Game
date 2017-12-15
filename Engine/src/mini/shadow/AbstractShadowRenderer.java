@@ -40,6 +40,7 @@ public abstract class AbstractShadowRenderer implements SceneProcessor, MiniClon
     protected ViewPort viewPort;
     protected FrameBuffer[] shadowFB;
     protected Texture2D[] shadowMaps;
+    private Texture2D dummyTex;
     protected Material preshadowMat;
     protected Material postshadowMat;
     protected Matrix4f[] lightViewProjectionsMatrices;
@@ -88,10 +89,9 @@ public abstract class AbstractShadowRenderer implements SceneProcessor, MiniClon
      * Create an abstract shadow renderer. Subclasses invoke this constructor.
      *
      * @param assetManager  the application asset manager
-     * @param shadowMapSize the size of the rendered shadow maps (512,1024,2048,
-     *                      etc...)
-     * @param nbShadowMaps  the number of shadow maps rendered (the more shadow
-     *                      maps the more quality, the fewer fps).
+     * @param shadowMapSize the size of the rendered shadow maps (512,1024,2048, etc...)
+     * @param nbShadowMaps  the number of shadow maps rendered (the more shadow maps the more
+     *                      quality, the fewer fps).
      */
     protected AbstractShadowRenderer(AssetManager assetManager, int shadowMapSize,
                                      int nbShadowMaps) {
@@ -111,6 +111,8 @@ public abstract class AbstractShadowRenderer implements SceneProcessor, MiniClon
         shadowMapStringCache = new String[nbShadowMaps];
         lightViewStringCache = new String[nbShadowMaps];
 
+        dummyTex = new Texture2D(shadowMapSize, shadowMapSize, Image.Format.RGBA8);
+
         preshadowMat = new Material(assetManager, "MatDefs/Shadow/PreShadow.minid");
         postshadowMat.setFloat("ShadowMapSize", shadowMapSize);
 
@@ -122,7 +124,7 @@ public abstract class AbstractShadowRenderer implements SceneProcessor, MiniClon
             shadowFB[i].setDepthTexture(shadowMaps[i]);
 
             //DO NOT COMMENT THIS (it prevent the OSX incomplete read buffer crash)
-            //shadowFB[i].setColorTexture(dummyTex);
+            shadowFB[i].setColorTexture(dummyTex);
             shadowMapStringCache[i] = "ShadowMap" + i;
             lightViewStringCache[i] = "LightViewProjectionMatrix" + i;
 
@@ -201,8 +203,6 @@ public abstract class AbstractShadowRenderer implements SceneProcessor, MiniClon
     }
 
     /**
-     * returns the shadow compare mode
-     *
      * @return the shadowCompareMode
      * @see CompareMode
      */

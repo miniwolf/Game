@@ -58,9 +58,7 @@ public final class ReflectionAllocator implements BufferAllocator {
     /**
      * This function explicitly calls the Cleaner method of a direct buffer.
      *
-     * @param toBeDestroyed
-     *            The direct buffer that will be "cleaned". Utilizes reflection.
-     *
+     * @param toBeDestroyed The direct buffer that will be "cleaned". Utilizes reflection.
      */
     public void destroyDirectBuffer(Buffer toBeDestroyed) {
         try {

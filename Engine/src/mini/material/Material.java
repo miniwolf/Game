@@ -310,7 +310,7 @@ public class Material implements CloneableSmartAsset, Cloneable {
     }
 
     /**
-     * Check if the material should receive shadows or not.
+     * Check if the material should receive shadows or not. FBXNode specific implementation.
      *
      * @return True if the material should receive shadows.
      * @see Material#setReceivesShadows(boolean)
@@ -320,7 +320,7 @@ public class Material implements CloneableSmartAsset, Cloneable {
     }
 
     /**
-     * Set if the material should receive shadows or not.
+     * Set if the material should receive shadows or not. FBXNode Specific implementation.
      * <p>
      * <p>This value is merely a marker, by itself it does nothing.
      * Generally model loaders will use this marker to indicate
