@@ -1,6 +1,7 @@
 package mini.input.lwjgl;
 
-import mini.input.KeyInput;
+import mini.input.Input;
+import mini.input.KeyboardKey;
 import mini.input.RawInputListener;
 import mini.input.events.KeyInputEvent;
 import mini.system.lwjgl.LwjglAbstractDisplay;
@@ -9,7 +10,7 @@ import org.lwjgl.LWJGLException;
 import org.lwjgl.Sys;
 import org.lwjgl.input.Keyboard;
 
-public class LwjglKeyInput implements KeyInput {
+public class LwjglKeyInput implements Input {
     private LwjglAbstractDisplay context;
     private RawInputListener listener;
 
@@ -42,12 +43,11 @@ public class LwjglKeyInput implements KeyInput {
 
         Keyboard.poll();
         while (Keyboard.next()) {
-            int keyCode = Keyboard.getEventKey();
-            char keyChar = Keyboard.getEventCharacter();
+            KeyboardKey keyCode = KeyboardKey.getValues().get(Keyboard.getEventKey());
             boolean pressed = Keyboard.getEventKeyState();
             boolean down = Keyboard.isRepeatEvent();
             long time = Keyboard.getEventNanoseconds();
-            KeyInputEvent evt = new KeyInputEvent(keyCode, keyChar, pressed, down);
+            KeyInputEvent evt = new KeyInputEvent(keyCode, pressed, down);
             evt.setTime(time);
             listener.onKeyEvent(evt);
         }

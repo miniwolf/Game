@@ -1,6 +1,7 @@
 package mini.input.lwjgl;
 
-import mini.input.KeyInput;
+import mini.input.Input;
+import mini.input.KeyboardKey;
 import mini.input.RawInputListener;
 import mini.input.events.KeyInputEvent;
 import mini.system.lwjgl.LwjglWindow;
@@ -19,7 +20,7 @@ import static org.lwjgl.glfw.GLFW.glfwGetTime;
 import static org.lwjgl.glfw.GLFW.glfwSetCharCallback;
 import static org.lwjgl.glfw.GLFW.glfwSetKeyCallback;
 
-public class GlfwKeyInput implements KeyInput {
+public class GlfwKeyInput implements Input {
 
     private static final Logger logger = Logger.getLogger(GlfwKeyInput.class.getName());
 
@@ -28,7 +29,7 @@ public class GlfwKeyInput implements KeyInput {
     private boolean initialized;
     private GLFWKeyCallback keyCallback;
     private GLFWCharCallback charCallback;
-    private Queue<KeyInputEvent> keyInputEvents = new LinkedList<KeyInputEvent>();
+    private Queue<KeyInputEvent> keyInputEvents = new LinkedList<>();
 
     public GlfwKeyInput(LwjglWindow context) {
         this.context = context;
@@ -47,9 +48,8 @@ public class GlfwKeyInput implements KeyInput {
                     return;
                 }
 
-                int jmeKey = GlfwKeyMap.toJmeKeyCode(key);
-
-                final KeyInputEvent event = new KeyInputEvent(jmeKey, '\0', GLFW_PRESS == action,
+                KeyboardKey keyboardKey = KeyboardKey.getValues().get(key);
+                final KeyInputEvent event = new KeyInputEvent(keyboardKey, GLFW_PRESS == action,
                                                               GLFW_REPEAT == action);
                 event.setTime(getInputTimeNanos());
 
@@ -74,13 +74,13 @@ public class GlfwKeyInput implements KeyInput {
 
                 final char keyChar = (char) codepoint;
 
-                final KeyInputEvent pressed = new KeyInputEvent(KeyInput.KEY_UNKNOWN, keyChar, true,
+                final KeyInputEvent pressed = new KeyInputEvent(KeyboardKey.KEY_UNKNOWN, true,
                                                                 false);
                 pressed.setTime(getInputTimeNanos());
 
                 keyInputEvents.add(pressed);
 
-                final KeyInputEvent released = new KeyInputEvent(KeyInput.KEY_UNKNOWN, keyChar,
+                final KeyInputEvent released = new KeyInputEvent(KeyboardKey.KEY_UNKNOWN,
                                                                  false, false);
                 released.setTime(getInputTimeNanos());
 

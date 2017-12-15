@@ -2,7 +2,7 @@ package mini.app;
 
 import mini.app.state.ApplicationState;
 import mini.input.FlyByCamera;
-import mini.input.KeyInput;
+import mini.input.KeyboardKey;
 import mini.input.controls.ActionListener;
 import mini.input.controls.KeyTrigger;
 import mini.renderer.RenderManager;
@@ -122,7 +122,7 @@ public abstract class SimpleApplication extends LegacyApplication {
                 stateManager.getState(FlyCamAppState.class).setCamera(flyCam);
             }
 
-            inputManager.addMapping(INPUT_MAPPING_EXIT, new KeyTrigger(KeyInput.KEY_ESCAPE));
+            inputManager.addMapping(INPUT_MAPPING_EXIT, new KeyTrigger(KeyboardKey.KEY_ESCAPE));
             inputManager.addListener(actionListener, INPUT_MAPPING_EXIT);
         }
 

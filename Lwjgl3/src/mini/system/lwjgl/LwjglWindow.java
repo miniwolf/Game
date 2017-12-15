@@ -1,6 +1,6 @@
 package mini.system.lwjgl;
 
-import mini.input.KeyInput;
+import mini.input.Input;
 import mini.input.MouseInput;
 import mini.input.lwjgl.GlfwKeyInput;
 import mini.input.lwjgl.GlfwMouseInput;
@@ -599,7 +599,8 @@ public abstract class LwjglWindow extends LwjglContext implements Runnable {
         return mouseInput;
     }
 
-    public KeyInput getKeyInput() {
+    @Override
+    public Input getKeyInput() {
         if (keyInput == null) {
             keyInput = new GlfwKeyInput(this);
         }

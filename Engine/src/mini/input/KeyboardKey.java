@@ -145,6 +145,16 @@ public enum KeyboardKey {
         return values;
     }
 
+    public char getCharValue() {
+        if (this == KEY_ENTER) {
+            return '\n';
+        } else if (this.toString().split("_").length == 2
+                   && toString().split("_")[1].length() == 1) {
+            return toString().split("_")[1].charAt(0);
+        }
+        return '\0';
+    }
+
     public int getValue() {
         return value;
     }

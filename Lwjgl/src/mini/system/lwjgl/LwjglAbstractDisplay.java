@@ -1,6 +1,6 @@
 package mini.system.lwjgl;
 
-import mini.input.KeyInput;
+import mini.input.Input;
 import mini.input.MouseInput;
 import mini.input.lwjgl.LwjglKeyInput;
 import mini.input.lwjgl.LwjglMouseInput;
@@ -187,7 +187,7 @@ public abstract class LwjglAbstractDisplay extends LwjglContext implements Runna
         return mouseInput;
     }
 
-    public KeyInput getKeyInput() {
+    public Input getKeyInput() {
         if (keyInput == null){
             keyInput = new LwjglKeyInput(this);
         }

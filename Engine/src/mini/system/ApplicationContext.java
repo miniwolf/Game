@@ -1,6 +1,6 @@
 package mini.system;
 
-import mini.input.KeyInput;
+import mini.input.Input;
 import mini.input.MouseInput;
 import mini.renderer.Renderer;
 import mini.renderer.opengl.GLRenderer;
@@ -52,7 +52,7 @@ public interface ApplicationContext {
     /**
      * @return Keyboard input implementation. May be null if not available.
      */
-    KeyInput getKeyInput();
+    Input getKeyInput();
 
     /**
      * @param settings the display settings to use for the created context. If

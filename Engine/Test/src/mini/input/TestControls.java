@@ -21,7 +21,7 @@ public class TestControls extends SimpleApplication {
     public void simpleInitApp() {
         // Test multiple inputs per mapping
         inputManager.addMapping("My Action",
-                                new KeyTrigger(KeyInput.KEY_SPACE),
+                                new KeyTrigger(KeyboardKey.KEY_SPACE),
                                 new MouseAxisTrigger(MouseInput.AXIS_WHEEL, false));
 
         // Test multiple listeners per mapping

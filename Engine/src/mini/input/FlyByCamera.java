@@ -188,19 +188,19 @@ public class FlyByCamera implements AnalogListener, ActionListener {
         // both mouse and button - rotation of cam
         inputManager
                 .addMapping(CameraInput.FLYCAM_LEFT, new MouseAxisTrigger(MouseInput.AXIS_X, true),
-                            new KeyTrigger(KeyInput.KEY_LEFT));
+                            new KeyTrigger(KeyboardKey.KEY_LEFT));
 
         inputManager.addMapping(CameraInput.FLYCAM_RIGHT,
                                 new MouseAxisTrigger(MouseInput.AXIS_X, false),
-                                new KeyTrigger(KeyInput.KEY_RIGHT));
+                                new KeyTrigger(KeyboardKey.KEY_RIGHT));
 
         inputManager
                 .addMapping(CameraInput.FLYCAM_UP, new MouseAxisTrigger(MouseInput.AXIS_Y, false),
-                            new KeyTrigger(KeyInput.KEY_UP));
+                            new KeyTrigger(KeyboardKey.KEY_UP));
 
         inputManager
                 .addMapping(CameraInput.FLYCAM_DOWN, new MouseAxisTrigger(MouseInput.AXIS_Y, true),
-                            new KeyTrigger(KeyInput.KEY_DOWN));
+                            new KeyTrigger(KeyboardKey.KEY_DOWN));
 
         // mouse only - zoom in/out with wheel, and rotate drag
         inputManager.addMapping(CameraInput.FLYCAM_ZOOMIN,
@@ -211,12 +211,12 @@ public class FlyByCamera implements AnalogListener, ActionListener {
                                 new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
 
         // keyboard only WASD for movement and WZ for rise/lower height
-        inputManager.addMapping(CameraInput.FLYCAM_STRAFELEFT, new KeyTrigger(KeyInput.KEY_A));
-        inputManager.addMapping(CameraInput.FLYCAM_STRAFERIGHT, new KeyTrigger(KeyInput.KEY_D));
-        inputManager.addMapping(CameraInput.FLYCAM_FORWARD, new KeyTrigger(KeyInput.KEY_W));
-        inputManager.addMapping(CameraInput.FLYCAM_BACKWARD, new KeyTrigger(KeyInput.KEY_S));
-        inputManager.addMapping(CameraInput.FLYCAM_RISE, new KeyTrigger(KeyInput.KEY_Q));
-        inputManager.addMapping(CameraInput.FLYCAM_LOWER, new KeyTrigger(KeyInput.KEY_Z));
+        inputManager.addMapping(CameraInput.FLYCAM_STRAFELEFT, new KeyTrigger(KeyboardKey.KEY_A));
+        inputManager.addMapping(CameraInput.FLYCAM_STRAFERIGHT, new KeyTrigger(KeyboardKey.KEY_D));
+        inputManager.addMapping(CameraInput.FLYCAM_FORWARD, new KeyTrigger(KeyboardKey.KEY_W));
+        inputManager.addMapping(CameraInput.FLYCAM_BACKWARD, new KeyTrigger(KeyboardKey.KEY_S));
+        inputManager.addMapping(CameraInput.FLYCAM_RISE, new KeyTrigger(KeyboardKey.KEY_Q));
+        inputManager.addMapping(CameraInput.FLYCAM_LOWER, new KeyTrigger(KeyboardKey.KEY_Z));
 
         inputManager.addListener(this, mappings);
         inputManager.setCursorVisible(dragToRotate || !isEnabled());

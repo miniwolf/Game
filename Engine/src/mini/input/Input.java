@@ -4,7 +4,6 @@ package mini.input;
  * Abstract interface for an input device.
  *
  * @see MouseInput
- * @see KeyInput
  * @see JoyInput
  */
 public interface Input {

@@ -1,18 +1,20 @@
 package mini.input.controls;
 
+import mini.input.KeyboardKey;
+
 /**
  * A <code>KeyTrigger</code> is used as a mapping to keyboard keys.
  */
 public class KeyTrigger implements Trigger {
 
-    private final int keyCode;
+    private final KeyboardKey keyCode;
 
     /**
      * Create a new <code>KeyTrigger</code> for the given keycode.
      *
      * @param keyCode the code for the key, see constants in {@link KeyInput}.
      */
-    public KeyTrigger(int keyCode) {
+    public KeyTrigger(KeyboardKey keyCode) {
         this.keyCode = keyCode;
     }
 
@@ -26,11 +28,11 @@ public class KeyTrigger implements Trigger {
     }
 
     public int getKeyCode() {
-        return keyCode;
+        return keyCode.getValue();
     }
 
     public int triggerHashCode() {
-        return keyHash(keyCode);
+        return keyCode.getValue();
     }
 
 }

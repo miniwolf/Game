@@ -3,7 +3,6 @@ package mini.input;
 import mini.input.controls.ActionListener;
 import mini.input.controls.AnalogListener;
 import mini.input.controls.InputListener;
-import mini.input.controls.KeyTrigger;
 import mini.input.controls.MouseAxisTrigger;
 import mini.input.controls.MouseButtonTrigger;
 import mini.input.controls.Trigger;
@@ -57,7 +56,7 @@ import java.util.Map;
  * will equal the actual analog value.
  */
 public class InputManager implements RawInputListener {
-    private final KeyInput keys;
+    private final Input keys;
     private final MouseInput mouse;
     private float frameTPF;
     private long lastLastUpdateTime = 0;
@@ -98,7 +97,7 @@ public class InputManager implements RawInputListener {
      * @param touch
      * @throws IllegalArgumentException If either mouseInput or keyInput are null.
      */
-    public InputManager(MouseInput mouse, KeyInput keys) {
+    public InputManager(MouseInput mouse, Input keys) {
         if (keys == null || mouse == null) {
             throw new IllegalArgumentException("Mouse or keyboard cannot be null");
         }
@@ -314,9 +313,8 @@ public class InputManager implements RawInputListener {
             return; // repeat events not used for bindings
         }
 
-        int hash = KeyTrigger.keyHash(evt.getKeyCode());
-        invokeActions(hash, evt.isPressed());
-        invokeTimedActions(hash, evt.getTime(), evt.isPressed());
+        invokeActions(evt.getKey().getValue(), evt.isPressed());
+        invokeTimedActions(evt.getKey().getValue(), evt.getTime(), evt.isPressed());
     }
 
     /**
@@ -614,9 +612,8 @@ public class InputManager implements RawInputListener {
 
     private void processQueue() {
         int queueSize = inputQueue.size();
-        RawInputListener[] array;
-        array = rawListeners.size() == 0 ? new RawInputListener[]{} :
-                (RawInputListener[]) rawListeners.toArray();
+        RawInputListener[] array = new RawInputListener[rawListeners.size()];
+        array = rawListeners.toArray(array);
 
 
         for (RawInputListener listener : array) {

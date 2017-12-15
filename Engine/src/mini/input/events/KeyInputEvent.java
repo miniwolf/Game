@@ -1,17 +1,17 @@
 package mini.input.events;
 
+import mini.input.KeyboardKey;
+
 /**
  * Keyboard key event.
  */
 public class KeyInputEvent extends InputEvent {
-    private int keyCode;
-    private char keyChar;
+    private KeyboardKey keyCode;
     private boolean pressed;
     private boolean repeating;
 
-    public KeyInputEvent(int keyCode, char keyChar, boolean pressed, boolean repeating) {
+    public KeyInputEvent(KeyboardKey keyCode, boolean pressed, boolean repeating) {
         this.keyCode = keyCode;
-        this.keyChar = keyChar;
         this.pressed = pressed;
         this.repeating = repeating;
     }
@@ -22,7 +22,7 @@ public class KeyInputEvent extends InputEvent {
      * @return the key character. 0 if the key has no character.
      */
     public char getKeyChar() {
-        return keyChar;
+        return keyCode.getCharValue();
     }
 
     /**
@@ -32,7 +32,7 @@ public class KeyInputEvent extends InputEvent {
      *
      * @return key code.
      */
-    public int getKeyCode() {
+    public KeyboardKey getKey() {
         return keyCode;
     }
 
@@ -65,10 +65,7 @@ public class KeyInputEvent extends InputEvent {
 
     @Override
     public String toString() {
-        String str = "Key(CODE=" + keyCode;
-        if (keyChar != '\0') {
-            str = str + ", CHAR=" + keyChar;
-        }
+        String str = "Key(" + keyCode;
 
         if (repeating) {
             return str + ", REPEATING)";

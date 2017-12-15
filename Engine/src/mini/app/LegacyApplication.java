@@ -3,8 +3,8 @@ package mini.app;
 import mini.app.state.ApplicationState;
 import mini.app.state.ApplicationStateManager;
 import mini.asset.AssetManager;
+import mini.input.Input;
 import mini.input.InputManager;
-import mini.input.KeyInput;
 import mini.input.MouseInput;
 import mini.math.Vector3f;
 import mini.renderer.Camera;
@@ -43,7 +43,7 @@ public class LegacyApplication implements Application, SystemListener {
     protected float speed = 1f;
     protected boolean paused = false;
     protected MouseInput mouseInput;
-    protected KeyInput keyInput;
+    protected Input keyInput;
     protected InputManager inputManager;
     protected AssetManager assetManager;
     protected ApplicationStateManager stateManager;
@@ -343,6 +343,7 @@ public class LegacyApplication implements Application, SystemListener {
     public void handleError(String errMsg, Throwable t) {
         // Print error to log.
         System.err.println(errMsg + t.getMessage());
+        t.printStackTrace();
         // Display error message on screen if not in headless mode
         if (t != null) {
             ApplicationSystem.showErrorDialog(errMsg + "\n" + t.getClass().getSimpleName() +
