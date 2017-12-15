@@ -2,6 +2,8 @@ package mini.asset;
 
 import mini.asset.cache.AssetCache;
 import mini.asset.plugins.ClasspathLocator;
+import mini.font.BitmapFont;
+import mini.font.plugins.BitmapFontLoader;
 import mini.material.Material;
 import mini.material.plugins.MiniLoader;
 import mini.material.plugins.ShaderNodeDefinitionLoader;
@@ -28,6 +30,7 @@ public class AssetManager {
         registerLoader(GLSLLoader.class, "frag", "vert", "glsl", "glsllib");
         registerLoader(ShaderNodeDefinitionLoader.class, "minisn");
         registerLoader(MTLLoader.class, "mtl");
+        registerLoader(BitmapFontLoader.class, "fnt");
         registerLocator(ClasspathLocator.class, "/");
     }
 
@@ -146,5 +149,9 @@ public class AssetManager {
 
     public Material loadMaterial(String name) {
         return loadAsset(new MaterialKey(name));
+    }
+
+    public BitmapFont loadFont(String name) {
+        return loadAsset(new AssetKey<>(name));
     }
 }

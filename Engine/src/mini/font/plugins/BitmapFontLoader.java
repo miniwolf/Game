@@ -1,7 +1,9 @@
 package mini.font.plugins;
 
-import mini.asset.FontKey;
-import mini.asset.MaterialKey;
+import mini.asset.AssetInfo;
+import mini.asset.AssetKey;
+import mini.asset.AssetLoader;
+import mini.asset.AssetManager;
 import mini.asset.TextureKey;
 import mini.font.BitmapCharacter;
 import mini.font.BitmapCharacterSet;
@@ -9,36 +11,21 @@ import mini.font.BitmapFont;
 import mini.material.Material;
 import mini.material.MaterialDef;
 import mini.material.RenderState;
-import mini.material.plugins.MiniLoader;
 import mini.textures.Texture;
-import mini.textures.plugins.AWTLoader;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-public class BitmapFontLoader {
-    public static BitmapFont loadFont(FontKey fontKey) {
-        InputStream in = fontKey.getFile().getInputStream();
-        BitmapFontLoader loader = new BitmapFontLoader();
-        BitmapFont load = null;
-        try {
-            load = loader.load(fontKey.getFile().getDirectory(), in);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return load;
-    }
-
-    public BitmapFont load(String folder, InputStream in) throws IOException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+public class BitmapFontLoader implements AssetLoader<BitmapFont> {
+    public BitmapFont load(AssetManager manager, String folder, InputStream in) throws IOException {
         BitmapCharacterSet charSet = new BitmapCharacterSet();
         Material[] matPages = null;
-        MaterialDef spriteMat = (MaterialDef) MiniLoader
-                .load(new MaterialKey("MatDefs/Misc/Unshaded.minid"));
+        MaterialDef spriteMat = manager.loadAsset(new AssetKey<>("MatDefs/Misc/Unshaded.minid"));
         BitmapFont font = new BitmapFont();
 
+        BufferedReader reader = new BufferedReader(new InputStreamReader(in));
         String regex = "[\\s=]+";
         font.setCharSet(charSet);
         String line;
@@ -94,7 +81,7 @@ public class BitmapFontLoader {
                 }
             } else if ("page".equals(tokens[0])) {
                 Texture tex = null;
-                int index = 0;
+                int index = -1;
                 for (int i = 1; i < tokens.length; i++) {
                     String token = tokens[i];
                     if ("id".equals(token)) {
@@ -106,13 +93,17 @@ public class BitmapFontLoader {
                         }
                         TextureKey key = new TextureKey(folder + file, true);
                         key.setGenerateMips(false);
-                        tex = (Texture) AWTLoader.load(key);
+                        tex = manager.loadTexture(key);
                         tex.setMagFilter(Texture.MagFilter.Bilinear);
                         tex.setMinFilter(Texture.MinFilter.BilinearNoMipMaps);
                     }
                 }
 
                 // setup page
+                if (index < 0 || tex == null) {
+                    continue;
+                }
+
                 Material mat = new Material(spriteMat);
                 mat.setTexture("ColorMap", tex);
                 mat.setBoolean("VertexColor", true);
@@ -120,8 +111,22 @@ public class BitmapFontLoader {
                 matPages[index] = mat;
             } else if ("kerning".equals(tokens[0])) {
                 // TODO: Build kerning lists
+                throw new UnsupportedOperationException();
             }
         }
         return font;
+    }
+
+    @Override
+    public BitmapFont load(AssetInfo assetInfo) throws IOException {
+        InputStream in = null;
+        try {
+            in = assetInfo.openStream();
+            return load(assetInfo.getManager(), assetInfo.getKey().getFolder(), in);
+        } finally {
+            if (in != null) {
+                in.close();
+            }
+        }
     }
 }
