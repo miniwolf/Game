@@ -807,8 +807,7 @@ public class MiniLoader implements AssetLoader {
 
     public Object load(AssetInfo info) throws IOException {
         this.assetManager = info.getManager();
-        InputStream in = info.openStream();
-        try {
+        try (InputStream in = info.openStream()) {
             key = info.getKey();
 //            if (key.getExtension().equals("mini") && !(key instanceof MaterialKey)) {
 //                throw new IOException("Material instances must be loaded via MaterialKey");
@@ -816,11 +815,6 @@ public class MiniLoader implements AssetLoader {
 //                throw new IOException("Material definitions must be loaded via AssetKey");
 //            }
             loadFromRoot(BlockLanguageParser.parse(in));
-
-        } finally {
-            if (in != null) {
-                in.close();
-            }
         }
 
         if (material != null) {

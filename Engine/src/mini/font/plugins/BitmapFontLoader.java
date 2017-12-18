@@ -119,14 +119,8 @@ public class BitmapFontLoader implements AssetLoader<BitmapFont> {
 
     @Override
     public BitmapFont load(AssetInfo assetInfo) throws IOException {
-        InputStream in = null;
-        try {
-            in = assetInfo.openStream();
+        try (InputStream in = assetInfo.openStream()) {
             return load(assetInfo.getManager(), assetInfo.getKey().getFolder(), in);
-        } finally {
-            if (in != null) {
-                in.close();
-            }
         }
     }
 }

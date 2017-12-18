@@ -15,6 +15,8 @@ import mini.math.Quaternion;
 import mini.math.Transform;
 import mini.math.Vector3f;
 import mini.renderer.Camera;
+import mini.renderer.RenderManager;
+import mini.renderer.ViewPort;
 import mini.renderer.queue.RenderQueue;
 import mini.scene.control.Control;
 import mini.utils.TempVars;
@@ -705,6 +707,65 @@ public abstract class Spatial implements Cloneable, CloneableSmartAsset, Collida
     }
 
     /**
+     * Called when the Spatial is about to be rendered, to notify controls attached to this Spatial
+     * using the Control.render() method.
+     *
+     * @param renderManager The RenderManager rendering this Spatial.
+     * @param vp            The ViewPort to which the Spatial is being rendered to.
+     * @see Spatial#addControl(Control)
+     * @see Spatial#removeControl(Control)
+     */
+    public void runControlRender(RenderManager renderManager, ViewPort vp) {
+        if (controls.isEmpty()) {
+            return;
+        }
+
+        for (Control control : controls) {
+            control.render(renderManager, vp);
+        }
+    }
+
+    /**
+     * Add a control to the list of controls.
+     *
+     * @param control The control to add.
+     * @see Spatial#
+     */
+    public void addControl(Control control) {
+        boolean before = requiresUpdates();
+        controls.add(control);
+        control.setSpatial(this);
+        boolean after = requiresUpdates();
+        // If the requirement to be updated has changed then we need to let the parent know so it
+        // can rebuild its update list.
+        if (parent != null && before != after) {
+            parent.invalidateUpdateList();
+        }
+    }
+
+    /**
+     * Removes the given control from this spatial's controls.
+     *
+     * @param control The control to remove
+     */
+    public boolean removeControl(Control control) {
+        boolean before = requiresUpdates();
+        boolean result = controls.remove(control);
+        if (result) {
+            control.setSpatial(null);
+        }
+
+        boolean after = requiresUpdates();
+        // If the requirement to be updated has changed then we need to let the parent know so it
+        // can rebuild its update list.
+        if (parent != null && before != after) {
+            parent.invalidateUpdateList();
+        }
+
+        return result;
+    }
+
+    /**
      * <code>updateLogicalState</code> call the <code>update()</code> method for all controls
      * attached to this <code>Spatial</code>.
      *
@@ -1037,6 +1098,17 @@ public abstract class Spatial implements Cloneable, CloneableSmartAsset, Collida
         vars.release();
 
         return this;
+    }
+
+    /**
+     * Centers the spatial in the origin of the world bound.
+     */
+    public void center() {
+        Vector3f worldTranslation = getWorldTranslation();
+        Vector3f worldCenter = getWorldBound().getCenter();
+
+        Vector3f absTranslation = worldTranslation.subtract(worldCenter);
+        setLocalTranslation(absTranslation);
     }
 
     /**

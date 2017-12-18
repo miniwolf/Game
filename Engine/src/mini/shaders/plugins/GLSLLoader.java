@@ -25,18 +25,21 @@ public class GLSLLoader implements AssetLoader {
     public Object load(AssetInfo info) {
         // The input stream provided is for the vertex shader,
         // to retrieve the fragment shader, use the content manager
-        Reader reader = new InputStreamReader(info.openStream());
-        if (info.getKey().getExtension().equals("glsllib")) {
-            // NOTE: Loopback, GLSLLIB is loaded by this loader
-            // and needs data as InputStream
-            return reader;
-        } else {
-            ShaderDependencyNode rootNode = loadNode(reader, "[main]");
-            StringBuilder extensions = new StringBuilder();
-            String code = resolveDependencies(rootNode, new HashSet<>(), extensions);
-            extensions.append(code);
-            dependCache.clear();
-            return extensions.toString();
+        try (Reader reader = new InputStreamReader(info.openStream())) {
+            if (info.getKey().getExtension().equals("glsllib")) {
+                // NOTE: Loopback, GLSLLIB is loaded by this loader
+                // and needs data as InputStream
+                return reader;
+            } else {
+                ShaderDependencyNode rootNode = loadNode(reader, "[main]");
+                StringBuilder extensions = new StringBuilder();
+                String code = resolveDependencies(rootNode, new HashSet<>(), extensions);
+                extensions.append(code);
+                dependCache.clear();
+                return extensions.toString();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

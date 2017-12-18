@@ -11,7 +11,7 @@ import java.io.InputStream;
 import java.util.List;
 
 /**
- * ShaderNodeDefnition file loader (.j3sn)
+ * ShaderNodeDefnition file loader (.minisn)
  * <p>
  * a minisn file is a block style file like minid or mini. It must contain one
  * ShaderNodeDefinition{} block that contains several ShaderNodeDefinition{}
@@ -21,9 +21,11 @@ public class ShaderNodeDefinitionLoader implements AssetLoader {
 
     public Object load(AssetInfo info) throws IOException {
         ShaderNodeLoaderDelegate loaderDelegate = new ShaderNodeLoaderDelegate();
+        List<Statement> roots;
 
-        InputStream in = info.openStream();
-        List<Statement> roots = BlockLanguageParser.parse(in);
+        try (InputStream in = info.openStream()) {
+            roots = BlockLanguageParser.parse(in);
+        }
 
         if (roots.size() == 2) {
             Statement exception = roots.get(0);

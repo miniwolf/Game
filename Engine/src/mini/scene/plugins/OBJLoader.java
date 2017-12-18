@@ -88,18 +88,11 @@ public final class OBJLoader implements AssetLoader {
 
         objNode = new Node(objName + "-objnode");
 
-        InputStream in = null;
-        try {
-            in = info.openStream();
-
+        try (InputStream in = info.openStream()) {
             scan = new Scanner(in);
             scan.useLocale(Locale.US);
 
             while (readLine()) {
-            }
-        } finally {
-            if (in != null) {
-                in.close();
             }
         }
 

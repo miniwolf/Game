@@ -103,10 +103,18 @@ public class MTLLoader implements AssetLoader {
             material.setColor("Specular", specular.clone());
             material.setFloat("Shininess", shininess); // prevents "premature culling" bug
 
-            if (diffuseMap != null) material.setTexture("DiffuseMap", diffuseMap);
-            if (specularMap != null) material.setTexture("SpecularMap", specularMap);
-            if (normalMap != null) material.setTexture("NormalMap", normalMap);
-            if (alphaMap != null) material.setTexture("AlphaMap", alphaMap);
+            if (diffuseMap != null) {
+                material.setTexture("DiffuseMap", diffuseMap);
+            }
+            if (specularMap != null) {
+                material.setTexture("SpecularMap", specularMap);
+            }
+            if (normalMap != null) {
+                material.setTexture("NormalMap", normalMap);
+            }
+            if (alphaMap != null) {
+                material.setTexture("AlphaMap", alphaMap);
+            }
         }
 
         if (transparent) {
@@ -258,18 +266,11 @@ public class MTLLoader implements AssetLoader {
         folderName = key.getFolder();
         matList = new HashMap<>();
 
-        InputStream in = null;
-        try {
-            in = info.openStream();
+        try (InputStream in = info.openStream()) {
             scan = new Scanner(in);
             scan.useLocale(Locale.US);
 
             while (readLine()) {
-                ;
-            }
-        } finally {
-            if (in != null) {
-                in.close();
             }
         }
 

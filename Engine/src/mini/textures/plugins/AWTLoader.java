@@ -111,25 +111,20 @@ public class AWTLoader implements AssetLoader {
     }
 
     public Object load(AssetInfo info) throws IOException {
-        if (ImageIO.getImageReadersBySuffix(info.getKey().getExtension()) != null) {
-            InputStream in = null;
-            try {
-                boolean flipY = ((TextureKey) info.getKey()).isFlipY();
-                in = info.openStream();
-                Image img = load(in, flipY);
-                if (img == null) {
-                    throw new AssetLoadException("The given image cannot be loaded "
-                                                 + info.getKey().getName());
-                }
-                return img;
-            } finally {
-                if (in != null) {
-                    in.close();
-                }
-            }
-        } else {
+        if (ImageIO.getImageReadersBySuffix(info.getKey().getExtension()) == null) {
             throw new AssetLoadException("The extension " + info.getKey().getExtension()
                                          + " is not supported");
+        }
+
+        try (InputStream in = info.openStream()) {
+            boolean flipY = ((TextureKey) info.getKey()).isFlipY();
+
+            Image img = load(in, flipY);
+            if (img == null) {
+                throw new AssetLoadException("The given image cannot be loaded "
+                                             + info.getKey().getName());
+            }
+            return img;
         }
     }
 

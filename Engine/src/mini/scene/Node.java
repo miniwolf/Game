@@ -179,6 +179,21 @@ public class Node extends Spatial {
     }
 
     @Override
+    public void updateLogicalState(float tpf) {
+        super.updateLogicalState(tpf);
+
+        // Only perform updates on children if we are the root and then only perform updates on
+        // children we know require updates.
+        if (parent != null) {
+            return;
+        }
+
+        for (Spatial spatial : getUpdateList()) {
+            spatial.updateLogicalState(tpf);
+        }
+    }
+
+    @Override
     public void updateGeometricState() {
         if (refreshFlags == 0) {
             // This branch has no geometric state that requires updates.

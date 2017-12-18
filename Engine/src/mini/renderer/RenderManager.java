@@ -659,7 +659,7 @@ public class RenderManager {
             return;
         }
 
-        //scene.runControlRender(this, vp);
+        scene.runControlRender(this, vp);
         if (scene instanceof Node) {
             // Recurse for all children
             Node n = (Node) scene;
