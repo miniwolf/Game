@@ -185,8 +185,18 @@ public abstract class Spatial implements Cloneable, CloneableSmartAsset, Collida
     }
 
     @Override
+    /**
+     * Note that meshes of geometries are not cloned explicitly, they are shared if static, or
+     * specially cloned if animated.
+     * <p>
+     * All controls will be cloned using the Control.cloneForSpatial method on the clone.
+     *
+     * @return A clone of this Spatial, the scene graph in its entirety is cloned and can be altered
+     * independently of the original scene graph.     *
+     * @see Mesh#cloneForAnim()
+     */
     public Object clone() {
-        return null;
+        return clone(true);
     }
 
     @Override

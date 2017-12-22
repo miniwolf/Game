@@ -3,10 +3,15 @@ package mini.utils.clone;
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.Stack;
+import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -69,6 +74,15 @@ public class Cloner {
      */
     private static final Map<Class, Method> methodCache = new ConcurrentHashMap<>();
     private Map<Class, CloneFunction> functions = new HashMap<>();
+
+    public Cloner() {
+        ListCloneFunction listFunction = new ListCloneFunction();
+        functions.put(ArrayList.class, listFunction);
+        functions.put(LinkedList.class, listFunction);
+        functions.put(CopyOnWriteArrayList.class, listFunction);
+        functions.put(Stack.class, listFunction);
+        functions.put(Vector.class, listFunction);
+    }
 
     /**
      * Convenience utility function that creates a new Cloner, uses it to
@@ -189,7 +203,7 @@ public class Cloner {
      * @return a previously registered clone function for the specified type or null if there is no
      * custom clone function for the type.
      */
-    private <T> CloneFunction<T> getCloneFunction(Class<T> type) {
+    public <T> CloneFunction<T> getCloneFunction(Class<T> type) {
         CloneFunction<T> cloneFunction = (CloneFunction<T>) functions.get(type);
         if (cloneFunction != null) {
             return cloneFunction;

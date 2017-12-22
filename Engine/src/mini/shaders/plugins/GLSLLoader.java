@@ -40,6 +40,7 @@ public class GLSLLoader implements AssetLoader {
             }
         } catch (IOException e) {
             e.printStackTrace();
+            return null;
         }
     }
 
