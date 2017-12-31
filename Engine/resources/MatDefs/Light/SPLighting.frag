@@ -18,7 +18,12 @@ varying vec3 SpecularSum;
 #ifndef VERTEX_LIGHTING
     uniform mat4 g_ViewMatrix;
     uniform vec4 g_LightData[NB_LIGHTS];
-    varying vec3 vPos; 
+    #ifdef VOXELIZATION
+        in vec3 gPos;
+        uniform image3D m_Texture3D;
+    #else
+        in vec3 vPos;
+    #endif
 #endif
 
 #ifdef DIFFUSEMAP
@@ -44,7 +49,7 @@ varying vec3 SpecularSum;
   uniform sampler2D m_NormalMap;   
   varying vec4 vTangent;
 #endif
-varying vec3 vNormal;
+in vec3 vNormal;
 
 #ifdef ALPHAMAP
   uniform sampler2D m_AlphaMap;
@@ -68,6 +73,10 @@ uniform float m_Shininess;
     #endif
 #endif
 
+#ifdef VOXELIZATION
+vec3 scaleAndBias(vec3 p) { return 0.5f * p + vec3(0.5f); }
+#endif
+
 void main(){
     #if !defined(VERTEX_LIGHTING)
         #if defined(NORMALMAP)
@@ -80,45 +89,44 @@ void main(){
 
             vec3 viewDir = normalize(-vPos.xyz * tbnMat);
         #else
-            vec3 viewDir = normalize(-vPos.xyz);
+            vec3 viewDir = normalize(-gPos.xyz);
         #endif
     #endif
 
     vec2 newTexCoord;
      
-    #if (defined(PARALLAXMAP) || (defined(NORMALMAP_PARALLAX) && defined(NORMALMAP))) && !defined(VERTEX_LIGHTING) 
-     
-       #ifdef STEEP_PARALLAX
-           #ifdef NORMALMAP_PARALLAX
-               //parallax map is stored in the alpha channel of the normal map         
-               newTexCoord = steepParallaxOffset(m_NormalMap, viewDir, texCoord, m_ParallaxHeight);
-           #else
-               //parallax map is a texture
-               newTexCoord = steepParallaxOffset(m_ParallaxMap, viewDir, texCoord, m_ParallaxHeight);         
-           #endif
-       #else
-           #ifdef NORMALMAP_PARALLAX
-               //parallax map is stored in the alpha channel of the normal map         
-               newTexCoord = classicParallaxOffset(m_NormalMap, viewDir, texCoord, m_ParallaxHeight);
-           #else
-               //parallax map is a texture
-               newTexCoord = classicParallaxOffset(m_ParallaxMap, viewDir, texCoord, m_ParallaxHeight);
-           #endif
-       #endif
+    #if (defined(PARALLAXMAP) || (defined(NORMALMAP_PARALLAX) && defined(NORMALMAP))) && !defined(VERTEX_LIGHTING)
+        #ifdef STEEP_PARALLAX
+            #ifdef NORMALMAP_PARALLAX
+                //parallax map is stored in the alpha channel of the normal map
+                newTexCoord = steepParallaxOffset(m_NormalMap, viewDir, texCoord, m_ParallaxHeight);
+            #else
+                //parallax map is a texture
+                newTexCoord = steepParallaxOffset(m_ParallaxMap, viewDir, texCoord, m_ParallaxHeight);
+            #endif
+        #else
+            #ifdef NORMALMAP_PARALLAX
+                //parallax map is stored in the alpha channel of the normal map
+                newTexCoord = classicParallaxOffset(m_NormalMap, viewDir, texCoord, m_ParallaxHeight);
+            #else
+                //parallax map is a texture
+                newTexCoord = classicParallaxOffset(m_ParallaxMap, viewDir, texCoord, m_ParallaxHeight);
+            #endif
+        #endif
     #else
-       newTexCoord = texCoord;    
+        newTexCoord = texCoord;
     #endif
     
-   #ifdef DIFFUSEMAP
-      vec4 diffuseColor = texture2D(m_DiffuseMap, newTexCoord);
+    #ifdef DIFFUSEMAP
+        vec4 diffuseColor = texture2D(m_DiffuseMap, newTexCoord);
     #else
-      vec4 diffuseColor = vec4(1.0);
+        vec4 diffuseColor = vec4(1.0);
     #endif
 
     float alpha = DiffuseSum.a * diffuseColor.a;
 
     #ifdef ALPHAMAP
-       alpha = alpha * texture2D(m_AlphaMap, newTexCoord).r;
+        alpha = alpha * texture2D(m_AlphaMap, newTexCoord).r;
     #endif
 
     #ifdef DISCARD_ALPHA
@@ -131,42 +139,40 @@ void main(){
     // Read from textures
     // ***********************
     #if defined(NORMALMAP) && !defined(VERTEX_LIGHTING)
-      vec4 normalHeight = texture2D(m_NormalMap, newTexCoord);
-      //Note the -2.0 and -1.0. We invert the green channel of the normal map, 
-      //as it's complient with normal maps generated with blender.
-      vec3 normal = normalize((normalHeight.xyz * vec3(2.0,-2.0,2.0) - vec3(1.0,-1.0,1.0)));
+        vec4 normalHeight = texture2D(m_NormalMap, newTexCoord);
+        //Note the -2.0 and -1.0. We invert the green channel of the normal map,
+        //as it's complient with normal maps generated with blender.
+        vec3 normal = normalize((normalHeight.xyz * vec3(2.0,-2.0,2.0) - vec3(1.0,-1.0,1.0)));
     #elif !defined(VERTEX_LIGHTING)
-      vec3 normal = normalize(vNormal); 
+        vec3 normal = normalize(vNormal);
 
-      if (!gl_FrontFacing)
-      {
+        if (!gl_FrontFacing) {
           normal = -normal;
-      }           
+        }
     #endif
 
     #ifdef SPECULARMAP
-      vec4 specularColor = texture2D(m_SpecularMap, newTexCoord);
+        vec4 specularColor = texture2D(m_SpecularMap, newTexCoord);
     #else
-      vec4 specularColor = vec4(1.0);
+        vec4 specularColor = vec4(1.0);
     #endif
 
     #ifdef LIGHTMAP
-       vec3 lightMapColor;
-       #ifdef SEPARATE_TEXCOORD
-          lightMapColor = texture2D(m_LightMap, texCoord2).rgb;
-       #else
-          lightMapColor = texture2D(m_LightMap, texCoord).rgb;
-       #endif
-       specularColor.rgb *= lightMapColor;
-       diffuseColor.rgb  *= lightMapColor;
+        vec3 lightMapColor;
+        #ifdef SEPARATE_TEXCOORD
+            lightMapColor = texture2D(m_LightMap, texCoord2).rgb;
+        #else
+            lightMapColor = texture2D(m_LightMap, texCoord).rgb;
+        #endif
+        specularColor.rgb *= lightMapColor;
+        diffuseColor.rgb  *= lightMapColor;
     #endif
 
     #ifdef VERTEX_LIGHTING
         gl_FragColor.rgb = AmbientSum.rgb  * diffuseColor.rgb 
                          + DiffuseSum.rgb  * diffuseColor.rgb
                          + SpecularSum.rgb * specularColor.rgb;                         
-    #else       
-        
+    #else
         int i = 0;
         gl_FragColor.rgb = AmbientSum * diffuseColor.rgb;
 
@@ -174,17 +180,17 @@ void main(){
              vec4 refColor = Optics_GetEnvColor(m_EnvMap, refVec.xyz);
         #endif
 
-        for( int i = 0;i < NB_LIGHTS; i+=3){
+        for (int i = 0;i < NB_LIGHTS; i+=3) {
             vec4 lightColor = g_LightData[i];
-            vec4 lightData1 = g_LightData[i+1];                
+            vec4 lightData1 = g_LightData[i+1];
             vec4 lightDir;
-            vec3 lightVec;            
-            lightComputeDir(vPos, lightColor.w, lightData1, lightDir,lightVec);
+            vec3 lightVec;
+            lightComputeDir(gPos, lightColor.w, lightData1, lightDir,lightVec);
 
             float spotFallOff = 1.0;
             #if __VERSION__ >= 110
                 // allow use of control flow
-            if(lightColor.w > 1.0){
+            if (lightColor.w > 1.0) {
             #endif
                 spotFallOff =  computeSpotFalloff(g_LightData[i+2], lightVec);
             #if __VERSION__ >= 110
@@ -222,7 +228,12 @@ void main(){
             gl_FragColor.rgb += DiffuseSum2.rgb   * lightColor.rgb * diffuseColor.rgb  * vec3(light.x) +
                                 SpecularSum2.rgb * lightColor.rgb * specularColor.rgb * vec3(light.y);
         }
-           
-     #endif
+    #endif
     gl_FragColor.a = alpha;
+
+    #ifdef VOXELIZATION
+        vec3 voxel = scaleAndBias(gPos);
+        ivec3 dim = imageSize(m_Texture3D);
+        imageStore(m_Texture3D, ivec3(dim * voxel), gl_FragColor);
+    #endif
 }

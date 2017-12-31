@@ -79,6 +79,8 @@ attribute vec3 inNormal;
 void main(){
    vec4 modelSpacePos = vec4(inPosition, 1.0);
    vec3 modelSpaceNorm = inNormal;
+
+
    
    #if  defined(NORMALMAP) && !defined(VERTEX_LIGHTING)
         vec3 modelSpaceTan  = inTangent.xyz;

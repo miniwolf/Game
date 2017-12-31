@@ -90,6 +90,8 @@ MaterialDef Phong Lighting {
         Texture2D ShadowMap4
         Texture2D ShadowMap5
 
+        Texture3D Texture3D
+
         Float ShadowIntensity
         Vector4f Splits
         Vector2f FadeInfo
@@ -115,6 +117,8 @@ MaterialDef Phong Lighting {
         Boolean UseInstancing
 
         Boolean BackfaceShadows : false
+
+        Boolean Voxelization : false
     }
 
     Technique {
@@ -191,6 +195,46 @@ MaterialDef Phong Lighting {
             SPHERE_MAP : EnvMapAsSphereMap
             NUM_BONES : NumberOfBones
             INSTANCING : UseInstancing
+        }
+    }
+
+    Technique Voxelization {
+        LightMode SinglePass
+
+        VertexShader GLSL100 GLSL150:   MatDefs/Light/SPLighting.vert
+        GeometryShader GLSL330 GLSL330: MatDefs/Voxelization/Voxelization.geom
+        FragmentShader GLSL430 GLSL430: MatDefs/Light/SPLighting.frag
+
+        WorldParameters {
+            WorldViewProjectionMatrix
+            NormalMatrix
+            WorldViewMatrix
+            ViewMatrix
+            CameraPosition
+            WorldMatrix
+            ViewProjectionMatrix
+        }
+
+        Defines {
+            VERTEX_COLOR : UseVertexColor
+            VERTEX_LIGHTING : VertexLighting
+            MATERIAL_COLORS : UseMaterialColors
+            DIFFUSEMAP : DiffuseMap
+            NORMALMAP : NormalMap
+            SPECULARMAP : SpecularMap
+            PARALLAXMAP : ParallaxMap
+            NORMALMAP_PARALLAX : PackedNormalParallax
+            STEEP_PARALLAX : SteepParallax
+            ALPHAMAP : AlphaMap
+            COLORRAMP : ColorRamp
+            LIGHTMAP : LightMap
+            SEPARATE_TEXCOORD : SeparateTexCoord
+            DISCARD_ALPHA : AlphaDiscardThreshold
+            USE_REFLECTION : EnvMap
+            SPHERE_MAP : EnvMapAsSphereMap
+            NUM_BONES : NumberOfBones
+            INSTANCING : UseInstancing
+            VOXELIZATION : Voxelization
         }
     }
 
