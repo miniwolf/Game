@@ -31,10 +31,22 @@ public class WeakRefCloneAssetCache implements AssetCache {
         if (!loadStack.isEmpty()) {
             throw new UnsupportedOperationException(
                     "Cache cannot be modified while assets are being"
-                    + " loaded");
+                            + " loaded");
         }
 
         return smartCache.remove(key) != null;
+    }
+
+    @Override
+    public void clearCache() {
+        List<AssetKey> loadStack = assetLoadStack.get();
+
+        if (!loadStack.isEmpty()) {
+            throw new UnsupportedOperationException("Cache cannot be modified"
+                    + "while assets are being loaded");
+        }
+
+        smartCache.clear();
     }
 
     private final ConcurrentMap<AssetKey, AssetRef> smartCache = new ConcurrentHashMap<>();
@@ -95,8 +107,8 @@ public class WeakRefCloneAssetCache implements AssetCache {
          * Creates a new phantom reference that refers to the given object and
          * is registered with the given queue.
          *
-         * @param referent the object the new phantom reference will refer to
-         * @param q        the queue with which the reference is to be registered,
+         * @param originalKey    the object the new phantom reference will refer to
+         * @param referenceQueue the queue with which the reference is to be registered,
          */
         public KeyRef(AssetKey originalKey, ReferenceQueue<? super AssetKey> referenceQueue) {
             super(originalKey, referenceQueue);

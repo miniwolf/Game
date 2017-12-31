@@ -1132,8 +1132,6 @@ public final class GLRenderer implements Renderer {
             }
 
             source.setId(id);
-        } else {
-            throw new RendererException("Cannot recompile shader source");
         }
 
         boolean gles2 = caps.contains(Caps.OpenGLES20);
@@ -1580,8 +1578,7 @@ public final class GLRenderer implements Renderer {
 
     public void updateFrameBuffer(FrameBuffer fb) {
         if (fb.getNumColorBuffers() == 0 && fb.getDepthBuffer() == null) {
-            throw new IllegalArgumentException("The framebuffer: " + fb
-                                               + "\nDoesn't have any color/depth buffers");
+            throw new IllegalArgumentException("The framebuffer: " + fb + "\nDoesn't have any color/depth buffers");
         }
 
         int id = fb.getId();
@@ -1731,13 +1728,10 @@ public final class GLRenderer implements Renderer {
             for (int i = 0; i < context.boundFB.getNumColorBuffers(); i++) {
                 FrameBuffer.RenderBuffer rb = context.boundFB.getColorBuffer(i);
                 Texture tex = rb.getTexture();
-                if (tex != null
-                    && tex.getMinFilter().usesMipMapLevels()) {
+                if (tex != null && tex.getMinFilter().usesMipMapLevels()) {
                     setTexture(0, rb.getTexture());
 
-                    int textureType = convertTextureType(tex.getType(),
-                                                         tex.getImage().getMultiSamples(),
-                                                         rb.getFace());
+                    int textureType = convertTextureType(tex.getType(), tex.getImage().getMultiSamples(), rb.getFace());
                     glfbo.glGenerateMipmapEXT(textureType);
                 }
             }

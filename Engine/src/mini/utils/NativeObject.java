@@ -1,5 +1,7 @@
 package mini.utils;
 
+import java.nio.Buffer;
+
 /**
  * Describes a native object. An encapsulation of a certain object
  * on the native side of the graphics or audio library.
@@ -48,8 +50,6 @@ public abstract class NativeObject implements Cloneable {
     /**
      * Creates a new GLObject with the given type. Should be
      * called by the subclasses.
-     *
-     * @param type The type that the subclass represents.
      */
     public NativeObject() {
         this.handleRef = new Object();
@@ -181,4 +181,17 @@ public abstract class NativeObject implements Cloneable {
      * @return unique ID for this NativeObject.
      */
     public abstract long getUniqueId();
+
+    /**
+     * Reclaims native resources used by this NativeObject.
+     * It should be safe to call this method or even use the object
+     * after it has been reclaimed, unless {@link NativeObjectManager#UNSAFE} is
+     * set to true, in that case native buffers are also reclaimed which may
+     * introduce instability.
+     */
+    public void dispose() {
+        if (objectManager != null) {
+            objectManager.enqueueUnusedObject(this);
+        }
+    }
 }

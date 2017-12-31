@@ -46,7 +46,6 @@ public class FrameBuffer extends NativeObject {
     public static final int SLOT_DEPTH = -100;
     public static final int SLOT_DEPTH_STENCIL = -101;
 
-    private int id = -1;
     private int width = 0;
     private int height = 0;
     private int colorBufIndex = 0;

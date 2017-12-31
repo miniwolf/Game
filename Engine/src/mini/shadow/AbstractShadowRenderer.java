@@ -61,7 +61,7 @@ public abstract class AbstractShadowRenderer implements SceneProcessor, MiniClon
     /**
      * list of materials for post shadow queue geometries
      */
-    protected List<Material> matCache = new ArrayList<Material>();
+    protected List<Material> matCache = new ArrayList<>();
     protected GeometryList lightReceivers = new GeometryList(new OpaqueComparator());
     protected GeometryList shadowMapOccluders = new GeometryList(new OpaqueComparator());
     private String[] shadowMapStringCache;
@@ -339,7 +339,6 @@ public abstract class AbstractShadowRenderer implements SceneProcessor, MiniClon
     protected void displayFrustumDebug(int shadowMapIndex) {
     }
 
-    @SuppressWarnings("fallthrough")
     public void postQueue(RenderQueue rq) {
         lightReceivers.clear();
         skipPostPass = false;
@@ -355,12 +354,10 @@ public abstract class AbstractShadowRenderer implements SceneProcessor, MiniClon
         renderManager.setForcedTechnique("PreShadow");
 
         for (int shadowMapIndex = 0; shadowMapIndex < nbShadowMaps; shadowMapIndex++) {
-
             if (debugfrustums) {
                 displayFrustumDebug(shadowMapIndex);
             }
             renderShadowMap(shadowMapIndex);
-
         }
 
         debugfrustums = false;

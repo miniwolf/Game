@@ -2,12 +2,18 @@ package mini.system;
 
 import mini.asset.AssetManager;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
+
 public abstract class ApplicationSystemDelegate {
     private boolean lowPermissions = false;
 
     public abstract ApplicationContext newContext();
 
     public abstract void showErrorDialog(String message);
+
+    public abstract void writeImageFile(OutputStream outStream, String format, ByteBuffer imageData, int width, int height) throws IOException;
 
     public Platform getPlatform() {
         String os = System.getProperty("os.name").toLowerCase();

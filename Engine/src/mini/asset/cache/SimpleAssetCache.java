@@ -30,4 +30,8 @@ public class SimpleAssetCache implements AssetCache {
     public boolean deleteFromCache(AssetKey key) {
         return keyToAssetMap.remove(key) != null;
     }
+
+    public void clearCache() {
+        keyToAssetMap.clear();
+    }
 }

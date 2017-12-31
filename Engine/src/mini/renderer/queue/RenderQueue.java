@@ -236,6 +236,10 @@ public class RenderQueue {
         }
     }
 
+    public void renderForVoxelization() {
+
+    }
+
     public void renderShadowQueue(GeometryList list, RenderManager rm, Camera cam, boolean clear) {
         renderGeometryList(list, rm, cam, clear);
     }

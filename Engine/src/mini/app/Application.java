@@ -1,11 +1,13 @@
 package mini.app;
 
+import mini.asset.AssetManager;
 import mini.input.InputManager;
 import mini.renderer.Camera;
 import mini.renderer.RenderManager;
 import mini.renderer.Renderer;
 import mini.renderer.ViewPort;
 import mini.system.ApplicationContext;
+import mini.system.ApplicationSettings;
 
 /**
  * The <code>Application</code> interface represents the minimum exposed
@@ -21,6 +23,11 @@ public interface Application {
      * @return the {@link RenderManager render manager}
      */
     RenderManager getRenderManager();
+
+    /**
+     * @return The {@link AssetManager asset manager} for this application.
+     */
+    AssetManager getAssetManager();
 
     /**
      * @return The {@link Renderer renderer} for the application
@@ -50,7 +57,7 @@ public interface Application {
     /**
      * Restarts the context, applying any changed settings.
      * <p>
-     * Changes to the {@link AppSettings} of this Application are not
+     * Changes to the {@link ApplicationSettings} of this Application are not
      * applied immediately; calling this method forces the context
      * to restart, applying the new settings.
      */

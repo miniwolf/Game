@@ -53,8 +53,8 @@ public class LegacyApplication implements Application, SystemListener {
 
         if (initialStates != null) {
             Arrays.stream(initialStates)
-                  .filter(Objects::nonNull)
-                  .forEach(state -> stateManager.attach(state));
+                    .filter(Objects::nonNull)
+                    .forEach(state -> stateManager.attach(state));
         }
     }
 
@@ -138,6 +138,13 @@ public class LegacyApplication implements Application, SystemListener {
         Camera guiCam = new Camera(1280, 768);
         guiViewPort = renderManager.createPostView("Gui Default", guiCam);
         guiViewPort.setClearFlags(false, false, false);
+    }
+
+    /**
+     * @return The {@link AssetManager asset manager} for this application.
+     */
+    public AssetManager getAssetManager() {
+        return assetManager;
     }
 
     /**
@@ -347,8 +354,8 @@ public class LegacyApplication implements Application, SystemListener {
         // Display error message on screen if not in headless mode
         if (t != null) {
             ApplicationSystem.showErrorDialog(errMsg + "\n" + t.getClass().getSimpleName() +
-                                              (t.getMessage() != null ? ": " + t.getMessage() :
-                                               ""));
+                    (t.getMessage() != null ? ": " + t.getMessage() :
+                            ""));
         } else {
             ApplicationSystem.showErrorDialog(errMsg);
         }

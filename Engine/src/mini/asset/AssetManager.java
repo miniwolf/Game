@@ -29,7 +29,7 @@ public class AssetManager {
         registerLoader(AWTLoader.class, "jpg", "png", "gif", "bmp", "jpeg");
         registerLoader(MiniLoader.class, "mini");
         registerLoader(MiniLoader.class, "minid");
-        registerLoader(GLSLLoader.class, "frag", "vert", "glsl", "glsllib");
+        registerLoader(GLSLLoader.class, "frag", "vert", "geom", "glsl", "glsllib");
         registerLoader(ShaderNodeDefinitionLoader.class, "minisn");
         registerLoader(MTLLoader.class, "mtl");
         registerLoader(BitmapFontLoader.class, "fnt");
@@ -239,5 +239,17 @@ public class AssetManager {
      */
     public Spatial loadModel(String name) {
         return loadAsset(new ModelKey(name));
+    }
+
+    public AssetInfo locateAsset(AssetKey<?> key){
+        AssetInfo info = handler.tryLocate(key);
+        if (info == null){
+            System.err.println("Warning: Cannot locate resource: " + key);
+        }
+        return info;
+    }
+
+    public void clearCache(){
+        handler.clearCache();
     }
 }

@@ -102,6 +102,15 @@ public class ImplHandler {
         }
     }
 
+    public void clearCache(){
+        // The iterator of the values collection is thread safe
+        synchronized (classToCacheMap) {
+            for (AssetCache cache : classToCacheMap.values()){
+                cache.clearCache();
+            }
+        }
+    }
+
     public <T extends AssetCache> T getCache(Class<T> cacheClass) {
         if (cacheClass == null) {
             return null;

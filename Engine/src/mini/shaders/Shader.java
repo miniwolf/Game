@@ -1,5 +1,6 @@
 package mini.shaders;
 
+import mini.asset.AssetManager;
 import mini.renderer.Renderer;
 import mini.scene.VertexBuffer;
 import mini.utils.NativeObject;
@@ -75,8 +76,7 @@ public final class Shader extends NativeObject {
     }
 
     /**
-     * Creates a new shader, {@link #initialize() } must be called
-     * after this constructor for the shader to be usable.
+     * Creates a new shader.
      */
     public Shader() {
         super();
@@ -94,7 +94,7 @@ public final class Shader extends NativeObject {
 
         // Shader sources cannot be shared, therefore they must
         // be destroyed together with the parent shader.
-        shaderSourceList = new ArrayList<ShaderSource>();
+        shaderSourceList = new ArrayList<>();
         for (ShaderSource source : s.shaderSourceList) {
             shaderSourceList.add((ShaderSource) source.createDestructableClone());
         }
@@ -102,6 +102,14 @@ public final class Shader extends NativeObject {
         uniforms = null;
         boundUniforms = null;
         attribs = null;
+    }
+
+    public void preloadSource(AssetManager assetManager) {
+        for (ShaderSource shaderSource : shaderSourceList) {
+            shaderSource.source = (String) assetManager.loadAsset(shaderSource.name);
+            shaderSource.setUpdateNeeded();
+        }
+        updateNeeded = true;
     }
 
     /**

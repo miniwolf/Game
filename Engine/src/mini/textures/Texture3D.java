@@ -2,57 +2,59 @@ package mini.textures;
 
 import mini.textures.image.ColorSpace;
 
-public class Texture2D extends Texture {
+public class Texture3D extends Texture {
+
     private WrapMode wrapS = WrapMode.EdgeClamp;
     private WrapMode wrapT = WrapMode.EdgeClamp;
+    private WrapMode wrapR = WrapMode.EdgeClamp;
 
     /**
      * Creates a new two-dimensional texture with default attributes.
      */
-    public Texture2D() {
+    public Texture3D() {
         super();
     }
 
     /**
-     * Creates a new two-dimensional texture using the given image.
+     * Creates a new three-dimensional texture using the given image.
      *
      * @param img The image to use.
      */
-    public Texture2D(Image img) {
+    public Texture3D(Image img) {
         super();
         setImage(img);
-        if (img.getData(0) == null) {
+        if (img.getFormat().isDepthFormat()) {
             setMagFilter(MagFilter.Nearest);
             setMinFilter(MinFilter.NearestNoMipMaps);
         }
     }
 
     /**
-     * Creates a new two-dimensional texture for the purpose of offscreen
+     * Creates a new three-dimensional texture for the purpose of offscreen
      * rendering.
      *
      * @param width
      * @param height
+     * @param depth
      * @param format
      * @see mini.textures.FrameBuffer
      */
-    public Texture2D(int width, int height, Image.Format format) {
-        this(new Image(format, width, height, null, ColorSpace.Linear));
+    public Texture3D(int width, int height, int depth, Image.Format format) {
+        this(new Image(format, width, height, depth, null, ColorSpace.Linear));
     }
 
     /**
-     * Creates a new two-dimensional texture for the purpose of offscreen
+     * Creates a new three-dimensional texture for the purpose of offscreen
      * rendering.
-     *
-     * @see mini.textures.FrameBuffer
      *
      * @param width
      * @param height
      * @param format
      * @param numSamples
+     * @see mini.textures.FrameBuffer
      */
-    public Texture2D(int width, int height, int numSamples, Image.Format format){
-        this(new Image(format, width, height, null, ColorSpace.Linear));
+    public Texture3D(int width, int height, int depth, int numSamples, Image.Format format) {
+        this(new Image(format, width, height, depth, null, ColorSpace.Linear));
         getImage().setMultiSamples(numSamples);
     }
 
@@ -61,7 +63,7 @@ public class Texture2D extends Texture {
      * particular axis.
      *
      * @param axis the texture axis to define a wrapmode on.
-     * @param mode the wrap mode for the given axis of the texture.
+     * @param mode the wrap mode for the given axis of the textures.
      * @throws IllegalArgumentException if axis or mode are null
      */
     public void setWrap(WrapAxis axis, WrapMode mode) {
@@ -77,48 +79,67 @@ public class Texture2D extends Texture {
             case T:
                 this.wrapT = mode;
                 break;
-            default:
-                throw new IllegalArgumentException("Not applicable for 2D textures");
+            case R:
+                this.wrapR = mode;
+                break;
         }
     }
 
     /**
      * <code>setWrap</code> sets the wrap mode of this texture for all axis.
      *
-     * @param mode the wrap mode for the given axis of the texture.
+     * @param mode the wrap mode for the given axis of the textures.
      * @throws IllegalArgumentException if mode is null
      */
-    @Override
     public void setWrap(WrapMode mode) {
         if (mode == null) {
             throw new IllegalArgumentException("mode can not be null.");
         }
         this.wrapS = mode;
         this.wrapT = mode;
+        this.wrapR = mode;
     }
 
     /**
      * <code>getWrap</code> returns the wrap mode for a given coordinate axis
-     * on this texture.
+     * on this textures.
      *
      * @param axis the axis to return for
-     * @return the wrap mode of the texture.
+     * @return the wrap mode of the textures.
      * @throws IllegalArgumentException if axis is null
      */
-    @Override
     public WrapMode getWrap(WrapAxis axis) {
         switch (axis) {
             case S:
                 return wrapS;
             case T:
                 return wrapT;
-            default:
-                throw new IllegalArgumentException("invalid WrapAxis: " + axis);
+            case R:
+                return wrapR;
         }
+        throw new IllegalArgumentException("invalid WrapAxis: " + axis);
     }
 
     @Override
     public Type getType() {
-        return Type.TwoDimensional;
+        return Type.ThreeDimensional;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof Texture3D)) {
+            return false;
+        }
+        Texture3D that = (Texture3D) other;
+        if (this.getWrap(WrapAxis.S) != that.getWrap(WrapAxis.S)) {
+            return false;
+        }
+        if (this.getWrap(WrapAxis.T) != that.getWrap(WrapAxis.T)) {
+            return false;
+        }
+        if (this.getWrap(WrapAxis.R) != that.getWrap(WrapAxis.R)) {
+            return false;
+        }
+        return super.equals(other);
     }
 }

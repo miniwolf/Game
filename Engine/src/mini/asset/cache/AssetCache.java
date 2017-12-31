@@ -55,4 +55,10 @@ public interface AssetCache {
      * @return Whether the asset was successfully found in the cache and removed.
      */
     boolean deleteFromCache(AssetKey key);
+
+    /**
+     * Deletes all assets from the cache.
+     * <p><font color="red">Thread-Safe</font>
+     */
+    void clearCache();
 }
