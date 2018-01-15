@@ -705,8 +705,7 @@ public class Material implements CloneableSmartAsset, Cloneable {
                                       + "The capabilities %s are required.",
                                       name, def.getName(), lastTech.getRequiredCaps()));
             }
-            System.out.println(
-                    this.getMaterialDef().getName() + " selected technique def " + tech.getDef());
+            //System.out.println(this.getMaterialDef().getName() + " selected technique def " + tech.getDef());
         } else if (technique == tech) {
             // attempting to switch to an already
             // active technique.

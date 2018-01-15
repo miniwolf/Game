@@ -26,11 +26,16 @@ public class NanoTimer implements Timer {
         previousTime = getTime();
     }
 
+    @Override
+    public float getResolution() {
+        return TIMER_RESOLUTION;
+    }
+
     public float getFrameRate() {
         return fps;
     }
 
-    private long getTime() {
+    public long getTime() {
         return System.nanoTime() - startTime;
     }
 

@@ -22,4 +22,26 @@ public interface Timer {
      * Reset the timer to 0. Clear any tpf history.
      */
     void reset();
+
+    /**
+     * @return the time in seconds. The timer starts at 0.0 seconds.
+     */
+    default float getTimeInSeconds() {
+        return getTime() / getResolution();
+    }
+
+    /**
+     * @return the number of ticks per second
+     */
+    float getResolution();
+
+    /**
+     * Returns the current time in ticks. A tick is an arbitrary measure of time defined by the
+     * timer implementation. The number of ticks per second is given by <code>getResolution()</code>
+     * <p>
+     * The timer starts at 0 ticks.
+     *
+     * @return a long value representing the current time
+     */
+    long getTime();
 }

@@ -83,41 +83,9 @@ public class BitmapText extends Node {
     public void setText(String text) {
         text = text == null ? "" : text;
 
-        if (text == block.getText() || block.getText().equals(text)) {
+        if (block.getText().equals(text)) {
             return;
         }
-
-        /*
-        The problem with the below block is that StringBlock carries
-        pretty much all of the text-related state of the BitmapText such
-        as size, text box, alignment, etc.
-
-        I'm not sure why this change was needed and the commit message was
-        not entirely helpful because it purports to fix a problem that I've
-        never encountered.
-
-        If block.setText("") doesn't do the right thing then that's where
-        the fix should go because StringBlock carries too much information to
-        be blown away every time.  -pspeed
-
-        Change was made:
-        http://code.google.com/p/jmonkeyengine/source/detail?spec=svn9389&r=9389
-        Diff:
-        http://code.google.com/p/jmonkeyengine/source/diff?path=/trunk/engine/src/core/com/jme3/font/BitmapText.java&format=side&r=9389&old_path=/trunk/engine/src/core/com/jme3/font/BitmapText.java&old=8843
-
-        // If the text is empty, reset
-        if (text.isEmpty()) {
-            detachAllChildren();
-
-            for (int page = 0; page < textPages.length; page++) {
-                textPages[page] = new BitmapTextPage(font, true, page);
-                attachChild(textPages[page]);
-            }
-
-            block = new StringBlock();
-            letters = new Letters(font, block, letters.getQuad().isRightToLeft());
-        }
-        */
 
         // Update the text content
         block.setText(text);
@@ -361,13 +329,13 @@ public class BitmapText extends Node {
         needRefresh = true;
     }
 
-//    @Override
-//    public void updateLogicalState(float tpf) {
-//        super.updateLogicalState(tpf);
-//        if (needRefresh) {
-//            assemble();
-//        }
-//    }
+    @Override
+    public void updateLogicalState(float tpf) {
+        super.updateLogicalState(tpf);
+        if (needRefresh) {
+            assemble();
+        }
+    }
 
     private void assemble() {
         // first generate quadlist

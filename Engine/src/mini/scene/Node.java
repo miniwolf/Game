@@ -309,8 +309,7 @@ public class Node extends Spatial {
             child.setTransformRefresh();
             child.setLightListRefresh();
             child.setMatParamOverrideRefresh();
-            System.out.println(
-                    "Child (" + child.getName() + ") attached to this node (" + getName() + ")");
+            //System.out.println("Child (" + child.getName() + ") attached to this node (" + getName() + ")");
             invalidateUpdateList();
         }
         return children.size();
@@ -373,7 +372,7 @@ public class Node extends Spatial {
         Spatial child = children.remove(index);
         if (child != null) {
             child.setParent(null);
-            System.out.println(this.toString() + ": Child removed.");
+            //System.out.println(this.toString() + ": Child removed.");
 
             // since a child with a bound was detached;
             // our own bound will probably change.
