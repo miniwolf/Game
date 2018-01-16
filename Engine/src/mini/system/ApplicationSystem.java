@@ -1,6 +1,7 @@
 package mini.system;
 
 import mini.asset.AssetManager;
+import mini.input.SoftTextDialogInput;
 import mini.textures.Image;
 
 import java.io.IOException;
@@ -87,5 +88,15 @@ public class ApplicationSystem {
 
     public static AssetManager newAssetManager() {
         return systemDelegate.newAssetManager();
+    }
+
+    public static SoftTextDialogInput getSoftTextDialogInput() {
+        checkDelegate();
+        return systemDelegate.getSoftTextDialogInput();
+    }
+
+    public static void setSoftTextDialogInput(SoftTextDialogInput input) {
+        checkDelegate();
+        systemDelegate.setSoftTextDialogInput(input);
     }
 }
