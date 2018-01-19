@@ -47,8 +47,8 @@ public class RenderDeviceMini implements RenderDevice {
     private VertexBuffer quadModTexcoord = quadDefaultTexcoord.clone();
     private VertexBuffer quadColor;
 
-    public RenderDeviceMini(NiftyMiniDisplay niftyMiniDisplay) {
-        display = niftyMiniDisplay;
+    public RenderDeviceMini(NiftyMiniDisplay display) {
+        this.display = display;
 
         quadColor = new VertexBuffer(VertexBuffer.Type.Color);
         quadColor.setNormalized(true);
@@ -58,13 +58,13 @@ public class RenderDeviceMini implements RenderDevice {
 
         quadModTexcoord.setUsage(VertexBuffer.Usage.Stream);
 
-        textureColorMaterial = new Material(niftyMiniDisplay.getAssetManager(),
+        textureColorMaterial = new Material(display.getAssetManager(),
                                             "MatDefs/Misc/Unshaded.minid");
-        vertexColorMaterial = new Material(niftyMiniDisplay.getAssetManager(),
+        vertexColorMaterial = new Material(display.getAssetManager(),
                                            "MatDefs/Misc/Unshaded.minid");
         vertexColorMaterial.setBoolean("VertexColor", true);
 
-        colorMaterial = new Material(niftyMiniDisplay.getAssetManager(),
+        colorMaterial = new Material(display.getAssetManager(),
                                      "MatDefs/Misc/Unshaded.minid");
 
         renderState.setDepthTest(false);
@@ -94,6 +94,11 @@ public class RenderDeviceMini implements RenderDevice {
         res |= ((int) (255.0 * color.getGreen())) << 8;
         res |= ((int) (255.0 * color.getRed()));
         return res;
+    }
+
+    public void setRenderManager(RenderManager renderManager) {
+        this.renderManager = renderManager;
+        this.renderer = renderManager.getRenderer();
     }
 
     @Override
@@ -171,8 +176,8 @@ public class RenderDeviceMini implements RenderDevice {
         data.putInt(convertColorToInt(topRight));
         data.putInt(convertColorToInt(topLeft));
 
-        data.putInt(convertColorToInt(bottomRight));
         data.putInt(convertColorToInt(bottomLeft));
+        data.putInt(convertColorToInt(bottomRight));
 
         data.flip();
         quadColor.updateData(data);
@@ -191,13 +196,11 @@ public class RenderDeviceMini implements RenderDevice {
 
     @Override
     public void renderImage(RenderImage renderImage, int x, int y, int width, int height,
-                            Color color,
-                            float scale) {
+                            Color color, float scale) {
         RenderImageMini miniImage = (RenderImageMini) renderImage;
-        Texture2D texture = miniImage.getTexture();
 
         textureColorMaterial.setColor("Color", convertColorToRGBA(color));
-        textureColorMaterial.setTexture("ColorMap", texture);
+        textureColorMaterial.setTexture("ColorMap", miniImage.getTexture());
 
         quad.clearBuffer(VertexBuffer.Type.TexCoord);
         quad.setBuffer(quadDefaultTexcoord);
@@ -219,7 +222,7 @@ public class RenderDeviceMini implements RenderDevice {
 
     @Override
     public void renderImage(RenderImage renderImage, int x, int y, int width, int height, int srcX,
-                            int srcY, int srcHeight, int srcWidth, Color color, float scale,
+                            int srcY, int srcWidth, int srcHeight, Color color, float scale,
                             int centerX, int centerY) {
         RenderImageMini miniImage = (RenderImageMini) renderImage;
         Texture2D texture = miniImage.getTexture();

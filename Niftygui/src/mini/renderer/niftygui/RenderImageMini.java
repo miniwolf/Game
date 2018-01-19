@@ -14,6 +14,9 @@ public class RenderImageMini implements RenderImage {
     public RenderImageMini(String fileName, boolean linear, NiftyMiniDisplay display) {
         TextureKey textureKey = new TextureKey(fileName, true);
 
+        textureKey.setAnisotropy(0);
+        textureKey.setGenerateMips(false);
+
         texture = (Texture2D) display.getAssetManager().loadTexture(textureKey);
         texture.setMagFilter(linear ? Texture.MagFilter.Bilinear : Texture.MagFilter.Nearest);
         texture.setMinFilter(

@@ -12,6 +12,7 @@ public class RenderFontMini implements RenderFont {
     public RenderFontMini(String fileName, NiftyMiniDisplay display) {
         font = display.getAssetManager().loadFont(fileName);
         text = new BitmapText(font);
+        text.setSize(font.getPreferredSize());
     }
 
     @Override

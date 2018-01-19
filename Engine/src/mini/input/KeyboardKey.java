@@ -148,6 +148,8 @@ public enum KeyboardKey {
     public char getCharValue() {
         if (this == KEY_ENTER) {
             return '\n';
+        } else if (this == KEY_SPACE) {
+            return ' ';
         } else if (this.toString().split("_").length == 2
                    && toString().split("_")[1].length() == 1) {
             return toString().split("_")[1].charAt(0);

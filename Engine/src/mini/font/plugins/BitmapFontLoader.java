@@ -110,8 +110,23 @@ public class BitmapFontLoader implements AssetLoader<BitmapFont> {
                 mat.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
                 matPages[index] = mat;
             } else if ("kerning".equals(tokens[0])) {
-                // TODO: Build kerning lists
-                throw new UnsupportedOperationException();
+                assert tokens.length % 2 != 0;
+                int index = 0;
+                int second = 0;
+                int amount = 0;
+
+                for (int i = 1; i < tokens.length; i += 2) {
+                    if (tokens[i].equals("first")) {
+                        index = Integer.parseInt(tokens[i + 1]);
+                    } else if (tokens[i].equals("second")) {
+                        second = Integer.parseInt(tokens[i + 1]);
+                    } else if (tokens[i].equals("amount")) {
+                        amount = Integer.parseInt(tokens[i + 1]);
+                    }
+                }
+
+                BitmapCharacter character = charSet.getCharacter(index);
+                character.addKerning(second, amount);
             }
         }
         return font;

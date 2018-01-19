@@ -62,8 +62,12 @@ public class InputSystemMini implements InputSystem, RawInputListener {
                 onMouseButtonEvent((MouseButtonEvent) event, niftyInputConsumer);
             } else if (event instanceof KeyInputEvent) {
                 onKeyEvent((KeyInputEvent) event, niftyInputConsumer);
+            } else {
+                System.out.println("Unknown event: " + event.toString());
             }
         }
+
+        inputList.clear();
     }
 
     @Override
@@ -120,7 +124,7 @@ public class InputSystemMini implements InputSystem, RawInputListener {
         } else {
             if (niftyOwnsDragging[button] && consumed) {
                 event.setConsumed();
-                processSoftKeyboard();
+                //processSoftKeyboard();
             }
 
             niftyOwnsDragging[button] = false;

@@ -35,8 +35,8 @@ public class NiftyMiniDisplay implements SceneProcessor {
     private Renderer renderer;
     private Nifty nifty;
 
-    public NiftyMiniDisplay(final AssetManager assetManager, final ViewPort viewPort, final
-    InputManager inputManager) {
+    public NiftyMiniDisplay(AssetManager assetManager, ViewPort viewPort,
+                            InputManager inputManager) {
         this.assetManager = assetManager;
         this.inputManager = inputManager;
         this.viewPort = viewPort;
@@ -65,6 +65,8 @@ public class NiftyMiniDisplay implements SceneProcessor {
     @Override
     public void initialize(RenderManager rm, ViewPort vp) {
         this.renderManager = rm;
+
+        renderDevice.setRenderManager(rm);
 
         if (inputManager != null) {
             inputManager.addRawInputListener(inputSystem);

@@ -17,12 +17,72 @@ public class SoundDeviceMini implements SoundDevice {
 
     @Override
     public SoundHandle loadSound(SoundSystem soundSystem, String s) {
-        return null;
+        return new SoundHandle() {
+            @Override
+            public void play() {
+
+            }
+
+            @Override
+            public void stop() {
+
+            }
+
+            @Override
+            public void setVolume(float v) {
+
+            }
+
+            @Override
+            public float getVolume() {
+                return 0;
+            }
+
+            @Override
+            public boolean isPlaying() {
+                return false;
+            }
+
+            @Override
+            public void dispose() {
+
+            }
+        };
     }
 
     @Override
     public SoundHandle loadMusic(SoundSystem soundSystem, String s) {
-        return null;
+        return new SoundHandle() {
+            @Override
+            public void play() {
+
+            }
+
+            @Override
+            public void stop() {
+
+            }
+
+            @Override
+            public float getVolume() {
+                return 0;
+            }
+
+            @Override
+            public void setVolume(float v) {
+
+            }
+
+            @Override
+            public boolean isPlaying() {
+                return false;
+            }
+
+            @Override
+            public void dispose() {
+
+            }
+        };
     }
 
     @Override
