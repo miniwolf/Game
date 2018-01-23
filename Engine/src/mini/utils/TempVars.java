@@ -13,6 +13,7 @@ import mini.math.Vector3f;
 import mini.math.Vector4f;
 import mini.scene.Spatial;
 
+import java.io.Closeable;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
@@ -25,7 +26,7 @@ import java.util.List;
  * This returns an available instance of the TempVar class ensuring this
  * particular instance is never used elsewhere in the mean time.
  */
-public class TempVars {
+public class TempVars implements Closeable {
 
     /**
      * Allow X instances of TempVars in a single thread.
@@ -89,6 +90,11 @@ public class TempVars {
         instance.isUsed = true;
 
         return instance;
+    }
+
+    @Override
+    public void close() {
+        release();
     }
 
     /**

@@ -3,10 +3,12 @@
 
 uniform ENVMAP m_Texture;
 
-varying vec3 direction;
+in vec3 direction;
+
+out vec4 color;
 
 void main() {
     vec3 dir = normalize(direction);
-    gl_FragColor = Optics_GetEnvColor(m_Texture, dir);
+    color = Optics_GetEnvColor(m_Texture, dir);
 }
 

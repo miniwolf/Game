@@ -56,4 +56,8 @@ public class UrlAssetInfo extends AssetInfo {
             }
         }
     }
+
+    public URL getUrl() {
+        return url;
+    }
 }

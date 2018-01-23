@@ -6,12 +6,12 @@ uniform mat4 g_WorldMatrix;
 
 uniform vec3 m_NormalScale;
 
-attribute vec3 inPosition;
-attribute vec3 inNormal;
+in vec3 inPosition;
+in vec3 inNormal;
 
-varying vec3 direction;
+out vec3 direction;
 
-void main(){
+void main() {
     // set w coordinate to 0
     vec4 pos = vec4(inPosition, 0.0);
 

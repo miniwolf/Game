@@ -32,6 +32,7 @@
 package mini.textures.plugins;
 
 import mini.asset.AssetInfo;
+import mini.asset.AssetLoader;
 import mini.asset.TextureKey;
 import mini.textures.Image;
 import mini.textures.Image.Format;
@@ -54,7 +55,7 @@ import java.util.logging.Logger;
  * Supports DXT1, DXT3, DXT5, RGB, RGBA, Grayscale, Alpha pixel formats.
  * 2D images, mipmapped 2D images, and cubemaps.
  */
-public class DDSLoader {
+public class DDSLoader implements AssetLoader<Image> {
 
     private static final Logger logger = Logger.getLogger(DDSLoader.class.getName());
     private static final boolean forceRGBA = false;
@@ -174,7 +175,7 @@ public class DDSLoader {
         return buf.toString();
     }
 
-    public Object load(AssetInfo info) throws IOException {
+    public Image load(AssetInfo info) throws IOException {
         InputStream stream = null;
         try {
             stream = info.openStream();

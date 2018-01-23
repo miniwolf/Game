@@ -13,6 +13,7 @@ import mini.scene.plugins.OBJLoader;
 import mini.shaders.plugins.GLSLLoader;
 import mini.textures.Texture;
 import mini.textures.plugins.AWTLoader;
+import mini.textures.plugins.DDSLoader;
 import mini.textures.plugins.TGALoader;
 
 import java.io.IOException;
@@ -27,6 +28,7 @@ public class AssetManager {
     public AssetManager() {
         registerLoader(OBJLoader.class, "obj");
         registerLoader(AWTLoader.class, "jpg", "png", "gif", "bmp", "jpeg");
+        registerLoader(DDSLoader.class, "dds");
         registerLoader(MiniLoader.class, "mini");
         registerLoader(MiniLoader.class, "minid");
         registerLoader(GLSLLoader.class, "frag", "vert", "geom", "glsl", "glsllib");

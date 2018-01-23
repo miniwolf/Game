@@ -359,6 +359,11 @@ public class BoundingBox extends BoundingVolume {
     }
 
     @Override
+    public boolean intersectsBoundingSphere(BoundingSphere boundingSphere) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     /**
      * determines if this bounding box interesects a given bounding box.
      *

@@ -1,5 +1,6 @@
 package mini.scene;
 
+import mini.bounding.BoundingSphere;
 import mini.collision.Collidable;
 import mini.collision.CollisionResults;
 import mini.material.Material;
@@ -423,5 +424,14 @@ public class Geometry extends Spatial {
         this.mesh = cloner.clone(mesh);
 
         this.material = cloner.clone(material);
+    }
+
+    /**
+     * @param modelBound
+     */
+    public void setModelBound(BoundingSphere modelBound) {
+        this.worldBound = modelBound;
+        mesh.setBound(modelBound);
+        setBoundRefresh();
     }
 }

@@ -6,8 +6,8 @@ MaterialDef Sky Plane {
         Vector3f NormalScale
     }
     Technique {
-        VertexShader GLSL100 GLSL150:   MatDefs/Misc/Sky.vert
-        FragmentShader GLSL100 GLSL150: MatDefs/Misc/Sky.frag
+        VertexShader GLSL330 GLSL330:   MatDefs/Misc/Sky.vert
+        FragmentShader GLSL330 GLSL330: MatDefs/Misc/Sky.frag
 
         WorldParameters {
             ViewMatrix

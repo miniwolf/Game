@@ -184,6 +184,14 @@ public abstract class BoundingVolume implements Cloneable, Collidable {
     public abstract boolean intersectsBoundingBox(BoundingBox boundingBox);
 
     /**
+     * determines if this bounding volume and a given bounding sphere are intersecting.
+     *
+     * @param boundingSphere the bounding sphere to test against.
+     * @return Whether the volume intersects the given bounding sphere.
+     */
+    public abstract boolean intersectsBoundingSphere(BoundingSphere boundingSphere);
+
+    /**
      * determines if a given point is contained within this bounding volume.
      * If the point is on the edge of the bounding volume, this method will
      * return false. Use intersects(Vector3f) to check for edge intersection.
