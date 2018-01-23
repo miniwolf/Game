@@ -20,9 +20,13 @@ public class TestFBXLoading extends SimpleApplication {
     public void simpleInitApp() {
         viewPort.setBackgroundColor(ColorRGBA.DarkGray);
 
-        Spatial bumpy = assetManager.loadModel("Models/fbxbox/Box.fbx");
+        flyCam.setMoveSpeed(20);
+
+        //Spatial bumpy = assetManager.loadModel("Models/fbxbox/Box.fbx");
+        Spatial bumpy = assetManager
+                .loadModel("Models/Chloe/Chloe Price (No Jacket Episode 2).FBX");
 //        bumpy.setLocalTranslation(0, -1, 0);
-        bumpy.rotate(0, 0.5f, 0);
+        bumpy.rotate(0, 0f, 0);
         rootNode.attachChild(bumpy);
 
         // sunset light

@@ -6,10 +6,12 @@ import mini.textures.Image;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URL;
 import java.nio.ByteBuffer;
 
 public class ApplicationSystem {
     private static ApplicationSystemDelegate systemDelegate;
+    private static URL platformAssetConfigURL;
 
     public static ApplicationContext newContext(ApplicationContext.Type contextType) {
         checkDelegate();
@@ -98,5 +100,10 @@ public class ApplicationSystem {
     public static void setSoftTextDialogInput(SoftTextDialogInput input) {
         checkDelegate();
         systemDelegate.setSoftTextDialogInput(input);
+    }
+
+    public static URL getPlatformAssetConfigURL() {
+        checkDelegate();
+        return systemDelegate.getPlatformAssetConfigURL();
     }
 }

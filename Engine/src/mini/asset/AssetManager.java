@@ -1,23 +1,14 @@
 package mini.asset;
 
 import mini.asset.cache.AssetCache;
-import mini.asset.plugins.ClasspathLocator;
 import mini.font.BitmapFont;
-import mini.font.plugins.BitmapFontLoader;
 import mini.material.Material;
-import mini.material.plugins.MiniLoader;
-import mini.material.plugins.ShaderNodeDefinitionLoader;
 import mini.scene.Spatial;
-import mini.scene.plugins.MTLLoader;
-import mini.scene.plugins.OBJLoader;
-import mini.scene.plugins.fbx.FBXLoader;
-import mini.shaders.plugins.GLSLLoader;
+import mini.system.ApplicationSystem;
 import mini.textures.Texture;
-import mini.textures.plugins.AWTLoader;
-import mini.textures.plugins.DDSLoader;
-import mini.textures.plugins.TGALoader;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -27,19 +18,16 @@ public class AssetManager {
     private List<AssetEventListener> eventListeners = new CopyOnWriteArrayList<>();
 
     public AssetManager() {
-        registerLoader(OBJLoader.class, "obj");
-        registerLoader(AWTLoader.class, "jpg", "png", "gif", "bmp", "jpeg");
-        registerLoader(DDSLoader.class, "dds");
-        registerLoader(MiniLoader.class, "mini");
-        registerLoader(MiniLoader.class, "minid");
-        registerLoader(GLSLLoader.class, "frag", "vert", "geom", "glsl", "glsllib");
-        registerLoader(ShaderNodeDefinitionLoader.class, "minisn");
-        registerLoader(MTLLoader.class, "mtl");
-        registerLoader(BitmapFontLoader.class, "fnt");
-        registerLoader(TGALoader.class, "tga");
-        registerLoader(FBXLoader.class, "fbx", "FBX");
-        registerLoader(AWTLoader.class, "png", "jpg");
-        registerLocator(ClasspathLocator.class, "/");
+        this(ApplicationSystem.getPlatformAssetConfigURL());
+    }
+
+    public AssetManager(URL configFile) {
+        try {
+            AssetConfig.loadText(this, configFile);
+        } catch (IOException e) {
+            System.err.println("Severe: Failed to load asset config: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -188,6 +176,10 @@ public class AssetManager {
      */
     public void registerLocator(Class<? extends AssetLocator> locatorClass, String rootPath) {
         handler.addLocator(locatorClass, rootPath);
+    }
+
+    public void unregisterLocator(Class<? extends AssetLocator> locatorClass, String rootPath) {
+        handler.removeLocator(locatorClass, rootPath);
     }
 
     /**

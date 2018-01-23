@@ -15,6 +15,7 @@ import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URL;
 import java.nio.ByteBuffer;
 
 /**
@@ -67,6 +68,11 @@ public class ApplicationDesktopSystem extends ApplicationSystemDelegate {
             imgOut.close();
             writer.dispose();
         }
+    }
+
+    @Override
+    public URL getPlatformAssetConfigURL() {
+        return Thread.currentThread().getContextClassLoader().getResource("mini/asset/General.cfg");
     }
 
     @SuppressWarnings("unchecked")

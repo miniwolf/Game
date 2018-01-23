@@ -5,11 +5,13 @@ import mini.input.SoftTextDialogInput;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URL;
 import java.nio.ByteBuffer;
 
 public abstract class ApplicationSystemDelegate {
     private boolean lowPermissions = false;
     private SoftTextDialogInput softTextDialogInput = null;
+    private URL platformAssetConfigURL;
 
     public abstract ApplicationContext newContext();
 
@@ -74,4 +76,6 @@ public abstract class ApplicationSystemDelegate {
     public void setSoftTextDialogInput(SoftTextDialogInput softTextDialogInput) {
         this.softTextDialogInput = softTextDialogInput;
     }
+
+    public abstract URL getPlatformAssetConfigURL();
 }

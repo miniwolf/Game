@@ -82,19 +82,4 @@ public class ClasspathLocator implements AssetLocator {
             throw new RuntimeException("Failed to read URL " + url, ex);
         }
     }
-
-    @Override
-    public void setRootPath(String rootPath) {
-        root = rootPath;
-        if (root.equals("/")) {
-            root = "";
-        } else if (root.length() > 1) {
-            if (root.startsWith("/")) {
-                root = root.substring(1);
-            }
-            if (!root.endsWith("/")) {
-                root += "/";
-            }
-        }
-    }
 }

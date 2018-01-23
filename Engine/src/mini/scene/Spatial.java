@@ -4,7 +4,6 @@ import mini.asset.AssetKey;
 import mini.asset.CloneableSmartAsset;
 import mini.bounding.BoundingVolume;
 import mini.collision.Collidable;
-import mini.collision.CollisionResults;
 import mini.light.Light;
 import mini.light.LightList;
 import mini.material.MatParamOverride;
@@ -27,8 +26,8 @@ import mini.utils.clone.MiniCloneable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * <code>Spatial</code> defines the base class for scene graph nodes. It
@@ -38,7 +37,7 @@ import java.util.Map;
  *
  * @author miniwolf
  */
-public abstract class Spatial implements Cloneable {
+public abstract class Spatial implements Cloneable, CloneableSmartAsset, MiniCloneable, Collidable {
     /**
      * Specifies how frustum culling should be handled by
      * this spatial.
