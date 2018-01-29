@@ -123,27 +123,27 @@ public class FBXMesh extends FBXNodeAttribute<Map<Integer, Mesh>> {
                 irVertex.pos = vertices[vertexIndex];
 
                 if (layer0 != null) {
-                    irVertex.norm = (Vector3f) layer0
-                            .getVertexData(FBXLayerElement.Type.Normal, i, polygonVertexIndex,
-                                           vertexIndex, 0);
-                    irVertex.tang = (Vector3f) layer0
-                            .getVertexData(FBXLayerElement.Type.Tangent, i, polygonVertexIndex,
-                                           vertexIndex, 0);
-                    irVertex.bitang = (Vector3f) layer0
-                            .getVertexData(FBXLayerElement.Type.Binormal, i, polygonVertexIndex,
-                                           vertexIndex, 0);
-                    irVertex.uv0 = (Vector2f) layer0
-                            .getVertexData(FBXLayerElement.Type.UV, i, polygonVertexIndex,
-                                           vertexIndex, 0);
-                    irVertex.color = (ColorRGBA) layer0
-                            .getVertexData(FBXLayerElement.Type.Color, i, polygonVertexIndex,
-                                           vertexIndex, 0);
-                    irVertex.material = (Integer) layer0
-                            .getVertexData(FBXLayerElement.Type.Material, i, polygonVertexIndex,
-                                           vertexIndex, 0);
-                    irVertex.smoothing = (Integer) layer0
-                            .getVertexData(FBXLayerElement.Type.Smoothing, i, polygonVertexIndex,
-                                           vertexIndex, 0);
+                    irVertex.norm =
+                            (Vector3f) layer0.getVertexData(FBXLayerElement.Type.Normal, i,
+                                                            polygonVertexIndex, vertexIndex, 0);
+                    irVertex.tang =
+                            (Vector3f) layer0.getVertexData(FBXLayerElement.Type.Tangent, i,
+                                                            polygonVertexIndex, vertexIndex, 0);
+                    irVertex.bitang =
+                            (Vector3f) layer0.getVertexData(FBXLayerElement.Type.Binormal, i,
+                                                            polygonVertexIndex, vertexIndex, 0);
+                    irVertex.uv0 =
+                            (Vector2f) layer0.getVertexData(FBXLayerElement.Type.UV, i,
+                                                            polygonVertexIndex, vertexIndex, 0);
+                    irVertex.color =
+                            (ColorRGBA) layer0.getVertexData(FBXLayerElement.Type.Color, i,
+                                                             polygonVertexIndex, vertexIndex, 0);
+                    irVertex.material =
+                            (Integer) layer0.getVertexData(FBXLayerElement.Type.Material, i,
+                                                           polygonVertexIndex, vertexIndex, 0);
+                    irVertex.smoothing =
+                            (Integer) layer0.getVertexData(FBXLayerElement.Type.Smoothing, i,
+                                                           polygonVertexIndex, vertexIndex, 0);
                 }
 
                 if (layer1 != null) {
@@ -168,17 +168,23 @@ public class FBXMesh extends FBXNodeAttribute<Map<Integer, Mesh>> {
     private void setPolygonVertexIndices(int[] polygonVertexIndices) {
         List<FBXPolygon> polygonList = new ArrayList<>();
 
+        boolean finishPolygon = false;
         List<Integer> vertexIndices = new ArrayList<>();
 
         for (int polygonVertexIndex : polygonVertexIndices) {
-            // Indices contains negative numbers to define polygon last index
-            // Check indices strides to be sure we have triangles or quad
-            if (polygonVertexIndex < 0) {
-                vertexIndices.add(0);
+            int vertexIndex = polygonVertexIndex;
+
+            if (vertexIndex < 0) {
+                vertexIndex ^= -1;
+                finishPolygon = true;
+            }
+
+            vertexIndices.add(vertexIndex);
+
+            if (finishPolygon) {
+                finishPolygon = false;
                 polygonList.add(FBXPolygon.fromIndices(vertexIndices));
                 vertexIndices.clear();
-            } else {
-                vertexIndices.add(polygonVertexIndex);
             }
         }
 
@@ -202,5 +208,9 @@ public class FBXMesh extends FBXNodeAttribute<Map<Integer, Mesh>> {
     @Override
     public void link(FBXObject obj, String propertyName) {
         unsupportedConnectObjectProperty(obj, propertyName);
+    }
+
+    public Vector3f[] getVertices() {
+        return vertices;
     }
 }

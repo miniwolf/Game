@@ -34,13 +34,13 @@ public class FBXConnectionLoader implements FBXElementLoader<Void> {
 
     private void LinkOPConnections(List<FBXElement> opConnections) {
         for (FBXElement fbxElement : opConnections) {
-            FBXId objId = FBXId.create(fbxElement.getProperties().get(1));
-            FBXId refId = FBXId.create(fbxElement.getProperties().get(2));
+            FBXId childId = FBXId.create(fbxElement.getProperties().get(1));
+            FBXId parentId = FBXId.create(fbxElement.getProperties().get(2));
             String propertyName = (String) fbxElement.getProperties().get(3);
-            FBXObject obj = objects.get(objId);
-            FBXObject ref = objects.get(refId);
-            if (ref != null) {
-                ref.link(obj, propertyName);
+            FBXObject child = objects.get(childId);
+            FBXObject parent = objects.get(parentId);
+            if (parent != null) {
+                parent.link(child, propertyName);
             }
         }
     }

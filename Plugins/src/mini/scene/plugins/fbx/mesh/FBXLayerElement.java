@@ -117,8 +117,9 @@ public class FBXLayerElement {
             case IndexToDirect:
                 return getVertexDataIndexToDirect(polygonIndex, polygonVertexIndex, vertexIndex,
                                                   edgeIndex);
+            default:
+                return null;
         }
-        return null;
     }
 
     private Object getVertexDataIndexToDirect(int polygonIndex, int polygonVertexIndex,

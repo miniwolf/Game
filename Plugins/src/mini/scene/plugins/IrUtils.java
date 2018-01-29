@@ -249,6 +249,7 @@ public class IrUtils {
         }
 
         mesh.updateCounts();
+        mesh.updateBound();
         return mesh;
     }
 

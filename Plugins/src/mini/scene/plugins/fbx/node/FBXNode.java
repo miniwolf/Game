@@ -81,6 +81,12 @@ public class FBXNode extends FBXObject<Spatial> {
                         "Missing culling: " + cullingElement.getProperties().get(0));
             }
         });
+
+        if (element.getChildByName("Vertices").isPresent()) {
+            FBXMesh mesh = new FBXMesh(assetManager, key);
+            mesh.fromElement(element);
+            link(mesh);
+        }
     }
 
     @Override
@@ -229,6 +235,13 @@ public class FBXNode extends FBXObject<Spatial> {
                 throw new IllegalStateException("An FBXNodeAttribute (" + nodeAttribute + ") is "
                                                 + "already attached to " + this + ". Only one "
                                                 + "attribute allowed per node.");
+            }
+            if (object instanceof FBXMesh) {
+                if (((FBXMesh) object).getVertices() == null) {
+                    System.err.println(
+                            "This might be wrong, but we are removing an empty mesh child"); // TODO: Verify this by documentation
+                    return;
+                }
             }
 
             nodeAttribute = (FBXNodeAttribute) object;

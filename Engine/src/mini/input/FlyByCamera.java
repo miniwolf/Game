@@ -42,7 +42,8 @@ public class FlyByCamera implements AnalogListener, ActionListener {
             CameraInput.FLYCAM_RISE,
             CameraInput.FLYCAM_LOWER,
 
-            CameraInput.FLYCAM_INVERTY
+            CameraInput.FLYCAM_INVERTY,
+            CameraInput.FLYCAM_INFO
     };
 
     protected Camera cam;
@@ -217,6 +218,7 @@ public class FlyByCamera implements AnalogListener, ActionListener {
         inputManager.addMapping(CameraInput.FLYCAM_BACKWARD, new KeyTrigger(KeyboardKey.KEY_S));
         inputManager.addMapping(CameraInput.FLYCAM_RISE, new KeyTrigger(KeyboardKey.KEY_Q));
         inputManager.addMapping(CameraInput.FLYCAM_LOWER, new KeyTrigger(KeyboardKey.KEY_Z));
+        inputManager.addMapping(CameraInput.FLYCAM_INFO, new KeyTrigger(KeyboardKey.KEY_I));
 
         inputManager.addListener(this, mappings);
         inputManager.setCursorVisible(dragToRotate || !isEnabled());
@@ -360,7 +362,14 @@ public class FlyByCamera implements AnalogListener, ActionListener {
             case CameraInput.FLYCAM_ZOOMOUT:
                 zoomCamera(-value);
                 break;
+            case CameraInput.FLYCAM_INFO:
+                giveInfo();
+                break;
         }
+    }
+
+    private void giveInfo() {
+        System.err.println("FlyCam position: " + cam.getLocation());
     }
 
     public void onAction(String name, boolean value, float tpf) {

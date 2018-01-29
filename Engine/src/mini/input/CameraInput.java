@@ -105,5 +105,7 @@ public class CameraInput {
     public final static String FLYCAM_LOWER = "FLYCAM_Lower";
 
     public final static String FLYCAM_INVERTY = "FLYCAM_InvertY";
+
+    public static final String FLYCAM_INFO = "FLYCAM_Info";
 }
 

@@ -12,10 +12,10 @@ import org.lwjgl.assimp.AIVector3D;
 import org.lwjgl.assimp.Assimp;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
+import static org.lwjgl.assimp.Assimp.aiProcess_GenSmoothNormals;
 import static org.lwjgl.assimp.Assimp.aiProcess_JoinIdenticalVertices;
+import static org.lwjgl.assimp.Assimp.aiProcess_PreTransformVertices;
 import static org.lwjgl.assimp.Assimp.aiProcess_Triangulate;
 
 public class AssimpLoader implements AssetLoader {
@@ -24,21 +24,27 @@ public class AssimpLoader implements AssetLoader {
         File file = new File(((UrlAssetInfo) assetInfo).getUrl().getFile());
         AIScene aiScene = Assimp.aiImportFile(file.getAbsolutePath(),
                                               aiProcess_JoinIdenticalVertices
-                                              | aiProcess_Triangulate);
+                                              | aiProcess_Triangulate
+                                              | aiProcess_GenSmoothNormals
+                                              | aiProcess_PreTransformVertices);
+
+        if (aiScene == null) {
+            System.err.println("Failed to load scene: " + file.getAbsolutePath());
+            return null;
+        }
+
         return new AssimpModel(aiScene);
     }
 
     static class AssimpModel {
-        private final List<Mesh> meshes;
         AIScene scene;
 
         public AssimpModel(AIScene scene) {
             this.scene = scene;
-            int meshCount = scene.mNumMeshes();
-            PointerBuffer meshBuffer = scene.mMeshes();
-            meshes = new ArrayList<>();
-            for (int i = 0; i < meshCount; i++) {
-                meshes.add(new AssimpMesh(AIMesh.create(meshBuffer.get(i))));
+            PointerBuffer meshes = scene.mMeshes();
+            for (int i = 0; i < (meshes == null ? 0 : meshes.remaining()); i++) {
+                new AssimpMesh(AIMesh.create(meshes.get(i)));
+
             }
         }
 
