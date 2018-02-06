@@ -750,6 +750,25 @@ public abstract class Spatial implements Cloneable, CloneableSmartAsset, MiniClo
         }
     }
 
+    public void removeControl(Class<? extends Control> controlType) {
+        boolean before = requiresUpdates();
+        for (int i = 0; i < controls.size(); i++) {
+            Control control = controls.get(i);
+            if (controlType.isAssignableFrom(control.getClass())) {
+                Control remove = controls.remove(i);
+                remove.setSpatial(null);
+                break;
+            }
+        }
+        boolean after = requiresUpdates();
+
+        // If the requirements to be updated has changed then we need to let the parent node know so
+        // it can rebuild its update list.
+        if (parent != null && before != after) {
+            parent.invalidateUpdateList();
+        }
+    }
+
     /**
      * Removes the given control from this spatial's controls.
      *
@@ -770,6 +789,26 @@ public abstract class Spatial implements Cloneable, CloneableSmartAsset, MiniClo
         }
 
         return result;
+    }
+
+    /**
+     * @param index The index of the <code>Control</code> in the list to find.
+     * @return the <code>Control</code> at the given index in the list
+     * @throws IndexOutOfBoundsException if the range is outside the range [0, getNumControls() - 1]
+     * @see Spatial#addControl(Control)
+     * @see Spatial#removeControl(Control)
+     */
+    public Control getControl(int index) {
+        return controls.get(index);
+    }
+
+    /**
+     * @return The number of controls attached to this <code>Spatial</code>
+     * @see Spatial#addControl(Control)
+     * @see Spatial#removeControl(Control)
+     */
+    public int getNumControls() {
+        return controls.size();
     }
 
     /**

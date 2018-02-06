@@ -12,8 +12,6 @@ import mini.scene.Spatial;
 public class TestFBXLoading extends SimpleApplication implements AnalogListener {
     private Spatial bumpy;
 
-    private float rotation = 0.0f;
-
     public static void main(String[] args) {
         System.setProperty("org.lwjgl.librarypath",
                            "C:/Users/miniwolf/Engine/Engine/lib/native/windows/");

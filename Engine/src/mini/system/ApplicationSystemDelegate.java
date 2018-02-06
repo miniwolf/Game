@@ -9,9 +9,11 @@ import java.net.URL;
 import java.nio.ByteBuffer;
 
 public abstract class ApplicationSystemDelegate {
-    private boolean lowPermissions = false;
     private SoftTextDialogInput softTextDialogInput = null;
     private URL platformAssetConfigURL;
+
+    protected boolean lowPermissions = false;
+    protected boolean initialized = false;
 
     public abstract ApplicationContext newContext();
 

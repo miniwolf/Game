@@ -49,7 +49,6 @@ public final class Vector3f implements Cloneable, java.io.Serializable {
     private static final Logger logger = Logger.getLogger(Vector3f.class.getName());
 
     public final static Vector3f ZERO = new Vector3f(0, 0, 0);
-    public final static Vector3f ONE = new Vector3f(1, 1, 1);
     public final static Vector3f NAN = new Vector3f(Float.NaN, Float.NaN, Float.NaN);
     public final static Vector3f UNIT_X = new Vector3f(1, 0, 0);
     public final static Vector3f UNIT_Y = new Vector3f(0, 1, 0);

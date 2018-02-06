@@ -1,6 +1,7 @@
 package mini.app;
 
 import mini.app.state.ApplicationState;
+import mini.font.BitmapFont;
 import mini.input.FlyByCamera;
 import mini.input.KeyboardKey;
 import mini.input.controls.ActionListener;
@@ -32,6 +33,7 @@ public abstract class SimpleApplication extends LegacyApplication {
 
     protected Node rootNode = new Node("Root Node");
     protected Node guiNode = new Node("Gui Node");
+    protected BitmapFont guiFont;
     protected FlyByCamera flyCam;
     protected boolean showSettings = true;
     private AppActionListener actionListener = new AppActionListener();
@@ -105,6 +107,9 @@ public abstract class SimpleApplication extends LegacyApplication {
     @Override
     public void initialize() {
         super.initialize();
+
+        loadGuiFont();
+
         guiNode.setQueueBucket(RenderQueue.Bucket.Gui);
         guiNode.setCullHint(Spatial.CullHint.Never);
         viewPort.attachScene(rootNode);
@@ -128,6 +133,10 @@ public abstract class SimpleApplication extends LegacyApplication {
 
         // call user code
         simpleInitApp();
+    }
+
+    private void loadGuiFont() {
+        guiFont = assetManager.loadFont("Interface/Fonts/Default.fnt");
     }
 
     @Override

@@ -73,7 +73,7 @@ public class BoundingSphere extends BoundingVolume {
         }
 
         trans.mult(center, sphere.center);
-        Vector3f axes = Vector3f.ONE;
+        Vector3f axes = new Vector3f(1, 1, 1);
         trans.mult(axes, axes);
         sphere.radius = FastMath.abs(getMaxAxis(axes) * radius) + RADIUS_EPSILON - 1f;
         return sphere;

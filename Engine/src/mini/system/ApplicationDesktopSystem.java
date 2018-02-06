@@ -93,6 +93,20 @@ public class ApplicationDesktopSystem extends ApplicationSystemDelegate {
 
     @Override
     public ApplicationContext newContext() {
+        initialize();
         return newContextLwjgl();
+    }
+
+    private void initialize() {
+        if (initialized) {
+            return;
+        }
+        initialized = true;
+
+        if (!lowPermissions) {
+            if (NativeLibraryLoader.isUsingNativeBullet()) {
+                NativeLibraryLoader.loadNativeLibrary("bulletmini", true);
+            }
+        }
     }
 }

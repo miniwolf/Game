@@ -100,6 +100,9 @@ public final class NativeLibraryLoader {
         registerNativeLibrary("lwjgl", MacOSX32, "lib/native/macosx/liblwjgl.dylib");
         registerNativeLibrary("lwjgl", MacOSX64, "lib/native/macosx/liblwjgl.dylib");
         registerNativeLibrary("lwjgl3", Platform.Windows64, "lib/lwjgl3/lwjgl_opengl.dll");
+
+        registerNativeLibrary("bulletmini", Platform.Windows64,
+                              "native/windows/x86_64/example.dll");
     }
 
     private NativeLibraryLoader() {
@@ -584,7 +587,7 @@ public final class NativeLibraryLoader {
                                        extactionDirectory.getAbsolutePath());
                     break;
                 default:
-                    // all other libraries (openal, bullet, custom)
+                    // all other libraries (openal, bulletmini, custom)
                     // will load directly in here.
                     System.load(targetFile.getAbsolutePath());
                     break;
