@@ -56,14 +56,26 @@ public class FBXObjectFactory {
             }
             return fbxObject;
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
-            throw new IllegalStateException();
+            throw new IllegalStateException(); // Programmer error
         }
     }
 
     private static Class<? extends FBXObject> getImplementingClass(String elementName,
                                                                    String subclassName) {
-        if ("NodeAttribute".equals(elementName) && "LimbNode".equals(subclassName)) {
-            return FBXNullAttribute.class;
+        if ("NodeAttribute".equals(elementName)) {
+            if ("LimbNode".equals(subclassName)) {
+                return FBXNullAttribute.class;
+            } else if ("Camera".equals(subclassName) || "CameraSwitcher".equals(subclassName)) {
+                // TODO: Support cameras
+                return FBXNullAttribute.class;
+            } else if ("Null".equals(subclassName)) {
+                // An "Empty" or "Node" without any specific behaviour
+                return FBXNullAttribute.class;
+            } else {
+                System.err.println(
+                        "Warning: unknown object subclass: " + subclassName + ". Ignoring");
+                return FBXUnknownObject.class;
+            }
         } else if ("Geometry".equals(elementName)) {
             return FBXMesh.class;
         } else if ("Model".equals(elementName)) {

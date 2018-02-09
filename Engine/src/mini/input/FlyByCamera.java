@@ -388,5 +388,10 @@ public class FlyByCamera implements AnalogListener, ActionListener {
         }
     }
 
+    public void jumpTo(Vector3f pos) {
+        Vector3f newPos = new Vector3f(pos.x + 2, pos.y + 2, pos.z + 2);
+        cam.setLocation(newPos);
+        cam.lookAt(pos, Vector3f.UNIT_Y);
+    }
 }
 

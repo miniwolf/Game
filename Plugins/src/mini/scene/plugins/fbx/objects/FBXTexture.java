@@ -88,6 +88,10 @@ public class FBXTexture extends FBXObject<Texture> {
 
     @Override
     public void link(FBXObject obj, String propertyName) {
+        if (this.media == obj) {
+            return;
+        }
+
         unsupportedConnectObjectProperty(obj, propertyName);
     }
 }

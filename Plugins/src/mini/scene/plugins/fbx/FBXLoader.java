@@ -4,8 +4,10 @@ import mini.asset.AssetInfo;
 import mini.asset.AssetKey;
 import mini.asset.AssetLoader;
 import mini.asset.AssetManager;
+import mini.math.Matrix4f;
 import mini.scene.Node;
 import mini.scene.Spatial;
+import mini.scene.plugins.fbx.anim.FBXBindPose;
 import mini.scene.plugins.fbx.connections.FBXConnectionLoader;
 import mini.scene.plugins.fbx.file.FBXElement;
 import mini.scene.plugins.fbx.file.FBXFile;
@@ -17,14 +19,16 @@ import mini.scene.plugins.fbx.objects.FBXObjectLoader;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Map;
 
 public class FBXLoader implements AssetLoader {
     private AssetManager assetManager;
     private FBXReader reader = new FBXReader();
-    Map<FBXId, FBXObject> objects = null;
     private Node sceneNode;
     private AssetKey key;
+    private Map<FBXId, FBXObject> objects = null;
+    private List<FBXBindPose> bindPoses;
 
     @Override
     public Object load(AssetInfo info) throws IOException {
@@ -35,9 +39,19 @@ public class FBXLoader implements AssetLoader {
         // Load the data from the stream
         loadScene(in);
 
+        // Bind poses are needed to compute world transforms.
+        applyBindPoses();
+
+        updateWorldTransforms();
+
         // Create the scene graph from the FBX scene graph.
         Spatial scene = constructSceneGraph();
         return scene;
+    }
+
+    private void updateWorldTransforms() {
+        FBXNode fbxRoot = (FBXNode) objects.get(FBXId.ROOT);
+        fbxRoot.updateWorldTransforms(null, null);
     }
 
     private void loadScene(InputStream in) throws IOException {
@@ -45,13 +59,28 @@ public class FBXLoader implements AssetLoader {
         for (FBXElement fbxElement : scene.getElements()) {
             switch (fbxElement.getName()) {
                 case "Objects":
-                    objects = loadObjects(fbxElement);
+                    loadObjects(fbxElement);
                     break;
                 case "Connections":
                     loadConnections(fbxElement);
                     break;
                 default:
                     System.out.println("Skipped elements: " + fbxElement.getName());
+            }
+        }
+    }
+
+    private void applyBindPoses() {
+        for (FBXBindPose bindPose : bindPoses) {
+            Map<FBXId, Matrix4f> bindPoseData = bindPose.getImplObject();
+            for (Map.Entry<FBXId, Matrix4f> entry : bindPoseData.entrySet()) {
+                FBXObject obj = objects.get(entry.getKey());
+                if (obj instanceof FBXNode) {
+                    FBXNode node = (FBXNode) obj;
+                    node.setWorldBindPose(entry.getValue());
+                } else {
+                    System.err.println("Bind poses can only be applied to FBX nodes");
+                }
             }
         }
     }
@@ -74,8 +103,10 @@ public class FBXLoader implements AssetLoader {
         //new FBXConnector(objects).connectFBXElements(load);
     }
 
-    private Map<FBXId, FBXObject> loadObjects(FBXElement fbxElement) {
+    private void loadObjects(FBXElement fbxElement) {
         FBXObjectLoader loader = new FBXObjectLoader(assetManager, key);
-        return loader.load(fbxElement);
+        loader.load(fbxElement);
+        objects = loader.getObjectMap();
+        bindPoses = loader.getBindPoses();
     }
 }
