@@ -3,17 +3,22 @@ package mini.scene.plugins.fbx.objects;
 import mini.asset.AssetKey;
 import mini.asset.AssetManager;
 import mini.scene.plugins.fbx.FBXElementLoader;
+import mini.scene.plugins.fbx.anim.FBXAnimStack;
+import mini.scene.plugins.fbx.anim.FBXBindPose;
 import mini.scene.plugins.fbx.file.FBXElement;
 import mini.scene.plugins.fbx.file.FBXId;
 import mini.scene.plugins.fbx.node.FBXRootNode;
 import mini.scene.plugins.fbx.obj.FBXObject;
 import mini.scene.plugins.fbx.obj.FBXObjectFactory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-public class FBXObjectLoader implements FBXElementLoader<Map<FBXId, FBXObject>> {
+public class FBXObjectLoader implements FBXElementLoader<Void> {
     private Map<FBXId, FBXObject> objectMap = new HashMap<>();
+    private List<FBXBindPose> bindPoses = new ArrayList<>();
     private AssetManager assetManager;
     private AssetKey key;
 
@@ -23,11 +28,12 @@ public class FBXObjectLoader implements FBXElementLoader<Map<FBXId, FBXObject>> 
     }
 
     @Override
-    public Map<FBXId, FBXObject> load(FBXElement element) {
+    public Void load(FBXElement element) {
         objectMap.put(FBXId.ROOT, new FBXRootNode(assetManager, key));
 
         for (FBXElement fbxElement : element.getChildren()) {
-            if (fbxElement.getName().equals("GlobalSettings")) {
+            if (fbxElement.getName().equals("GlobalSettings") || fbxElement.getName().startsWith(
+                    "MotionBuilder")) {
                 // Old FBX files seem to have the GlobalSettings element under Objects (??) for some reason
                 continue;
             }
@@ -42,9 +48,23 @@ public class FBXObjectLoader implements FBXElementLoader<Map<FBXId, FBXObject>> 
             }
 
             objectMap.put(object.getId(), object);
+
+            if (object instanceof FBXBindPose) {
+                bindPoses.add((FBXBindPose) object);
+            } else if (object instanceof FBXAnimStack) {
+                throw new UnsupportedOperationException();
+            }
             // Todo: animation stuff here
         }
 
+        return null;
+    }
+
+    public Map<FBXId, FBXObject> getObjectMap() {
         return objectMap;
+    }
+
+    public List<FBXBindPose> getBindPoses() {
+        return bindPoses;
     }
 }
