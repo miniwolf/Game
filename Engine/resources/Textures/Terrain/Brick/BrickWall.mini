@@ -1,0 +1,8 @@
+Material Phong Rock : MatDefs/Light/Lighting.minid {
+    MaterialParameters {
+        Shininess            : 2.0
+        DiffuseMap           : Repeat Textures/Terrain/Brick/BrickWall.dds
+        NormalMap            : Repeat Textures/Terrain/Brick/BrickWall_normal_parallax.dds
+        PackedNormalParallax : true
+    }
+}

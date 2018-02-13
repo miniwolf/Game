@@ -208,7 +208,7 @@ public abstract class Spatial implements Cloneable, CloneableSmartAsset, MiniClo
      * avoid exposing it to the public API since it is only used by Node.
      */
     boolean requiresUpdates() {
-        return requiresUpdates;
+        return requiresUpdates | !controls.isEmpty();
     }
 
     /**

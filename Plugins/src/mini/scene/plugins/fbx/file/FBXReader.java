@@ -1,5 +1,7 @@
 package mini.scene.plugins.fbx.file;
 
+import mini.asset.AssetInfo;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -22,12 +24,15 @@ public class FBXReader {
                                                        0x6e, 0x61, 0x72, 0x79, 0x20, 0x20, 0x00,
                                                        0x1a, 0x00};
 
-    public FBXFile readFBX(InputStream in) throws IOException {
+    public FBXFile readFBX(AssetInfo info) throws IOException {
         FBXFile file = new FBXFile();
+        InputStream in = info.openStream();
         ByteBuffer byteBuffer = readToByteBuffer(in);
-        in.close(); // No longer need to retain input stream
 
-        checkHeaderIsFBX(byteBuffer);
+        if (!checkHeaderIsFBX(byteBuffer)) {
+            return new FBXTextReader(info, file).readFBX();
+        }
+        in.close(); // No longer need to retain input stream
 
         file.setVersion(getUInt(byteBuffer));
         FBXElement e;
@@ -183,11 +188,9 @@ public class FBXReader {
         return byteBuffer.getInt() & 0x00000000ffffffffL;
     }
 
-    private void checkHeaderIsFBX(ByteBuffer byteBuffer) throws IOException {
+    private boolean checkHeaderIsFBX(ByteBuffer byteBuffer) {
         byte[] headerBytes = getBytes(byteBuffer, FBX_HEADER.length);
-        if (!Arrays.equals(FBX_HEADER, headerBytes)) {
-            throw new IOException("Only binary FBX files are supported");
-        }
+        return Arrays.equals(FBX_HEADER, headerBytes);
     }
 
     private byte[] getBytes(ByteBuffer buffer, int size) {

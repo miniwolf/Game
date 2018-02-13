@@ -19,6 +19,7 @@ import java.util.Map;
 public class FBXObjectLoader implements FBXElementLoader<Void> {
     private Map<FBXId, FBXObject> objectMap = new HashMap<>();
     private List<FBXBindPose> bindPoses = new ArrayList<>();
+    private List<FBXAnimStack> animStacks = new ArrayList<>();
     private AssetManager assetManager;
     private AssetKey key;
 
@@ -32,8 +33,7 @@ public class FBXObjectLoader implements FBXElementLoader<Void> {
         objectMap.put(FBXId.ROOT, new FBXRootNode(assetManager, key));
 
         for (FBXElement fbxElement : element.getChildren()) {
-            if (fbxElement.getName().equals("GlobalSettings") || fbxElement.getName().startsWith(
-                    "MotionBuilder")) {
+            if (fbxElement.getName().equals("GlobalSettings")) {
                 // Old FBX files seem to have the GlobalSettings element under Objects (??) for some reason
                 continue;
             }
@@ -52,9 +52,8 @@ public class FBXObjectLoader implements FBXElementLoader<Void> {
             if (object instanceof FBXBindPose) {
                 bindPoses.add((FBXBindPose) object);
             } else if (object instanceof FBXAnimStack) {
-                throw new UnsupportedOperationException();
+                animStacks.add((FBXAnimStack) object);
             }
-            // Todo: animation stuff here
         }
 
         return null;

@@ -17,7 +17,6 @@ import mini.scene.mesh.IndexBuffer;
 import mini.scene.mesh.VirtualIndexBuffer;
 import mini.scene.mesh.WrappedIndexBuffer;
 import mini.utils.TempVars;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.nio.FloatBuffer;
 
@@ -350,7 +349,7 @@ public class BIHTree implements CollisionData {
             Ray ray = (Ray) other;
             return collideWithRay(ray, worldMatrix, worldBound, results);
         } else if (other instanceof BoundingVolume) {
-            throw new NotImplementedException();
+            throw new UnsupportedOperationException();
         } else {
             throw new UnsupportedOperationException("Collidable:" + other);
         }
