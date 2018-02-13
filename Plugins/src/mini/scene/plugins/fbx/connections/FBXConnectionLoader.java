@@ -57,8 +57,10 @@ public class FBXConnectionLoader implements FBXElementLoader<Void> {
             FBXObject parent = parentId.isNull() ? objects.get(FBXId.ROOT) : objects.get(parentId);
 
             if (parent == null) {
-                System.err.println("Cannot find parent object ID \"" + parentId + "\"");
-                continue;
+                System.err.println("Cheating and attaching to root element");
+                parent = objects.get(FBXId.ROOT);
+//                System.err.println("Cannot find parent object ID \"" + parentId + "\"");
+//                continue;
             }
             parent.link(child);
         }

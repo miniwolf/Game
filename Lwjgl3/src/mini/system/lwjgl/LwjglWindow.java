@@ -440,15 +440,15 @@ public abstract class LwjglWindow extends LwjglContext implements Runnable {
         try {
             if (!ApplicationSystem.isLowPermissions()) {
                 // Enable uncaught exception handler only for current thread
-                Thread.currentThread().setUncaughtExceptionHandler((thread, thrown) -> {
-                    listener.handleError("Uncaught exception thrown in " + thread.toString(),
-                                         thrown);
-                    if (needClose.get()) {
-                        // listener.handleError() has requested the
-                        // context to close. Satisfy request.
-                        deinitInThread();
-                    }
-                });
+//                Thread.currentThread().setUncaughtExceptionHandler((thread, thrown) -> {
+//                    listener.handleError("Uncaught exception thrown in " + thread.toString(),
+//                                         thrown);
+//                    if (needClose.get()) {
+//                        // listener.handleError() has requested the
+//                        // context to close. Satisfy request.
+//                        deinitInThread();
+//                    }
+//                });
             }
 
             timer = new NanoTimer();

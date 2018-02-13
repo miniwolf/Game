@@ -11,7 +11,6 @@ import mini.math.Ray;
 import mini.math.Transform;
 import mini.math.Vector3f;
 import mini.utils.TempVars;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.nio.FloatBuffer;
 
@@ -252,7 +251,7 @@ public class BoundingBox extends BoundingVolume {
 
     @Override
     public BoundingVolume merge(BoundingVolume volume) {
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -274,7 +273,7 @@ public class BoundingBox extends BoundingVolume {
                 BoundingBox box = (BoundingBox) volume;
                 return mergeLocal(box.center, box.xExtent, box.yExtent, box.zExtent);
             case Sphere:
-                throw new NotImplementedException();
+                throw new UnsupportedOperationException();
             default:
                 return null;
         }
@@ -345,7 +344,7 @@ public class BoundingBox extends BoundingVolume {
 
     @Override
     public float distanceToEdge(Vector3f point) {
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -387,17 +386,17 @@ public class BoundingBox extends BoundingVolume {
 
     @Override
     public boolean contains(Vector3f point) {
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public boolean intersects(Vector3f point) {
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public float getVolume() {
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
 
     @Override

@@ -5,7 +5,6 @@ import mini.asset.AssetManager;
 import mini.math.Transform;
 import mini.scene.plugins.fbx.file.FBXElement;
 import mini.scene.plugins.fbx.file.FBXFile;
-import mini.scene.plugins.fbx.file.FBXReader;
 import mini.scene.plugins.fbx.mesh.FBXMesh;
 import mini.scene.plugins.fbx.node.FBXNode;
 import mini.scene.plugins.fbx.objects.FBXObjectLoader;
@@ -15,9 +14,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 public class FBXObjectTests {
     private static FBXElement objectElement;
     private FBXObjectLoader loader;
@@ -25,11 +21,11 @@ public class FBXObjectTests {
     private AssetKey key;
 
     @BeforeClass
-    public static void ctor() throws IOException {
-        InputStream stream = FBXReader.class
-                .getResourceAsStream("/Models/Chloe/Chloe Price (No Jacket Episode 2).FBX");
-        FBXFile fbxFile = new FBXReader().readFBX(stream);
-        objectElement = getObjectElement(fbxFile);
+    public static void ctor() {
+//        InputStream stream = FBXReader.class
+//                .getResourceAsStream("/Models/Chloe/Chloe Price (No Jacket Episode 2).FBX");
+//        FBXFile fbxFile = new FBXReader().readFBX(stream);
+//        objectElement = getObjectElement(fbxFile);
     }
 
     private static FBXElement getObjectElement(FBXFile file) {

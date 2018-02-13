@@ -8,10 +8,11 @@ import mini.light.AmbientLight;
 import mini.light.DirectionalLight;
 import mini.math.ColorRGBA;
 import mini.math.Vector3f;
+import mini.scene.Node;
 import mini.scene.Spatial;
 
 public class LoadModelWithAnimation extends SimpleApplication implements ActionListener {
-    private Spatial bumpy;
+    private Node bumpy;
     private Spatial reference;
 
     public static void main(String[] args) {
@@ -24,13 +25,16 @@ public class LoadModelWithAnimation extends SimpleApplication implements ActionL
         viewPort.setBackgroundColor(ColorRGBA.White);
         renderer.setBackgroundColor(ColorRGBA.White);
 
-        bumpy = assetManager.loadModel("Models/animation/demo/DefaultAvatar.fbx");
+        bumpy = (Node) assetManager.loadModel("Models/animation/demo/DefaultAvatar.fbx");
         bumpy.setLocalTranslation(0, -1, 0);
-        bumpy.setLocalScale(10);
+        bumpy.setLocalScale(0.01f);
         rootNode.attachChild(bumpy);
 
+        Spatial spatial = assetManager.loadModel("Models/animation/demo/animation/06_13.fbx");
+        rootNode.attachChild(spatial);
+
         reference = assetManager.loadModel("Models/Teapot/Teapot.obj");
-        reference.setLocalTranslation(5, -1, 5);
+        reference.setLocalTranslation(15, -1, 15);
         rootNode.attachChild(reference);
 
         // sunset light
@@ -48,13 +52,18 @@ public class LoadModelWithAnimation extends SimpleApplication implements ActionL
 
     private void setupKey() {
         inputManager.addMapping("GotoBumpy", new KeyTrigger(KeyboardKey.KEY_F));
+        inputManager.addMapping("GotoTeapot", new KeyTrigger(KeyboardKey.KEY_T));
         inputManager.addListener(this, "GotoBumpy");
+        inputManager.addListener(this, "GotoTeapot");
     }
 
     public void onAction(String binding, boolean value, float tpf) {
         if (binding.equals("GotoBumpy")) {
-            //flyCam.jumpTo(reference.getLocalTranslation());
             flyCam.jumpTo(bumpy.getLocalTranslation());
+        }
+
+        if (binding.equals("GotoTeapot")) {
+            flyCam.jumpTo(reference.getLocalTranslation());
         }
     }
 }

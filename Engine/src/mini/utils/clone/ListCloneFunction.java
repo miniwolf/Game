@@ -2,7 +2,7 @@ package mini.utils.clone;
 
 import java.util.List;
 
-public class ListCloneFunction<T extends List<T>> implements CloneFunction<T> {
+public class ListCloneFunction<T extends List<R>, R> implements CloneFunction<T> {
     @Override
     public T cloneObject(Cloner cloner, T object) {
         try {

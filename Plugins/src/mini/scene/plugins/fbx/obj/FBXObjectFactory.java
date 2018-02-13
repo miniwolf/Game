@@ -9,6 +9,7 @@ import mini.scene.plugins.fbx.anim.FBXCluster;
 import mini.scene.plugins.fbx.anim.FBXLimbNode;
 import mini.scene.plugins.fbx.anim.FBXSkinDeformer;
 import mini.scene.plugins.fbx.file.FBXElement;
+import mini.scene.plugins.fbx.file.FBXId;
 import mini.scene.plugins.fbx.material.FBXImage;
 import mini.scene.plugins.fbx.material.FBXMaterial;
 import mini.scene.plugins.fbx.mesh.FBXMesh;
@@ -45,6 +46,13 @@ public class FBXObjectFactory {
                     .getConstructor(AssetManager.class, AssetKey.class);
             FBXObject fbxObject = ctor.newInstance(assetManager, assetKey);
             fbxObject.fromElement(fbxElement);
+
+            if ("Null:Model".equals(fbxObject.getFullClassName())) {
+                fbxObject.id = FBXId.ROOT;
+            }
+            if (elementName.startsWith("MotionBuilder_")) { // TODO: This is horrible
+                return fbxObject;
+            }
 
             String subClassName = elementName + ", " + subclassName;
             if (fbxObject.getAssetManager() == null) {

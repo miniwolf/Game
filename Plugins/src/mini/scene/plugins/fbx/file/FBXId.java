@@ -62,12 +62,16 @@ public abstract class FBXId {
         }
     }
 
-    private static final class LongFBXId extends FBXId {
+    public static final class LongFBXId extends FBXId {
         private long id;
 
         public LongFBXId(long id) {
             this.id = id;
         }
+
+        public long getId() {
+            return id;
+        }// TODO: Delete, debugging only
 
         @Override
         public boolean equals(Object o) {

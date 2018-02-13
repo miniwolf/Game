@@ -18,7 +18,6 @@ import mini.scene.plugins.fbx.obj.FBXObject;
 import mini.scene.plugins.fbx.objects.FBXObjectLoader;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
@@ -33,11 +32,10 @@ public class FBXLoader implements AssetLoader {
     @Override
     public Object load(AssetInfo info) throws IOException {
         this.assetManager = info.getManager();
-        InputStream in = info.openStream();
         key = info.getKey();
 
         // Load the data from the stream
-        loadScene(in);
+        loadScene(info);
 
         // Bind poses are needed to compute world transforms.
         applyBindPoses();
@@ -54,8 +52,8 @@ public class FBXLoader implements AssetLoader {
         fbxRoot.updateWorldTransforms(null, null);
     }
 
-    private void loadScene(InputStream in) throws IOException {
-        FBXFile scene = reader.readFBX(in);
+    private void loadScene(AssetInfo info) throws IOException {
+        FBXFile scene = reader.readFBX(info);
         for (FBXElement fbxElement : scene.getElements()) {
             switch (fbxElement.getName()) {
                 case "Objects":

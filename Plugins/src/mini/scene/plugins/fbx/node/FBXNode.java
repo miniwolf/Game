@@ -299,8 +299,11 @@ public class FBXNode extends FBXObject<Spatial> {
         if (miniParentNodeTransform != null) {
             miniParentNodeTransform = miniParentNodeTransform.clone();
             switch (inheritMode) {
+                case NoParentScale:
                 case ScaleAfterChildRotation:
-                    worldNodeTransform.combineWithParent(miniParentNodeTransform);
+                case ScaleBeforeChildRotation:
+                    worldNodeTransform.combineWithParent(
+                            miniParentNodeTransform); // TODO: Use inheritMode to decide
                     break;
                 default:
                     throw new UnsupportedOperationException();
@@ -360,8 +363,21 @@ public class FBXNode extends FBXObject<Spatial> {
     private enum InheritMode {
         /**
          * Apply parent scale after child rotation. This is the only correctly supported by this engine.
+         * ParentR * childr * ParentS * childs
          */
         ScaleAfterChildRotation,
+        /**
+         * Crap... Apply parent scale before child rotation. Not currently supported, distortion with
+         * non-uniform scale are bound to happen. No way around it atm.
+         * ParentR * ParentS * childr * childs
+         */
+        ScaleBeforeChildRotation,
+        /**
+         * Do not apply parent scale at all.
+         * Could be worked around via: miniChildScale = miniParentScale / fbxChildScale;
+         * ParentR * childr * childs
+         */
+        NoParentScale,
     }
 
     private class FBXTransform {
