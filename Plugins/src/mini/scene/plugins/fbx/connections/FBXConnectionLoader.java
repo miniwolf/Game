@@ -7,6 +7,7 @@ import mini.scene.plugins.fbx.obj.FBXObject;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 // TODO: Having separate map per class or make data class that is outputted containing the different formats
@@ -57,10 +58,10 @@ public class FBXConnectionLoader implements FBXElementLoader<Void> {
             FBXObject parent = parentId.isNull() ? objects.get(FBXId.ROOT) : objects.get(parentId);
 
             if (parent == null) {
-                System.err.println("Cheating and attaching to root element");
-                parent = objects.get(FBXId.ROOT);
-//                System.err.println("Cannot find parent object ID \"" + parentId + "\"");
-//                continue;
+//                System.err.println("Cheating and attaching to root element");
+//                parent = objects.get(FBXId.ROOT);
+                System.err.println("Cannot find parent object ID \"" + parentId + "\"");
+                continue;
             }
             parent.link(child);
         }

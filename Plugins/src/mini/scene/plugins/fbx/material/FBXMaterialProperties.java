@@ -2,7 +2,6 @@ package mini.scene.plugins.fbx.material;
 
 import mini.math.ColorRGBA;
 import mini.scene.plugins.fbx.file.FBXElement;
-import mini.scene.plugins.fbx.objects.FBXTexture;
 
 import java.util.HashMap;
 import java.util.Map;

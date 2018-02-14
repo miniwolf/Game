@@ -28,8 +28,8 @@ public class TestFBXLoading extends SimpleApplication implements AnalogListener 
         flyCam.setMoveSpeed(20);
 
 //        bumpy = assetManager.loadModel("Models/chest/Models/chest.fbx");
-        bumpy = assetManager
-                .loadModel("Models/Chloe/Chloe Price (No Jacket Episode 2).FBX");
+        bumpy = assetManager.loadModel("Models/car/L200-FBX/L200-FBX.fbx");
+                //.loadModel("Models/Chloe/Chloe Price (No Jacket Episode 2).FBX");
         bumpy.setLocalTranslation(0, -1, 0);
         bumpy.rotate(0, 0f, 0);
         rootNode.attachChild(bumpy);

@@ -42,9 +42,15 @@ public class FBXObjectLoader implements FBXElementLoader<Void> {
                 throw new UnsupportedOperationException(
                         "Failed to create FBX Object of type " + fbxElement.getName());
             }
-            if (objectMap.containsKey(object.getId())) {
-                System.err.println("An object with ID \"" + object.getId() + "\" has already been "
-                                   + "defined. Overwriting previous");
+            if (objectMap.containsKey(object.getId()) || (object.getId() instanceof FBXId.LongFBXId && ((FBXId.LongFBXId)object.getId()).getId() == 0)) {
+                FBXId.StringFBXId customID = new FBXId.StringFBXId(object.getName() + "\u0000\u0001" + object.getClassName());
+                if (objectMap.containsKey(customID)) {
+                    System.err.println("An object with ID \"" + object.getId() + "\" has already been "
+                            + "defined. Overwriting previous");
+                } else {
+                    objectMap.put(customID, object);
+                    continue;
+                }
             }
 
             objectMap.put(object.getId(), object);

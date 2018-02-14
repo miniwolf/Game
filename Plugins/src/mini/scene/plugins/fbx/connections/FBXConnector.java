@@ -2,10 +2,10 @@ package mini.scene.plugins.fbx.connections;
 
 import mini.scene.plugins.fbx.material.FBXImage;
 import mini.scene.plugins.fbx.material.FBXMaterial;
+import mini.scene.plugins.fbx.material.FBXTexture;
 import mini.scene.plugins.fbx.mesh.FBXMesh;
 import mini.scene.plugins.fbx.node.FBXNode;
 import mini.scene.plugins.fbx.obj.FBXObject;
-import mini.scene.plugins.fbx.objects.FBXTexture;
 
 import java.util.List;
 import java.util.Map;
