@@ -40,13 +40,13 @@ public class Animation implements Cloneable, MiniCloneable {
         throw new UnsupportedOperationException();
     }
 
-    public void setTime(float time, AnimationControl control, AnimationChannel channel) {
+    public void setTime(float time, AnimationControl control) {
         if (tracks == null) {
             return;
         }
 
         for (SpatialTrack track : tracks) {
-            track.setTime(time, control, channel);
+            track.setTime(time, control);
         }
     }
 }

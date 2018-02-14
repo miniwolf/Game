@@ -47,6 +47,7 @@ public class TestSpatialAimation extends SimpleApplication {
         int totalFrames = (int) (fps * animationTime);
         float t = 0, dT = animationTime / totalFrames;
         float x = 0, dX = totalMoveLengthX / totalFrames;
+        float rx = 0, drX = totalMoveLengthX / totalFrames;
         float[] times = new float[totalFrames];
         Vector3f[] translations = new Vector3f[totalFrames];
         Quaternion[] rotations = new Quaternion[totalFrames];
@@ -56,7 +57,8 @@ public class TestSpatialAimation extends SimpleApplication {
             t += dT;
             translations[i] = new Vector3f(x, 0, 0);
             x += dX;
-            rotations[i] = Quaternion.IDENTITY;
+            rotations[i] = new Quaternion(rx, 0,0,1);
+            rx += drX;
             scales[i] = Vector3f.UNIT_XYZ;
         }
         SpatialTrack spatialTrack = new SpatialTrack(times, translations, rotations, scales);

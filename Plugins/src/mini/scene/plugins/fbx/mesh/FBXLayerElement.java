@@ -166,6 +166,7 @@ public class FBXLayerElement {
         Position,
         BoneIndex,
         BoneWeight,
+        Texture, // TODO: Implement this...
         Normal, // Vector3f
         Binormal,
         Tangent,

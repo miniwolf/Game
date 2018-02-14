@@ -19,6 +19,11 @@ public abstract class AbstractControl implements Control, MiniCloneable {
     }
 
     @Override
+    public Spatial getSpatial() {
+        return spatial;
+    }
+
+    @Override
     public void render(RenderManager renderManager, ViewPort vp) {
         if (!enabled) {
             return;
