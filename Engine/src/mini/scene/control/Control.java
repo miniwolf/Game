@@ -22,6 +22,8 @@ public interface Control {
      */
     void setSpatial(Spatial spatial);
 
+    Spatial getSpatial();
+
     /**
      * Should be called prior to queueing the spatial by the RenderManager. This should not be
      * called from user code.

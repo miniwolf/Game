@@ -40,7 +40,7 @@ public class AnimationChannel {
             return;
         }
 
-        animation.setTime(time, control, this);
+        animation.setTime(time, control);
         time += tpf * speed;
     }
 }

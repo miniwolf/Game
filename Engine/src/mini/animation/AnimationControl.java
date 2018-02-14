@@ -3,6 +3,7 @@ package mini.animation;
 import mini.renderer.RenderManager;
 import mini.renderer.ViewPort;
 import mini.scene.AbstractControl;
+import mini.scene.Spatial;
 import mini.utils.clone.Cloner;
 
 import java.util.ArrayList;
@@ -13,11 +14,7 @@ import java.util.Map;
 public class AnimationControl extends AbstractControl {
     private List<AnimationChannel> channels = new ArrayList<>();
     private Map<String, Animation> animationMap = new HashMap<>();
-
-    @Override
-    public void update(float tpf) {
-        throw new UnsupportedOperationException();
-    }
+    private Spatial spatial;
 
     @Override
     protected void controlRender(RenderManager renderManager, ViewPort vp) {
