@@ -198,34 +198,6 @@ public final class Transform implements Cloneable, java.io.Serializable {
         this.scale.interpolateLocal(t1.scale, t2.scale, delta);
     }
 
-    /**
-     * Changes the values of this matrix acording to it's parent.  Very similar to the concept of Node/Spatial transforms.
-     *
-     * @param parent The parent matrix.
-     * @param useScale
-     * @return This matrix, after combining.
-     */
-    public Transform combineWithParent(Transform parent) {
-        scale.multLocal(parent.scale); // Ss
-
-//        rot.multLocal(parent.rot);
-        parent.rot.mult(rot, rot); // Rr
-
-        // This here, is evil code
-//        parent
-//            .rot
-//            .multLocal(translation)
-//            .multLocal(parent.scale)
-//            .addLocal(parent.translation);
-
-        translation.multLocal(parent.scale);
-        parent // RrSs
-                .rot
-                .multLocal(translation)
-                .addLocal(parent.translation);
-        return this;
-    }
-
     public void combineWithParent(Transform parent, String mode) {
         switch (mode) {
             case "ScaleAfterChildRotation":
@@ -240,31 +212,37 @@ public final class Transform implements Cloneable, java.io.Serializable {
         }
     }
 
-    private void combineWithParentWithoutScaling(Transform parent) {
-        parent.rot.mult(rot, rot); // Rr
-
-        // This here, is evil code
-//        parent
-//            .rot
-//            .multLocal(translation)
-//            .multLocal(parent.scale)
-//            .addLocal(parent.translation);
-
+    /**
+     * Changes the values of this matrix according to it's parent.  Very similar to the concept of Node/Spatial transforms.
+     *
+     * @param parent The parent matrix.
+     * @return This matrix, after combining.
+     */
+    public Transform combineWithParent(Transform parent) {
+        //applying parent scale to local scale
+        scale.multLocal(parent.scale);
+        //applying parent rotation to local rotation.
+        parent.rot.mult(rot, rot);
+        //applying parent scale to local translation.
         translation.multLocal(parent.scale);
-        parent // RrSs
-                .rot
-                .multLocal(translation)
-                .addLocal(parent.translation);
+        //applying parent rotation to local translation, then applying parent translation to local translation.
+        //Note that parent.rot.multLocal(translation) doesn't modify "parent.rot" but "translation"
+        parent.rot
+              .multLocal(translation)
+              .addLocal(parent.translation);
+
+        return this;
     }
 
     private void combineWithParentAfter(Transform parent) {
-//        parent.scale.mult(scale, scale); // sS
-//        rot.multLocal(parent.rot); // rR
-
         //ParentR * ParentS * childr * childs
 
         rot.multLocal(scale); // rs
         parent.rot.multLocal(parent.scale); // RS
+    }
+
+    private void combineWithParentWithoutScaling(Transform parent) {
+        parent.rot.mult(rot, rot); // Rr
 
         translation.multLocal(parent.scale);
         parent // RrSs

@@ -17,6 +17,7 @@ import mini.scene.Spatial;
 import mini.scene.plugins.fbx.anim.FBXLimbNode;
 import mini.scene.plugins.fbx.file.FBXElement;
 import mini.scene.plugins.fbx.material.FBXMaterial;
+import mini.scene.plugins.fbx.material.FBXTexture;
 import mini.scene.plugins.fbx.mesh.FBXMesh;
 import mini.scene.plugins.fbx.obj.FBXObject;
 import mini.scene.plugins.fbx.utils.RotationOrder;
@@ -133,10 +134,6 @@ public class FBXNode extends FBXObject<Spatial> {
 
     @Override
     public void link(FBXObject object) {
-        if (object.getFullClassName().startsWith("Null:")) {
-            return;
-        }
-
         if (object instanceof FBXNode) { // Scene Graph Object
             FBXNode childNode = (FBXNode) object;
             if (childNode.parent != null) {
@@ -166,6 +163,8 @@ public class FBXNode extends FBXObject<Spatial> {
             }
         } else if (object instanceof FBXMaterial) {
             materials.add((FBXMaterial) object);
+        } else if (object instanceof FBXTexture) {
+            // TODO: right thing to do? Skipping
         } else {
             unsupportedConnectObject(object);
         }
@@ -300,10 +299,12 @@ public class FBXNode extends FBXObject<Spatial> {
             miniParentNodeTransform = miniParentNodeTransform.clone();
             switch (inheritMode) {
                 case NoParentScale:
+                    worldNodeTransform.combineWithParent(miniParentNodeTransform, "NoParentScale");
                 case ScaleAfterChildRotation:
+                    worldNodeTransform.combineWithParent(miniParentNodeTransform, "ScaleAfterChildRotation");
                 case ScaleBeforeChildRotation:
                     worldNodeTransform.combineWithParent(
-                            miniParentNodeTransform); // TODO: Use inheritMode to decide
+                            miniParentNodeTransform, "ScaleBeforeChildRotation"); // TODO: Use inheritMode to decide
                     break;
                 default:
                     throw new UnsupportedOperationException();
@@ -435,6 +436,8 @@ public class FBXNode extends FBXObject<Spatial> {
                         int inheritType = (int) element.getProperties().get(4);
                         inheritMode = InheritMode.values()[inheritType];
                         break;
+                    default:
+                        System.err.println("");
                 }
             }
             return this;

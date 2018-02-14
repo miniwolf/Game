@@ -8,7 +8,6 @@ import mini.math.ColorRGBA;
 import mini.scene.plugins.fbx.file.FBXElement;
 import mini.scene.plugins.fbx.obj.FBXObject;
 import mini.scene.plugins.fbx.obj.FBXUnknownObject;
-import mini.scene.plugins.fbx.objects.FBXTexture;
 import mini.textures.Texture;
 import mini.textures.image.ColorSpace;
 
@@ -105,7 +104,7 @@ public class FBXMaterial extends FBXObject<Material> {
         emissive = setColorFromFactor(emissive, emissiveFactor);
 
         Object ambientColor = properties.getProperty("AmbientColor");
-        if (ambientColor != null && ambientColor instanceof ColorRGBA) {
+        if (ambientColor instanceof ColorRGBA) {
             ambient = ((ColorRGBA) ambientColor).clone();
         }
 
@@ -113,14 +112,14 @@ public class FBXMaterial extends FBXObject<Material> {
         ambient = setColorFromFactor(ambient, ambientFactor);
 
         Object bumpMap = properties.getProperty("NormalMap");
-        if (bumpMap != null && bumpMap instanceof FBXTexture) {
+        if (bumpMap instanceof FBXTexture) {
             FBXTexture texture = (FBXTexture) bumpMap;
             normalMap = texture.getImplObject();
             normalMap.getImage().setColorSpace(ColorSpace.sRGB);
         }
 
         Object shininessFactor = properties.getProperty("Shininess");
-        if (shininessFactor != null && shininessFactor instanceof Float) {
+        if (shininessFactor instanceof Float) {
             shininess = (Float) shininessFactor;
         }
 
@@ -203,7 +202,7 @@ public class FBXMaterial extends FBXObject<Material> {
     }
 
     private ColorRGBA setColorFromFactor(ColorRGBA color, Object specularFactor) {
-        if (specularFactor != null && specularFactor instanceof Float) {
+        if (specularFactor instanceof Float) {
             float factor = (Float) specularFactor;
             if (color != null) {
                 multRGB(color, factor);

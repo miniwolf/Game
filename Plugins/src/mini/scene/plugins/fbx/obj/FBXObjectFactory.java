@@ -12,10 +12,10 @@ import mini.scene.plugins.fbx.file.FBXElement;
 import mini.scene.plugins.fbx.file.FBXId;
 import mini.scene.plugins.fbx.material.FBXImage;
 import mini.scene.plugins.fbx.material.FBXMaterial;
+import mini.scene.plugins.fbx.material.FBXTexture;
 import mini.scene.plugins.fbx.mesh.FBXMesh;
 import mini.scene.plugins.fbx.node.FBXNode;
 import mini.scene.plugins.fbx.node.FBXNullAttribute;
-import mini.scene.plugins.fbx.objects.FBXTexture;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -63,8 +63,11 @@ public class FBXObjectFactory {
                                                 " to call super.fromElement in their constructor");
             }
             return fbxObject;
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
+        } catch (IllegalAccessException | InvocationTargetException | InstantiationException e) {
             throw new IllegalStateException(); // Programmer error
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+            throw new IllegalStateException();
         }
     }
 

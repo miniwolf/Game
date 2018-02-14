@@ -33,7 +33,7 @@ public abstract class FBXId {
 
     public abstract boolean isNull();
 
-    private static final class StringFBXId extends FBXId {
+    public static final class StringFBXId extends FBXId {
         private final String id;
 
         public StringFBXId(String id) {
