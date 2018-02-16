@@ -32,7 +32,6 @@ public class FBXNode extends FBXObject<Spatial> {
     protected final Transform worldNodeTransform = new Transform();
     private Matrix4f cachedWorldBindPose;
 
-    private Node node;
     private RenderState.FaceCullMode cullMode;
     private FBXNode parent;
     private FBXMesh mesh;
@@ -109,11 +108,10 @@ public class FBXNode extends FBXObject<Spatial> {
     @Override
     public void fromElement(FBXElement element) {
         super.fromElement(element);
-        node = new Node(name);
         FBXTransform FBXTransform = new FBXTransform(element.getFBXProperties()).invoke();
 
         Transform transform = setupTransform(FBXTransform);
-        node.setLocalTransform(transform);
+        localNodeTransform.set(transform);
 
         Optional<FBXElement> culling = element.getChildByName("Culling");
         culling.ifPresent(cullingElement -> {
@@ -177,7 +175,7 @@ public class FBXNode extends FBXObject<Spatial> {
             System.err.println("No meshes could be loaded. Creating empty node.");
             return new Node(getName() + "-node");
         } else {
-            // Multiple jME3 geometries required for a single FBXMesh.
+            // Multiple geometries required for a single FBXMesh.
             String nodeName;
             if (children.isEmpty()) {
                 nodeName = getName() + "-mesh";
@@ -228,6 +226,10 @@ public class FBXNode extends FBXObject<Spatial> {
     }
 
     private Transform setupTransform(FBXTransform FBXTransform) {
+        // Render Local Translation =
+        // Inv Scale Pivot * Lcl Scale * Scale Pivot * Scale Offset *
+        // Inv Rota Pivot * Post Rotation * Rotation * Pre Rotation * Rotation Pivot * Rotation Offset *
+        // Translation
         Matrix4f transformMatrix = new Matrix4f();
         Vector3f translationLocalRaw = FBXTransform.getTranslationLocalRaw();
         transformMatrix.setTranslation(translationLocalRaw.x, translationLocalRaw.y,
@@ -236,7 +238,9 @@ public class FBXNode extends FBXObject<Spatial> {
         Vector3f rotationLocalRaw = FBXTransform.getRotationLocalRaw();
         boolean rotationActive = FBXTransform.isRotationActive();
         if (rotationActive) {
-            Quaternion postRotation = new Quaternion();
+            Vector3f rotationPostRaw = FBXTransform.getRotationPostRaw();
+            Quaternion postRotation = RotationOrder
+                    .rotate(rotationPostRaw.x, rotationPostRaw.y, rotationPostRaw.z);
             Quaternion localRotation = RotationOrder
                     .rotate(rotationLocalRaw.x, rotationLocalRaw.y, rotationLocalRaw.z);
             Vector3f rotationPreRaw = FBXTransform.getRotationPreRaw();
@@ -250,6 +254,9 @@ public class FBXNode extends FBXObject<Spatial> {
         }
 
         Vector3f scaleLocalRaw = FBXTransform.getScaleLocalRaw();
+        Vector3f scalePivotRaw = FBXTransform.getScalePivotRaw();
+        Vector3f scaleOffsetRaw = FBXTransform.getScaleOffsetRaw();
+        scaleLocalRaw.multLocal(scalePivotRaw).multLocal(scaleOffsetRaw);
         if (!scaleLocalRaw.equals(Vector3f.ZERO)) {
             transformMatrix.scale(scaleLocalRaw);
         }
@@ -257,10 +264,6 @@ public class FBXNode extends FBXObject<Spatial> {
         return new Transform(transformMatrix.toTranslationVector(),
                              transformMatrix.toRotationQuat(),
                              transformMatrix.toScaleVector());
-    }
-
-    public Node getNode() {
-        return node;
     }
 
     public void setWorldBindPose(Matrix4f worldBindPose) {
@@ -387,7 +390,12 @@ public class FBXNode extends FBXObject<Spatial> {
         private Vector3f rotationLocalRaw = new Vector3f();
         private Vector3f translationLocalRaw = new Vector3f();
         private Vector3f scaleLocalRaw = new Vector3f();
+        private Vector3f rotationOffsetRaw = new Vector3f();
         private boolean rotationActive;
+        private Vector3f rotationPivotRaw = new Vector3f();
+        private Vector3f scalingPivotRaw = new Vector3f();
+        private Vector3f scalingOffsetRaw = new Vector3f();
+        private Vector3f rotationPostRaw = new Vector3f();
 
         public FBXTransform(List<FBXElement> properties) {
             this.properties = properties;
@@ -413,7 +421,13 @@ public class FBXNode extends FBXObject<Spatial> {
             return rotationActive;
         }
 
+        public Vector3f getRotationPostRaw() {
+            return rotationPostRaw;
+        }
+
         public FBXTransform invoke() {
+            // Render Local Translation =
+            //      Inv Scale Pivot * Lcl Scale * Scale Pivot * Scale Offset * Inv Rota Pivot * Post Rotation * Rotation * Pre Rotation * Rotation Pivot * Rotation Offset * Translation
             for (FBXElement element : properties) {
                 String propertyName = (String) element.getProperties().get(0);
                 switch (propertyName) {
@@ -422,6 +436,9 @@ public class FBXNode extends FBXObject<Spatial> {
                         break;
                     case "PreRotation":
                         rotationPreRaw = readVectorFromProperty(element);
+                        break;
+                    case "PostRotation":
+                        rotationPostRaw = readVectorFromProperty(element);
                         break;
                     case "Lcl Rotation":
                         rotationLocalRaw = readVectorFromProperty(element);
@@ -432,15 +449,34 @@ public class FBXNode extends FBXObject<Spatial> {
                     case "Lcl Scaling":
                         scaleLocalRaw = readVectorFromProperty(element);
                         break;
+                    case "ScalingPivot":
+                        scalingPivotRaw = readVectorFromProperty(element);
+                        break;
+                    case "ScalingOffset":
+                        scalingOffsetRaw = readVectorFromProperty(element);
+                        break;
                     case "InheritType":
                         int inheritType = (int) element.getProperties().get(4);
                         inheritMode = InheritMode.values()[inheritType];
                         break;
+                    case "RotationOffset":
+                        rotationOffsetRaw = readVectorFromProperty(element);
+                        break;
+                    case "RotationPivot":
+                        rotationPivotRaw = readVectorFromProperty(element);
+                        break;
                     default:
-                        System.err.println("");
                 }
             }
             return this;
+        }
+
+        public Vector3f getScalePivotRaw() {
+            return scalingPivotRaw;
+        }
+
+        public Vector3f getScaleOffsetRaw() {
+            return scalingOffsetRaw;
         }
     }
 }

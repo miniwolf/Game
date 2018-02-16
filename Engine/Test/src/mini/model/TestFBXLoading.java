@@ -23,9 +23,10 @@ public class TestFBXLoading extends SimpleApplication implements AnalogListener 
     public void simpleInitApp() {
         setupInput();
 
+
         viewPort.setBackgroundColor(ColorRGBA.DarkGray);
 
-        flyCam.setMoveSpeed(20);
+        flyCam.setMoveSpeed(30);
 
 //        bumpy = assetManager.loadModel("Models/chest/Models/chest.fbx");
         bumpy = assetManager.loadModel("Models/car/L200-FBX/L200-FBX.fbx");

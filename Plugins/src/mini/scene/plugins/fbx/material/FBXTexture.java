@@ -13,8 +13,8 @@ public class FBXTexture extends FBXObject<Texture> {
     private FBXImage media;
     private String type;
     private String uvSet;
-    private Integer wrapModeU;
-    private Integer wrapModeV;
+    private int wrapModeU;
+    private int wrapModeV;
 
     public FBXTexture(AssetManager assetManager, AssetKey key) {
         super(assetManager, key);
@@ -45,8 +45,6 @@ public class FBXTexture extends FBXObject<Texture> {
                 wrapModeV = (Integer) property.getProperties().get(4);
             }
         }
-
-        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -68,10 +66,10 @@ public class FBXTexture extends FBXObject<Texture> {
         }
         tex.setMinFilter(Texture.MinFilter.Trilinear);
         tex.setMagFilter(Texture.MagFilter.Bilinear);
-        if (wrapModeU == 0) {
+        if (0 == wrapModeU) {
             tex.setWrap(Texture.WrapAxis.S, Texture.WrapMode.Repeat);
         }
-        if (wrapModeV == 0) {
+        if (0 == wrapModeV) {
             tex.setWrap(Texture.WrapAxis.T, Texture.WrapMode.Repeat);
         }
         return tex;
@@ -88,6 +86,9 @@ public class FBXTexture extends FBXObject<Texture> {
 
     @Override
     public void link(FBXObject obj, String propertyName) {
+        if (propertyName.equals("VideoProperty")) {
+            return;
+        }
         throw new UnsupportedOperationException();
     }
 }
