@@ -57,8 +57,7 @@ public class TestSpatialAimation extends SimpleApplication {
             t += dT;
             translations[i] = new Vector3f(x, 0, 0);
             x += dX;
-            rotations[i] = new Quaternion(rx, 0,0,1);
-            rx += drX;
+            rotations[i] = Quaternion.IDENTITY;
             scales[i] = Vector3f.UNIT_XYZ;
         }
         SpatialTrack spatialTrack = new SpatialTrack(times, translations, rotations, scales);

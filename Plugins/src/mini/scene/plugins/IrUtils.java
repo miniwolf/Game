@@ -13,6 +13,7 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,14 +35,56 @@ public class IrUtils {
             } else if (polygon.vertices.length == 3) {
                 newPolygons.add(polygon);
             } else {
+                newPolygons.addAll(NGonToTri(polygon));
                 // N-gon. Have to ignore it...
-                System.err.println("Warning: N-gon encountered, ignoring. The mesh may not appear "
-                                   + "correctly. Triangulate your model prior to export. Quads are"
-                                   + "acceptable to.");
+//                System.err.println("Warning: N-gon encountered, ignoring. The mesh may not appear "
+//                                   + "correctly. Triangulate your model prior to export. Quads are"
+//                                   + "acceptable to.");
             }
         }
         irMesh.polygons = new IrPolygon[newPolygons.size()];
         newPolygons.toArray(irMesh.polygons);
+    }
+
+    private static List<IrPolygon> NGonToTri(IrPolygon polygon) {
+        List<IrVertex> verticesToTriangulate = new ArrayList<>(Arrays.asList(polygon.vertices));
+
+        List<IrPolygon> newPolygons = new ArrayList<>();
+
+        while (verticesToTriangulate.size() > 3) {
+            IrPolygon irPolygon = new IrPolygon();
+
+            IrVertex index0 = verticesToTriangulate.get(0);
+            verticesToTriangulate.remove(index0);
+            IrVertex index1 = findClosestVertex(verticesToTriangulate, index0);
+            IrVertex index2 = findClosestVertex(verticesToTriangulate, index0);
+
+            irPolygon.vertices = new IrVertex[]{index0, index1, index2};
+            newPolygons.add(irPolygon);
+        }
+        assert verticesToTriangulate.size() == 3;
+        IrPolygon irPolygon = new IrPolygon();
+        irPolygon.vertices = verticesToTriangulate.toArray(new IrVertex[3]);
+        newPolygons.add(irPolygon);
+        return newPolygons;
+    }
+
+    private static IrVertex findClosestVertex(List<IrVertex> verticesToTriangulate,
+                                              IrVertex index0) {
+        float minDistance = Float.MAX_VALUE;
+        IrVertex result = null;
+        for (IrVertex v2 : verticesToTriangulate) {
+            float d = v2.pos.distance(index0.pos);
+            if (d < minDistance) {
+                result = v2;
+                minDistance = d;
+            }
+        }
+        if (verticesToTriangulate.size() > 3) {
+            verticesToTriangulate.remove(result);
+        }
+
+        return result;
     }
 
     private static IrPolygon[] quadToTri(IrPolygon quad) {
