@@ -15,8 +15,7 @@ public class FBXCluster extends FBXObject {
     }
 
     @Override
-    public void fromElement(FBXElement element) {
-        super.fromElement(element);
+    public void fromElementOverride(FBXElement element) {
         for (FBXElement fbxElement : element.getChildren()) {
             if (fbxElement.getName().equals("Indexes")) {
                 indexes = (int[]) fbxElement.getProperties().get(0);

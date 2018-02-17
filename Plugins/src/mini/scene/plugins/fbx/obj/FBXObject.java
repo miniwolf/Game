@@ -27,6 +27,8 @@ public abstract class FBXObject<T> {
         return new Vector3f(x, y, z);
     }
 
+    public abstract void fromElementOverride(FBXElement element);
+
     public void fromElement(FBXElement element) {
         id = FBXId.getObjectId(element);
         String nameAndClass;
@@ -54,6 +56,7 @@ public abstract class FBXObject<T> {
             name = nameAndClass;
             className = null;
         }
+        fromElementOverride(element);
     }
 
     public FBXId getId() {
