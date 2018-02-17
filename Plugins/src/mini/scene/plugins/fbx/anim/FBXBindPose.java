@@ -23,8 +23,7 @@ public class FBXBindPose extends FBXObject<Map<FBXId, Matrix4f>> {
     }
 
     @Override
-    public void fromElement(FBXElement element) {
-        super.fromElement(element);
+    public void fromElementOverride(FBXElement element) {
         for (FBXElement fbxElement : element.getChildren()) {
             if (!fbxElement.getName().equals("PoseNode")) {
                 continue;

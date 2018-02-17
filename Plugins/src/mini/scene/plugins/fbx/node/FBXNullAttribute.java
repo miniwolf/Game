@@ -2,11 +2,16 @@ package mini.scene.plugins.fbx.node;
 
 import mini.asset.AssetKey;
 import mini.asset.AssetManager;
+import mini.scene.plugins.fbx.file.FBXElement;
 import mini.scene.plugins.fbx.obj.FBXObject;
 
 public class FBXNullAttribute extends FBXNodeAttribute {
     public FBXNullAttribute(AssetManager assetManager, AssetKey key) {
         super(assetManager, key);
+    }
+
+    @Override
+    public void fromElementOverride(FBXElement element) {
     }
 
     @Override

@@ -62,6 +62,8 @@ public class FBXLoader implements AssetLoader {
                 case "Connections":
                     loadConnections(fbxElement);
                     break;
+                case "Takes":
+                    break;
                 default:
                     System.out.println("Skipped elements: " + fbxElement.getName());
             }

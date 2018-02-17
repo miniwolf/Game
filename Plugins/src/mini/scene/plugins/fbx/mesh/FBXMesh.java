@@ -34,8 +34,7 @@ public class FBXMesh extends FBXNodeAttribute<Map<Integer, Mesh>> {
     }
 
     @Override
-    public void fromElement(FBXElement element) {
-        super.fromElement(element);
+    public void fromElementOverride(FBXElement element) {
 
         List<FBXLayerElement> layerElementList = new ArrayList<>();
         List<FBXLayer> layerList = new ArrayList<>();

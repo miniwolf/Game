@@ -25,8 +25,7 @@ public class FBXImage extends FBXObject {
     }
 
     @Override
-    public void fromElement(FBXElement element) {
-        super.fromElement(element);
+    public void fromElementOverride(FBXElement element) {
         if (element.getPropertyTypes().length == 3) {
             type = (String) element.getProperties().get(2);
         } else {

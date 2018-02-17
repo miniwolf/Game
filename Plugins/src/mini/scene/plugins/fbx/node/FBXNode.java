@@ -106,8 +106,7 @@ public class FBXNode extends FBXObject<Spatial> {
     }
 
     @Override
-    public void fromElement(FBXElement element) {
-        super.fromElement(element);
+    public void fromElementOverride(FBXElement element) {
         FBXTransform FBXTransform = new FBXTransform(element.getFBXProperties()).invoke();
 
         Transform transform = setupTransform(FBXTransform);
@@ -278,14 +277,14 @@ public class FBXNode extends FBXObject<Spatial> {
         miniWorldBindPose.setRotation(worldBindPose.toRotationQuat());
         miniWorldBindPose.setScale(worldBindPose.toScaleVector());
 
-        System.out.println("\tBind Pose for " + getName());
-        System.out.println(miniWorldBindPose);
+//        System.out.println("\tBind Pose for " + getName());
+//        System.out.println(miniWorldBindPose);
 
         float[] angles = new float[3];
         miniWorldBindPose.getRotation().toAngles(angles);
-        System.out.println("Angles " + angles[0] * FastMath.RAD_TO_DEG + ", " +
-                           angles[1] * FastMath.RAD_TO_DEG + ", " +
-                           angles[2] * FastMath.RAD_TO_DEG);
+//        System.out.println("Angles " + angles[0] * FastMath.RAD_TO_DEG + ", " +
+//                           angles[1] * FastMath.RAD_TO_DEG + ", " +
+//                           angles[2] * FastMath.RAD_TO_DEG);
     }
 
     @Override

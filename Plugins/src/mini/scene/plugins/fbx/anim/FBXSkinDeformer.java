@@ -2,6 +2,7 @@ package mini.scene.plugins.fbx.anim;
 
 import mini.asset.AssetKey;
 import mini.asset.AssetManager;
+import mini.scene.plugins.fbx.file.FBXElement;
 import mini.scene.plugins.fbx.obj.FBXObject;
 
 import java.util.ArrayList;
@@ -12,6 +13,10 @@ public class FBXSkinDeformer extends FBXObject<List<FBXCluster>> {
 
     public FBXSkinDeformer(AssetManager assetManager, AssetKey key) {
         super(assetManager, key);
+    }
+
+    @Override
+    public void fromElementOverride(FBXElement element) {
     }
 
     @Override

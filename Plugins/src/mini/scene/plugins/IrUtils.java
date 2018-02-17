@@ -36,10 +36,11 @@ public class IrUtils {
                 newPolygons.add(polygon);
             } else {
                 newPolygons.addAll(NGonToTri(polygon));
-                // N-gon. Have to ignore it...
-//                System.err.println("Warning: N-gon encountered, ignoring. The mesh may not appear "
-//                                   + "correctly. Triangulate your model prior to export. Quads are"
-//                                   + "acceptable to.");
+                // N-gon. Try to fix it.
+                // TODO: Indexed loop graph and splitting it using face collections.
+                System.err.println("Warning: N-gon encountered, adding them wrongfully."
+                                   + "The mesh may not appear correctly. Triangulate your model"
+                                   + "prior to export. Quads are acceptable to.");
             }
         }
         irMesh.polygons = new IrPolygon[newPolygons.size()];
@@ -55,7 +56,6 @@ public class IrUtils {
             IrPolygon irPolygon = new IrPolygon();
 
             IrVertex index0 = verticesToTriangulate.get(0);
-            verticesToTriangulate.remove(index0);
             IrVertex index1 = findClosestVertex(verticesToTriangulate, index0);
             IrVertex index2 = findClosestVertex(verticesToTriangulate, index0);
 
