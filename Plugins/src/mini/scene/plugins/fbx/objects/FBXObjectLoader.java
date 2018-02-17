@@ -72,4 +72,8 @@ public class FBXObjectLoader implements FBXElementLoader<Void> {
     public List<FBXBindPose> getBindPoses() {
         return bindPoses;
     }
+
+    public List<FBXAnimStack> getAnimStacks() {
+        return animStacks;
+    }
 }

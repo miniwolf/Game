@@ -1,29 +1,36 @@
-package mini.scene.plugins.fbx.obj;
+package mini.scene.plugins.fbx.anim;
 
+import mini.animation.SpatialTrack;
 import mini.asset.AssetKey;
 import mini.asset.AssetManager;
 import mini.scene.plugins.fbx.file.FBXElement;
+import mini.scene.plugins.fbx.obj.FBXObject;
 
-public class FBXUnknownObject extends FBXObject<Void> {
+public class FBXTake extends FBXObject<SpatialTrack> {
+    private String name;
 
-    public FBXUnknownObject(AssetManager assetManager, AssetKey key) {
+    public FBXTake(AssetManager assetManager, AssetKey key, String name) {
         super(assetManager, key);
+        this.name = name;
     }
 
     @Override
     protected void fromElementOverride(FBXElement element) {
+
     }
 
     @Override
-    protected Void toImplObject() {
-        throw new UnsupportedOperationException();
+    protected SpatialTrack toImplObject() {
+        return null;
     }
 
     @Override
     public void link(FBXObject obj) {
+
     }
 
     @Override
     public void link(FBXObject obj, String propertyName) {
+
     }
 }
