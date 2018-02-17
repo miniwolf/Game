@@ -368,9 +368,6 @@ public final class OBJLoader implements AssetLoader {
         }
 
         geometry.setMaterial(material);
-        //        if (material.isTransparent())
-        //            geom.setQueueBucket(Bucket.Transparent);
-        //        else
         geometry.setQueueBucket(RenderQueue.Bucket.Opaque);
 
         if (material.getMaterialDef().getName().contains("Lighting")
@@ -556,20 +553,6 @@ public final class OBJLoader implements AssetLoader {
             if (objectName == null) {
                 groupNode.setName("Model");
             }
-            //            if (matFaces.size() > 0){
-            //                for (Entry<String, ArrayList<Face>> entry : matFaces.entrySet()){
-            //                    ArrayList<Face> materialFaces = entry.getValue();
-            //                    if (materialFaces.size() > 0){
-            //                        Geometry geom = createGeometry(materialFaces, entry.getKey());
-            //                        objNode.attachChild(geom);
-            //                    }
-            //                }
-            //            }else if (faces.size() > 0){
-            //                // generate final geometry
-            //                Geometry geom = createGeometry(faces, null);
-            //                objNode.attachChild(geom);
-            //            }
-
             return groupNode;
         }
     }
