@@ -106,7 +106,7 @@ public class FBXNode extends FBXObject<Spatial> {
     }
 
     @Override
-    public void fromElementOverride(FBXElement element) {
+    protected void fromElementOverride(FBXElement element) {
         FBXTransform FBXTransform = new FBXTransform(element.getFBXProperties()).invoke();
 
         Transform transform = setupTransform(FBXTransform);

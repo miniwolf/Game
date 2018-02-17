@@ -103,7 +103,7 @@ public class FBXObjectFactory {
         } else if ("Material".equals(elementName)) {
             return FBXMaterial.class;
         } else if ("Deformer".equals(elementName)) {
-            if (subclassName.equals("Skin")) {
+            if ("Skin".equals(subclassName)) {
                 // FBXSkinDeformer (Mapping between FBXMesh & FBXClusters)
                 return FBXSkinDeformer.class;
             } else if ("Cluster".equals(subclassName)) {
@@ -119,6 +119,9 @@ public class FBXObjectFactory {
         } else if ("AnimationLayer".equals(elementName)) {
             // Blended animations
             return FBXAnimLayer.class;
+        } else if ("AnimationCurveNode".equals(elementName) || "AnimationCurve"
+                .equals(elementName)) {
+            throw new UnsupportedOperationException();
         } else if ("SceneInfo".equals(elementName)) {
             // Old-style FBX 6.1 uses this. Nothing useful here.
             return FBXUnknownObject.class;

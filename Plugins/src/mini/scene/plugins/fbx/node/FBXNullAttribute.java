@@ -11,7 +11,7 @@ public class FBXNullAttribute extends FBXNodeAttribute {
     }
 
     @Override
-    public void fromElementOverride(FBXElement element) {
+    protected void fromElementOverride(FBXElement element) {
     }
 
     @Override

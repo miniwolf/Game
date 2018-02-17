@@ -14,7 +14,7 @@ public class FBXAnimStack extends FBXObject {
     }
 
     @Override
-    public void fromElementOverride(FBXElement element) {
+    protected void fromElementOverride(FBXElement element) {
         for (FBXElement fbxElement : element.getFBXProperties()) {
             String propName = (String) fbxElement.getProperties().get(0);
             if (propName.equals("LocalStop")) {
@@ -41,5 +41,9 @@ public class FBXAnimStack extends FBXObject {
     @Override
     public void link(FBXObject obj, String propertyName) {
         unsupportedConnectObjectProperty(obj, propertyName);
+    }
+
+    public FBXAnimLayer getLayer() {
+        return layer0;
     }
 }

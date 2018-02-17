@@ -21,7 +21,7 @@ public class FBXMaterial extends FBXObject<Material> {
     }
 
     @Override
-    public void fromElementOverride(FBXElement element) {
+    protected void fromElementOverride(FBXElement element) {
         for (FBXElement fbxElement : element.getFBXProperties()) {
             properties.setPropertyFromElement(fbxElement);
         }

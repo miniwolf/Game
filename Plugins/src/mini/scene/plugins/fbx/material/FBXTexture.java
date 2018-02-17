@@ -21,7 +21,7 @@ public class FBXTexture extends FBXObject<Texture> {
     }
 
     @Override
-    public void fromElementOverride(FBXElement element) {
+    protected void fromElementOverride(FBXElement element) {
         if (!subclassName.equals("")) {
             return;
         }
