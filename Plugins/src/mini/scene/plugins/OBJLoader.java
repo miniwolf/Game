@@ -143,7 +143,7 @@ public final class OBJLoader implements AssetLoader {
         indexVertMap.put(vertex.index, vertex);
     }
 
-    private Face[] quadToTriangle(Face f) {
+    private Face[] quadToTriangles(Face f) {
         assert f.vertices.length == 4;
 
         Face[] t = new Face[] { new Face(), new Face() };
@@ -387,7 +387,7 @@ public final class OBJLoader implements AssetLoader {
             }
 
             if (f.vertices.length == 4) {
-                Face[] t = quadToTriangle(f);
+                Face[] t = quadToTriangles(f);
                 newFaces.add(t[0]);
                 newFaces.add(t[1]);
             } else {
