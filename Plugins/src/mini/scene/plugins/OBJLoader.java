@@ -147,8 +147,6 @@ public final class OBJLoader implements AssetLoader {
         assert f.vertices.length == 4;
 
         Face[] t = new Face[] { new Face(), new Face() };
-        t[0].vertices = new Vertex[3];
-        t[1].vertices = new Vertex[3];
 
         Vertex v0 = f.vertices[0];
         Vertex v1 = f.vertices[1];
