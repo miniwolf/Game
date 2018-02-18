@@ -104,12 +104,12 @@ public final class OBJLoader implements AssetLoader {
                 }
             }
         } else if (faces.size() > 0) {
-            // generate final geometry
+            // Generate final geometry.
             Geometry geom = createGeometry(faces, null);
             objNode.attachChild(geom);
         }
 
-        // only 1 geometry, so no need to send node
+        // Only 1 geometry, so no need to send node.
         return objNode.getQuantity() == 1 ? objNode.getChild(0) : objNode;
     }
 
@@ -155,10 +155,8 @@ public final class OBJLoader implements AssetLoader {
         Vertex v2 = f.vertices[2];
         Vertex v3 = f.vertices[3];
 
-        // find the pair of verticies that is closest to each over
-        // v0 and v2
-        // OR
-        // v1 and v3
+        // Find the pair of verticies that is closest to each other.
+        // v0 and v2 OR v1 and v3.
         float d1 = v0.v.distanceSquared(v2.v);
         float d2 = v1.v.distanceSquared(v3.v);
         if (d1 < d2) {
@@ -249,7 +247,7 @@ public final class OBJLoader implements AssetLoader {
             return;
         }
 
-        faces.add(f); // faces that belong to the default material
+        faces.add(f); // Faces that belong to the default material.
     }
 
     private Integer readVertex(String vertex) {
@@ -287,7 +285,7 @@ public final class OBJLoader implements AssetLoader {
         }
 
         if (matList != null) {
-            // create face lists for every material
+            // Create face lists for every material.
             for (String matName : matList.keySet()) {
                 matFaces.put(matName, new ArrayList<>());
             }
@@ -311,34 +309,34 @@ public final class OBJLoader implements AssetLoader {
 
         String cmd = scan.next();
         if (cmd.startsWith("#")) {
-            // skip entire comment until next line
+            // Skip entire comment until next line.
             return nextStatement();
         } else if (cmd.equals("v")) {
-            // vertex position
+            // Vertex position.
             vertices.add(readVector3());
         } else if (cmd.equals("vn")) {
-            // vertex normal
+            // Vertex normal.
             normals.add(readVector3());
         } else if (cmd.equals("vt")) {
-            // texture coordinate
+            // Texture coordinates.
             texCoords.add(readVector2());
         } else if (cmd.equals("f")) {
-            // face, can be triangle, quad, or polygon (unsupported)
+            // Face, can be triangle, quad, or polygon (unsupported).
             readFace();
         } else if (cmd.equals("usemtl")) {
-            // use material from MTL lib for the following faces
+            // Use material from MTL lib for the following faces.
             currentMatName = scan.next();
             if (!matList.containsKey(currentMatName)) {
                 throw new IOException("Cannot locate material " + currentMatName + " in MTL file!");
             }
         } else if (cmd.equals("mtllib")) {
-            // specify MTL lib to use for this OBJ file
+            // Specify MTL lib to use for this OBJ file.
             String mtllib = scan.nextLine().trim();
             loadMtlLib(mtllib);
         } else if (cmd.equals("s") || cmd.equals("g")) {
             return nextStatement();
         } else {
-            // skip entire command until next line
+            // Skip entire command until next line.
             System.err.println("Unknown statement in OBJ! " + cmd);
             return nextStatement();
         }
@@ -351,18 +349,18 @@ public final class OBJLoader implements AssetLoader {
             throw new IOException("No geometry data to generate mesh");
         }
 
-        // Create mesh from the faces
+        // Create mesh from the faces.
         Mesh mesh = constructMesh(faceList);
         Geometry geometry = new Geometry(objName + "-geom-" + (geometryIndex++), mesh);
         Material material = null;
 
         if (matName != null && matList != null) {
-            // Get material from material list
+            // Get material from material list.
             material = matList.get(matName);
         }
 
         if (material == null) {
-            // create default material
+            // Create default material.
             material = new Material(assetManager, "MatDefs/Light/Lighting.minid");
             material.setFloat("Shininess", 64);
         }
@@ -454,22 +452,21 @@ public final class OBJLoader implements AssetLoader {
                 }
             }
 
-            int index = i * 3; // current face * 3 = current index
+            int index = i * 3; // Current face * 3 = current index.
             indexBuffer.put(index, v0.index);
             indexBuffer.put(index + 1, v1.index);
             indexBuffer.put(index + 2, v2.index);
         }
 
         mesh.setBuffer(VertexBuffer.Type.Position, 3, positionBuffer);
-        // index buffer and others were set on creation
+        // Index buffer and others were set on creation.
 
         mesh.setStatic();
         mesh.updateBound();
         mesh.updateCounts();
-        //m.setInterleaved();
 
-        // clear data generated face statements
-        // to prepare for next mesh
+        // Clear data generated face statements
+        // to prepare for next mesh.
         vertIndexMap.clear();
         indexVertMap.clear();
         currentIndex = 0;
