@@ -160,23 +160,13 @@ public final class OBJLoader implements AssetLoader {
         float d1 = v0.v.distanceSquared(v2.v);
         float d2 = v1.v.distanceSquared(v3.v);
         if (d1 < d2) {
-            // put an edge in v0, v2
-            t[0].vertices[0] = v0;
-            t[0].vertices[1] = v1;
-            t[0].vertices[2] = v3;
-
-            t[1].vertices[0] = v1;
-            t[1].vertices[1] = v2;
-            t[1].vertices[2] = v3;
+            // Put an edge in v0, v2.
+            t[0].vertices = new Vertex[] { v0, v1, v3 };
+            t[1].vertices = new Vertex[] { v1, v2, v3 };
         } else {
-            // put an edge in v1, v3
-            t[0].vertices[0] = v0;
-            t[0].vertices[1] = v1;
-            t[0].vertices[2] = v2;
-
-            t[1].vertices[0] = v0;
-            t[1].vertices[1] = v2;
-            t[1].vertices[2] = v3;
+            // Put an edge in v1, v3.
+            t[0].vertices = new Vertex[] { v0, v1, v2 };
+            t[1].vertices = new Vertex[] { v0, v2, v3 };
         }
 
         return t;
@@ -415,6 +405,7 @@ public final class OBJLoader implements AssetLoader {
         int numFaces = newFaces.size();
         for (int i = 0; i < numFaces; i++) {
             Face f = newFaces.get(i);
+
             if (f.vertices.length != 3) {
                 continue;
             }
