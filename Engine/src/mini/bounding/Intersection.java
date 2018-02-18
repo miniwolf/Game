@@ -33,24 +33,23 @@ public final class Intersection {
         float minZ = boundingbox.center.z - boundingbox.getZExtent();
         float maxZ = boundingbox.center.z + boundingbox.getZExtent();
 
-        if (center.x < minX) {
-            distSqr -= FastMath.sqr(center.x - minX);
-        } else if (center.x > maxX) {
-            distSqr -= FastMath.sqr(center.x - maxX);
-        }
-
-        if (center.y < minY) {
-            distSqr -= FastMath.sqr(center.y - minY);
-        } else if (center.y > maxY) {
-            distSqr -= FastMath.sqr(center.y - maxY);
-        }
-
-        if (center.z < minZ) {
-            distSqr -= FastMath.sqr(center.z - minZ);
-        } else if (center.z > maxZ) {
-            distSqr -= FastMath.sqr(center.z - maxZ);
-        }
+        distSqr -= centerOffset(center.x, minX, maxX);
+        distSqr -= centerOffset(center.y, minY, maxY);
+        distSqr -= centerOffset(center.z, minZ, maxZ);
 
         return distSqr > 0;
     }
+
+    // FIXME: Needs a better name.
+	private static float centerOffset(float center, float min, float max) {
+		if (center < min) {
+            return FastMath.sqr(center - min);
+        }
+
+        if (center > max) {
+            return FastMath.sqr(center - max);
+        }
+
+		return 0;
+	}
 }
