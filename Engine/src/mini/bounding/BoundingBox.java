@@ -174,11 +174,13 @@ public class BoundingBox extends BoundingVolume {
 
         if (distance < -radius) {
             return Plane.Side.Negative;
-        } else if (distance > radius) {
-            return Plane.Side.Positive;
-        } else {
-            return Plane.Side.None;
         }
+
+        if (distance > radius) {
+            return Plane.Side.Positive;
+        }
+
+        return Plane.Side.None;
     }
 
     @Override
@@ -200,10 +202,13 @@ public class BoundingBox extends BoundingVolume {
 
         float[] tmpArray = vars.skinPositions;
 
-        float minX = Float.POSITIVE_INFINITY, minY = Float.POSITIVE_INFINITY, minZ
-                = Float.POSITIVE_INFINITY;
-        float maxX = Float.NEGATIVE_INFINITY, maxY = Float.NEGATIVE_INFINITY, maxZ
-                = Float.NEGATIVE_INFINITY;
+        float minX = Float.POSITIVE_INFINITY;
+        float minY = Float.POSITIVE_INFINITY;
+        float minZ = Float.POSITIVE_INFINITY;
+
+        float maxX = Float.NEGATIVE_INFINITY;
+        float maxY = Float.NEGATIVE_INFINITY;
+        float maxZ = Float.NEGATIVE_INFINITY;
 
         int iterations = (int) FastMath.ceil(points.limit() / ((float) tmpArray.length));
         // TODO: Parallel iterations through the array could get all 6 values. Using streaming on the array
@@ -292,7 +297,15 @@ public class BoundingBox extends BoundingVolume {
      */
     private BoundingVolume mergeLocal(Vector3f center, float xExtent, float yExtent,
                                       float zExtent) {
-        if (this.xExtent == Float.POSITIVE_INFINITY || xExtent == Float.POSITIVE_INFINITY) {
+        mergeLocalX(center, xExtent);
+        mergeLocalY(center, yExtent);
+        mergeLocalZ(center, zExtent);
+
+        return this;
+    }
+
+    private void mergeLocalX(Vector3f center, float xExtent) {
+		if (this.xExtent == Float.POSITIVE_INFINITY || xExtent == Float.POSITIVE_INFINITY) {
             this.center.x = 0;
             this.xExtent = Float.POSITIVE_INFINITY;
         } else {
@@ -307,24 +320,10 @@ public class BoundingBox extends BoundingVolume {
             this.center.x = (low + high) / 2;
             this.xExtent = high - this.center.x;
         }
+	}
 
-        if (this.yExtent == Float.POSITIVE_INFINITY || yExtent == Float.POSITIVE_INFINITY) {
-            this.center.y = 0;
-            this.yExtent = Float.POSITIVE_INFINITY;
-        } else {
-            float low = this.center.y - this.yExtent;
-            if (low > center.y - yExtent) {
-                low = center.y - yExtent;
-            }
-            float high = this.center.y + this.yExtent;
-            if (high < center.y + yExtent) {
-                high = center.y + yExtent;
-            }
-            this.center.y = (low + high) / 2;
-            this.yExtent = high - this.center.y;
-        }
-
-        if (this.zExtent == Float.POSITIVE_INFINITY || zExtent == Float.POSITIVE_INFINITY) {
+	private void mergeLocalZ(Vector3f center, float zExtent) {
+		if (this.zExtent == Float.POSITIVE_INFINITY || zExtent == Float.POSITIVE_INFINITY) {
             this.center.z = 0;
             this.zExtent = Float.POSITIVE_INFINITY;
         } else {
@@ -339,9 +338,25 @@ public class BoundingBox extends BoundingVolume {
             this.center.z = (low + high) / 2;
             this.zExtent = high - this.center.z;
         }
+	}
 
-        return this;
-    }
+	private void mergeLocalY(Vector3f center, float yExtent) {
+		if (this.yExtent == Float.POSITIVE_INFINITY || yExtent == Float.POSITIVE_INFINITY) {
+            this.center.y = 0;
+            this.yExtent = Float.POSITIVE_INFINITY;
+        } else {
+            float low = this.center.y - this.yExtent;
+            if (low > center.y - yExtent) {
+                low = center.y - yExtent;
+            }
+            float high = this.center.y + this.yExtent;
+            if (high < center.y + yExtent) {
+                high = center.y + yExtent;
+            }
+            this.center.y = (low + high) / 2;
+            this.yExtent = high - this.center.y;
+        }
+	}
 
     @Override
     public float distanceToEdge(Vector3f point) {
@@ -466,29 +481,35 @@ public class BoundingBox extends BoundingVolume {
      */
     private boolean clip(float denominator, float numerator, float t[]) {
         if (denominator > 0.0f) {
-            float newT = numerator / denominator;
-            if (newT > t[1]) {
-                return false;
-            }
-
-            if (newT > t[0]) {
-                t[0] = newT;
-            }
-            return true;
-        } else if (denominator < 0.0f) {
-            float newT = numerator / denominator;
-            if (newT < t[0]) {
-                return false;
-            }
-
-            if (newT < t[1]) {
-                t[1] = newT;
-            }
-            return true;
-        } else {
-            return numerator <= 0.0f;
+            return clipPositive(denominator, numerator, t);
         }
+        if (denominator < 0.0f) {
+            return clipNegative(denominator, numerator, t);
+        }
+        return numerator <= 0.0f;
     }
+
+	private boolean clipPositive(float denominator, float numerator, float[] t) {
+		float newT = numerator / denominator;
+        if (newT > t[1]) {
+            return false;
+        }
+        if (newT > t[0]) {
+            t[0] = newT;
+        }
+        return true;
+    }
+
+    private boolean clipNegative(float denominator, float numerator, float[] t) {
+		float newT = numerator / denominator;
+        if (newT < t[0]) {
+            return false;
+        }
+        if (newT < t[1]) {
+            t[1] = newT;
+        }
+        return true;
+	}
 
     /**
      * Query extent
@@ -530,13 +551,13 @@ public class BoundingBox extends BoundingVolume {
      */
     public BoundingVolume clone(BoundingVolume store) {
         if (store != null && store.getType() == Type.AABB) {
-            BoundingBox rVal = (BoundingBox) store;
-            rVal.center.set(center);
-            rVal.xExtent = xExtent;
-            rVal.yExtent = yExtent;
-            rVal.zExtent = zExtent;
-            rVal.checkPlane = checkPlane;
-            return rVal;
+            BoundingBox clone = (BoundingBox) store;
+            clone.center.set(center);
+            clone.xExtent = xExtent;
+            clone.yExtent = yExtent;
+            clone.zExtent = zExtent;
+            clone.checkPlane = checkPlane;
+            return clone;
         }
 
         return new BoundingBox(center.clone(), xExtent, yExtent, zExtent);
