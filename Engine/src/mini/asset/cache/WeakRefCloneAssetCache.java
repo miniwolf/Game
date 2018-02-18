@@ -28,10 +28,9 @@ public class WeakRefCloneAssetCache implements AssetCache {
     @Override
     public boolean deleteFromCache(AssetKey key) {
         List<AssetKey> loadStack = assetLoadStack.get();
+
         if (!loadStack.isEmpty()) {
-            throw new UnsupportedOperationException(
-                    "Cache cannot be modified while assets are being"
-                            + " loaded");
+            throw new UnsupportedOperationException("Cache cannot be modified while assets are being loaded");
         }
 
         return smartCache.remove(key) != null;
@@ -42,8 +41,7 @@ public class WeakRefCloneAssetCache implements AssetCache {
         List<AssetKey> loadStack = assetLoadStack.get();
 
         if (!loadStack.isEmpty()) {
-            throw new UnsupportedOperationException("Cache cannot be modified"
-                    + "while assets are being loaded");
+            throw new UnsupportedOperationException("Cache cannot be modified while assets are being loaded");
         }
 
         smartCache.clear();
@@ -51,11 +49,10 @@ public class WeakRefCloneAssetCache implements AssetCache {
 
     private final ConcurrentMap<AssetKey, AssetRef> smartCache = new ConcurrentHashMap<>();
     private final ReferenceQueue<AssetKey> referenceQueue = new ReferenceQueue<>();
-    private final ThreadLocal<List<AssetKey>> assetLoadStack =
-            ThreadLocal.withInitial(ArrayList::new);
+    private final ThreadLocal<List<AssetKey>> assetLoadStack = ThreadLocal.withInitial(ArrayList::new);
 
     private void removeCollectedAssets() {
-        for (KeyRef ref; (ref = (KeyRef) referenceQueue.poll()) != null; ) {
+        for (KeyRef ref; (ref = (KeyRef) referenceQueue.poll()) != null;) {
             smartCache.remove(ref.clonedKey);
         }
     }
@@ -87,17 +84,17 @@ public class WeakRefCloneAssetCache implements AssetCache {
 
         if (smartInfo == null) {
             return null;
-        } else {
-            AssetKey keyForTheClone = smartInfo.get();
-            if (keyForTheClone == null) {
-                // was collected by GC between here and smartCache.get
-                return null;
-            }
-
-            List<AssetKey> loadStack = assetLoadStack.get();
-            loadStack.add(keyForTheClone);
-            return (T) smartInfo.asset;
         }
+
+        AssetKey keyForTheClone = smartInfo.get();
+        if (keyForTheClone == null) {
+            // Was collected by GC between here and smartCache.get
+            return null;
+        }
+
+        List<AssetKey> loadStack = assetLoadStack.get();
+        loadStack.add(keyForTheClone);
+        return (T) smartInfo.asset;
     }
 
     private static final class KeyRef extends PhantomReference<AssetKey> {
