@@ -104,27 +104,47 @@ class ColorTags {
         Range(int start, String colorStr) {
             this.start = start;
             this.color = new ColorRGBA();
+
             if (colorStr.length() >= 6) {
-                color.set(Integer.parseInt(colorStr.subSequence(0, 2).toString(), 16) / 255f,
-                          Integer.parseInt(colorStr.subSequence(2, 4).toString(), 16) / 255f,
-                          Integer.parseInt(colorStr.subSequence(4, 6).toString(), 16) / 255f,
-                          1);
-                if (baseAlpha != -1) {
-                    color.a = baseAlpha;
-                } else if (colorStr.length() == 8) {
-                    color.a = Integer.parseInt(colorStr.subSequence(6, 8).toString(), 16) / 255f;
-                }
-            } else {
-                color.set(Integer.parseInt(Character.toString(colorStr.charAt(0)), 16) / 15f,
-                          Integer.parseInt(Character.toString(colorStr.charAt(1)), 16) / 15f,
-                          Integer.parseInt(Character.toString(colorStr.charAt(2)), 16) / 15f,
-                          1);
-                if (baseAlpha != -1) {
-                    color.a = baseAlpha;
-                } else if (colorStr.length() == 4) {
-                    color.a = Integer.parseInt(Character.toString(colorStr.charAt(3)), 16) / 15f;
-                }
+                readHexColor(colorStr);
+				return;
             }
+
+            readColor(colorStr);
+        }
+
+		private void readHexColor(String colorStr) {
+            color.r = readHexColorValue(colorStr, 0);
+            color.g = readHexColorValue(colorStr, 1);
+            color.b = readHexColorValue(colorStr, 2);
+
+            if (baseAlpha != -1) {
+                color.a = baseAlpha;
+            } else if (colorStr.length() == 8) {
+                color.a = readHexColorValue(colorStr, 3);
+            }
+        }
+
+        private float readHexColorValue(String colorStr, int index) {
+            int start = index * 2;
+            int end = start + 2;
+            return Integer.parseInt(colorStr.subSequence(start, end).toString(), 16) / 255f;
+        }
+
+        private void readColor(String colorStr) {
+            color.r = readColorValue(colorStr, 0);
+            color.g = readColorValue(colorStr, 1);
+            color.b = readColorValue(colorStr, 2);
+
+            if (baseAlpha != -1) {
+                color.a = baseAlpha;
+            } else if (colorStr.length() == 4) {
+                readColorValue(colorStr, 3);
+            }
+        }
+
+        private float readColorValue(String colorStr, int index) {
+            return Integer.parseInt(Character.toString(colorStr.charAt(index)), 16) / 15f;
         }
     }
 }
