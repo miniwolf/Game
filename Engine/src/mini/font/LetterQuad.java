@@ -384,11 +384,11 @@ public class LetterQuad {
     private float computeLineY(StringBlock block) {
         if (isHead()) {
             return getBound(block).y;
-        } else if (previous.eol) {
-            return previous.getNextLine();
-        } else {
-            return previous.lineY;
         }
+        if (previous.eol) {
+            return previous.getNextLine();
+        }
+        return previous.lineY;
     }
 
     boolean isLineStart() {
