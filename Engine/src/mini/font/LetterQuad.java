@@ -401,7 +401,7 @@ public class LetterQuad {
 
     public void storeToArrays(float[] pos, float[] tc, short[] idx, byte[] colors, int quadIdx) {
         storePositionToArray(pos);
-        storeTcToArray(tc);
+        storeTexCoordsToArray(tc);
         storeColorsToArray(colors);
         storeIndicesToArray(idx, quadIdx);
     }
@@ -426,7 +426,7 @@ public class LetterQuad {
         pos[11] = 0;
     }
 
-    private void storeTcToArray(float[] tc) {
+    private void storeTexCoordsToArray(float[] tc) {
 		float v0 = 1f - this.v0;
         float v1 = 1f - this.v1;
 
