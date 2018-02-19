@@ -122,6 +122,8 @@ class ColorTags {
                 color.a = baseAlpha;
             } else if (colorStr.length() == 8) {
                 color.a = readHexColorValue(colorStr, 3);
+            } else {
+                color.a = 0;
             }
         }
 
@@ -140,6 +142,8 @@ class ColorTags {
                 color.a = baseAlpha;
             } else if (colorStr.length() == 4) {
                 readColorValue(colorStr, 3);
+            } else {
+                color.a = 0;
             }
         }
 
