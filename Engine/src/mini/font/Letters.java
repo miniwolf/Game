@@ -89,54 +89,13 @@ class Letters {
                             lineCount++;
                             break;
                         case Word:
-                            if (!l.isBlank()) {
-                                // search last blank character before this word
-                                LetterQuad blank = l;
-                                while (!blank.isBlank()) {
-                                    if (blank.isLineStart() || blank.isHead()) {
-                                        lineWrap(l);
-                                        lineCount++;
-                                        blank = null;
-                                        break;
-                                    }
-                                    blank = blank.getPrevious();
-                                }
-                                if (blank != null) {
-                                    blank.setEndOfLine();
-                                    lineCount++;
-                                    while (blank != l) {
-                                        blank = blank.getNext();
-                                        blank.invalidate();
-                                        blank.update(block);
-                                    }
-                                }
-                            }
+						    lineCount = word(l, lineCount);
                             break;
                         case NoWrap:
-                            LetterQuad cursor = l.getPrevious();
-                            while (cursor.isInvalid(block, ellipsisWidth) && !cursor
-                                    .isLineStart()) {
-                                cursor = cursor.getPrevious();
-                            }
-                            cursor.setBitmapChar(ellipsis);
-                            cursor.update(block);
-                            cursor = cursor.getNext();
-                            while (!cursor.isTail() && !cursor.isLineFeed()) {
-                                cursor.setBitmapChar(null);
-                                cursor.update(block);
-                                cursor = cursor.getNext();
-                            }
+						    noWrap(l, ellipsis, ellipsisWidth);
                             break;
                         case Clip:
-                            // Clip the character that falls out of bounds
-                            l.clip(block);
-
-                            // Clear the rest up to the next line feed.
-                            for (LetterQuad q = l.getNext(); !q.isTail() && !q.isLineFeed();
-                                 q = q.getNext()) {
-                                q.setBitmapChar(null);
-                                q.update(block);
-                            }
+						    clip(l);
                             break;
                     }
                 }
@@ -154,6 +113,61 @@ class Letters {
         rewind();
     }
 
+    // FIXME: Needs better name.
+    private int word(LetterQuad l, int lineCount) {
+		if (!l.isBlank()) {
+            // search last blank character before this word
+            LetterQuad blank = l;
+            while (!blank.isBlank()) {
+                if (blank.isLineStart() || blank.isHead()) {
+                    lineWrap(l);
+                    lineCount++;
+                    blank = null;
+                    break;
+                }
+                blank = blank.getPrevious();
+            }
+            if (blank != null) {
+                blank.setEndOfLine();
+                lineCount++;
+                while (blank != l) {
+                    blank = blank.getNext();
+                    blank.invalidate();
+                    blank.update(block);
+                }
+            }
+        }
+		return lineCount;
+    }
+
+    // FIXME: Needs better name.    
+    private void noWrap(LetterQuad l, BitmapCharacter ellipsis, float ellipsisWidth) {
+		LetterQuad cursor = l.getPrevious();
+        while (cursor.isInvalid(block, ellipsisWidth) && !cursor.isLineStart()) {
+            cursor = cursor.getPrevious();
+        }
+        cursor.setBitmapChar(ellipsis);
+        cursor.update(block);
+        cursor = cursor.getNext();
+        while (!cursor.isTail() && !cursor.isLineFeed()) {
+            cursor.setBitmapChar(null);
+            cursor.update(block);
+            cursor = cursor.getNext();
+        }
+    }
+
+    // FIXME: Needs better name.    
+	private void clip(LetterQuad l) {
+        // Clip the character that falls out of bounds
+        l.clip(block);
+
+        // Clear the rest up to the next line feed.
+        for (LetterQuad q = l.getNext(); !q.isTail() && !q.isLineFeed(); q = q.getNext()) {
+            q.setBitmapChar(null);
+            q.update(block);
+        }
+	}	
+
     private void align() {
         final BitmapFont.Align alignment = block.getAlignment();
         final BitmapFont.VAlign valignment = block.getVerticalAlignment();
@@ -163,40 +177,47 @@ class Letters {
         }
         LetterQuad cursor = tail.getPrevious();
         cursor.setEndOfLine();
-        final float width = block.getTextBox().width;
-        final float height = block.getTextBox().height;
-        float lineWidth = 0;
-        float gapX = 0;
-        float gapY = 0;
         validateSize();
-        if (totalHeight < height) { // align vertically only for no overflow
-            switch (valignment) {
-                case Top:
-                    gapY = 0;
-                    break;
-                case Center:
-                    gapY = (height - totalHeight) * 0.5f;
-                    break;
-                case Bottom:
-                    gapY = height - totalHeight;
-                    break;
-            }
-        }
+        
+        float gapY = calculateGapY(valignment);
+        float gapX = 0;
+        float lineWidth = 0;        
+        final float width = block.getTextBox().width;
         while (!cursor.isHead()) {
             if (cursor.isEndOfLine()) {
                 lineWidth = cursor.getX1() - block.getTextBox().x;
-                if (alignment == BitmapFont.Align.Center) {
-                    gapX = (width - lineWidth) / 2;
-                } else if (alignment == BitmapFont.Align.Right) {
-                    gapX = width - lineWidth;
-                } else {
-                    gapX = 0;
-                }
+                gapX = calculateGapX(alignment, width, lineWidth);
             }
             cursor.setAlignment(gapX, gapY);
             cursor = cursor.getPrevious();
         }
     }
+
+	private float calculateGapY(final BitmapFont.VAlign valignment) {     
+        // align vertically only for no overflow
+        if (totalHeight < block.getTextBox().height) {
+            if (valignment == BitmapFont.VAlign.Top) {
+                return 0;
+            }
+            if (valignment == BitmapFont.VAlign.Center) {
+                return (height - totalHeight) / 2;
+            }
+            if (valignment == BitmapFont.VAlign.Bottom) {
+                return height - totalHeight;
+            }
+        }
+		return 0;
+	}
+
+	private float calculateGapX(final BitmapFont.Align alignment, final float width, float lineWidth) {
+		if (alignment == BitmapFont.Align.Center) {
+           return (width - lineWidth) / 2;
+        }
+        if (alignment == BitmapFont.Align.Right) {
+            return width - lineWidth;
+        }
+        return 0;
+	}
 
     private void lineWrap(LetterQuad l) {
         if (l.isHead() || l.isBlank()) {
