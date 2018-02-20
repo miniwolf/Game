@@ -50,7 +50,9 @@ public class PointLight extends Light {
         if (radius < 0) {
             throw new IllegalArgumentException("Light radius cannot be negative");
         }
+
         this.radius = radius;
+
         if (radius != 0f) {
             this.invRadius = 1f / radius;
         } else {
@@ -103,15 +105,16 @@ public class PointLight extends Light {
 
     @Override
     public boolean intersectsFrustum(Camera camera, TempVars vars) {
-        if (this.radius == 0) {
-            return true;
-        } else {
-            for (int i = 5; i >= 0; i--) {
-                if (camera.getWorldPlane(i).pseudoDistance(position) <= -radius) {
-                    return false;
-                }
-            }
+        if (radius != 0) {
             return true;
         }
+
+        for (int i = 5; i >= 0; i--) {
+            if (camera.getWorldPlane(i).pseudoDistance(position) <= -radius) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
