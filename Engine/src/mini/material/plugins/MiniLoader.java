@@ -101,7 +101,6 @@ public class MiniLoader implements AssetLoader {
         if (split.length != 2) {
             throw new IOException("LightMode statement syntax incorrect");
         }
-
         TechniqueDef.LightMode lm = TechniqueDef.LightMode.valueOf(split[1]);
         technique.setLightMode(lm);
     }
@@ -156,13 +155,18 @@ public class MiniLoader implements AssetLoader {
             final String value = values.get(i);
             final TextureOption textureOption = TextureOption.getTextureOption(value);
 
-            if (textureOption == null && !value.contains("\\") && !value.contains("/") && !values
-                    .get(0).equals("Flip") && !values.get(0).equals("Repeat")) {
-                System.err
-                        .println("Unknown texture option \"" + value + "\" encountered for \"" + key
+            if (textureOption == null 
+                && !value.contains("\\")
+                && !value.contains("/")
+                && !values.get(0).equals("Flip")
+                && !values.get(0).equals("Repeat")) {
+                System.err.println("Unknown texture option \"" + value + "\" encountered for \"" + key
                                  + "\" in material \"" + material.getKey().getName()
                                  + "\"");
-            } else if (textureOption != null) {
+                return matchList;
+            }
+
+            if (textureOption != null) {
                 final String option = textureOption.getOptionValue(value);
                 matchList.add(new TextureOptionValue(textureOption, option));
             }
@@ -173,29 +177,30 @@ public class MiniLoader implements AssetLoader {
 
     private boolean isTexturePathDeclaredTheTraditionalWay(
             final List<TextureOptionValue> optionValues, final String texturePath) {
-        final boolean startsWithOldStyle = texturePath.startsWith("Flip Repeat ") || texturePath
-                .startsWith("Flip ") ||
-                                           texturePath.startsWith("Repeat ") || texturePath
-                                                   .startsWith("Repeat Flip ");
+        final boolean startsWithOldStyle = texturePath.startsWith("Flip Repeat ")
+                                        || texturePath.startsWith("Flip ")
+                                        || texturePath.startsWith("Repeat ")
+                                        || texturePath.startsWith("Repeat Flip ");
 
         if (!startsWithOldStyle) {
             return false;
         }
 
-        if (optionValues.size() == 1 && (optionValues.get(0).textureOption == TextureOption.Flip
-                                         || optionValues.get(0).textureOption
-                                            == TextureOption.Repeat)) {
+        if (optionValues.size() == 1 
+            && (optionValues.get(0).textureOption == TextureOption.Flip
+            || optionValues.get(0).textureOption == TextureOption.Repeat)) {
             return true;
-        } else if (optionValues.size() == 2
-                   && optionValues.get(0).textureOption == TextureOption.Flip
-                   && optionValues.get(1).textureOption == TextureOption.Repeat) {
-            return true;
-        } else {
-            return optionValues.size() == 2
-                   && optionValues.get(0).textureOption == TextureOption.Repeat
-                   && optionValues.get(1).textureOption == TextureOption.Flip;
         }
 
+        if (optionValues.size() == 2
+            && optionValues.get(0).textureOption == TextureOption.Flip
+            && optionValues.get(1).textureOption == TextureOption.Repeat) {
+            return true;
+        }
+
+        return optionValues.size() == 2
+            && optionValues.get(0).textureOption == TextureOption.Repeat
+            && optionValues.get(1).textureOption == TextureOption.Flip;
     }
 
     private Texture parseTextureType(final VarType type, final String value) {
@@ -520,10 +525,14 @@ public class MiniLoader implements AssetLoader {
     // <DEFINENAME> [ ":" <PARAMNAME> ]
     private void readDefine(String statement) throws IOException {
         String[] split = statement.split(":");
+
         if (split.length == 1) {
             String defineName = split[0].trim();
             presetDefines.add(defineName);
-        } else if (split.length == 2) {
+            return;
+        }
+        
+        if (split.length == 2) {
             String defineName = split[0].trim();
             String paramName = split[1].trim();
             MatParam param = materialDef.getMaterialParam(paramName);
@@ -536,9 +545,10 @@ public class MiniLoader implements AssetLoader {
 
             VarType paramType = param.getVarType();
             technique.addShaderParamDefine(paramName, paramType, defineName);
-        } else {
-            throw new IOException("Define syntax incorrect");
+            return;
         }
+
+        throw new IOException("Define syntax incorrect");
     }
 
     private void readDefines(List<Statement> defineList) throws IOException {
@@ -717,13 +727,16 @@ public class MiniLoader implements AssetLoader {
         if (roots.size() == 2) {
             Statement exception = roots.get(0);
             String line = exception.getLine();
+
             if (line.startsWith("Exception")) {
                 throw new RuntimeException(line.substring("Exception ".length()));
-            } else {
-                throw new IOException(
-                        "In multiroot material, expected first statement to be 'Exception'");
             }
-        } else if (roots.size() != 1) {
+
+            throw new IOException(
+                    "In multiroot material, expected first statement to be 'Exception'");
+        }
+
+        if (roots.size() != 1) {
             throw new IOException("Too many roots in J3M/J3MD file");
         }
 
@@ -822,10 +835,10 @@ public class MiniLoader implements AssetLoader {
         if (material != null) {
             // material implementation
             return material;
-        } else {
-            // material definition
-            return materialDef;
         }
+
+        // material definition
+        return materialDef;
     }
 
 //    public MaterialDef loadMaterialDef(List<Statement> roots, AssetKey key) throws IOException {
