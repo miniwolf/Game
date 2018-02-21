@@ -1205,8 +1205,8 @@ public class Camera implements Cloneable {
         updateViewProjection();
     }
 
-	private void setWorldPlaneConstant(int PLANE, Vector3f left, Vector3f direction, float[] coeff) {
-		Vector3f planeNormal = worldPlane[PLANE].getNormal();
+    private void setWorldPlaneConstant(int PLANE, Vector3f left, Vector3f direction, float[] coeff) {
+        Vector3f planeNormal = worldPlane[PLANE].getNormal();
         planeNormal.x = left.x * coeff[0];
         planeNormal.y = left.y * coeff[0];
         planeNormal.z = left.z * coeff[0];
@@ -1214,7 +1214,7 @@ public class Camera implements Cloneable {
                              direction.y * coeff[1],
                              direction.z * coeff[1]);
         worldPlane[PLANE].setConstant(location.dot(planeNormal));
-	}
+    }
 
     /**
      * @return true if parallel projection is enable, false if in normal perspective mode
