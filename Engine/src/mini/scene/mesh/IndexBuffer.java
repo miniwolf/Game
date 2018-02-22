@@ -17,12 +17,12 @@ public abstract class IndexBuffer {
     public static IndexBuffer wrapIndexBuffer(Buffer buf) {
         if (buf instanceof ShortBuffer) {
             return new IndexShortBuffer((ShortBuffer) buf);
-        } else if (buf instanceof IntBuffer) {
-            return new IndexIntBuffer((IntBuffer) buf);
-        } else {
-            throw new UnsupportedOperationException(
-                    "Index buffer type unsupported: " + buf.getClass());
         }
+        if (buf instanceof IntBuffer) {
+            return new IndexIntBuffer((IntBuffer) buf);
+        }
+        throw new UnsupportedOperationException(
+                    "Index buffer type unsupported: " + buf.getClass());
     }
 
     /**
@@ -38,9 +38,8 @@ public abstract class IndexBuffer {
     public static IndexBuffer createIndexBuffer(int vertexCount, int indexCount) {
         if (vertexCount > 65535) {
             return new IndexIntBuffer(BufferUtils.createIntBuffer(indexCount));
-        } else {
-            return new IndexShortBuffer(BufferUtils.createShortBuffer(indexCount));
         }
+        return new IndexShortBuffer(BufferUtils.createShortBuffer(indexCount));
     }
 
     /**
