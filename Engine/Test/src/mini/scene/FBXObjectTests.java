@@ -27,7 +27,7 @@ public class FBXObjectTests {
     }
 
     private static FBXElement getObjectElement(FBXFile file) {
-        return file.getElements().stream().filter(element -> element.getName().equals("Objects"))
+        return file.getElements().stream().filter(element -> element.name.equals("Objects"))
                    .findFirst().get();
     }
 
@@ -49,7 +49,7 @@ public class FBXObjectTests {
     @Test
     public void CreatingGeometry_WillNotReturnNull() {
         FBXElement geometry = objectElement.getChildren().stream()
-                                           .filter(element -> element.getName().equals("Geometry"))
+                                           .filter(element -> element.name.equals("Geometry"))
                                            .findFirst().get();
         FBXMesh fbxMesh = new FBXMesh(assetManager, key);
         fbxMesh.fromElement(geometry);
@@ -58,7 +58,7 @@ public class FBXObjectTests {
     @Test
     public void CreatingModel_WillNotReturnNull() {
         FBXElement modelElement = objectElement.getChildren().stream()
-                                               .filter(element -> element.getName().equals("Model"))
+                                               .filter(element -> element.name.equals("Model"))
                                                .findFirst().get();
         FBXNode fbxMesh = new FBXNode(assetManager, key);
         fbxMesh.fromElement(modelElement);

@@ -25,7 +25,7 @@ public class FBXBindPose extends FBXObject<Map<FBXId, Matrix4f>> {
     @Override
     protected void fromElementOverride(FBXElement element) {
         for (FBXElement fbxElement : element.getChildren()) {
-            if (!fbxElement.getName().equals("PoseNode")) {
+            if (!fbxElement.name.equals("PoseNode")) {
                 continue;
             }
 
@@ -33,9 +33,9 @@ public class FBXBindPose extends FBXObject<Map<FBXId, Matrix4f>> {
             float[] matrixData = null;
 
             for (FBXElement child : fbxElement.getChildren()) {
-                if ("Node".equals(child.getName())) {
+                if ("Node".equals(child.name)) {
                     node = FBXId.create(child.getProperties().get(0));
-                } else if ("Matrix".equals(child.getName())) {
+                } else if ("Matrix".equals(child.name)) {
                     double[] matrixDataDoubles;
                     if (child.getProperties().size() == 16) {
                         // TODO: Performance over this and array conversion. Maybe a helper function

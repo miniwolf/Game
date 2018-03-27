@@ -17,7 +17,7 @@ public class FBXLayer {
         layer.layerIndex = (int) fbxElement.getProperties().get(0);
 
         for (FBXElement element : fbxElement.getChildren()) {
-            if (!element.getName().equals("LayerElement")) {
+            if (!element.name.equals("LayerElement")) {
                 continue;
             }
             addLayerElementRefIfValid(element, layer.references);
@@ -29,7 +29,7 @@ public class FBXLayer {
                                                   Map<FBXLayerElement.Type, FBXLayerElementRef> references) {
         FBXLayerElementRef ref = new FBXLayerElementRef();
         for (FBXElement layerElement : element.getChildren()) {
-            if (layerElement.getName().equals("Type")) {
+            if (layerElement.name.equals("Type")) {
                 String layerElementType = (String) layerElement.getProperties().get(0);
                 layerElementType = layerElementType.substring("LayerElement".length());
                 try {
@@ -39,7 +39,7 @@ public class FBXLayer {
                             "Unsupported layer type: " + layerElementType + ". Ignoring");
                     return;
                 }
-            } else if (layerElement.getName().equals("TypedIndex")) {
+            } else if (layerElement.name.equals("TypedIndex")) {
                 ref.layerElementIndex = (int) layerElement.getProperties().get(0);
             }
         }

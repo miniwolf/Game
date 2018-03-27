@@ -33,14 +33,14 @@ public class FBXObjectLoader implements FBXElementLoader<Void> {
         objectMap.put(FBXId.ROOT, new FBXRootNode(assetManager, key));
 
         for (FBXElement fbxElement : element.getChildren()) {
-            if (fbxElement.getName().equals("GlobalSettings")) {
+            if (fbxElement.name.equals("GlobalSettings")) {
                 // Old FBX files seem to have the GlobalSettings element under Objects (??) for some reason
                 continue;
             }
             FBXObject object = FBXObjectFactory.createObject(fbxElement, assetManager, key);
             if (object == null) {
                 throw new UnsupportedOperationException(
-                        "Failed to create FBX Object of type " + fbxElement.getName());
+                        "Failed to create FBX Object of type " + fbxElement.name);
             }
             if (objectMap.containsKey(object.getId()) || (object.getId() instanceof FBXId.LongFBXId && ((FBXId.LongFBXId)object.getId()).getId() == 0)) {
                 FBXId.StringFBXId customID = new FBXId.StringFBXId(object.getName() + "\u0000\u0001" + object.getClassName());

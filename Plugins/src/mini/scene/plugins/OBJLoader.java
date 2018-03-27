@@ -12,7 +12,6 @@ import mini.renderer.queue.RenderQueue;
 import mini.scene.Geometry;
 import mini.scene.Mesh;
 import mini.scene.Node;
-import mini.scene.Spatial;
 import mini.scene.VertexBuffer;
 import mini.scene.mesh.IndexBuffer;
 import mini.scene.mesh.IndexIntBuffer;
@@ -38,28 +37,22 @@ import java.util.Scanner;
  */
 public final class OBJLoader implements AssetLoader {
 
-    protected final List<Vector3f> verts = new ArrayList<>();
-    protected final List<Vector2f> texCoords = new ArrayList<>();
-    protected final List<Vector3f> norms = new ArrayList<>();
+    private final List<Vector3f> verts = new ArrayList<>();
+    private final List<Vector2f> texCoords = new ArrayList<>();
+    private final List<Vector3f> norms = new ArrayList<>();
 
     protected final List<Face> faces = new ArrayList<>();
-    protected final Map<String, List<Face>> matFaces = new HashMap<>();
+    private final Map<String, List<Face>> matFaces = new HashMap<>();
+    private final Map<Vertex, Integer> vertIndexMap = new HashMap<>(100);
+    private String currentMatName;
+    private int curIndex = 0;
+    private int geomIndex = 0;
 
-    protected String currentMatName;
-    protected String currentObjectName;
-
-    protected final Map<Vertex, Integer> vertIndexMap = new HashMap<>(100);
-    protected final Map<Integer, Vertex> indexVertMap = new HashMap<>(100);
-    protected int curIndex = 0;
-    protected int objectIndex = 0;
-    protected int geomIndex = 0;
-
-    protected Scanner scan;
+    private Scanner scan;
     protected ModelKey key;
-    protected Map<String, Material> matList;
+    private Map<String, Material> matList;
 
-    protected String objName;
-    protected Node objNode;
+    private String objName;
     private List<Vertex> vertList = new ArrayList<>();
     private AssetManager assetManager;
 
@@ -86,7 +79,7 @@ public final class OBJLoader implements AssetLoader {
             objName = objName.substring(folderName.length());
         }
 
-        objNode = new Node(objName + "-objnode");
+        Node objNode = new Node(objName + "-objnode");
 
         try (InputStream in = info.openStream()) {
             scan = new Scanner(in);
@@ -114,7 +107,7 @@ public final class OBJLoader implements AssetLoader {
         return objNode.getQuantity() == 1 ? objNode.getChild(0) : objNode;
     }
 
-    public void reset() {
+    private void reset() {
         verts.clear();
         texCoords.clear();
         norms.clear();
@@ -122,7 +115,6 @@ public final class OBJLoader implements AssetLoader {
         matFaces.clear();
 
         vertIndexMap.clear();
-        indexVertMap.clear();
 
         currentMatName = null;
         matList = null;
@@ -138,7 +130,6 @@ public final class OBJLoader implements AssetLoader {
         } else {
             vert.index = curIndex++;
             vertIndexMap.put(vert, vert.index);
-            indexVertMap.put(vert.index, vert);
         }
     }
 
@@ -381,7 +372,7 @@ public final class OBJLoader implements AssetLoader {
         return geom;
     }
 
-    protected Mesh constructMesh(List<Face> faceList) {
+    private Mesh constructMesh(List<Face> faceList) {
         Mesh m = new Mesh();
         m.setMode(Mesh.Mode.Triangles);
 
@@ -492,7 +483,6 @@ public final class OBJLoader implements AssetLoader {
         // clear data generated face statements
         // to prepare for next mesh
         vertIndexMap.clear();
-        indexVertMap.clear();
         curIndex = 0;
 
         return m;
@@ -526,37 +516,6 @@ public final class OBJLoader implements AssetLoader {
             hash = 53 * hash + (this.vt != null ? this.vt.hashCode() : 0);
             hash = 53 * hash + (this.vn != null ? this.vn.hashCode() : 0);
             return hash;
-        }
-    }
-
-    protected class ObjectGroup {
-
-        final String objectName;
-
-        public ObjectGroup(String objectName) {
-            this.objectName = objectName;
-        }
-
-        public Spatial createGeometry() {
-            Node groupNode = new Node(objectName);
-            if (objectName == null) {
-                groupNode.setName("Model");
-            }
-//            if (matFaces.size() > 0){
-//                for (Entry<String, ArrayList<Face>> entry : matFaces.entrySet()){
-//                    ArrayList<Face> materialFaces = entry.getValue();
-//                    if (materialFaces.size() > 0){
-//                        Geometry geom = createGeometry(materialFaces, entry.getKey());
-//                        objNode.attachChild(geom);
-//                    }
-//                }
-//            }else if (faces.size() > 0){
-//                // generate final geometry
-//                Geometry geom = createGeometry(faces, null);
-//                objNode.attachChild(geom);
-//            }
-
-            return groupNode;
         }
     }
 }

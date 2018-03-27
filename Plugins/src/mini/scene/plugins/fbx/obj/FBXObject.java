@@ -38,9 +38,12 @@ public abstract class FBXObject<T> {
         } else if (element.getPropertyTypes().length == 2) {
             nameAndClass = (String) element.getProperties().get(0);
             subclassName = (String) element.getProperties().get(1);
+        } else if (element.getPropertyTypes().length == 1) {
+            nameAndClass = (String) element.getProperties().get(0);
+            subclassName = "N/A";
         } else {
             throw new UnsupportedOperationException(
-                    "This is not an FBX Object: " + element.getName());
+                    "This is not an FBX Object: " + element.name);
         }
 
         int splitter = nameAndClass.indexOf("\u0000\u0001");

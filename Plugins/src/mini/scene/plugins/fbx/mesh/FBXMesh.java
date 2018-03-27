@@ -40,13 +40,13 @@ public class FBXMesh extends FBXNodeAttribute<Map<Integer, Mesh>> {
         List<FBXLayer> layerList = new ArrayList<>();
 
         for (FBXElement fbxElement : element.getChildren()) {
-            if (fbxElement.getName().equals("Vertices")) {
+            if (fbxElement.name.equals("Vertices")) {
                 setPositions(FBXMeshReader.getDoubleArray(fbxElement));
-            } else if (fbxElement.getName().equals("PolygonVertexIndex")) {
+            } else if (fbxElement.name.equals("PolygonVertexIndex")) {
                 setPolygonVertexIndices(FBXMeshReader.getIntArray(fbxElement));
-            } else if (fbxElement.getName().startsWith("LayerElement")) {
+            } else if (fbxElement.name.startsWith("LayerElement")) {
                 layerElementList.add(FBXLayerElement.fromElement(fbxElement));
-            } else if (fbxElement.getName().equals("Layer")) {
+            } else if (fbxElement.name.equals("Layer")) {
                 layerList.add(FBXLayer.fromElement(fbxElement));
             }
         }

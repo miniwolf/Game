@@ -40,13 +40,18 @@ public class FBXTextReader {
     private FBXElement readFBXElement(String description, BufferedReader reader)
             throws IOException {
         boolean hasChildren = false;
+        if (description.contains("Key")) {
+            // Assume skip, as this line should be
+            assert description.contains("KeyVer:");
+            return readArray(reader);
+        }
         if (description.contains("{")) {
             hasChildren = true;
         }
         String[] split = description.split(":");
         if (split.length == 1) {
             FBXElement fbxElement = new FBXElement(0);
-            fbxElement.setName(trim(split[0]));
+            fbxElement.name = trim(split[0]);
             return fbxElement;
         }
         String trimmedDescription = String.join(":", Stream.of(description.split("[:{]"))
@@ -68,7 +73,7 @@ public class FBXTextReader {
             }
         }
 
-        fbxElement.setName(trim(split[0]));
+        fbxElement.name = trim(split[0]);
 
         if (hasChildren) {
             String line;
@@ -81,6 +86,29 @@ public class FBXTextReader {
             }
         }
 
+        return fbxElement;
+    }
+
+    private FBXElement readArray(BufferedReader reader) throws IOException {
+        String keyCount = reader.readLine();
+        assert keyCount.contains("KeyCount:");
+        FBXElement fbxElement = new FBXElement(2);
+        fbxElement.name = "Array";
+        int elementCount = Integer.parseInt(trim(keyCount.split(":")[1]));
+        long[] timeStamps = new long[elementCount];
+        double[] values = new double[elementCount];
+        reader.readLine(); // Skipping: "key:"
+        String line;
+        int index = 0;
+        while (!(line = reader.readLine()).contains(":")) {
+            String[] split = line.split(","); // Third split is an "L"
+            timeStamps[index] = Long.parseLong(trim(split[0]));
+            values[index++] = Double.parseDouble(trim(split[1]));
+        } // This is skipping a value. In example Color: 1,0,0
+        fbxElement.addProperty(timeStamps);
+        fbxElement.addPropertyType('L', 0);
+        fbxElement.addProperty(values);
+        fbxElement.addPropertyType('D', 0);
         return fbxElement;
     }
 

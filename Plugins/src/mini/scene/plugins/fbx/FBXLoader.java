@@ -67,7 +67,7 @@ public class FBXLoader implements AssetLoader {
     private void loadScene(AssetInfo info) throws IOException {
         FBXFile scene = reader.readFBX(info);
         for (FBXElement fbxElement : scene.getElements()) {
-            switch (fbxElement.getName()) {
+            switch (fbxElement.name) {
                 case "Objects":
                     loadObjects(fbxElement);
                     break;
@@ -78,7 +78,7 @@ public class FBXLoader implements AssetLoader {
                     loadTakes(fbxElement);
                     break;
                 default:
-                    System.out.println("Skipped elements: " + fbxElement.getName());
+                    System.out.println("Skipped elements: " + fbxElement.name);
             }
         }
     }

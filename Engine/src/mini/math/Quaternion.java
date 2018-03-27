@@ -145,6 +145,49 @@ public final class Quaternion implements Cloneable, java.io.Serializable {
     }
 
     /**
+     * @param index
+     * @return x value if index == 0, y value if index == 1, z value if index == 2 or w value if
+     * index == 3
+     * @throws IllegalArgumentException if index is not one of 0, 1, 2, 3.
+     */
+    public float get(int index) {
+        switch (index) {
+            case 0:
+                return x;
+            case 1:
+                return y;
+            case 2:
+                return z;
+            case 3:
+                return w;
+        }
+        throw new IllegalArgumentException("index must be either 0, 1, 2 or 3");
+    }
+
+    /**
+     * @param index which field index in this quaternion to set.
+     * @param value to set to one of x, y, z or w.
+     * @throws IllegalArgumentException if index is not one of 0, 1, 2, 3.
+     */
+    public void set(int index, float value) {
+        switch (index) {
+            case 0:
+                x = value;
+                return;
+            case 1:
+                y = value;
+                return;
+            case 2:
+                z = value;
+                return;
+            case 3:
+                w = value;
+                return;
+        }
+        throw new IllegalArgumentException("index must be either 0, 1, 2 or 3");
+    }
+
+    /**
      * Constructor instantiates a new <code>Quaternion</code> object from a
      * collection of rotation angles.
      *
