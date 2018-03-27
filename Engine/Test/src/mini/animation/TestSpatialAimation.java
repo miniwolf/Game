@@ -39,13 +39,13 @@ public class TestSpatialAimation extends SimpleApplication {
         model.attachChild(childModel);
 
         // animation parameters
-        float animationTime = 5;
+        long animationTime = 5;
         int fps = 24;
         float totalMoveLengthX = 10;
 
         // frames
         int totalFrames = (int) (fps * animationTime);
-        float t = 0, dT = animationTime / totalFrames;
+        float t = 0, dT = (float) animationTime / totalFrames;
         float x = 0, dX = totalMoveLengthX / totalFrames;
         float rx = 0, drX = totalMoveLengthX / totalFrames;
         float[] times = new float[totalFrames];

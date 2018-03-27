@@ -26,8 +26,8 @@ public class FBXTexture extends FBXObject<Texture> {
             return;
         }
 
-        type = element.getChildren().stream().filter(fbxElement -> fbxElement.getName().equals("Type"))
-                .map(child -> (String) child.getProperties().get(0)).findFirst().get();
+        type = element.getChildren().stream().filter(fbxElement -> fbxElement.name.equals("Type"))
+                      .map(child -> (String) child.getProperties().get(0)).findFirst().get();
 //        for (FBXElement fbxElement : element.getChildren()) {
 //            if (fbxElement.getName().equals("Type")) {
 //                type = (String) fbxElement.getProperties().get(0);

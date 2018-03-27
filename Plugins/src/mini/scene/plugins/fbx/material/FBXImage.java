@@ -37,7 +37,7 @@ public class FBXImage extends FBXObject {
         }
 
         for (FBXElement fbxElement : element.getChildren()) {
-            switch (fbxElement.getName()) {
+            switch (fbxElement.name) {
                 case "RelativeFilename":
                     relativeFilename = (String) fbxElement.getProperties().get(0);
                     break;

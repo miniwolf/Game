@@ -23,7 +23,7 @@ import java.lang.reflect.InvocationTargetException;
 public class FBXObjectFactory {
     public static FBXObject createObject(FBXElement fbxElement, AssetManager assetManager,
                                          AssetKey assetKey) {
-        String elementName = fbxElement.getName();
+        String elementName = fbxElement.name;
         String subclassName;
 
         if (fbxElement.getPropertyTypes().length == 3) {

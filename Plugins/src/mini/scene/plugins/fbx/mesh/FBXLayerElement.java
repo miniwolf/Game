@@ -69,31 +69,31 @@ public class FBXLayerElement {
         FBXLayerElement layerElement = new FBXLayerElement();
         layerElement.index = (Integer) fbxElement.getProperties().get(0);
 
-        String elementType = fbxElement.getName().substring("LayerElement".length());
+        String elementType = fbxElement.name.substring("LayerElement".length());
         layerElement.type = Type.valueOf(elementType);
 
         for (FBXElement element : fbxElement.getChildren()) {
-            if (element.getName().equals("MappingInformationType")) {
+            if (element.name.equals("MappingInformationType")) {
                 String mapInfoTypeValue = (String) element.getProperties().get(0);
                 if (mapInfoTypeValue.equals("ByVertice")) {
                     mapInfoTypeValue = "ByVertex";
                 }
                 layerElement.mapInfoType = MappingInformationType.valueOf(mapInfoTypeValue);
-            } else if (element.getName().equals("ReferenceInformationType")) {
+            } else if (element.name.equals("ReferenceInformationType")) {
                 String refInfoTypeValue = (String) element.getProperties().get(0);
                 if (refInfoTypeValue.equals("Index")) {
                     refInfoTypeValue = "IndexToDirect";
                 }
                 layerElement.refInfoType = ReferenceInformationType.valueOf(refInfoTypeValue);
-            } else if (element.getName().equals("Name")) {
+            } else if (element.name.equals("Name")) {
                 layerElement.name = (String) element.getProperties().get(0);
-            } else if (indexTypes.contains(element.getName())) {
+            } else if (indexTypes.contains(element.name)) {
                 layerElement.dataIndices = FBXMeshReader.getIntArray(element);
-            } else if (element.getName().equals("Normals")) {
+            } else if (element.name.equals("Normals")) {
                 layerElement.data = toVector3f(FBXMeshReader.getDoubleArray(element));
-            } else if (element.getName().equals("UV")) {
+            } else if (element.name.equals("UV")) {
                 layerElement.data = toVector2f(FBXMeshReader.getDoubleArray(element));
-            } else if (element.getName().equals("Colors")) {
+            } else if (element.name.equals("Colors")) {
                 layerElement.data = toColorRGBA(FBXMeshReader.getDoubleArray(element));
             }
         }

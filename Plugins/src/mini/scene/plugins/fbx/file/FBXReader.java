@@ -52,7 +52,7 @@ public class FBXReader {
 
         FBXElement fbxElement = new FBXElement((int) numProperties);
         byte[] name = getBytes(byteBuffer, getUByte(byteBuffer));
-        fbxElement.setName(new String(name));
+        fbxElement.name = new String(name);
 
         for (int i = 0; i < numProperties; ++i) {
             char dataType = readDataType(byteBuffer);

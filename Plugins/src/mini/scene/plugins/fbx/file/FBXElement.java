@@ -6,7 +6,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class FBXElement {
-    private String name;
+    public String name;
     private List<Object> properties = new ArrayList<>();
     private char[] propertyTypes;
     private List<FBXElement> children = new ArrayList<>();
@@ -18,14 +18,6 @@ public class FBXElement {
 
     public Optional<FBXElement> getChildByName(String name) {
         return children.stream().filter(child -> child.name.equals(name)).findFirst();
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     public void addProperty(Object obj) {
@@ -66,18 +58,18 @@ public class FBXElement {
 
     private List<FBXElement> getNewStyleProperties(FBXElement propertyElement) {
         return propertyElement.children.stream().peek(child -> {
-            if (!child.getName().equals("P") && !child.getName().equals("Property")) {
+            if (!child.name.equals("P") && !child.name.equals("Property")) {
                 throw new UnsupportedOperationException(
-                        "Unexpected property name: " + child.getName());
+                        "Unexpected property name: " + child.name);
             }
         }).collect(Collectors.toList());
     }
 
     private List<FBXElement> getLegacyProperties(FBXElement propertyElement) {
         return propertyElement.children.stream().peek(child -> {
-            if (!child.getName().equals("P") && !child.getName().equals("Property")) {
+            if (!child.name.equals("P") && !child.name.equals("Property")) {
                 throw new UnsupportedOperationException(
-                        "Unexpected property name: " + child.getName());
+                        "Unexpected property name: " + child.name);
             }
         }).map(child -> {
             char[] types = new char[child.propertyTypes.length + 1];
@@ -99,9 +91,9 @@ public class FBXElement {
 
     private Optional<FBXElement> getPropertyElement() {
         for (FBXElement child : children) {
-            if (child.getName().equals("Properties70")) {
+            if (child.name.equals("Properties70")) {
                 return Optional.of(child);
-            } else if (child.getName().equals("Properties60")) {
+            } else if (child.name.equals("Properties60")) {
                 legacy = true;
                 return Optional.of(child);
             }
