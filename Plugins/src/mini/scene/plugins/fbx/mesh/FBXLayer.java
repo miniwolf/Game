@@ -14,7 +14,7 @@ public class FBXLayer {
 
     public static FBXLayer fromElement(FBXElement fbxElement) {
         FBXLayer layer = new FBXLayer();
-        layer.layerIndex = (int) fbxElement.getProperties().get(0);
+        layer.layerIndex = (int) (long) fbxElement.getProperties().get(0);
 
         for (FBXElement element : fbxElement.getChildren()) {
             if (!element.name.equals("LayerElement")) {
@@ -40,7 +40,7 @@ public class FBXLayer {
                     return;
                 }
             } else if (layerElement.name.equals("TypedIndex")) {
-                ref.layerElementIndex = (int) layerElement.getProperties().get(0);
+                ref.layerElementIndex = (int) (long) layerElement.getProperties().get(0);
             }
         }
         references.put(ref.layerElementType, ref);

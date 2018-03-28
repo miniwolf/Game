@@ -67,7 +67,7 @@ public class FBXLayerElement {
 
     public static FBXLayerElement fromElement(FBXElement fbxElement) {
         FBXLayerElement layerElement = new FBXLayerElement();
-        layerElement.index = (Integer) fbxElement.getProperties().get(0);
+        layerElement.index = (int) (long) fbxElement.getProperties().get(0);
 
         String elementType = fbxElement.name.substring("LayerElement".length());
         layerElement.type = Type.valueOf(elementType);
