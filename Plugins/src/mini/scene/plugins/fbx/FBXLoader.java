@@ -1,5 +1,8 @@
 package mini.scene.plugins.fbx;
 
+import mini.animation.Animation;
+import mini.animation.AnimationControl;
+import mini.animation.SpatialTrack;
 import mini.asset.AssetInfo;
 import mini.asset.AssetKey;
 import mini.asset.AssetLoader;
@@ -10,6 +13,7 @@ import mini.scene.Spatial;
 import mini.scene.plugins.fbx.anim.FBXAnimLayer;
 import mini.scene.plugins.fbx.anim.FBXAnimStack;
 import mini.scene.plugins.fbx.anim.FBXBindPose;
+import mini.scene.plugins.fbx.anim.FBXTake;
 import mini.scene.plugins.fbx.connections.FBXConnectionLoader;
 import mini.scene.plugins.fbx.file.FBXElement;
 import mini.scene.plugins.fbx.file.FBXFile;
@@ -22,6 +26,7 @@ import mini.scene.plugins.fbx.objects.FBXObjectLoader;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class FBXLoader implements AssetLoader {
     private AssetManager assetManager;
@@ -31,6 +36,8 @@ public class FBXLoader implements AssetLoader {
     private Map<FBXId, FBXObject> objects = null;
     private List<FBXAnimStack> animStacks;
     private List<FBXBindPose> bindPoses;
+    private FBXTake take;
+    private String animationName;
 
     @Override
     public Object load(AssetInfo info) throws IOException {
@@ -102,18 +109,51 @@ public class FBXLoader implements AssetLoader {
         // Acquire the implicit root object.
         FBXNode rootNode = (FBXNode) objects.get(FBXId.ROOT);
 
+        // Create animation
+        attachAnimation(rootNode, take.getTracks());
+
         // Convert it into a scene
         Node root = (Node) FBXNode.createScene(rootNode);
-
         root.setName("FBX-scene");
 
         return root;
     }
 
+    private void attachAnimation(FBXNode rootNode, Map<String, SpatialTrack> tracks) {
+        if (tracks == null) {
+            return;
+        }
+        for (Map.Entry<String, SpatialTrack> entry : tracks.entrySet()) {
+            String name = entry.getKey().split("Model::")[1];
+
+            FBXNode matchingChild = findName(name, rootNode);
+            if (matchingChild == null) {
+                throw new IllegalStateException("Could not find match for: " + name);
+            }
+            var animation = new Animation(animationName, take.getTime());
+            animation.setTracks(new SpatialTrack[] {entry.getValue()});
+
+            // Create spatial animation control
+            AnimationControl animationControl = new AnimationControl();
+            animationControl.addAnimation(animation);
+            matchingChild.setAnimationController(animationControl);
+        }
+    }
+
+    private FBXNode findName(String name, FBXNode rootNode) {
+        if (name.equals(rootNode.getClassName())) {
+            return rootNode;
+        }
+        for (FBXNode fbxNode : rootNode.getChildren()) {
+            FBXNode tryGet = findName(name, fbxNode);
+            if (tryGet != null) return tryGet;
+        }
+        return null;
+    }
+
     private void loadConnections(FBXElement fbxElement) {
         FBXConnectionLoader loader = new FBXConnectionLoader(objects);
         loader.load(fbxElement);
-        //new FBXConnector(objects).connectFBXElements(load);
     }
 
     private void loadObjects(FBXElement fbxElement) {
@@ -126,6 +166,7 @@ public class FBXLoader implements AssetLoader {
 
     private void loadTakes(FBXElement fbxElement) {
         FBXTakeLoader fbxTakeLoader = new FBXTakeLoader(assetManager, key);
-        fbxTakeLoader.load(fbxElement);
+        animationName = fbxTakeLoader.getTakeName();
+        take = fbxTakeLoader.load(fbxElement);
     }
 }

@@ -126,11 +126,7 @@ public class FBXTextReader {
             return Double.parseDouble(string);
         }
         if (trimmedDescription.contains("bool")) {
-            return Integer.parseInt(string);
-        }
-        try {
-            return Integer.parseInt(string);
-        } catch (NumberFormatException ignored) {
+            return Long.parseLong(string);
         }
         try {
             return Long.parseLong(string);
@@ -162,8 +158,8 @@ public class FBXTextReader {
             } catch (NumberFormatException ignored) {
             }
             try {
-                Integer.parseInt(property);
-                return 'I';
+                Long.parseLong(property);
+                return 'L';
             } catch (NumberFormatException ignored) {
             }
             try {
@@ -174,11 +170,6 @@ public class FBXTextReader {
             try {
                 Double.parseDouble(property);
                 return 'D';
-            } catch (NumberFormatException ignored) {
-            }
-            try {
-                Long.parseLong(property);
-                return 'L';
             } catch (NumberFormatException ignored) {
             }
         }

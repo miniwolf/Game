@@ -1,5 +1,6 @@
 package mini.scene.plugins.fbx.node;
 
+import mini.animation.AnimationControl;
 import mini.asset.AssetKey;
 import mini.asset.AssetManager;
 import mini.material.Material;
@@ -14,6 +15,7 @@ import mini.scene.Geometry;
 import mini.scene.Mesh;
 import mini.scene.Node;
 import mini.scene.Spatial;
+import mini.scene.control.Control;
 import mini.scene.plugins.fbx.anim.FBXLimbNode;
 import mini.scene.plugins.fbx.file.FBXElement;
 import mini.scene.plugins.fbx.material.FBXMaterial;
@@ -41,6 +43,7 @@ public class FBXNode extends FBXObject<Spatial> {
     private Transform miniWorldBindPose;
     private Transform miniLocalBindPose;
     private InheritMode inheritMode = InheritMode.ScaleAfterChildRotation;
+    private AnimationControl animationController;
 
     @Override
     protected Spatial toImplObject() {
@@ -101,6 +104,9 @@ public class FBXNode extends FBXObject<Spatial> {
 
             createScene(fbxChild);
             Spatial child = fbxChild.getImplObject();
+            if (fbxChild.animationController != null) {
+                child.addControl(fbxChild.animationController);
+            }
             node.attachChild(child);
         }
     }
@@ -277,14 +283,8 @@ public class FBXNode extends FBXObject<Spatial> {
         miniWorldBindPose.setRotation(worldBindPose.toRotationQuat());
         miniWorldBindPose.setScale(worldBindPose.toScaleVector());
 
-//        System.out.println("\tBind Pose for " + getName());
-//        System.out.println(miniWorldBindPose);
-
         float[] angles = new float[3];
         miniWorldBindPose.getRotation().toAngles(angles);
-//        System.out.println("Angles " + angles[0] * FastMath.RAD_TO_DEG + ", " +
-//                           angles[1] * FastMath.RAD_TO_DEG + ", " +
-//                           angles[2] * FastMath.RAD_TO_DEG);
     }
 
     @Override
@@ -363,6 +363,14 @@ public class FBXNode extends FBXObject<Spatial> {
         return transform;
     }
 
+    public void setAnimationController(AnimationControl animationController) {
+        this.animationController = animationController;
+    }
+
+    public List<FBXNode> getChildren() {
+        return children;
+    }
+
     private enum InheritMode {
         /**
          * Apply parent scale after child rotation. This is the only correctly supported by this engine.
@@ -431,7 +439,7 @@ public class FBXNode extends FBXObject<Spatial> {
                 String propertyName = (String) element.getProperties().get(0);
                 switch (propertyName) {
                     case "RotationActive":
-                        rotationActive = ((Integer) element.getProperties().get(4)) == 1;
+                        rotationActive = ((int) (long) element.getProperties().get(4)) == 1;
                         break;
                     case "PreRotation":
                         rotationPreRaw = readVectorFromProperty(element);
@@ -455,8 +463,8 @@ public class FBXNode extends FBXObject<Spatial> {
                         scalingOffsetRaw = readVectorFromProperty(element);
                         break;
                     case "InheritType":
-                        int inheritType = (int) element.getProperties().get(4);
-                        inheritMode = InheritMode.values()[inheritType];
+                        long inheritType = (long) element.getProperties().get(4);
+                        inheritMode = InheritMode.values()[(int)inheritType];
                         break;
                     case "RotationOffset":
                         rotationOffsetRaw = readVectorFromProperty(element);

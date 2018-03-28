@@ -6,39 +6,46 @@ import mini.asset.AssetManager;
 import mini.scene.plugins.fbx.anim.FBXTake;
 import mini.scene.plugins.fbx.file.FBXElement;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
-public class FBXTakeLoader implements FBXElementLoader<List<SpatialTrack>> {
+public class FBXTakeLoader implements FBXElementLoader<FBXTake> {
     private final AssetManager assetManager;
     private final AssetKey key;
+    private String takeName;
 
     public FBXTakeLoader(AssetManager assetManager, AssetKey key) {
         this.assetManager = assetManager;
         this.key = key;
     }
 
+    public String getTakeName() {
+        return takeName;
+    }
+
     @Override
-    public List<SpatialTrack> load(FBXElement element) {
-        List<SpatialTrack> tracks = new ArrayList<>();
+    public FBXTake load(FBXElement element) {
         FBXElement fbxElement = element.getChildren().get(1);
-        FBXAnimation fbxAnimation = new FBXAnimation(assetManager, key);
-        new FBXTake(assetManager, key, (String) fbxElement.getProperties().get(0));
+        FBXTake fbxTake = new FBXTake(assetManager, key, (String) fbxElement.getProperties().get(0));
+        takeName = (String) fbxElement.getProperties().get(0);
+
         for (FBXElement child : fbxElement.getChildren()) {
             switch (child.name) {
                 case "LocalTime":
-                    long l = Long.parseLong(child.getProperties().get(0).toString());
-                    fbxAnimation.setTime(l, (long) child.getProperties().get(1));
+                    fbxTake.setLocalTime((long)child.getProperties().get(0), (long) child.getProperties().get(1));
+                    break;
+                case "ReferenceTime":
+                    fbxTake.setReferenceTime((long) child.getProperties().get(0), (long) child.getProperties().get(1));
                     break;
                 case "Model":
                     FbxSpatialTrack spatialTrack = new FbxSpatialTrack(assetManager, key);
                     spatialTrack.fromElement(child);
-                    tracks.add(spatialTrack.toImplObject());
+                    fbxTake.AddTrack((String) child.getProperties().get(0), spatialTrack.toImplObject());
                     break;
                 default:
                     System.err.println(child.name);
             }
         }
-        return tracks;
+        return fbxTake;
     }
 }
