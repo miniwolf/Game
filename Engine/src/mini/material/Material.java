@@ -815,7 +815,7 @@ public class Material implements CloneableSmartAsset, Cloneable {
      *
      * @param renderManager The render manager to preload for
      */
-    public void preload(RenderManager renderManager, AssetManager assetManager) {
+    public void preload(RenderManager renderManager) {
         if (technique == null) {
             selectTechnique(TechniqueDef.DEFAULT_TECHNIQUE_NAME, renderManager);
         }
@@ -828,7 +828,6 @@ public class Material implements CloneableSmartAsset, Cloneable {
         }
 
         Shader shader = technique.makeCurrent(renderManager, null, null, null, rendererCaps);
-        shader.preloadSource(assetManager);
         updateShaderMaterialParameters(renderer, shader, null, null);
         renderManager.getRenderer().setShader(shader);
     }

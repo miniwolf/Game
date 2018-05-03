@@ -60,8 +60,6 @@ public class TestBitmapFont extends SimpleApplication {
     };
 
     public static void main(String[] args) {
-        System.setProperty("org.lwjgl.librarypath",
-                           "C:/Users/miniwolf/Engine/Engine/lib/native/windows/");
         TestBitmapFont app = new TestBitmapFont();
         app.start();
     }

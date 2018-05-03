@@ -217,6 +217,8 @@ public class IrUtils {
         FloatBuffer uv0Buffer = null;
         FloatBuffer uv1Buffer = null;
         ByteBuffer colBuffer = null;
+        ByteBuffer boneIndices = null;
+        FloatBuffer boneWeights = null;
         IndexBuffer indexBuffer;
 
         Mesh mesh = new Mesh();
@@ -252,6 +254,21 @@ public class IrUtils {
             mesh.setBuffer(VertexBuffer.Type.Color, 4, colBuffer);
             mesh.getBuffer(VertexBuffer.Type.Color).setNormalized(true);
         }
+        if (inspectionVertex.boneWeightsIndices != null) {
+            boneIndices = BufferUtils.createByteBuffer(vertices.size() * 4);
+            boneWeights = BufferUtils.createFloatBuffer(vertices.size() * 4);
+            mesh.setBuffer(VertexBuffer.Type.BoneIndex, 4, boneIndices);
+            mesh.setBuffer(VertexBuffer.Type.BoneWeight, 4, boneWeights);
+
+            var weightsHW = new VertexBuffer(VertexBuffer.Type.HWBoneWeight);
+            var indicesHW = new VertexBuffer(VertexBuffer.Type.HWBoneIndex);
+
+            weightsHW.setUsage(VertexBuffer.Usage.CpuOnly);
+            indicesHW.setUsage(VertexBuffer.Usage.CpuOnly);
+
+            mesh.setBuffer(weightsHW);
+            mesh.setBuffer(indicesHW);
+        }
 
         if (vertices.size() >= 65536) {
             // Too many vertices : use intbuffer instead of shortbuffer
@@ -265,6 +282,8 @@ public class IrUtils {
         }
 
         mesh.setStatic();
+
+        int maxBonesPerVertex = -1;
 
         for (IrVertex vertex : vertices) {
             if (posBuffer != null) {
@@ -285,6 +304,29 @@ public class IrUtils {
             if (colBuffer != null) {
                 colBuffer.putInt(vertex.color.asIntABGR());
             }
+            if (boneIndices != null) {
+                if (vertex.boneWeightsIndices == null) {
+                    boneIndices.putInt(0);
+                    boneWeights.put(0f).put(0f).put(0f).put(0f);
+                } else {
+                    if (vertex.boneWeightsIndices.length > 4) {
+                        throw new UnsupportedOperationException("Mesh uses more than 4 weights per "
+                                                                + "bone. Remember to call"
+                                                                + "trimBoneWeights() to alleviate "
+                                                                + "this.");
+                    }
+                    for (int i = 0; i < vertex.boneWeightsIndices.length; i++) {
+                        boneIndices.put((byte) (vertex.boneWeightsIndices[i].boneIndex & 0xFF));
+                        boneWeights.put(vertex.boneWeightsIndices[i].boneWeight);
+                    }
+                    for (int i = 0; i < 4 - vertex.boneWeightsIndices.length; i++) {
+                        boneIndices.put((byte) 0);
+                        boneWeights.put(0f);
+                    }
+                }
+
+                maxBonesPerVertex = Math.max(maxBonesPerVertex, vertex.boneWeightsIndices.length);
+            }
         }
 
         for (int i = 0; i < indexes.size(); i++) {
@@ -293,6 +335,12 @@ public class IrUtils {
 
         mesh.updateCounts();
         mesh.updateBound();
+
+        if (boneIndices != null) {
+            mesh.setMaxNumWeights(maxBonesPerVertex);
+            mesh.prepareForAnim(true);
+            mesh.generateBindPose(true);
+        }
         return mesh;
     }
 
@@ -313,5 +361,50 @@ public class IrUtils {
         vertex.tang4d = new Vector4f(vertex.tang.x, vertex.tang.y, vertex.tang.z, wCoord);
         vertex.tang = null;
         vertex.bitang = null;
+    }
+
+    public static void trimBoneWeights(IrMesh irMesh) {
+        for (IrPolygon polygon : irMesh.polygons) {
+            for (IrVertex vertex : polygon.vertices) {
+                trimBoneWeights(vertex);
+            }
+        }
+    }
+
+    private static void trimBoneWeights(IrVertex vertex) {
+        if (vertex.boneWeightsIndices == null) {
+            return;
+        }
+
+        IrBoneWeightIndex[] boneWeightsIndices = vertex.boneWeightsIndices;
+
+        if (boneWeightsIndices.length <= 4) {
+            return;
+        }
+
+        // Sort by weight
+        boneWeightsIndices = Arrays.copyOf(boneWeightsIndices, boneWeightsIndices.length);
+        Arrays.sort(boneWeightsIndices);
+
+        // Trim to four weights at most
+        boneWeightsIndices = Arrays.copyOf(boneWeightsIndices, 4);
+
+        // Renormalize weights
+        float sum = 0;
+
+        for (IrBoneWeightIndex boneWeightIndex : boneWeightsIndices) {
+            sum += boneWeightIndex.boneWeight;
+        }
+
+        if (sum != 1f) {
+            float sumToB = sum == 0 ? 0 : 1f / sum;
+            for (int i = 0; i < boneWeightsIndices.length; i++) {
+                IrBoneWeightIndex original = boneWeightsIndices[i];
+                boneWeightsIndices[i] = new IrBoneWeightIndex(original.boneIndex,
+                                                              original.boneWeight * sumToB);
+            }
+        }
+
+        vertex.boneWeightsIndices = boneWeightsIndices;
     }
 }

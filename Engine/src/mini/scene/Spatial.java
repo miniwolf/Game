@@ -792,6 +792,20 @@ public abstract class Spatial implements Cloneable, CloneableSmartAsset, MiniClo
     }
 
     /**
+     * @param controlType The superclass of the control to look for.
+     * @return the first control that is an instance of the given class, or null if no such control
+     * exists.
+     */
+    public <T extends Control> T getControl(Class<T> controlType) {
+        for (Control control : controls) {
+            if (controlType.isAssignableFrom(control.getClass())) {
+                return (T) control;
+            }
+        }
+        return null;
+    }
+
+    /**
      * @param index The index of the <code>Control</code> in the list to find.
      * @return the <code>Control</code> at the given index in the list
      * @throws IndexOutOfBoundsException if the range is outside the range [0, getNumControls() - 1]

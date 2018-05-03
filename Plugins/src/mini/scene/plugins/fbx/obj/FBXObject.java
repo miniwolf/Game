@@ -53,8 +53,8 @@ public abstract class FBXObject<T> {
             name = nameAndClass.substring(0, splitter);
             className = nameAndClass.substring(splitter + 2);
         } else if (otherPossibility != -1) {
-            name = nameAndClass.substring(0, otherPossibility);
-            className = nameAndClass.substring(otherPossibility + 2);
+            name = nameAndClass.substring(otherPossibility + 2);
+            className = nameAndClass.substring(0, otherPossibility);
         } else {
             name = nameAndClass;
             className = null;

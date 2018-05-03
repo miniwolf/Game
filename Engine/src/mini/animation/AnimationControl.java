@@ -3,7 +3,7 @@ package mini.animation;
 import mini.renderer.RenderManager;
 import mini.renderer.ViewPort;
 import mini.scene.AbstractControl;
-import mini.scene.Spatial;
+import mini.utils.TempVars;
 import mini.utils.clone.Cloner;
 
 import java.util.ArrayList;
@@ -14,7 +14,21 @@ import java.util.Map;
 public class AnimationControl extends AbstractControl {
     private List<AnimationChannel> channels = new ArrayList<>();
     private Map<String, Animation> animationMap = new HashMap<>();
-    private Spatial spatial;
+    private Skeleton skeleton;
+
+    public AnimationControl(Skeleton skeleton) {
+        this.skeleton = skeleton;
+        reset();
+    }
+
+    public AnimationControl() {
+    }
+
+    private void reset() {
+        if (skeleton != null) {
+            skeleton.resetAndUpdate();
+        }
+    }
 
     @Override
     protected void controlRender(RenderManager renderManager, ViewPort vp) {
@@ -22,8 +36,18 @@ public class AnimationControl extends AbstractControl {
 
     @Override
     protected void controlUpdate(float tpf) {
-        for (AnimationChannel channel : channels) {
-            channel.update(tpf);
+        if (skeleton != null) {
+            skeleton.reset();
+        }
+
+        try (var vars = TempVars.get()) {
+            for (AnimationChannel channel : channels) {
+                channel.update(tpf, vars);
+            }
+        }
+
+        if (skeleton != null) {
+            skeleton.updateWorldVectors();
         }
     }
 
@@ -53,5 +77,17 @@ public class AnimationControl extends AbstractControl {
 
     public void notifyAnimationChange(AnimationChannel animationChannel, String name) {
         // TODO: Listeners.onAnimationChange(this, animationChannel, name)
+    }
+
+    void notifyAnimCycleDone(AnimationChannel channel, String name) {
+        // TODO: Listeners.onAnimCycleDone(this, channel, name)
+    }
+
+    public Skeleton getSkeleton() {
+        return skeleton;
+    }
+
+    public void setSkeleton(Skeleton skeleton) {
+        this.skeleton = skeleton;
     }
 }

@@ -58,4 +58,8 @@ public abstract class AbstractControl implements Control, MiniCloneable {
     public void cloneFields(Cloner cloner, Object original) {
         this.spatial = cloner.clone(spatial);
     }
+
+    public void reassign(Spatial spatial) {
+        this.spatial = spatial;
+    }
 }

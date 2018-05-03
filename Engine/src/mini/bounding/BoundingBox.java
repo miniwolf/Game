@@ -344,7 +344,44 @@ public class BoundingBox extends BoundingVolume {
 
     @Override
     public float distanceToEdge(Vector3f point) {
-        throw new UnsupportedOperationException();
+        try (var vars = TempVars.get()) {
+            var closest = vars.vect1;
+
+            point.subtract(center, closest);
+            var sqrDistance = 0.0f;
+            float delta;
+
+            if (closest.x < -xExtent) {
+                delta = closest.x + xExtent;
+                sqrDistance += delta * delta;
+                closest.x = -xExtent;
+            } else if (closest.x > xExtent) {
+                delta = closest.x - xExtent;
+                sqrDistance += delta * delta;
+                closest.x = xExtent;
+            }
+
+            if (closest.y < -yExtent) {
+                delta = closest.y + yExtent;
+                sqrDistance += delta * delta;
+                closest.y = -yExtent;
+            } else if (closest.y > yExtent) {
+                delta = closest.y - yExtent;
+                sqrDistance += delta * delta;
+                closest.y = yExtent;
+            }
+
+            if (closest.z < -zExtent) {
+                delta = closest.z + zExtent;
+                sqrDistance += delta * delta;
+                closest.z = -zExtent;
+            } else if (closest.z > zExtent) {
+                delta = closest.z - zExtent;
+                sqrDistance += delta * delta;
+                closest.z = zExtent;
+            }
+            return FastMath.sqrt(sqrDistance);
+        }
     }
 
     @Override

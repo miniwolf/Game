@@ -65,7 +65,7 @@ public final class Quaternion implements Cloneable, java.io.Serializable {
         DIRECTION_Z.fromAxes(Vector3f.UNIT_X, Vector3f.UNIT_Y, Vector3f.UNIT_Z);
     }
 
-    protected float x, y, z, w;
+    public float x, y, z, w;
 
     /**
      * Constructor instantiates a new <code>Quaternion</code> object

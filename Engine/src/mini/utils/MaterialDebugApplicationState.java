@@ -2,7 +2,6 @@ package mini.utils;
 
 import mini.app.Application;
 import mini.app.state.AbstractApplicationState;
-import mini.app.state.ApplicationState;
 import mini.app.state.ApplicationStateManager;
 import mini.asset.AssetInfo;
 import mini.asset.AssetKey;
@@ -27,7 +26,11 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.nio.file.Files;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * This appState is for debug purpose only, and was made to provide an easy way to test shaders, with a live update
@@ -175,7 +178,7 @@ public class MaterialDebugApplicationState extends AbstractApplicationState {
 
         try {
             //preloading the dummyGeom, this call will compile the shader again
-            renderManager.preloadScene(dummyGeom, assetManager);
+            renderManager.preloadScene(dummyGeom);
         } catch (RendererException e) {
             //compilation error, the shader code will be output to the console
             //the following code will output the error

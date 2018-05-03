@@ -1,6 +1,5 @@
 package mini.renderer;
 
-import mini.asset.AssetManager;
 import mini.light.DefaultLightFilter;
 import mini.light.LightFilter;
 import mini.light.LightList;
@@ -587,13 +586,13 @@ public class RenderManager {
      *
      * @param scene The scene to preload
      */
-    public void preloadScene(Spatial scene, AssetManager assetManager) {
+    public void preloadScene(Spatial scene) {
         if (scene instanceof Node) {
             // recurse for all children
             Node n = (Node) scene;
             List<Spatial> children = n.getChildren();
             for (Spatial child : children) {
-                preloadScene(child, assetManager);
+                preloadScene(child);
             }
         } else if (scene instanceof Geometry) {
             // add to the render queue
@@ -602,7 +601,7 @@ public class RenderManager {
                 throw new IllegalStateException("No material is set for Geometry: " + gm.getName());
             }
 
-            gm.getMaterial().preload(this, assetManager);
+            gm.getMaterial().preload(this);
             Mesh mesh = gm.getMesh();
             if (mesh != null
                 && mesh.getVertexCount() != 0

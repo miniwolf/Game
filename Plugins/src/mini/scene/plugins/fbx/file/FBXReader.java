@@ -79,7 +79,7 @@ public class FBXReader {
             case 'C': //1 bit boolean (1: true, 0: false) encoded as the LSB of a 1 Byte value.
                 return byteBuffer.get() == 1;
             case 'I': //4 byte signed Integer
-                return (long)byteBuffer.getInt();
+                return byteBuffer.getInt();
             case 'F': //4 byte single-precision IEEE 754 number
                 return byteBuffer.getFloat();
             case 'D': //8 byte double-precision IEEE 754 number

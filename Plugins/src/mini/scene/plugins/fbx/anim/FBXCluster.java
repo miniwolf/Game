@@ -7,8 +7,8 @@ import mini.scene.plugins.fbx.obj.FBXObject;
 
 public class FBXCluster extends FBXObject {
     private FBXLimbNode limb;
-    private int[] indexes;
-    private double[] weights;
+    private Integer[] indexes;
+    private Double[] weights;
 
     public FBXCluster(AssetManager assetManager, AssetKey key) {
         super(assetManager, key);
@@ -18,9 +18,13 @@ public class FBXCluster extends FBXObject {
     protected void fromElementOverride(FBXElement element) {
         for (FBXElement fbxElement : element.getChildren()) {
             if (fbxElement.name.equals("Indexes")) {
-                indexes = (int[]) fbxElement.getProperties().get(0);
+                if (fbxElement.getProperties().size() > 0) {
+                    indexes = fbxElement.getProperties().toArray(new Integer[0]);
+                }
             } else if (fbxElement.name.equals("Weights")) {
-                weights = (double[]) fbxElement.getProperties().get(0);
+                if (fbxElement.getProperties().size() > 0) {
+                    weights = fbxElement.getProperties().toArray(new Double[0]);
+                }
             }
         }
     }
@@ -46,5 +50,17 @@ public class FBXCluster extends FBXObject {
         }
 
         unsupportedConnectObjectProperty(obj, propertyName);
+    }
+
+    public FBXLimbNode getLimb() {
+        return limb;
+    }
+
+    public Integer[] getIndexes() {
+        return indexes;
+    }
+
+    public Double[] getWeights() {
+        return weights;
     }
 }
