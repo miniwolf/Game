@@ -58,7 +58,7 @@ public class FBXTextReader {
                                                            .skip(1).collect(Collectors.toList()))
                                           .trim();
         FBXElement fbxElement;
-        if (trimmedDescription.matches("(\"[^,]+\")|[0-9]+")) {
+        if (trimmedDescription.matches("(\"[^,]+\")|[0-9]+|[-]?[0-9]+(\\.[0-9]+)?")) {
             fbxElement = new FBXElement(1);
             fbxElement.addProperty(cleanType(trimmedDescription, trimmedDescription));
             fbxElement.addPropertyType(findType(trimmedDescription), 0); // TODO: Figure this out

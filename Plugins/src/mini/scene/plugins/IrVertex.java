@@ -17,4 +17,5 @@ public class IrVertex {
     public Integer smoothing;
     public Vector2f uv1;
     public Vector4f tang4d;
+    public IrBoneWeightIndex[] boneWeightsIndices;
 }

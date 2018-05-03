@@ -1,10 +1,14 @@
 package mini.scene.plugins.fbx.node;
 
 import mini.animation.AnimationControl;
+import mini.animation.Skeleton;
+import mini.animation.SkeletonControl;
+import mini.animation.presets.HumanoidPreset;
 import mini.asset.AssetKey;
 import mini.asset.AssetManager;
 import mini.material.Material;
 import mini.material.RenderState;
+import mini.math.ColorRGBA;
 import mini.math.FastMath;
 import mini.math.Matrix4f;
 import mini.math.Quaternion;
@@ -15,7 +19,7 @@ import mini.scene.Geometry;
 import mini.scene.Mesh;
 import mini.scene.Node;
 import mini.scene.Spatial;
-import mini.scene.control.Control;
+import mini.scene.debug.SkeletonDebugger;
 import mini.scene.plugins.fbx.anim.FBXLimbNode;
 import mini.scene.plugins.fbx.file.FBXElement;
 import mini.scene.plugins.fbx.material.FBXMaterial;
@@ -40,10 +44,14 @@ public class FBXNode extends FBXObject<Spatial> {
     private List<FBXNode> children = new ArrayList<>();
     private List<FBXMaterial> materials = new ArrayList<>();
     private FBXNodeAttribute nodeAttribute;
-    private Transform miniWorldBindPose;
-    private Transform miniLocalBindPose;
+    protected Transform miniWorldBindPose;
+    protected Transform miniLocalBindPose;
     private InheritMode inheritMode = InheritMode.ScaleAfterChildRotation;
-    private AnimationControl animationController;
+    /**
+     * For FBX nodes that contain a skeleton (i.e. FBXLimbs)
+     */
+    private Skeleton skeleton;
+    private HumanoidPreset preset;
 
     @Override
     protected Spatial toImplObject() {
@@ -86,14 +94,27 @@ public class FBXNode extends FBXObject<Spatial> {
         super(assetManager, key);
     }
 
-    public static Spatial createScene(FBXNode rootNode) {
-        Spatial spatial = rootNode.getImplObject();
+    public static Node createScene(FBXNode rootNode) {
+        Node node = (Node) rootNode.getImplObject();
 
-        if (spatial instanceof Node) {
-            attachChildren((Node) spatial, rootNode);
+        attachChildren(node, rootNode);
+
+        if (rootNode.skeleton != null) {
+            node.addControl(new AnimationControl(rootNode.skeleton));
+            node.addControl(new SkeletonControl(rootNode.skeleton));
+
+            SkeletonDebugger sd = new SkeletonDebugger("debug", rootNode.skeleton);
+            Material mat = new Material(rootNode.assetManager, "MatDefs/Misc/Unshaded.minid");
+            mat.getAdditionalRenderState().setWireframe(true);
+            mat.getAdditionalRenderState().setDepthTest(false);
+            mat.setColor("Color", ColorRGBA.Green);
+            sd.setMaterial(mat);
+
+            // TODO: Maybe think about a skeleton debugger.
+            // It should draw the skeleton
         }
 
-        return spatial;
+        return node;
     }
 
     private static void attachChildren(Node node, FBXNode rootNode) {
@@ -101,12 +122,8 @@ public class FBXNode extends FBXObject<Spatial> {
             if (fbxChild instanceof FBXLimbNode) {
                 continue;
             }
-
             createScene(fbxChild);
             Spatial child = fbxChild.getImplObject();
-            if (fbxChild.animationController != null) {
-                child.addControl(fbxChild.animationController);
-            }
             node.attachChild(child);
         }
     }
@@ -282,20 +299,16 @@ public class FBXNode extends FBXObject<Spatial> {
         miniWorldBindPose.setTranslation(worldBindPose.toTranslationVector());
         miniWorldBindPose.setRotation(worldBindPose.toRotationQuat());
         miniWorldBindPose.setScale(worldBindPose.toScaleVector());
-
-        float[] angles = new float[3];
-        miniWorldBindPose.getRotation().toAngles(angles);
     }
 
     @Override
     public void link(FBXObject obj, String propertyName) {
-        System.out.println("Did not implement FBXNode: " + obj);
+        throw new UnsupportedOperationException("Implement animation connections");
     }
 
     public void updateWorldTransforms(Transform miniParentNodeTransform, Transform parentBindPose) {
         Transform fbxLocalTransform = computeFBXLocalTransform();
         localNodeTransform.set(fbxLocalTransform);
-        worldNodeTransform.set(localNodeTransform);
 
         if (miniParentNodeTransform != null) {
             miniParentNodeTransform = miniParentNodeTransform.clone();
@@ -311,6 +324,8 @@ public class FBXNode extends FBXObject<Spatial> {
                 default:
                     throw new UnsupportedOperationException();
             }
+        } else {
+            worldNodeTransform.set(localNodeTransform);
         }
 
         if (miniWorldBindPose != null) {
@@ -363,12 +378,13 @@ public class FBXNode extends FBXObject<Spatial> {
         return transform;
     }
 
-    public void setAnimationController(AnimationControl animationController) {
-        this.animationController = animationController;
+    public HumanoidPreset getPreset() {
+        return preset;
     }
 
-    public List<FBXNode> getChildren() {
-        return children;
+    public void setPreset(HumanoidPreset humanoidPreset) {
+        this.preset = humanoidPreset;
+        skeleton.setJointsBoneMap(preset.getJointsBoneMap());
     }
 
     private enum InheritMode {
@@ -389,6 +405,18 @@ public class FBXNode extends FBXObject<Spatial> {
          * ParentR * childr * childs
          */
         NoParentScale,
+    }
+
+    public List<FBXNode> getChildren() {
+        return children;
+    }
+
+    public Skeleton getSkeleton() {
+        return skeleton;
+    }
+
+    public void setSkeleton(Skeleton skeleton) {
+        this.skeleton = skeleton;
     }
 
     private class FBXTransform {
@@ -439,7 +467,7 @@ public class FBXNode extends FBXObject<Spatial> {
                 String propertyName = (String) element.getProperties().get(0);
                 switch (propertyName) {
                     case "RotationActive":
-                        rotationActive = ((int) (long) element.getProperties().get(4)) == 1;
+                        rotationActive = ((int) element.getProperties().get(4)) == 1;
                         break;
                     case "PreRotation":
                         rotationPreRaw = readVectorFromProperty(element);
@@ -463,8 +491,8 @@ public class FBXNode extends FBXObject<Spatial> {
                         scalingOffsetRaw = readVectorFromProperty(element);
                         break;
                     case "InheritType":
-                        long inheritType = (long) element.getProperties().get(4);
-                        inheritMode = InheritMode.values()[(int)inheritType];
+                        int inheritType = (int) element.getProperties().get(4);
+                        inheritMode = InheritMode.values()[inheritType];
                         break;
                     case "RotationOffset":
                         rotationOffsetRaw = readVectorFromProperty(element);

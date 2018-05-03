@@ -5,9 +5,12 @@ import mini.asset.AssetManager;
 import mini.scene.plugins.fbx.file.FBXElement;
 import mini.scene.plugins.fbx.obj.FBXObject;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class FBXAnimStack extends FBXObject {
     private float duration;
-    private FBXAnimLayer layer0;
+    private List<FBXAnimLayer> layers = new ArrayList<>();
 
     public FBXAnimStack(AssetManager assetManager, AssetKey key) {
         super(assetManager, key);
@@ -32,7 +35,7 @@ public class FBXAnimStack extends FBXObject {
     @Override
     public void link(FBXObject obj) {
         if (obj instanceof FBXAnimLayer) {
-            layer0 = (FBXAnimLayer) obj;
+            layers.add((FBXAnimLayer) obj);
         } else {
             unsupportedConnectObject(obj);
         }
@@ -43,7 +46,26 @@ public class FBXAnimStack extends FBXObject {
         unsupportedConnectObjectProperty(obj, propertyName);
     }
 
-    public FBXAnimLayer getLayer() {
-        return layer0;
+    public List<FBXAnimLayer> getLayer() {
+        return layers;
+    }
+
+    public float getDuration() {
+        return duration;
+    }
+
+    public void fromElementAscii(FBXElement element) {
+        name = (String) element.getProperties().get(0);
+        for (FBXElement child : element.getChildren()) {
+            if (child.name.equals("LocalTime")) {
+                duration = (float) (((Long) child.getProperties().get(1))
+                                    * FBXAnimUtil.SECONDS_PER_UNIT);
+            } else if (child.name.equals("Model")) {
+                var animLayer = new FBXAnimLayer(assetManager, key,
+                                                 (String) child.getProperties().get(0));
+                animLayer.fromElementAscii(child);
+                layers.add(animLayer);
+            }
+        }
     }
 }

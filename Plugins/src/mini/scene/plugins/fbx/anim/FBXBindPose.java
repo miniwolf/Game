@@ -56,6 +56,8 @@ public class FBXBindPose extends FBXObject<Map<FBXId, Matrix4f>> {
                     for (int i = 0; i < matrixDataDoubles.length; i++) {
                         matrixData[i] = (float) matrixDataDoubles[i];
                     }
+                } else {
+                    System.err.println();
                 }
             }
 

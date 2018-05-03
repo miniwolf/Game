@@ -92,7 +92,7 @@ public class FBXObjectFactory {
         } else if ("Model".equals(elementName)) {
             // Scene Graph Node
             // Determine Specific subclass (e.g. Mesh, LimbNode)
-            if ("LimbNode".equals(subclassName)) {
+            if ("LimbNode".equals(subclassName) || "Limb".equals(subclassName)) {
                 return FBXLimbNode.class;
             } else {
                 return FBXNode.class;

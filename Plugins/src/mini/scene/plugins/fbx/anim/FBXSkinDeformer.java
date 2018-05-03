@@ -17,6 +17,7 @@ public class FBXSkinDeformer extends FBXObject<List<FBXCluster>> {
 
     @Override
     protected void fromElementOverride(FBXElement element) {
+        System.out.println(element);
     }
 
     @Override

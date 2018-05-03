@@ -6,6 +6,7 @@ import mini.math.ColorRGBA;
 import mini.math.Vector2f;
 import mini.math.Vector3f;
 import mini.scene.Mesh;
+import mini.scene.plugins.IrBoneWeightIndex;
 import mini.scene.plugins.IrMesh;
 import mini.scene.plugins.IrPolygon;
 import mini.scene.plugins.IrUtils;
@@ -28,6 +29,9 @@ public class FBXMesh extends FBXNodeAttribute<Map<Integer, Mesh>> {
     private FBXLayerElement[] layerElements;
     private FBXLayer[] layers;
     private FBXSkinDeformer skinDeformer;
+
+    private ArrayList<Integer>[] boneIndices;
+    private ArrayList<Float>[] boneWeights;
 
     public FBXMesh(AssetManager assetManager, AssetKey key) {
         super(assetManager, key);
@@ -70,7 +74,10 @@ public class FBXMesh extends FBXNodeAttribute<Map<Integer, Mesh>> {
 
         IrMesh irMesh = toIRMesh();
 
-        // Maybe convert tangents / binormals to tangents with parity
+        // Trim bone weight to 4 weights per vertex
+        IrUtils.trimBoneWeights(irMesh);
+
+        // Convert tangents / binormals to tangents with parity
         IrUtils.toTangentWithParity(irMesh);
 
         // Triangulate quads
@@ -151,17 +158,72 @@ public class FBXMesh extends FBXNodeAttribute<Map<Integer, Mesh>> {
                                            vertexIndex, 0);
                 }
 
+                if (boneIndices != null) {
+                    ArrayList<Integer> boneIndicesForVertex = boneIndices[vertexIndex];
+                    ArrayList<Float> boneWeightsForVertex = boneWeights[vertexIndex];
+                    if (boneIndicesForVertex != null) {
+                        irVertex.boneWeightsIndices = toBoneWeightIndices(boneIndicesForVertex,
+                                                                          boneWeightsForVertex);
+                    }
+                }
+
                 irPolygon.vertices[j] = irVertex;
                 polygonVertexIndex++;
             }
             newMesh.polygons[i] = irPolygon;
         }
 
+        // Ensure "inspection vertex" specifies that mesh has bone indices / weights
+        if (boneIndices != null && newMesh.polygons[0].vertices[0] != null) {
+            newMesh.polygons[0].vertices[0].boneWeightsIndices = new IrBoneWeightIndex[0];
+        }
+
         return newMesh;
     }
 
-    private void applyCluster(FBXCluster cluster) {
+    private IrBoneWeightIndex[] toBoneWeightIndices(List<Integer> boneIndices,
+                                                    List<Float> boneWeights) {
+        var boneWeightIndices = new IrBoneWeightIndex[boneIndices.size()];
+        for (int i = 0; i < boneIndices.size(); i++) {
+            boneWeightIndices[i] = new IrBoneWeightIndex(boneIndices.get(i), boneWeights.get(i));
+        }
+        return boneWeightIndices;
+    }
 
+    private void applyCluster(FBXCluster cluster) {
+        if (cluster == null || cluster.getIndexes() == null || cluster.getWeights() == null) {
+            return;
+        }
+        if (boneIndices == null) {
+            boneIndices = new ArrayList[vertices.length];
+            boneWeights = new ArrayList[vertices.length];
+        }
+
+        var limb = cluster.getLimb();
+        var bone = limb.getBone();
+        var skeleton = limb.getSkeletonHolder().getSkeleton();
+        int boneIndex = skeleton.getBoneIndex(bone);
+
+        Integer[] positionIndices = cluster.getIndexes();
+        Double[] weights = cluster.getWeights();
+
+        for (int i = 0; i < positionIndices.length; i++) {
+            var positionIndex = positionIndices[i];
+            var boneWeight = weights[i].floatValue();
+
+            var boneIndicesForVertex = boneIndices[positionIndex];
+            var boneWeightsForVertex = boneWeights[positionIndex];
+
+            if (boneIndicesForVertex == null) {
+                boneIndicesForVertex = new ArrayList<>();
+                boneWeightsForVertex = new ArrayList<>();
+                boneIndices[positionIndex] = boneIndicesForVertex;
+                boneWeights[positionIndex] = boneWeightsForVertex;
+            }
+
+            boneIndicesForVertex.add(boneIndex);
+            boneWeightsForVertex.add(boneWeight);
+        }
     }
 
     private void setPolygonVertexIndices(int[] polygonVertexIndices) {
