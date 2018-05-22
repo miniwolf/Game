@@ -2,6 +2,9 @@ package mini.shadow;
 
 import mini.asset.AssetManager;
 import mini.light.DirectionalLight;
+import mini.renderer.Renderer;
+import mini.renderer.queue.RenderQueue;
+import mini.textures.FrameBuffer;
 
 /**
  * This Filter does basically the same as a <code>DirectionalLightShadowRenderer</code> except it
@@ -48,5 +51,21 @@ public class DirectionalLightShadowFilter
      */
     public void setLambda(float lamba) {
         shadowRenderer.setLambda(lamba);
+    }
+
+    @Override
+    public void postFilter(Renderer renderer, FrameBuffer buffer) {
+    }
+
+    @Override
+    public void postQueue(RenderQueue queue) {
+    }
+
+    @Override
+    public void preFrame(float tpf) {
+    }
+
+    @Override
+    protected void cleanupFilter(Renderer renderer) {
     }
 }

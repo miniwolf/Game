@@ -1179,13 +1179,13 @@ public abstract class Spatial implements Cloneable, CloneableSmartAsset, MiniClo
 
         Object o = userData.get(key);
         if (o instanceof UserData) {
-            return (T) ((UserData) o).getValue();
+            return ((UserData<T>) o).getValue();
         } else {
             return (T) o;
         }
     }
 
-    public void setUserData(String key, Object data) {
+    public <T> void setUserData(String key, T data) {
         if (data == null) { // Remove object
             if (userData != null) {
                 userData.remove(key);
@@ -1197,7 +1197,7 @@ public abstract class Spatial implements Cloneable, CloneableSmartAsset, MiniClo
             if (userData == null) {
                 userData = new HashMap<>();
             }
-            userData.put(key, new UserData(UserData.getObjectType(data), data));
+            userData.put(key, new UserData<>(UserData.getObjectType(data), data));
         }
     }
 

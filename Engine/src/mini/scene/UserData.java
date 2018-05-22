@@ -1,5 +1,7 @@
 package mini.scene;
 
+import mini.export.Savable;
+
 import java.util.List;
 import java.util.Map;
 
@@ -7,7 +9,7 @@ import java.util.Map;
  * <code>UserData</code> is used to contain user data objects set on spatials (primarily primitives)
  * that do not implement an interface.
  */
-public class UserData {
+public class UserData<T> {
     private static final int TYPE_INTEGER = 0;
     private static final int TYPE_FLOAT = 1;
     private static final int TYPE_BOOLEAN = 2;
@@ -16,8 +18,9 @@ public class UserData {
     private static final int TYPE_LIST = 5;
     private static final int TYPE_MAP = 6;
     private static final int TYPE_ARRAY = 7;
+    private static final int TYPE_SAVABLE = 8;
     private final byte type;
-    private final Object value;
+    private final T value;
 
     /**
      * Creates a new <code>UserData</code> with the given type and value
@@ -25,7 +28,7 @@ public class UserData {
      * @param type  Type of data, should be between 0 and 7
      * @param value Value of the data
      */
-    public UserData(byte type, Object value) {
+    public UserData(byte type, T value) {
         assert type >= 0 && type <= 7;
         this.type = type;
         this.value = value;
@@ -48,6 +51,8 @@ public class UserData {
             return TYPE_MAP;
         } else if (type instanceof Object[]) {
             return TYPE_ARRAY;
+        } else if (type instanceof Savable) {
+            return TYPE_SAVABLE;
         } else {
             throw new IllegalArgumentException("Unsupported type: " + type.getClass().getName());
         }
@@ -57,7 +62,7 @@ public class UserData {
         return type;
     }
 
-    public Object getValue() {
+    public T getValue() {
         return value;
     }
 }

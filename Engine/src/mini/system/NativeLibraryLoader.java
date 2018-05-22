@@ -57,7 +57,7 @@ public final class NativeLibraryLoader {
      *
      * @param name          The name / ID of the library (not OS or architecture specific).
      * @param platform      The platform for which the in-natives-jar path has
-     *                      been specified for.
+     *                       been specified for.
      * @param path          The path inside the natives-jar or classpath
      *                      corresponding to this library. Must be compatible with the platform
      *                      argument.

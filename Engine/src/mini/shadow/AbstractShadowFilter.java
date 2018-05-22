@@ -3,9 +3,13 @@ package mini.shadow;
 import mini.asset.AssetManager;
 import mini.material.Material;
 import mini.post.Filter;
+import mini.renderer.RenderManager;
+import mini.renderer.ViewPort;
+import mini.textures.FrameBuffer;
 
-public class AbstractShadowFilter<T extends AbstractShadowRenderer> extends Filter {
+public abstract class AbstractShadowFilter<T extends AbstractShadowRenderer> extends Filter {
     protected final T shadowRenderer;
+    protected ViewPort viewPort;
 
     /**
      * @param assetManager   the application <code>AssetManager</code>
@@ -39,5 +43,21 @@ public class AbstractShadowFilter<T extends AbstractShadowRenderer> extends Filt
      */
     final public void setEdgeFilteringMode(EdgeFilteringMode filteringMode) {
         shadowRenderer.setEdgeFilteringMode(filteringMode);
+    }
+
+    @Override
+    protected void initFilter(AssetManager manager, RenderManager renderManager, ViewPort viewPort,
+                              int width, int height) {
+        shadowRenderer.needsfallBackMaterial = true;
+        shadowRenderer.initialize(renderManager, viewPort);
+        this.viewPort = viewPort;
+    }
+
+    @Override
+    public void postFrame(RenderManager renderManager, ViewPort viewPort, FrameBuffer buffer,
+                          FrameBuffer sceneBuffer) {
+        if (!shadowRenderer.skipPostPass) {
+            shadowRenderer.setPostShadowParams();
+        }
     }
 }

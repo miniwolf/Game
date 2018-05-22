@@ -338,6 +338,5 @@ public interface Renderer {
      * @see Caps#Srgb
      */
     void setLinearizeSrgbImages(boolean linearize);
-
 }
 

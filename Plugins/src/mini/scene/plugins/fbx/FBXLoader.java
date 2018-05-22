@@ -51,7 +51,7 @@ public class FBXLoader implements AssetLoader {
 
         updateWorldTransforms();
 
-        constructSkeleton();
+        //constructSkeleton();
 
         Node node = constructSceneGraph();
 

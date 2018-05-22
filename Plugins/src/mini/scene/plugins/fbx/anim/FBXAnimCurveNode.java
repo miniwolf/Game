@@ -21,7 +21,7 @@ public class FBXAnimCurveNode extends FBXObject implements AsciiObject {
 
     @Override
     protected void fromElementOverride(FBXElement fbxElement) {
-        System.out.println("Take this");
+        throw new UnsupportedOperationException();
     }
 
     @Override

@@ -16,17 +16,17 @@ public class FBXCluster extends FBXObject {
 
     @Override
     protected void fromElementOverride(FBXElement element) {
-        for (FBXElement fbxElement : element.getChildren()) {
-            if (fbxElement.name.equals("Indexes")) {
-                if (fbxElement.getProperties().size() > 0) {
-                    indexes = fbxElement.getProperties().toArray(new Integer[0]);
-                }
-            } else if (fbxElement.name.equals("Weights")) {
-                if (fbxElement.getProperties().size() > 0) {
-                    weights = fbxElement.getProperties().toArray(new Double[0]);
-                }
-            }
-        }
+//        for (FBXElement fbxElement : element.getChildren()) {
+//            if (fbxElement.name.equals("Indexes")) {
+//                if (fbxElement.getProperties().size() > 0) {
+//                    indexes = fbxElement.getProperties().toArray(new Integer[0]);
+//                }
+//            } else if (fbxElement.name.equals("Weights")) {
+//                if (fbxElement.getProperties().size() > 0) {
+//                    weights = fbxElement.getProperties().toArray(new Double[0]);
+//                }
+//            }
+//        }
     }
 
     @Override

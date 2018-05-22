@@ -62,10 +62,10 @@ public class ClasspathLocator implements AssetLocator {
                 }
 
                 // compare path
-                if (!path.endsWith(name)) {
-                    throw new RuntimeException("Asset name doesn't match requirements.\n" +
-                                               "\"" + path + "\" doesn't match \"" + name + "\"");
-                }
+//                if (!path.endsWith(name)) { // TODO: Reintroduce if it makes sense
+//                    throw new RuntimeException("Asset name doesn't match requirements.\n" +
+//                                               "\"" + path + "\" doesn't match \"" + name + "\"");
+//                }
             } catch (URISyntaxException ex) {
                 throw new RuntimeException("Error converting URL to URI", ex);
             } catch (IOException ex) {

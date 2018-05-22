@@ -831,8 +831,6 @@ public class Camera implements Cloneable {
     public void update() {
         onFrustumChange();
         onViewPortChange();
-        //...this is always called by onFrustumChange()
-        //onFrameChange();
     }
 
     /**
@@ -1159,10 +1157,8 @@ public class Camera implements Cloneable {
 
         projectionMatrix.fromFrustum(frustumNear, frustumFar, frustumLeft, frustumRight, frustumTop,
                                      frustumBottom, parallelProjection);
-//        projectionMatrix.transposeLocal();
 
-        // The frame is effected by the frustum values
-        // update it as well
+        // The frame is effected by the frustum values update it as well
         onFrameChange();
     }
 

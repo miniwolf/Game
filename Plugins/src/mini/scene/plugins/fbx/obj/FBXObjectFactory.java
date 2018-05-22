@@ -2,6 +2,8 @@ package mini.scene.plugins.fbx.obj;
 
 import mini.asset.AssetKey;
 import mini.asset.AssetManager;
+import mini.scene.plugins.fbx.anim.FBXAnimCurve;
+import mini.scene.plugins.fbx.anim.FBXAnimCurveNode;
 import mini.scene.plugins.fbx.anim.FBXAnimLayer;
 import mini.scene.plugins.fbx.anim.FBXAnimStack;
 import mini.scene.plugins.fbx.anim.FBXBindPose;
@@ -119,9 +121,10 @@ public class FBXObjectFactory {
         } else if ("AnimationLayer".equals(elementName)) {
             // Blended animations
             return FBXAnimLayer.class;
-        } else if ("AnimationCurveNode".equals(elementName) || "AnimationCurve"
-                .equals(elementName)) {
-            throw new UnsupportedOperationException();
+        } else if ("AnimationCurveNode".equals(elementName)) {
+            return FBXAnimCurveNode.class;
+        } else if ("AnimationCurve".equals(elementName)) {
+            return FBXAnimCurve.class;
         } else if ("SceneInfo".equals(elementName)) {
             // Old-style FBX 6.1 uses this. Nothing useful here.
             return FBXUnknownObject.class;

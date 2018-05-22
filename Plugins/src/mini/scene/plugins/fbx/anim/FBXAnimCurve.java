@@ -18,7 +18,7 @@ public class FBXAnimCurve extends FBXObject implements AsciiObject {
 
     @Override
     protected void fromElementOverride(FBXElement element) {
-
+        throw new UnsupportedOperationException();
     }
 
     @Override
