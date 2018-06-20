@@ -113,7 +113,7 @@ class ColorTags {
             readColor(colorStr);
         }
 
-		private void readHexColor(String colorStr) {
+        private void readHexColor(String colorStr) {
             color.r = readHexColorValue(colorStr, 0);
             color.g = readHexColorValue(colorStr, 1);
             color.b = readHexColorValue(colorStr, 2);
