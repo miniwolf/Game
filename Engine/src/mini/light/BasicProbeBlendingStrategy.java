@@ -22,15 +22,17 @@ public class BasicProbeBlendingStrategy implements LightProbeBlendingStrategy {
 
     @Override
     public void populateProbes(Geometry g, LightList lightList) {
-        if (!lightProbes.isEmpty()) {
-            //The first probe is actually the closest to the geometry since the
-            //light list is sorted according to the distance to the geom.
-            LightProbe p = lightProbes.get(0);
-            if (p.isReady()) {
-                lightList.add(p);
-            }
-            //clearing the list for next pass.
-            lightProbes.clear();
+        if (lightProbes.isEmpty()) {
+            return;
         }
+
+        // The first probe is actually the closest to the geometry since the
+        // light list is sorted according to the distance to the geometry.
+        LightProbe p = lightProbes.get(0);
+        if (p.isReady()) {
+            lightList.add(p);
+        }
+        // Clears the list for next pass.
+        lightProbes.clear();
     }
 }
