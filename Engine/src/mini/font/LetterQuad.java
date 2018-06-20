@@ -72,8 +72,7 @@ public class LetterQuad {
     }
 
     LetterQuad addNextCharacter(char c) {
-        LetterQuad n = new LetterQuad(c, this);
-        return n;
+        return new LetterQuad(c, this);
     }
 
     BitmapCharacter getBitmapChar() {
@@ -88,9 +87,10 @@ public class LetterQuad {
         alignX = 0;
         alignY = 0;
 
-        BitmapCharacterSet charSet = font.getCharSet();
-        this.bitmapChar = bitmapChar;
+        this.bitmapChar = bitmapChar;   
+  
         if (bitmapChar != null) {
+            BitmapCharacterSet charSet = font.getCharSet();
             u0 = (float) bitmapChar.getX() / charSet.getWidth();
             v0 = (float) bitmapChar.getY() / charSet.getHeight();
             u1 = u0 + (float) bitmapChar.getWidth() / charSet.getWidth();
@@ -384,11 +384,11 @@ public class LetterQuad {
     private float computeLineY(StringBlock block) {
         if (isHead()) {
             return getBound(block).y;
-        } else if (previous.eol) {
-            return previous.getNextLine();
-        } else {
-            return previous.lineY;
         }
+        if (previous.eol) {
+            return previous.getNextLine();
+        }
+        return previous.lineY;
     }
 
     boolean isLineStart() {
@@ -400,7 +400,14 @@ public class LetterQuad {
     }
 
     public void storeToArrays(float[] pos, float[] tc, short[] idx, byte[] colors, int quadIdx) {
-        float x = x0 + alignX;
+        storePositionToArray(pos);
+        storeTexCoordsToArray(tc);
+        storeColorsToArray(colors);
+        storeIndicesToArray(idx, quadIdx);
+    }
+
+    private void storePositionToArray(float[] pos) {
+		float x = x0 + alignX;
         float y = y0 - alignY;
         float xpw = x + width;
         float ymh = y - height;
@@ -417,8 +424,10 @@ public class LetterQuad {
         pos[9] = xpw;
         pos[10] = y;
         pos[11] = 0;
+    }
 
-        float v0 = 1f - this.v0;
+    private void storeTexCoordsToArray(float[] tc) {
+		float v0 = 1f - this.v0;
         float v1 = 1f - this.v1;
 
         tc[0] = u0;
@@ -429,16 +438,21 @@ public class LetterQuad {
         tc[5] = v1;
         tc[6] = u1;
         tc[7] = v0;
-
-        colors[3] = (byte) (colorInt & 0xff);
+    }
+    
+    private void storeColorsToArray(byte[] colors) {
+		colors[3] = (byte) (colorInt & 0xff);
         colors[2] = (byte) ((colorInt >> 8) & 0xff);
         colors[1] = (byte) ((colorInt >> 16) & 0xff);
         colors[0] = (byte) ((colorInt >> 24) & 0xff);
+
         System.arraycopy(colors, 0, colors, 4, 4);
         System.arraycopy(colors, 0, colors, 8, 4);
         System.arraycopy(colors, 0, colors, 12, 4);
+	}
 
-        short i0 = (short) (quadIdx * 4);
+	private void storeIndicesToArray(short[] idx, int quadIdx) {
+		short i0 = (short) (quadIdx * 4);
         short i1 = (short) (i0 + 1);
         short i2 = (short) (i0 + 2);
         short i3 = (short) (i0 + 3);
@@ -449,7 +463,7 @@ public class LetterQuad {
         idx[3] = i0;
         idx[4] = i2;
         idx[5] = i3;
-    }
+	}
 
     public void appendPositions(FloatBuffer fb) {
         float sx = x0 + alignX;
