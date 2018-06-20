@@ -107,7 +107,7 @@ class ColorTags {
 
             if (colorStr.length() >= 6) {
                 readHexColor(colorStr);
-				return;
+                return;
             }
 
             readColor(colorStr);
@@ -123,7 +123,7 @@ class ColorTags {
             } else if (colorStr.length() == 8) {
                 color.a = readHexColorValue(colorStr, 3);
             } else {
-                color.a = 0;
+                color.a = 1;
             }
         }
 
@@ -141,9 +141,9 @@ class ColorTags {
             if (baseAlpha != -1) {
                 color.a = baseAlpha;
             } else if (colorStr.length() == 4) {
-                readColorValue(colorStr, 3);
+                color.a = readColorValue(colorStr, 3);
             } else {
-                color.a = 0;
+                color.a = 1;
             }
         }
 
