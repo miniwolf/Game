@@ -1174,61 +1174,22 @@ public class Camera implements Cloneable {
 
         float dirDotLocation = direction.dot(location);
 
-        // left plane
-        Vector3f leftPlaneNormal = worldPlane[LEFT_PLANE].getNormal();
-        leftPlaneNormal.x = left.x * coeffLeft[0];
-        leftPlaneNormal.y = left.y * coeffLeft[0];
-        leftPlaneNormal.z = left.z * coeffLeft[0];
-        leftPlaneNormal.addLocal(direction.x * coeffLeft[1], direction.y
-                                                             * coeffLeft[1],
-                                 direction.z * coeffLeft[1]);
-        worldPlane[LEFT_PLANE].setConstant(location.dot(leftPlaneNormal));
-
-        // right plane
-        Vector3f rightPlaneNormal = worldPlane[RIGHT_PLANE].getNormal();
-        rightPlaneNormal.x = left.x * coeffRight[0];
-        rightPlaneNormal.y = left.y * coeffRight[0];
-        rightPlaneNormal.z = left.z * coeffRight[0];
-        rightPlaneNormal.addLocal(direction.x * coeffRight[1], direction.y
-                                                               * coeffRight[1],
-                                  direction.z * coeffRight[1]);
-        worldPlane[RIGHT_PLANE].setConstant(location.dot(rightPlaneNormal));
-
-        // bottom plane
-        Vector3f bottomPlaneNormal = worldPlane[BOTTOM_PLANE].getNormal();
-        bottomPlaneNormal.x = up.x * coeffBottom[0];
-        bottomPlaneNormal.y = up.y * coeffBottom[0];
-        bottomPlaneNormal.z = up.z * coeffBottom[0];
-        bottomPlaneNormal.addLocal(direction.x * coeffBottom[1], direction.y
-                                                                 * coeffBottom[1],
-                                   direction.z * coeffBottom[1]);
-        worldPlane[BOTTOM_PLANE].setConstant(location.dot(bottomPlaneNormal));
-
-        // top plane
-        Vector3f topPlaneNormal = worldPlane[TOP_PLANE].getNormal();
-        topPlaneNormal.x = up.x * coeffTop[0];
-        topPlaneNormal.y = up.y * coeffTop[0];
-        topPlaneNormal.z = up.z * coeffTop[0];
-        topPlaneNormal.addLocal(direction.x * coeffTop[1], direction.y
-                                                           * coeffTop[1],
-                                direction.z * coeffTop[1]);
-        worldPlane[TOP_PLANE].setConstant(location.dot(topPlaneNormal));
+        setWorldPlaneConstant(LEFT_PLANE, left, direction, coeffLeft);
+        setWorldPlaneConstant(RIGHT_PLANE, left, direction, coeffRight);
+        setWorldPlaneConstant(BOTTOM_PLANE, up, direction, coeffBottom);
+        setWorldPlaneConstant(TOP_PLANE, up, direction, coeffTop);
 
         if (isParallelProjection()) {
             worldPlane[LEFT_PLANE].setConstant(worldPlane[LEFT_PLANE].getConstant() + frustumLeft);
-            worldPlane[RIGHT_PLANE]
-                    .setConstant(worldPlane[RIGHT_PLANE].getConstant() - frustumRight);
+            worldPlane[RIGHT_PLANE].setConstant(worldPlane[RIGHT_PLANE].getConstant() - frustumRight);
             worldPlane[TOP_PLANE].setConstant(worldPlane[TOP_PLANE].getConstant() - frustumTop);
-            worldPlane[BOTTOM_PLANE]
-                    .setConstant(worldPlane[BOTTOM_PLANE].getConstant() + frustumBottom);
+            worldPlane[BOTTOM_PLANE].setConstant(worldPlane[BOTTOM_PLANE].getConstant() + frustumBottom);
         }
 
-        // far plane
         worldPlane[FAR_PLANE].setNormal(left);
         worldPlane[FAR_PLANE].setNormal(-direction.x, -direction.y, -direction.z);
         worldPlane[FAR_PLANE].setConstant(-(dirDotLocation + frustumFar));
 
-        // near plane
         worldPlane[NEAR_PLANE].setNormal(direction.x, direction.y, direction.z);
         worldPlane[NEAR_PLANE].setConstant(dirDotLocation + frustumNear);
 
@@ -1238,6 +1199,17 @@ public class Camera implements Cloneable {
 
 //        viewMatrix.transposeLocal();
         updateViewProjection();
+    }
+
+    private void setWorldPlaneConstant(int PLANE, Vector3f left, Vector3f direction, float[] coeff) {
+        Vector3f planeNormal = worldPlane[PLANE].getNormal();
+        planeNormal.x = left.x * coeff[0];
+        planeNormal.y = left.y * coeff[0];
+        planeNormal.z = left.z * coeff[0];
+        planeNormal.addLocal(direction.x * coeff[1],
+                             direction.y * coeff[1],
+                             direction.z * coeff[1]);
+        worldPlane[PLANE].setConstant(location.dot(planeNormal));
     }
 
     /**
