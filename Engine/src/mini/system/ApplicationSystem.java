@@ -13,9 +13,10 @@ public class ApplicationSystem {
     private static ApplicationSystemDelegate systemDelegate;
     private static URL platformAssetConfigURL;
 
-    public static ApplicationContext newContext(ApplicationContext.Type contextType) {
+    public static ApplicationContext newContext(ApplicationSettings settings,
+                                                ApplicationContext.Type contextType) {
         checkDelegate();
-        return systemDelegate.newContext();
+        return systemDelegate.newContext(settings, contextType);
     }
 
     public static Platform getPlatform() {
@@ -88,8 +89,8 @@ public class ApplicationSystem {
         systemDelegate.writeImageFile(outStream, format, imageData, width, height);
     }
 
-    public static AssetManager newAssetManager() {
-        return systemDelegate.newAssetManager();
+    public static AssetManager newAssetManager(URL configFile) {
+        return systemDelegate.newAssetManager(configFile);
     }
 
     public static SoftTextDialogInput getSoftTextDialogInput() {

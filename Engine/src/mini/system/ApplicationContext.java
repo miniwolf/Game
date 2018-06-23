@@ -76,10 +76,9 @@ public interface ApplicationContext {
         Display,
 
         /**
-         * A canvas type context makes a rendering surface available as an
-         * AWT {@link java.awt.Canvas} object that can be embedded in a Swing/AWT
-         * frame. To retrieve the Canvas object, you should cast the context
-         * to {@link ApplicationCanvasContext}.
+         * A canvas type context makes a rendering surface available as an AWT
+         * {@link java.awt.Canvas} object that can be embedded in a Swing/AWT frame. To retrieve the
+         * Canvas object, you should cast the context to {@link ApplicationCanvasContext}.
          */
         Canvas,
 

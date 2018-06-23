@@ -1,5 +1,6 @@
 package mini.asset;
 
+import mini.asset.plugins.ClasspathLocator;
 import mini.shaders.plugins.GLSLLoader;
 import org.junit.Assert;
 import org.junit.Test;
@@ -52,7 +53,9 @@ public class LoadShaderSourceTest {
                           + "   gl_FragColor = vec4((normal * vec3(0.5)) + vec3(0.5), 1.0);\n"
                           + "}\n";
         AssetManager assetManager = new AssetManager();
+        assetManager.registerLocator(ClasspathLocator.class, null);
         assetManager.registerLoader(GLSLLoader.class, "frag");
+        assetManager.registerLoader(GLSLLoader.class, "glsllib");
         String showNormals = (String) assetManager.loadAsset("MatDefs/Misc/ShowNormals.frag");
         Assert.assertEquals(expected, showNormals);
     }

@@ -15,7 +15,8 @@ public abstract class ApplicationSystemDelegate {
     protected boolean lowPermissions = false;
     protected boolean initialized = false;
 
-    public abstract ApplicationContext newContext();
+    public abstract ApplicationContext newContext(ApplicationSettings settings,
+                                                  ApplicationContext.Type context);
 
     public abstract void showErrorDialog(String message);
 
@@ -63,8 +64,8 @@ public abstract class ApplicationSystemDelegate {
         }
     }
 
-    public AssetManager newAssetManager() {
-        return new AssetManager();
+    public AssetManager newAssetManager(URL configFile) {
+        return new AssetManager(configFile);
     }
 
     public boolean isLowPermissions() {

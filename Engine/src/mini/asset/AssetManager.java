@@ -9,6 +9,8 @@ import mini.textures.Texture;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -16,12 +18,23 @@ public class AssetManager {
     private ImplHandler handler = new ImplHandler(this);
 
     private List<AssetEventListener> eventListeners = new CopyOnWriteArrayList<>();
+    private List<ClassLoader> classLoaders = Collections.synchronizedList(new ArrayList<>());
 
     public AssetManager() {
-        this(ApplicationSystem.getPlatformAssetConfigURL());
+        this(null);
+    }
+
+    public AssetManager(boolean usePlatformConfig) {
+        this(usePlatformConfig ? ApplicationSystem.getPlatformAssetConfigURL() : null);
     }
 
     public AssetManager(URL configFile) {
+        if (configFile != null) {
+            loadConfigFile(configFile);
+        }
+    }
+
+    private void loadConfigFile(URL configFile) {
         try {
             AssetConfig.loadText(this, configFile);
         } catch (IOException e) {
@@ -148,6 +161,25 @@ public class AssetManager {
     }
 
     /**
+     * Adds a {@link ClassLoader} that is used to load {@link Class classes} that are needed for
+     * finding and loading Assets.
+     * This does <strong>not</strong> allow loading assets from that classpath, use registerLocator
+     * for that.
+     *
+     * @param loader A ClassLoader that Classes in asset files can be loaded from.
+     */
+    public void addClassLoader(ClassLoader loader) {
+        classLoaders.add(loader);
+    }
+
+    /**
+     * Remove a {@link ClassLoader} from the list of registered ClassLoaders
+     */
+    public void removeClassLoader(ClassLoader loader) {
+        classLoaders.remove(loader);
+    }
+
+    /**
      * Register an {@link AssetLoader} by using a class object.
      *
      * @param loaderClass The loader class to register.
@@ -239,15 +271,15 @@ public class AssetManager {
         return (T) (loadAsset(new ModelKey(name)));
     }
 
-    public AssetInfo locateAsset(AssetKey<?> key){
+    public AssetInfo locateAsset(AssetKey<?> key) {
         AssetInfo info = handler.tryLocate(key);
-        if (info == null){
+        if (info == null) {
             System.err.println("Warning: Cannot locate resource: " + key);
         }
         return info;
     }
 
-    public void clearCache(){
+    public void clearCache() {
         handler.clearCache();
     }
 }

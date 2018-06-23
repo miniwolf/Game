@@ -24,9 +24,11 @@ import mini.utils.clone.IdentityCloneFunction;
 import mini.utils.clone.MiniCloneable;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -151,10 +153,14 @@ public abstract class Spatial implements Cloneable, CloneableSmartAsset, MiniClo
     private boolean requiresUpdates = true;
 
     /**
+     * Flag for visibility
+     */
+    private boolean visible;
+
+    /**
      * Serialization only. Do not use.
-     * Not really. This class is never instantiated directly but the
-     * subclasses like to use the no-arg constructor for their own
-     * no-arg constructor... which is technically weaker than
+     * Not really. This class is never instantiated directly but the subclasses like to use the
+     * no-arg constructor for their own no-arg constructor... which is technically weaker than
      * forward supplying defaults.
      */
     protected Spatial() {
@@ -345,10 +351,10 @@ public abstract class Spatial implements Cloneable, CloneableSmartAsset, MiniClo
 
         CullHint cm = getCullHint();
         assert cm != CullHint.Inherit;
-        if (cm == Spatial.CullHint.Always) {
+        if (cm == CullHint.Always) {
             setLastFrustumIntersection(Camera.FrustumIntersect.Outside);
             return false;
-        } else if (cm == Spatial.CullHint.Never) {
+        } else if (cm == CullHint.Never) {
             setLastFrustumIntersection(Camera.FrustumIntersect.Intersects);
             return true;
         }
@@ -1163,12 +1169,14 @@ public abstract class Spatial implements Cloneable, CloneableSmartAsset, MiniClo
     /**
      * Centers the spatial in the origin of the world bound.
      */
-    public void center() {
+    public Spatial center() {
         Vector3f worldTranslation = getWorldTranslation();
         Vector3f worldCenter = getWorldBound().getCenter();
 
         Vector3f absTranslation = worldTranslation.subtract(worldCenter);
         setLocalTranslation(absTranslation);
+
+        return this;
     }
 
     @SuppressWarnings("unchecked")
@@ -1183,6 +1191,13 @@ public abstract class Spatial implements Cloneable, CloneableSmartAsset, MiniClo
         } else {
             return (T) o;
         }
+    }
+
+    public Set<String> getUserDataKeys() {
+        if (userData != null) {
+            return userData.keySet();
+        }
+        return Collections.EMPTY_SET;
     }
 
     public <T> void setUserData(String key, T data) {
@@ -1517,5 +1532,19 @@ public abstract class Spatial implements Cloneable, CloneableSmartAsset, MiniClo
         store.multLocal(getWorldRotation());
         store.setTranslation(getWorldTranslation());
         return store;
+    }
+
+    /**
+     * @return whether the spatial is visible in the world.
+     */
+    public boolean isVisible() {
+        return visible;
+    }
+
+    /**
+     * Sets visibility of the spatial
+     */
+    public void setVisible(boolean visible) {
+        this.visible = visible;
     }
 }

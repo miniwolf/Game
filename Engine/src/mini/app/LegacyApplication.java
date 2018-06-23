@@ -12,14 +12,19 @@ import mini.renderer.RenderManager;
 import mini.renderer.Renderer;
 import mini.renderer.ViewPort;
 import mini.system.ApplicationContext;
+import mini.system.ApplicationSettings;
 import mini.system.ApplicationSystem;
 import mini.system.SystemListener;
 import mini.system.time.NanoTimer;
 import mini.system.time.Timer;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Future;
 
 /**
  * The <code>LegacyApplication</code> class represents an instance of a real-time 3D rendering
@@ -47,6 +52,9 @@ public class LegacyApplication implements Application, SystemListener {
     protected InputManager inputManager;
     protected AssetManager assetManager;
     protected ApplicationStateManager stateManager;
+    private final ConcurrentLinkedQueue<ApplicationTask<?>> taskQueue
+            = new ConcurrentLinkedQueue<>();
+    protected ApplicationSettings settings;
 
     public LegacyApplication(ApplicationState... initialStates) {
         initStateManager();
@@ -75,19 +83,24 @@ public class LegacyApplication implements Application, SystemListener {
      *
      * @param settings The settings to set.
      */
-    public void setSettings() {
-        // may need to create or destroy input based
-        // on settings change
-        if (inputEnabled) {
-            initInput();
+    public void setSettings(ApplicationSettings settings) {
+        this.settings = settings;
+        if (context != null && settings.useInput() != inputEnabled) {
+            // may need to create or destroy input based on settings change
+            inputEnabled = !inputEnabled;
+            if (inputEnabled) {
+                initInput();
+            } else {
+                destroyInput();
+            }
         } else {
-            destroyInput();
+            inputEnabled = settings.useInput();
         }
     }
 
     private void initDisplay() {
-        // aquire important objects
-        // from the context
+        // acquire important objects from the context
+        settings = context.getSettings();
 
         // Reset timer if a user has not already provided one
         if (timer == null) {
@@ -155,6 +168,13 @@ public class LegacyApplication implements Application, SystemListener {
     }
 
     /**
+     * @return the {@link ApplicationStateManager application state manager}.
+     */
+    public ApplicationStateManager getStateManager() {
+        return stateManager;
+    }
+
+    /**
      * @return the {@link RenderManager render manager}
      */
     public RenderManager getRenderManager() {
@@ -218,8 +238,12 @@ public class LegacyApplication implements Application, SystemListener {
             return;
         }
 
+        if (settings == null) {
+            settings = new ApplicationSettings(true);
+        }
+
         System.out.println("Starting application: " + getClass().getName());
-        context = ApplicationSystem.newContext(contextType);
+        context = ApplicationSystem.newContext(settings, contextType);
         context.setSystemListener(this);
         context.create(waitFor);
     }
@@ -245,8 +269,12 @@ public class LegacyApplication implements Application, SystemListener {
             return;
         }
 
+        if (settings == null) {
+            settings = new ApplicationSettings(true);
+        }
+
         System.out.println("Starting application: " + getClass().getName());
-        context = ApplicationSystem.newContext(ApplicationContext.Type.Canvas);
+        context = ApplicationSystem.newContext(settings, ApplicationContext.Type.Canvas);
         context.setSystemListener(this);
     }
 
@@ -341,7 +369,31 @@ public class LegacyApplication implements Application, SystemListener {
     }
 
     private void initAssetManager() {
-        assetManager = ApplicationSystem.newAssetManager();
+        URL assetCfgUrl = null;
+
+        if (settings != null) {
+            String assetCfg = settings.getString("AssetConfigURL");
+            if (assetCfg != null) {
+                try {
+                    assetCfgUrl = new URL(assetCfg);
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                }
+                if (assetCfgUrl == null) {
+                    assetCfgUrl = LegacyApplication.class.getClassLoader().getResource(assetCfg);
+                    if (assetCfgUrl == null) {
+                        System.err.println(
+                                "Unable to access AssetConfigURL in asset config: " + assetCfg);
+                    }
+                }
+            }
+        }
+        if (assetCfgUrl == null) {
+            assetCfgUrl = ApplicationSystem.getPlatformAssetConfigURL();
+        }
+        if (assetManager == null) {
+            assetManager = ApplicationSystem.newAssetManager(assetCfgUrl);
+        }
     }
 
     /**
@@ -382,6 +434,32 @@ public class LegacyApplication implements Application, SystemListener {
      */
     public void requestClose(boolean esc) {
         context.destroy(false);
+    }
+
+    /**
+     * Enqueues a task/callable object to execute in the rendering thread.
+     * <p>
+     * Callables are executed right at the beginning of the main loop. They are executed even if the
+     * application is currently paused or out of focus.
+     *
+     * @param callable The callables to run in the main thread
+     */
+    public <V> Future<V> enqueue(Callable<V> callable) {
+        ApplicationTask<V> task = new ApplicationTask<>(callable);
+        taskQueue.add(task);
+        return task;
+    }
+
+    /**
+     * Runs tasks enqueued via {@link #enqueue(Callable)}
+     */
+    protected void runQueuedTasks() {
+        ApplicationTask<?> task;
+        while ((task = taskQueue.poll()) != null) {
+            if (!task.isCancelled()) {
+                task.invoke();
+            }
+        }
     }
 
     /**

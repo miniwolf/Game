@@ -33,7 +33,7 @@ public class FBXObjectTests {
 
     @Before
     public void initialize() {
-        assetManager = new AssetManager();
+        assetManager = new AssetManager(); // TODO: Missing cfg file
         key = Mockito.mock(AssetKey.class);
         Mockito.when(key.getFolder()).thenReturn("Models");
         loader = new FBXObjectLoader(assetManager, key);

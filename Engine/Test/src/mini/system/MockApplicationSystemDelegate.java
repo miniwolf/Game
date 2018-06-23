@@ -6,6 +6,12 @@ import java.nio.ByteBuffer;
 
 public class MockApplicationSystemDelegate extends ApplicationSystemDelegate {
     @Override
+    public ApplicationContext newContext(ApplicationSettings settings,
+                                         ApplicationContext.Type context) {
+        return null;
+    }
+
+    @Override
     public void showErrorDialog(String message) {
     }
 
@@ -17,10 +23,5 @@ public class MockApplicationSystemDelegate extends ApplicationSystemDelegate {
     @Override
     public URL getPlatformAssetConfigURL() {
         return Thread.currentThread().getContextClassLoader().getResource("mini/asset/General.cfg");
-    }
-
-    @Override
-    public ApplicationContext newContext() {
-        return null;
     }
 }

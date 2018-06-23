@@ -4,7 +4,6 @@ import mini.input.controls.ActionListener;
 import mini.input.controls.AnalogListener;
 import mini.input.controls.InputListener;
 import mini.input.controls.MouseAxisTrigger;
-import mini.input.controls.MouseButtonTrigger;
 import mini.input.controls.Trigger;
 import mini.input.events.InputEvent;
 import mini.input.events.KeyInputEvent;
@@ -290,9 +289,8 @@ public class InputManager implements RawInputListener {
     }
 
     private void onMouseButtonEventQueued(MouseButtonEvent evt) {
-        int hash = MouseButtonTrigger.mouseButtonHash(evt.getButtonIndex());
-        invokeActions(hash, evt.isPressed());
-        invokeTimedActions(hash, evt.getTime(), evt.isPressed());
+        invokeActions(evt.getButtonIndex(), evt.isPressed());
+        invokeTimedActions(evt.getButtonIndex(), evt.getTime(), evt.isPressed());
     }
 
     /**

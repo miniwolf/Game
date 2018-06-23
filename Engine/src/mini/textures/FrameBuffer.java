@@ -241,6 +241,28 @@ public class FrameBuffer extends NativeObject {
         depthBuf.format = img.getFormat();
     }
 
+    /**
+     * Enables the use
+     *
+     * @param format
+     */
+    public void setColorBuffer(Image.Format format) {
+        if (id != -1) {
+            throw new UnsupportedOperationException("Framebuffer already initialized.");
+        }
+
+        if (format.isDepthFormat()) {
+            throw new IllegalArgumentException("Color buffer format must be color/luminance.");
+        }
+
+        RenderBuffer colorBuffer = new RenderBuffer();
+        colorBuffer.slot = 0;
+        colorBuffer.format = format;
+
+        colorBufs.clear();
+        colorBufs.add(colorBuffer);
+    }
+
     private void checkSetTexture(Texture2D texture, boolean depth) {
         Image img = texture.getImage();
         if (img == null) {

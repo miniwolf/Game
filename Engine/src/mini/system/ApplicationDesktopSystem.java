@@ -15,6 +15,7 @@ import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.nio.ByteBuffer;
 
@@ -34,8 +35,10 @@ public class ApplicationDesktopSystem extends ApplicationSystemDelegate {
     private static BufferedImage verticalFlip(BufferedImage original) {
         AffineTransform tx = AffineTransform.getScaleInstance(1, -1);
         tx.translate(0, -original.getHeight());
-        AffineTransformOp transformOp = new AffineTransformOp(tx, AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
-        BufferedImage awtImage = new BufferedImage(original.getWidth(), original.getHeight(), BufferedImage.TYPE_INT_BGR);
+        AffineTransformOp transformOp = new AffineTransformOp(tx,
+                                                              AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
+        BufferedImage awtImage = new BufferedImage(original.getWidth(), original.getHeight(),
+                                                   BufferedImage.TYPE_INT_BGR);
         Graphics2D g2d = awtImage.createGraphics();
         g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
         g2d.drawImage(original, transformOp, 0, 0);
@@ -44,7 +47,8 @@ public class ApplicationDesktopSystem extends ApplicationSystemDelegate {
     }
 
     @Override
-    public void writeImageFile(OutputStream outStream, String format, ByteBuffer imageData, int width, int height) throws IOException {
+    public void writeImageFile(OutputStream outStream, String format, ByteBuffer imageData,
+                               int width, int height) throws IOException {
         BufferedImage awtImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_BGR);
         Screenshots.convertScreenShot(imageData.asIntBuffer(), awtImage);
 
@@ -76,25 +80,77 @@ public class ApplicationDesktopSystem extends ApplicationSystemDelegate {
     }
 
     @SuppressWarnings("unchecked")
-    private ApplicationContext newContextLwjgl() {
+    private ApplicationContext newContextLwjgl(ApplicationSettings settings,
+                                               ApplicationContext.Type contextType) {
         try {
-            Class<? extends ApplicationContext> ctxClazz =
-                    (Class<? extends ApplicationContext>) Class.forName("mini.system.lwjgl.LwjglDisplay");
-            return ctxClazz.newInstance();
-        } catch (InstantiationException | IllegalAccessException ex) {
-            System.err.println("Failed to create context" + ex.getMessage());
+            Class<? extends ApplicationContext> ctxClazz;
+            switch (contextType) {
+                case Display:
+                    ctxClazz = (Class<? extends ApplicationContext>) Class
+                            .forName("mini.system.lwjgl.LwjglDisplay");
+                    break;
+                case OffscreenSurface:
+                    ctxClazz = (Class<? extends ApplicationContext>)
+                            Class.forName("mini.system.lwjgl.LwjglOffscreenBuffer");
+                    break;
+                default:
+                    throw new UnsupportedOperationException(
+                            "Needs to create a new context class for type: " + contextType);
+            }
+
+            return ctxClazz.getDeclaredConstructor().newInstance();
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException ex) {
+            System.err.println("Failed to create context: " + ex.getMessage());
         } catch (ClassNotFoundException ex) {
             System.err.println("CRITICAL ERROR: Context class is missing!\n"
                                + "Make sure context class is on the classpath." + ex);
+        } catch (NoSuchMethodException e) {
+            System.err.println("Missing constructor: " + e.getMessage());
+        }
+
+        return null;
+    }
+
+    private ApplicationContext newContextCustom(ApplicationSettings settings,
+                                                ApplicationContext.Type type) {
+        String className = settings.getRenderer().substring("CUSTOM".length());
+
+        try {
+            Class<? extends ApplicationContext> ctxClazz =
+                    (Class<? extends ApplicationContext>) Class.forName(className);
+            return ctxClazz.getDeclaredConstructor().newInstance();
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException ex) {
+            ex.printStackTrace();
+            System.err.println("Failed to create context: " + ex.getMessage());
+        } catch (ClassNotFoundException ex) {
+            System.err.println("CRITICAL ERROR: Context class is missing!\n"
+                               + "Make sure context class is on the classpath." + ex);
+        } catch (NoSuchMethodException e) {
+            System.err.println("Missing constructor: " + e.getMessage());
         }
 
         return null;
     }
 
     @Override
-    public ApplicationContext newContext() {
+    public ApplicationContext newContext(ApplicationSettings settings,
+                                         ApplicationContext.Type contextType) {
         initialize();
-        return newContextLwjgl();
+
+        ApplicationContext applicationContext;
+        if (settings.getRenderer().startsWith("LWJGL")) {
+            applicationContext = newContextLwjgl(settings, contextType);
+            applicationContext.setSettings(settings);
+        } else if (settings.getRenderer().startsWith("CUSTOM")) {
+            applicationContext = newContextCustom(settings, contextType);
+            applicationContext.setSettings(settings);
+        } else {
+            throw new UnsupportedOperationException(
+                    "Unrecognizable renderer specified " + settings.getRenderer());
+        }
+
+        // HEADLESS, JOGL
+        return applicationContext;
     }
 
     private void initialize() {

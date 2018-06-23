@@ -15,6 +15,8 @@ import mini.renderer.opengl.GLFbo;
 import mini.renderer.opengl.GLRenderer;
 import mini.system.ApplicationContext;
 import mini.system.ApplicationSettings;
+import mini.system.ApplicationSystem;
+import mini.system.NativeLibraryLoader;
 import mini.system.SystemListener;
 import mini.system.time.Timer;
 import mini.utils.BufferAllocatorFactory;
@@ -85,6 +87,14 @@ public abstract class LwjglContext implements ApplicationContext {
         }
 
         return Integer.MAX_VALUE;
+    }
+
+    protected void loadNatives() {
+        if (ApplicationSystem.isLowPermissions()) {
+            return;
+        }
+
+        NativeLibraryLoader.loadNativeLibrary("lwjgl", true);
     }
 
     protected int getNumSamplesToUse() {

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<nifty xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns="http://nifty-gui.lessvoid.com/nifty-gui"
+<nifty
+        xmlns="http://nifty-gui.lessvoid.com/nifty-gui"
 >
 
     <useStyles filename="nifty-default-styles.xml"/>
@@ -8,6 +8,10 @@
 
     <screen id="Screen" controller="mini.niftygui.TestNiftyGuiController">
         <layer id="Layer0" childLayout="vertical">
+            <interact
+                    onPrimaryClick="primaryClick()"
+                    onPrimaryClickMouseMove="mouseMoved()"
+            />
             <control name="button" id="ApplyButton" label="Change Context" align="center"
                      valing="top" height="5%" padding="10px"/>
         </layer>
