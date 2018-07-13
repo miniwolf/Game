@@ -22,8 +22,7 @@ public class UrlAssetInfo extends AssetInfo {
         this.in = in;
     }
 
-    public static UrlAssetInfo create(AssetManager assetManager, AssetKey key, URL url) throws
-                                                                                        IOException {
+    public static UrlAssetInfo create(AssetManager assetManager, AssetKey key, URL url) throws IOException {
         // Check if URL can be reached. This will throw
         // IOException which calling code will handle.
         URLConnection conn = url.openConnection();
@@ -33,9 +32,9 @@ public class UrlAssetInfo extends AssetInfo {
         // For some reason url cannot be reached?
         if (in == null) {
             return null;
-        } else {
-            return new UrlAssetInfo(assetManager, key, url, in);
         }
+
+        return new UrlAssetInfo(assetManager, key, url, in);
     }
 
     @Override
@@ -45,15 +44,15 @@ public class UrlAssetInfo extends AssetInfo {
             InputStream in2 = in;
             in = null;
             return in2;
-        } else {
-            // Create a new stream for subsequent invocations.
-            try {
-                URLConnection conn = url.openConnection();
-                conn.setUseCaches(false);
-                return conn.getInputStream();
-            } catch (IOException ex) {
-                throw new RuntimeException("Failed to read URL " + url, ex);
-            }
+        }
+
+        // Create a new stream for subsequent invocations.
+        try {
+            URLConnection connection = url.openConnection();
+            connection.setUseCaches(false);
+            return connection.getInputStream();
+        } catch (IOException ex) {
+            throw new RuntimeException("Failed to read URL " + url, ex);
         }
     }
 

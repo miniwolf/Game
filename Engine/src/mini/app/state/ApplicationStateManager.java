@@ -83,13 +83,15 @@ public class ApplicationStateManager {
             states.remove(state);
             terminating.add(state);
             return true;
-        } else if (initializing.contains(state)) {
+        }
+
+        if (initializing.contains(state)) {
             state.stateDetached(this);
             initializing.remove(state);
             return true;
-        } else {
-            return false;
         }
+
+        return false;
     }
 
     /**
@@ -118,9 +120,7 @@ public class ApplicationStateManager {
      * @param renderManager The RenderManager
      */
     public void render(RenderManager renderManager) {
-        Arrays.stream(getStates())
-              .filter(ApplicationState::isEnabled)
-              .forEach(state -> state.render(renderManager));
+        Arrays.stream(getStates()).filter(ApplicationState::isEnabled).forEach(state -> state.render(renderManager));
     }
 
     /**
@@ -129,9 +129,7 @@ public class ApplicationStateManager {
      * @param renderManager The RenderManager
      */
     public void postRender() {
-        Arrays.stream(getStates())
-              .filter(ApplicationState::isEnabled)
-              .forEach(ApplicationState::postRender);
+        Arrays.stream(getStates()).filter(ApplicationState::isEnabled).forEach(ApplicationState::postRender);
     }
 
     private void initializePending() {

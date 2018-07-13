@@ -109,11 +109,13 @@ public class BoundingSphere extends BoundingVolume {
 
         if (distance <= -radius) {
             return Plane.Side.Negative;
-        } else if (distance >= radius) {
+        } 
+
+        if (distance >= radius) {
             return Plane.Side.Positive;
-        } else {
-            return Plane.Side.None;
         }
+
+        return Plane.Side.None;
     }
 
     @Override
@@ -190,21 +192,24 @@ public class BoundingSphere extends BoundingVolume {
         Vector3f b = B.subtract(O);
         Vector3f c = C.subtract(O);
 
-        float denominator = 2.0f * (a.x * (b.y * c.z - c.y * b.z) - b.x * (a.y * c.z - c.y * a.z)
-                                    + c.x * (a.y * b.z - b.y - a.z));
+        float ax = a.x * (b.y * c.z - c.y * b.z);
+        float bx = b.x * (a.y * c.z - c.y * a.z);
+        float cx = c.x * (a.y * b.z - b.y - a.z);
+        float denominator = 2.0f * (ax - bx + cx);
 
         if (denominator == 0) {
             center.set(0, 0, 0);
             radius = 0;
-        } else {
-            Vector3f o = a.cross(b).multLocal(c.lengthSquared())
-                          .addLocal(c.cross(a).multLocal(b.lengthSquared()))
-                          .addLocal(b.cross(c).multLocal(a.lengthSquared()))
-                          .divideLocal(denominator);
-
-            radius = o.length() * RADIUS_EPSILON;
-            O.add(o, center);
+            return;
         }
+
+        Vector3f o = a.cross(b).multLocal(c.lengthSquared())
+                        .addLocal(c.cross(a).multLocal(b.lengthSquared()))
+                        .addLocal(b.cross(c).multLocal(a.lengthSquared()))
+                        .divideLocal(denominator);
+
+        radius = o.length() * RADIUS_EPSILON;
+        O.add(o, center);
     }
 
     private void setSphere(Vector3f O, Vector3f A, Vector3f B) {
@@ -217,19 +222,21 @@ public class BoundingSphere extends BoundingVolume {
         if (denominator == 0) {
             center.set(0, 0, 0);
             radius = 0;
-        } else {
-            Vector3f o = aCrossB.cross(a).multLocal(b.lengthSquared())
-                                .addLocal(b.cross(aCrossB).multLocal(a.lengthSquared()))
-                                .divideLocal(denominator);
-            radius = o.length() * RADIUS_EPSILON;
-            O.add(o, center);
+            return;
         }
+
+        Vector3f o = aCrossB.cross(a).multLocal(b.lengthSquared())
+                            .addLocal(b.cross(aCrossB).multLocal(a.lengthSquared()))
+                            .divideLocal(denominator);
+        radius = o.length() * RADIUS_EPSILON;
+        O.add(o, center);
     }
 
     private void setSphere(Vector3f O, Vector3f A) {
-        radius = FastMath.sqrt(
-                ((A.x - O.x) * (A.x - O.x) + (A.y - O.y) * (A.y - O.y) + (A.z - O.z) * (A.z - O.z))
-                / 4f) + RADIUS_EPSILON - 1f;
+        float x = (A.x - O.x) * (A.x - O.x);
+        float y = (A.y - O.y) * (A.y - O.y);
+        float z = (A.z - O.z) * (A.z - O.z);
+        radius = FastMath.sqrt((a + b + c) / 4f) + RADIUS_EPSILON - 1f;
         center.interpolateLocal(O, A, .5f);
     }
 
@@ -317,25 +324,27 @@ public class BoundingSphere extends BoundingVolume {
         }
 
         switch (volume.getType()) {
-            case Sphere: {
-                BoundingSphere sphere = (BoundingSphere) volume;
-                float tempRadius = sphere.radius;
-                Vector3f tempCenter = sphere.center;
-                return merge(tempRadius, tempCenter, this);
-            }
-            case AABB: {
-                BoundingBox box = (BoundingBox) volume;
-                TempVars vars = TempVars.get();
-                Vector3f radVect = vars.vect1;
-                radVect.set(box.getXExtent(), box.getYExtent(), box.getZExtent());
-                Vector3f tempCenter = box.center;
-                float length = radVect.length();
-                vars.release(); // TODO: Is this better than defining new Vector3f?
-                return merge(length, tempCenter, this);
-            }
+            case Sphere:
+                return mergeLocalSphere(volume);
+            case AABB:
+                return mergeLocalBox(volume);
             default:
                 return null;
         }
+    }
+
+    private BoundingVolume mergeLocalSphere(BoundingSphere sphere) {
+        return merge(sphere.radius, sphere.center, this);
+    }
+
+    private BoundingVolume mergeLocalBox(BoundingBox box) {
+        TempVars vars = TempVars.get();
+        Vector3f radVect = vars.vect1;
+        radVect.set(box.getXExtent(), box.getYExtent(), box.getZExtent());
+        Vector3f tempCenter = box.center;
+        float length = radVect.length();
+        vars.release(); // TODO: Is this better than defining new Vector3f?
+        return merge(length, tempCenter, this);
     }
 
     /**
@@ -377,12 +386,14 @@ public class BoundingSphere extends BoundingVolume {
             CollisionResult result = new CollisionResult();
             results.addCollision(result);
             return 1;
-        } else if (other instanceof Ray) {
+        }
+
+        if (other instanceof Ray) {
             Ray ray = (Ray) other;
             return collideWithRay(ray, results);
-        } else {
-            throw new UnsupportedOperationException();
         }
+
+        throw new UnsupportedOperationException();
     }
 
     private int collideWithRay(Ray ray, CollisionResults results) {
@@ -403,7 +414,9 @@ public class BoundingSphere extends BoundingVolume {
 
         if (discr < 0.0) {
             return 0;
-        } else if (discr >= FastMath.ZERO_TOLERANCE) {
+        }
+
+        if (discr >= FastMath.ZERO_TOLERANCE) {
             root = FastMath.sqrt(discr);
 
             float distance = -a1 - root;
@@ -412,10 +425,10 @@ public class BoundingSphere extends BoundingVolume {
             distance = -a1 + root;
             addCollision(ray, results, distance);
             return 2;
-        } else {
-            addCollision(ray, results, -a1);
-            return 1;
         }
+
+        addCollision(ray, results, -a1);
+        return 1;
     }
 
     private void addCollision(Ray ray, CollisionResults results, float distance) {
