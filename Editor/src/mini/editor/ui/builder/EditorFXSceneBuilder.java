@@ -15,11 +15,19 @@ import mini.editor.ui.component.splt.pane.GlobalLeftToolSplitPane;
 import mini.editor.ui.component.tab.GlobalBottomToolComponent;
 import mini.editor.ui.component.tab.GlobalLeftToolComponent;
 import mini.editor.ui.css.CssClasses;
+import mini.editor.ui.css.CssRegistry;
 import mini.editor.ui.scene.EditorFXScene;
 
 import static javafx.scene.paint.Color.TRANSPARENT;
 
 public class EditorFXSceneBuilder {
+
+    public static final String CSS_FILE_CUSTOM_CLASSES = "ui/css/custom_classes.css";
+    private static final CssRegistry CSS_REGISTRY = CssRegistry.getInstance();
+
+    static {
+        CSS_REGISTRY.register(CSS_FILE_CUSTOM_CLASSES, EditorFXSceneBuilder.class.getClassLoader());
+    }
 
     public static EditorFXScene build(Stage stage) {
         EditorConfig instance = EditorConfig.getInstance();
@@ -29,7 +37,8 @@ public class EditorFXSceneBuilder {
         scene.setFill(TRANSPARENT);
         scene.setRoot(root);
 
-        // TODO: Handling stylesheets
+        var stylesheets = scene.getStylesheets();
+        stylesheets.addAll(CSS_REGISTRY.getAvailableCssFiles());
 
         var container = scene.getContainer();
 

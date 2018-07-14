@@ -45,7 +45,7 @@ public class FXEditorTaskExecutor extends AbstractEditorTaskExecutor {
             lock();
             try {
                 if (waitTasks.isEmpty()) {
-                    wait.getAndSet(true);
+                    wait.set(true);
                 } else {
                     execute.addAll(waitTasks);
                 }

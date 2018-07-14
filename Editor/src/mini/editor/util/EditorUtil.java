@@ -10,10 +10,14 @@ import mini.editor.annotation.FromAnyThread;
 import mini.editor.config.EditorConfig;
 import mini.editor.ui.scene.EditorFXScene;
 import mini.renderer.Camera;
+import mini.renderer.RenderManager;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.nio.file.Path;
 
 public class EditorUtil {
@@ -32,8 +36,14 @@ public class EditorUtil {
         EditorUtil.javaFXApplication = javaFXApplication;
     }
 
+    @FromAnyThread
     public static AssetManager getAssetManager() {
         return miniEditor.getAssetManager();
+    }
+
+    @FromAnyThread
+    public static RenderManager getRenderManager() {
+        return miniEditor.getRenderManager();
     }
 
     public static Path getAssetFile(Path file) {
@@ -114,5 +124,19 @@ public class EditorUtil {
     @FromAnyThread
     public static Camera getGlobalCamera() {
         return miniEditor.getCamera();
+    }
+
+    /**
+     * @return object converted to a byte array
+     */
+    public static byte[] serialize(Serializable object) {
+        var bout = new ByteArrayOutputStream();
+        try (var out = new ObjectOutputStream(bout)) {
+            out.writeObject(object);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return bout.toByteArray();
     }
 }

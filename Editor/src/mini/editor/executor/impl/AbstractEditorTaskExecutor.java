@@ -36,7 +36,7 @@ public abstract class AbstractEditorTaskExecutor extends EditorThread
 
     @Override
     @FromAnyThread
-    public void execute(Runnable task) {
+    public void execute(final Runnable task) {
         lock();
 
         try {
@@ -75,7 +75,7 @@ public abstract class AbstractEditorTaskExecutor extends EditorThread
 
             try {
                 if (waitTasks.isEmpty()) {
-                    wait.getAndSet(true);
+                    wait.set(true);
                 } else {
                     execute.addAll(waitTasks);
                 }
@@ -108,10 +108,18 @@ public abstract class AbstractEditorTaskExecutor extends EditorThread
                 unlock();
             }
         }
+        System.out.println(Thread.currentThread().getName() + " has terminated");
     }
 
     protected abstract void doExecute(final Array<Runnable> execute,
                                       final Array<Runnable> executed);
+
+    public void shutdown() {
+        running = false;
+        synchronized (wait) {
+            ConcurrentUtils.notifyAllInSynchronize(wait);
+        }
+    }
 
     @Override
     public void lock() {

@@ -348,6 +348,11 @@ public class Geometry extends Spatial {
         return added;
     }
 
+    @Override
+    public void depthFirstTraversal(SceneGraphVisitor visitor, DFSMode mode) {
+        visitor.visit(this);
+    }
+
     /**
      * Determine whether this <code>Geometry</code> is managed by a
      * {@link GeometryGroupNode} or not.

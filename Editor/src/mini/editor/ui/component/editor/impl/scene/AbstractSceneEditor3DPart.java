@@ -5,6 +5,7 @@ import com.ss.rlib.common.util.array.ArrayFactory;
 import com.ss.rlib.common.util.array.ArrayIterator;
 import com.ss.rlib.common.util.dictionary.DictionaryFactory;
 import com.ss.rlib.common.util.dictionary.ObjectDictionary;
+import mini.asset.AssetManager;
 import mini.bounding.BoundingBox;
 import mini.bounding.BoundingSphere;
 import mini.bounding.BoundingVolume;
@@ -18,12 +19,15 @@ import mini.editor.plugin.api.editor.part3d.Advanced3DEditorPart;
 import mini.editor.util.EditorUtil;
 import mini.editor.util.LocalObjects;
 import mini.editor.util.NodeUtils;
+import mini.light.Light;
 import mini.material.Material;
 import mini.math.Transform;
 import mini.math.Vector3f;
 import mini.renderer.Camera;
+import mini.renderer.RenderManager;
 import mini.scene.Geometry;
 import mini.scene.Mesh;
+import mini.scene.Node;
 import mini.scene.Spatial;
 import mini.scene.debug.WireBox;
 
@@ -31,17 +35,34 @@ public class AbstractSceneEditor3DPart<T extends AbstractSceneFileEditor & Model
         extends Advanced3DEditorPart<T> implements EditorTransformSupport {
     public static final String KEY_SHAPE_CENTER = "mini.sceneEditor.shapeCenter";
     public static final String KEY_SHAPE_INIT_SCALE = "mini.sceneEditor.shapeInitScale";
+    public static final String KEY_MODEL_NODE = "mini.sceneEditor.modelNode";
+
+    private static final ObjectDictionary<Light.Type, Node> LIGHT_MODEL_TABLE;
 
     protected final Array<Spatial> selected;
 
     private final ObjectDictionary<Spatial, Geometry> selectionShape;
+
+    static {
+        final AssetManager assetManager = EditorUtil.getAssetManager();
+
+        LIGHT_MODEL_TABLE = DictionaryFactory.newObjectDictionary();
+        //LIGHT_MODEL_TABLE.put(Light.Type.Point, assetManager.loadModel("graphics/models/light/point_light.minio"));
+    }
+
     private Transform transformCenter;
     private Spatial toTransform;
     private Material selectionMaterial;
 
+    private final Node modelNode;
+    private M currentModel;
+
     public AbstractSceneEditor3DPart() {
         selected = ArrayFactory.newArray(Spatial.class);
         selectionShape = DictionaryFactory.newObjectDictionary();
+
+        this.modelNode = new Node("TreeNode");
+        this.modelNode.setUserData(KEY_MODEL_NODE, true);
     }
 
     public void select(final Array<Spatial> objects) {
@@ -223,6 +244,10 @@ public class AbstractSceneEditor3DPart<T extends AbstractSceneFileEditor & Model
         return EditorUtil.getGlobalCamera();
     }
 
+    protected Node getModelNode() {
+        return modelNode;
+    }
+
     /**
      * Look at the spatial
      */
@@ -256,5 +281,61 @@ public class AbstractSceneEditor3DPart<T extends AbstractSceneFileEditor & Model
 
             getNodeForCamera().setLocalTranslation(position);
         });
+    }
+
+    @FromAnyThread
+    public void openModel(final M model) {
+        EXECUTOR_MANAGER.addEditorTask(() -> openModelImpl(model));
+    }
+
+    @FromAnyThread
+    public void addLight(final Light light) {
+        EXECUTOR_MANAGER.addEditorTask(() -> addLightImpl(light));
+    }
+
+    @MiniThread
+    private void addLightImpl(final Light light) {
+        throw new UnsupportedOperationException();
+    }
+
+    @FromAnyThread
+    public void removeLight(final Light light) {
+        EXECUTOR_MANAGER.addEditorTask(() -> removeLightImpl(light));
+    }
+
+    @MiniThread
+    private void removeLightImpl(final Light light) {
+        throw new UnsupportedOperationException();
+    }
+
+    @MiniThread
+    private void openModelImpl(final M model) {
+        final Node modelNode = getModelNode();
+        final M currentModel = getCurrentModel();
+
+        if (currentModel != null) {
+            throw new UnsupportedOperationException(); // Detach the previous model
+        }
+
+        NodeUtils.visitGeometry(model, geometry -> {
+            final RenderManager renderManager = EditorUtil.getRenderManager();
+            renderManager.preloadScene(geometry);
+        });
+
+        attachModel(model, modelNode);
+
+        setCurrentModel(model);
+    }
+
+    protected void attachModel(final M model, final Node modelNode) {
+        modelNode.attachChild(model);
+    }
+
+    public M getCurrentModel() {
+        return currentModel;
+    }
+
+    public void setCurrentModel(M currentModel) {
+        this.currentModel = currentModel;
     }
 }

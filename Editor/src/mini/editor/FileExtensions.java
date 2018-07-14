@@ -5,4 +5,6 @@ public interface FileExtensions {
     String MINI_SCENE = "minis";
     String MINI_OBJECT = "minio";
     String MINI_MATERIAL = "mini";
+
+    String MODEL_FBX = "fbx";
 }

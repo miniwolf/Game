@@ -8,7 +8,7 @@ import mini.editor.ui.component.editor.EditorDescription;
 import java.nio.file.Path;
 
 public class RequestedOpenFileEvent extends SceneEvent {
-    private static final EventType<SceneEvent> EVENT_TYPE;
+    public static final EventType<SceneEvent> EVENT_TYPE;
 
     private static final String NEED_SHOW = "need_show";
     private static final String FILE = "file";

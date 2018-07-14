@@ -10,4 +10,6 @@ public interface EditorTaskExecutor {
      * This does not guarantee immediate execution
      */
     void execute(Runnable task);
+
+    void shutdown();
 }

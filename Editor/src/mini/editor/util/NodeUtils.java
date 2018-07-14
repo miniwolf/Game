@@ -1,9 +1,14 @@
 package mini.editor.util;
 
+import com.ss.rlib.common.util.array.Array;
 import com.ss.rlib.common.util.array.ArrayFactory;
+import mini.editor.annotation.FromAnyThread;
+import mini.light.Light;
+import mini.scene.Geometry;
 import mini.scene.Node;
 import mini.scene.Spatial;
 
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -40,6 +45,52 @@ public class NodeUtils {
         var node = (Node) spatial;
         for (var child: node.getChildren()) {
             visitSpatial(child, handler);
+        }
+    }
+
+    public static void visitGeometry(Spatial spatial, Consumer<Geometry> consumer) {
+        spatial.depthFirstTraversal(sp -> {
+            if (spatial instanceof Geometry) {
+                consumer.accept((Geometry) sp);
+            }
+        }, Spatial.DFSMode.PRE_ORDER);
+    }
+
+    /**
+     * Collect all lights from the model.
+     */
+    @FromAnyThread
+    public static void addLight(Spatial spatial, Array<Light> lights) {
+        var lightList = spatial.getLocalLightList();
+        lightList.forEach(lights::add);
+
+        if (!(spatial instanceof Node)) {
+            return;
+        }
+
+        var node = (Node) spatial;
+
+        for (var child : node.getChildren()) {
+            addLight(child, lights);
+        }
+    }
+
+    /**
+     * Collect all geometries from the model.
+     */
+    @FromAnyThread
+    public static void addGeometry(Spatial spatial, Array<Geometry> geometries) {
+        if (spatial instanceof Geometry) {
+            geometries.add((Geometry) spatial);
+            return;
+        } else if (!(spatial instanceof Node)) {
+            return;
+        }
+
+        var node = (Node) spatial;
+
+        for (var child : node.getChildren()) {
+            addGeometry(child, geometries);
         }
     }
 }

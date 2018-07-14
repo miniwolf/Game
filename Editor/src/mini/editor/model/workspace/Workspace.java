@@ -5,13 +5,17 @@ import com.ss.rlib.common.util.ObjectUtils;
 import com.ss.rlib.common.util.StringUtils;
 import mini.editor.annotation.FromAnyThread;
 import mini.editor.annotation.FxThread;
+import mini.editor.manager.WorkspaceManager;
 import mini.editor.ui.component.editor.EditorDescription;
 import mini.editor.ui.component.editor.FileEditor;
 import mini.editor.ui.component.editor.state.EditorState;
 import mini.editor.util.EditorUtil;
 import mini.editor.util.ObjectsUtil;
 
+import java.io.IOException;
 import java.io.Serializable;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
@@ -136,5 +140,48 @@ public class Workspace implements Serializable {
     @FxThread
     private synchronized Map<String, EditorState> getEditorStateMap() {
         return ObjectsUtil.notNull(editorStateMap);
+    }
+
+    public void save(boolean force) {
+        if (!force && changes.get() == 0) {
+            return;
+        }
+
+        final Path assetFolder = getAssetFolder();
+        if (!Files.exists(assetFolder)) {
+            return;
+        }
+
+        final Path workspaceFile = assetFolder.resolve(WorkspaceManager.FOLDER_EDITOR)
+                                              .resolve(WorkspaceManager.FILE_WORKSPACE);
+
+        try {
+            if (!Files.exists(workspaceFile)) {
+                Files.createDirectories(workspaceFile.getParent());
+                Files.createFile(workspaceFile);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            final Boolean hidden = (Boolean) Files
+                    .getAttribute(workspaceFile,
+                                  "dos:hidden",
+                                  LinkOption.NOFOLLOW_LINKS);
+
+            if (hidden != null && !hidden) {
+                Files.setAttribute(workspaceFile, "dos:hidden", true, LinkOption.NOFOLLOW_LINKS);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        changes.set(0);
+        try {
+            Files.write(workspaceFile, EditorUtil.serialize(this));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

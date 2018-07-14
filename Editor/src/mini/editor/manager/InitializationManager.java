@@ -38,4 +38,8 @@ public class InitializationManager {
     public void onAfterCreateJavaFXContext() {
 
     }
+
+    public void onBeforeCreateEditorContext() {
+
+    }
 }

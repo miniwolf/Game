@@ -74,7 +74,7 @@ public class EditorRegistry {
             return null;
         }
 
-        final String extension = FileUtils.getExtension(file);
+        final String extension = FileUtils.getExtension(file, true);
         final ObjectDictionary<String, Array<EditorDescription>> editorDescriptions
                 = getEditorDescriptions();
 

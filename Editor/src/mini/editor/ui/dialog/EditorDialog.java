@@ -15,6 +15,7 @@ import javafx.stage.Window;
 import mini.editor.annotation.FromAnyThread;
 import mini.editor.annotation.FxThread;
 import mini.editor.ui.css.CssClasses;
+import mini.editor.ui.css.CssRegistry;
 import mini.editor.ui.scene.EditorFXScene;
 import mini.editor.util.EditorUtil;
 import mini.editor.util.FXUtils;
@@ -24,6 +25,8 @@ import java.awt.*;
 public abstract class EditorDialog {
 
     private static final Point DEFAULT_SIZE = new Point(0, 0);
+    private static final CssRegistry CSS_REGISTRY = CssRegistry.getInstance();
+
     private final Stage dialog;
     /**
      * The content container
@@ -40,6 +43,9 @@ public abstract class EditorDialog {
         container.setAlignment(Pos.CENTER);
 
         Scene scene = new Scene(container);
+
+        var stylesheets = scene.getStylesheets();
+        stylesheets.addAll(CSS_REGISTRY.getAvailableCssFiles());
 
         createControls(container);
 

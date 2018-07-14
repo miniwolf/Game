@@ -21,7 +21,9 @@ import mini.editor.ui.component.ScreenComponent;
 import mini.editor.ui.component.editor.EditorRegistry;
 import mini.editor.ui.component.editor.FileEditor;
 import mini.editor.ui.dialog.ConfirmDialog;
+import mini.editor.ui.event.FXEventManager;
 import mini.editor.ui.event.RequestedOpenFileEvent;
+import mini.editor.ui.event.impl.ChangedCurrentAssetFolderEvent;
 import mini.editor.util.EditorUtil;
 import mini.editor.util.UIUtils;
 
@@ -36,14 +38,33 @@ public class EditorAreaComponent extends TabPane implements ScreenComponent {
     private static final WorkspaceManager WORKSPACE_MANAGER = WorkspaceManager.getInstance();
     private static final ExecutorManager EXECUTOR_MANAGER = ExecutorManager.getInstance();
     private static final EditorRegistry EDITOR_REGISTRY = EditorRegistry.getInstance();
+    private static final FXEventManager FX_EVENT_MANAGER = FXEventManager.getInstance();
     private static final String KEY_EDITOR = "editor";
 
     private final ConcurrentObjectDictionary<Path, Tab> openedEditors;
     private final ConcurrentArray<Path> openingFiles;
 
+    private boolean ignoredOpenedFiles;
+
     public EditorAreaComponent() {
         openedEditors = DictionaryFactory.newConcurrentAtomicObjectDictionary();
         openingFiles = ArrayFactory.newConcurrentStampedLockArray(Path.class);
+
+        FX_EVENT_MANAGER.addEventHandler(ChangedCurrentAssetFolderEvent.EVENT_TYPE,
+                                         event -> processEvent(
+                                                 (ChangedCurrentAssetFolderEvent) event));
+        FX_EVENT_MANAGER.addEventHandler(RequestedOpenFileEvent.EVENT_TYPE,
+                                         event -> processOpenFile((RequestedOpenFileEvent) event));
+    }
+
+    private void processEvent(ChangedCurrentAssetFolderEvent event) {
+        setIgnoredOpenedFiles(true);
+        try {
+            getTabs().clear();
+            loadOpenedFiles();
+        } finally {
+            setIgnoredOpenedFiles(false);
+        }
     }
 
     @Override
@@ -195,5 +216,13 @@ public class EditorAreaComponent extends TabPane implements ScreenComponent {
 
     public ConcurrentArray<Path> getOpeningFiles() {
         return openingFiles;
+    }
+
+    public boolean isIgnoredOpenedFiles() {
+        return ignoredOpenedFiles;
+    }
+
+    public void setIgnoredOpenedFiles(boolean ignoredOpenedFiles) {
+        this.ignoredOpenedFiles = ignoredOpenedFiles;
     }
 }

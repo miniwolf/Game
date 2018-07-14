@@ -86,10 +86,10 @@ public class FolderResourceElement extends ResourceElement {
         return false;
     }
 
-//    @Override
-//    public String toString() {
-//        return "FolderResourceElement{" +
-//               "file=" + file +
-//               '}';
-//    }
+    @Override
+    public String toString() {
+        return "FolderResourceElement{" +
+               "file=" + file +
+               '}';
+    }
 }

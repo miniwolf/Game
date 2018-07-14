@@ -41,9 +41,10 @@ public class ExternalFileEditorDialog extends AbstractSimpleEditorDialog {
     @Override
     @FxThread
     protected void createContent(final VBox root) {
-        resourceTree = new ResourceTree();
+        resourceTree = new ResourceTree(this::processOpen, false);
         resourceTree.prefHeightProperty().bind(heightProperty());
         resourceTree.prefWidthProperty().bind(widthProperty());
+        resourceTree.setLazyMode(true);
         resourceTree.setShowRoot(false);
         resourceTree.getSelectionModel()
                     .selectedItemProperty()
@@ -62,6 +63,17 @@ public class ExternalFileEditorDialog extends AbstractSimpleEditorDialog {
                 .getSelectedItem()
                 .getValue();
 
+        consumer.accept(element.getFile());
+    }
+
+    @FxThread
+    private void processOpen(final ResourceElement element) {
+        final Button okButton = getOKButton();
+        if (okButton == null || okButton.isDisabled()) {
+            return;
+        }
+
+        hide();
         consumer.accept(element.getFile());
     }
 

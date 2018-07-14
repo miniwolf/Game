@@ -2,6 +2,7 @@ package mini.editor;
 
 import com.ss.rlib.common.util.ArrayUtils;
 import com.ss.rlib.common.util.ObjectUtils;
+import com.ss.rlib.common.util.Utils;
 import com.ss.rlib.common.util.array.Array;
 import com.ss.rlib.common.util.array.ArrayFactory;
 import com.ss.rlib.common.util.array.ConcurrentArray;
@@ -16,17 +17,23 @@ import mini.editor.annotation.FromAnyThread;
 import mini.editor.annotation.FxThread;
 import mini.editor.config.Config;
 import mini.editor.config.EditorConfig;
+import mini.editor.executor.impl.EditorThreadExecutor;
+import mini.editor.file.converter.FileConverterRegistry;
 import mini.editor.injfx.MiniToJfxIntegrator;
 import mini.editor.injfx.processor.FrameTransferSceneProcessor;
+import mini.editor.manager.ExecutorManager;
 import mini.editor.manager.InitializationManager;
+import mini.editor.manager.PluginManager;
 import mini.editor.manager.ResourceManager;
 import mini.editor.manager.WorkspaceManager;
 import mini.editor.ui.builder.EditorFXSceneBuilder;
+import mini.editor.ui.css.CssRegistry;
 import mini.editor.ui.scene.EditorFXScene;
 import mini.editor.util.EditorUtil;
 import mini.editor.util.ObjectsUtil;
 
 import java.util.Collection;
+import java.util.concurrent.CountDownLatch;
 
 import static mini.editor.config.DefaultSettingsProvider.Defaults.PREF_DEFAULT_OPEN_GL;
 import static mini.editor.config.DefaultSettingsProvider.Preferences.PREF_OPEN_GL;
@@ -61,6 +68,9 @@ public class JavaFXApplication extends Application {
     }
 
     private static void startMiniEditor(MiniEditor editor) {
+        var initializationManager = InitializationManager.getInstance();
+        initializationManager.onBeforeCreateEditorContext();
+
         editor.start();
 
         var context = editor.getContext();
@@ -81,7 +91,7 @@ public class JavaFXApplication extends Application {
 
     @Override
     @FxThread
-    public void start(Stage primaryStage) throws Exception {
+    public void start(Stage primaryStage) {
         instance = this;
         this.stage = primaryStage;
 
@@ -95,6 +105,10 @@ public class JavaFXApplication extends Application {
 
             var initializationManager = InitializationManager.getInstance();
             initializationManager.onBeforeCreateJavaFXContext();
+
+            var pluginManager = PluginManager.getInstance();
+            pluginManager.handlePlugins(
+                    editorPlugin -> editorPlugin.register(CssRegistry.getInstance()));
 
             var config = EditorConfig.getInstance();
             stage.initStyle(StageStyle.DECORATED);
@@ -129,11 +143,41 @@ public class JavaFXApplication extends Application {
         }
     }
 
+    @Override
+    @FxThread
+    public void stop() throws Exception {
+        super.stop();
+        onExit();
+    }
+
+    @FxThread
+    private void onExit() {
+        var config = EditorConfig.getInstance();
+        config.save();
+
+        var waiter = new CountDownLatch(1);
+
+        var executor = EditorThreadExecutor.getInstance();
+        executor.addToExecute(() -> {
+            MiniEditor.getInstance().destroy();
+            waiter.countDown();
+        });
+
+        ExecutorManager.getInstance().shutdown();
+
+        Utils.run(waiter::await);
+    }
+
     private void buildScene() {
         this.scene = EditorFXSceneBuilder.build(stage);
 
         var initializationManager = InitializationManager.getInstance();
         initializationManager.onAfterCreateJavaFXContext();
+
+        var pluginManager = PluginManager.getInstance();
+        pluginManager.handlePlugins(editorPlugin -> {
+            editorPlugin.register(FileConverterRegistry.getInstance());
+        });
 
         var miniEditor = MiniEditor.getInstance();
         createSceneProcessor(scene, miniEditor);

@@ -3,12 +3,18 @@ package mini.editor.util;
 import com.ss.rlib.common.util.ClassUtils;
 import com.ss.rlib.common.util.FileUtils;
 import com.ss.rlib.common.util.array.Array;
+import com.ss.rlib.common.util.array.ArrayFactory;
 import javafx.collections.ObservableList;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
+import javafx.scene.control.Labeled;
 import javafx.scene.control.TreeItem;
+import javafx.scene.control.TreeView;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
+import javafx.scene.layout.HBox;
 import mini.editor.annotation.FxThread;
 import mini.editor.ui.component.editor.state.impl.BaseEditorSceneEditorState;
 import org.reactfx.util.TriConsumer;
@@ -18,6 +24,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Stream;
 
 public abstract class UIUtils {
     @FxThread
@@ -92,6 +99,12 @@ public abstract class UIUtils {
     }
 
     public static <T> TreeItem<T> findItemForValue(
+            final TreeView<T> treeView,
+            final Object object) {
+        return findItemForValue(treeView.getRoot(), object);
+    }
+
+    public static <T> TreeItem<T> findItemForValue(
             final TreeItem<T> root,
             final Object object) {
         if (object == null) {
@@ -113,5 +126,36 @@ public abstract class UIUtils {
         }
 
         return null;
+    }
+
+    /**
+     * Collect all elements of a tree item.
+     *
+     * @return the list containing all items.
+     */
+    @FxThread
+    public static <T> Stream<TreeItem<T>> allItems(TreeItem<T> root) {
+        Array<TreeItem<T>> container = ArrayFactory.newArray(TreeItem.class);
+        collectAllItems(container, root);
+        return container.stream();
+    }
+
+    private static <T> void collectAllItems(Array<TreeItem<T>> container, TreeItem<T> root) {
+        container.add(root);
+
+        final ObservableList<TreeItem<T>> children = root.getChildren();
+
+        for (final TreeItem<T> child : children) {
+            collectAllItems(container, child);
+        }
+    }
+
+    public static void updateEditedCell(Labeled cell) {
+        final Node graphic = cell.getGraphic();
+        if (graphic instanceof HBox) {
+            final HBox hBox = (HBox) graphic;
+            hBox.setAlignment(Pos.CENTER_LEFT);
+            hBox.setMinHeight(cell.getMinHeight());
+        }
     }
 }

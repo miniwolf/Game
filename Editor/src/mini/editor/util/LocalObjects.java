@@ -23,12 +23,16 @@ public class LocalObjects {
 
     private final CycleBuffer<Array<Spatial>> spatialArrayBuffer;
     private final CycleBuffer<Vector3f> vectorBuffer;
+    private final CycleBuffer<Array<Object>> objectArrayBuffer;
 
     public LocalObjects() {
         spatialArrayBuffer = new CycleBuffer<>(Array.class, SIZE,
                                                () -> ArrayFactory.newArray(Spatial.class),
                                                Collection::clear);
         vectorBuffer = new CycleBuffer<>(Vector3f.class, SIZE, Vector3f::new);
+        objectArrayBuffer = new CycleBuffer<>(Array.class, SIZE,
+                                              () -> ArrayFactory.newArray(Object.class),
+                                              Collection::clear);
     }
 
     public static LocalObjects get() {
@@ -54,5 +58,9 @@ public class LocalObjects {
     @FromAnyThread
     public Vector3f nextVector() {
         return vectorBuffer.next();
+    }
+
+    public Array<Object> nextObjectArray() {
+        return objectArrayBuffer.next();
     }
 }

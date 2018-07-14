@@ -1,9 +1,15 @@
 package mini.editor;
 
+import mini.asset.plugins.ClasspathLocator;
 import mini.editor.annotation.FromAnyThread;
 import mini.editor.annotation.MiniThread;
+import mini.editor.asset.locator.FileSystemAssetLocator;
+import mini.editor.asset.locator.FolderAssetLocator;
+import mini.editor.config.Config;
 import mini.editor.config.EditorConfig;
+import mini.editor.executor.impl.EditorThreadExecutor;
 import mini.editor.injfx.MiniToJavaFXApplication;
+import mini.editor.manager.WorkspaceManager;
 import mini.editor.util.EditorUtil;
 import mini.material.TechniqueDef;
 import mini.math.ColorRGBA;
@@ -41,15 +47,51 @@ public class MiniEditor extends MiniToJavaFXApplication {
     }
 
     @Override
+    @MiniThread
+    public void update() {
+        var stamp = syncLock();
+
+        try {
+            var executor = EditorThreadExecutor.getInstance();
+            executor.execute();
+
+            if (Config.ENABLE_3D) {
+                super.update();
+            }
+        } finally {
+            syncUnlock(stamp);
+        }
+    }
+
+    /**
+     * Lock the render thread for doing actions with game scene.
+     *
+     * @return lock stamp
+     */
+    @FromAnyThread
+    private long syncLock() {
+        return lock.writeLock();
+    }
+
+    /**
+     * Unlock the render thread
+     */
+    private void syncUnlock(long stamp) {
+        lock.unlockWrite(stamp);
+    }
+
+    @Override
     public void simpleInitApp() {
         super.simpleInitApp();
 
         renderManager.setPreferredLightMode(TechniqueDef.LightMode.SinglePass);
         renderManager.setSinglePassLightBatchSize(10);
 
-//        assetManager.unregisterLocator(ClasspathLocator.class, "");
-//        assetManager.unregisterLocator(ClasspathLocator.class, "/");
-//        assetManager.registerLocator(FolderAssetLocator.class);
+        assetManager.unregisterLocator(ClasspathLocator.class, "");
+        assetManager.unregisterLocator(ClasspathLocator.class, "/");
+        assetManager.registerLocator(FolderAssetLocator.class, "");
+        assetManager.registerLocator(FileSystemAssetLocator.class, "");
+        assetManager.registerLocator(ClasspathLocator.class, "");
 
         viewPort.setBackgroundColor(new ColorRGBA(50 / 255F, 50 / 255F, 50 / 255F, 1));
         cam.setFrustumPerspective(55, (float) cam.getWidth() / cam.getHeight(), 1f,
@@ -62,6 +104,16 @@ public class MiniEditor extends MiniToJavaFXApplication {
 
         new EditorThread(new ThreadGroup("JavaFX"), JavaFXApplication::start, "Java Launch")
                 .start();
+    }
+
+    @Override
+    public void destroy() {
+        super.destroy();
+
+        var workspaceManager = WorkspaceManager.getInstance();
+        workspaceManager.save();
+
+        System.exit(0);
     }
 
     /**

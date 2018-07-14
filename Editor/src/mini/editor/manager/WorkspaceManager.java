@@ -82,4 +82,12 @@ public class WorkspaceManager {
     public ObjectDictionary<Path, Workspace> getWorkspaces() {
         return workspaces;
     }
+
+    /**
+     * Save all workspaces
+     */
+    @FromAnyThread
+    public synchronized void save() {
+        getWorkspaces().forEach((path, workspace) -> workspace.save(true));
+    }
 }

@@ -1535,6 +1535,37 @@ public abstract class Spatial implements Cloneable, CloneableSmartAsset, MiniClo
     }
 
     /**
+     * Visit each scene graph element ordered by DFS with the default post order mode.
+     *
+     * @param visitor
+     * @see #depthFirstTraversal(SceneGraphVisitor, DFSMode)
+     */
+    public void depthFirstTraversal(SceneGraphVisitor visitor) {
+        depthFirstTraversal(visitor, DFSMode.POST_ORDER);
+    }
+
+    /**
+     * Visit each scene graph element ordered by DFS with the default post order mode.
+     *
+     * @param mode the traversal mode: pre order or post order.
+     */
+    public abstract void depthFirstTraversal(SceneGraphVisitor visitor, DFSMode mode);
+
+    /**
+     * Specifies the order of the depth first search.
+     */
+    public enum DFSMode {
+        /**
+         * Pre order: the current spatial is visited first, the its children.
+         */
+        PRE_ORDER,
+        /**
+         * Post order: the children are visited first, then the parent.
+         */
+        POST_ORDER
+    }
+
+    /**
      * @return whether the spatial is visible in the world.
      */
     public boolean isVisible() {

@@ -80,6 +80,13 @@ public class ExecutorManager {
         }
     }
 
+    public void shutdown() {
+        for (EditorTaskExecutor backgroundTaskExecutor : getBackgroundTaskExecutors()) {
+            backgroundTaskExecutor.shutdown();
+        }
+        fxEditorTaskExecutor.shutdown();
+    }
+
     public void addEditorTask(final Runnable task) {
         getEditorTaskExecutor().addToExecute(task);
     }

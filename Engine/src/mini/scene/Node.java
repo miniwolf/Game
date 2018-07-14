@@ -547,4 +547,19 @@ public class Node extends Spatial {
 
         this.updateList = cloner.clone(updateList);
     }
+
+    @Override
+    public void depthFirstTraversal(SceneGraphVisitor visitor, DFSMode mode) {
+        if (mode == DFSMode.POST_ORDER) {
+            for (Spatial child : children) {
+                child.depthFirstTraversal(visitor);
+            }
+            visitor.visit(this);
+        } else { // PRE_ORDER
+            visitor.visit(this);
+            for (Spatial child : children) {
+                child.depthFirstTraversal(visitor);
+            }
+        }
+    }
 }

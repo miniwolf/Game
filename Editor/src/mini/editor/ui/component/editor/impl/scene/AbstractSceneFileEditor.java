@@ -18,6 +18,7 @@ import mini.editor.ui.component.painting.PaintingComponentContainer;
 import mini.editor.ui.control.model.ModelNodeTree;
 import mini.editor.ui.control.model.ModelPropertyEditor;
 import mini.editor.ui.control.tree.TreeNode;
+import mini.editor.util.NodeUtils;
 import mini.editor.util.ObjectsUtil;
 import mini.editor.util.UIUtils;
 import mini.light.Light;
@@ -31,7 +32,7 @@ import java.nio.file.Path;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class AbstractSceneFileEditor<M extends Spatial, MA extends AbstractSceneEditor3DPart, ES extends BaseEditorSceneEditorState>
+public abstract class AbstractSceneFileEditor<M extends Spatial, MA extends AbstractSceneEditor3DPart, ES extends BaseEditorSceneEditorState>
         extends Advanced3DFileEditorWithSplitRightTool<MA, ES>
         implements ModelChangeConsumer, Editor3DProvider {
 
@@ -62,7 +63,11 @@ public class AbstractSceneFileEditor<M extends Spatial, MA extends AbstractScene
 
         final StackPane editorAreaPane = getEditorAreaPane();
 
-        modelNodeTree = new ModelNodeTree();
+        modelNodeTree = new ModelNodeTree(selectionNodeHandler, this);
+    }
+
+    protected void refreshTree() {
+        getModelNodeTree().fill(getCurrentModel());
     }
 
     @Override
@@ -80,17 +85,7 @@ public class AbstractSceneFileEditor<M extends Spatial, MA extends AbstractScene
     }
 
     @Override
-    protected MA create3DEditorPart() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     protected Supplier<EditorState> getEditorStateFactory() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    protected void doOpenFile(Path file) {
         throw new UnsupportedOperationException();
     }
 
@@ -203,6 +198,39 @@ public class AbstractSceneFileEditor<M extends Spatial, MA extends AbstractScene
         }
 
         getModelNodeTree();
+    }
+
+    protected void handleAddedObject(final Spatial model) {
+        final MA editor3DPart = getEditor3DPart();
+        final Array<Light> lights = ArrayFactory.newArray(Light.class);
+
+        NodeUtils.addLight(model, lights);
+
+        lights.forEach(editor3DPart, (light, part) -> part.addLight(light));
+    }
+
+    @Override
+    @FxThread
+    public void notifyJavaFXRemovedChild(final Object parent,
+                                         final Object removed) {
+        final MA editor3DPart = getEditor3DPart();
+        final ModelNodeTree modelNodeTree = getModelNodeTree();
+        modelNodeTree.notifyRemoved(parent, removed);
+
+        if (removed instanceof Light) {
+            editor3DPart.removeLight((Light) removed);
+        } else if (removed instanceof Spatial) {
+            handleRemovedObject((Spatial) removed);
+        }
+    }
+
+    private void handleRemovedObject(Spatial model) {
+        final MA editor3DPart = getEditor3DPart();
+        final Array<Light> lights = ArrayFactory.newArray(Light.class);
+
+        NodeUtils.addLight(model, lights);
+
+        lights.forEach(editor3DPart, ((light, part) -> part.removeLight(light)));
     }
 
     /**

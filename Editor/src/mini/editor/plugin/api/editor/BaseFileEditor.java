@@ -6,6 +6,8 @@ import javafx.scene.layout.StackPane;
 import mini.editor.annotation.FromAnyThread;
 import mini.editor.annotation.FxThread;
 import mini.editor.manager.WorkspaceManager;
+import mini.editor.model.undo.EditorOperation;
+import mini.editor.model.undo.EditorOperationControl;
 import mini.editor.model.undo.UndoableEditor;
 import mini.editor.model.undo.editor.ChangeConsumer;
 import mini.editor.model.workspace.Workspace;
@@ -14,15 +16,31 @@ import mini.editor.ui.component.editor.state.EditorState;
 import mini.editor.util.ObjectsUtil;
 
 import java.nio.file.Path;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 public abstract class BaseFileEditor<S extends EditorState>
         extends AbstractFileEditor<StackPane>
         implements ChangeConsumer, UndoableEditor {
+    private final EditorOperationControl operationControl;
+    private final AtomicInteger changeCounter;
+
     /**
      * The state of this editor
      */
     private S editorState;
+
+    protected BaseFileEditor() {
+        operationControl = new EditorOperationControl(this);
+        changeCounter = new AtomicInteger();
+    }
+
+    @Override
+    @FxThread
+    public void incrementChange() {
+        final int result = changeCounter.incrementAndGet();
+        setDirty(result != 0);
+    }
 
     @Override
     @FxThread
@@ -58,6 +76,12 @@ public abstract class BaseFileEditor<S extends EditorState>
         final Workspace currentWorkSpace = ObjectsUtil
                 .notNull(workspaceManager.getCurrentWorkspace());
         editorState = currentWorkSpace.getEditorState(getEditFile(), stateFactory);
+    }
+
+    @Override
+    @FromAnyThread
+    public void execute(final EditorOperation operation) {
+        operationControl.execute(operation);
     }
 
     /**
