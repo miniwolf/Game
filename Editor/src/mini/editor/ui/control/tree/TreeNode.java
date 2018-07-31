@@ -1,12 +1,20 @@
 package mini.editor.ui.control.tree;
 
+import com.ss.rlib.common.util.array.Array;
+import com.ss.rlib.common.util.array.ArrayFactory;
 import mini.editor.annotation.FromAnyThread;
 import mini.editor.annotation.FxThread;
 import mini.editor.model.Entity;
+import mini.editor.ui.control.tree.node.factory.TreeNodeFactoryRegistry;
 
 import java.util.Objects;
 
 public class TreeNode<T> implements Entity {
+    protected static final Array<TreeNode<?>> EMPTY_ARRAY = ArrayFactory.newArray(TreeNode.class);
+
+    protected static final TreeNodeFactoryRegistry
+            FACTORY_REGISTRY = TreeNodeFactoryRegistry.getInstance();
+
     private final long objectId;
     private final T element;
     private TreeNode<?> parent;
@@ -104,5 +112,28 @@ public class TreeNode<T> implements Entity {
 
     public void notifyChildRemoved(final TreeNode<?> treeNode) {
         treeNode.setParent(treeNode);
+    }
+
+    public Array<TreeNode<?>> getChildren(NodeTree<?> nodeTree) {
+        return EMPTY_ARRAY;
+    }
+
+    /**
+     * Notify about that a model node will be added as a child of this node.
+     *
+     * @param treeNode the model node.
+     */
+    @FxThread
+    public void notifyChildPreAdd(final TreeNode<?> treeNode) {
+        treeNode.setParent(this);
+    }
+
+    /**
+     * Notify about that a model node was added as a child of this node.
+     *
+     * @param treeNode the model node.
+     */
+    @FxThread
+    public void notifyChildAdded(final TreeNode<?> treeNode) {
     }
 }

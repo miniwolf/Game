@@ -12,7 +12,6 @@ import mini.editor.model.editor.Editor3DProvider;
 import mini.editor.model.undo.editor.ModelChangeConsumer;
 import mini.editor.plugin.api.editor.Advanced3DFileEditorWithSplitRightTool;
 import mini.editor.ui.component.editor.EditorDescription;
-import mini.editor.ui.component.editor.state.EditorState;
 import mini.editor.ui.component.editor.state.impl.BaseEditorSceneEditorState;
 import mini.editor.ui.component.painting.PaintingComponentContainer;
 import mini.editor.ui.control.model.ModelNodeTree;
@@ -30,7 +29,6 @@ import mini.scene.Spatial;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 public abstract class AbstractSceneFileEditor<M extends Spatial, MA extends AbstractSceneEditor3DPart, ES extends BaseEditorSceneEditorState>
         extends Advanced3DFileEditorWithSplitRightTool<MA, ES>
@@ -82,11 +80,6 @@ public abstract class AbstractSceneFileEditor<M extends Spatial, MA extends Abst
 
         UIUtils.handleDroppedFile(dragEvent, FileExtensions.MINI_MATERIAL, this, dragEvent,
                                   AbstractSceneFileEditor::applyMaterial);
-    }
-
-    @Override
-    protected Supplier<EditorState> getEditorStateFactory() {
-        throw new UnsupportedOperationException();
     }
 
     @Override

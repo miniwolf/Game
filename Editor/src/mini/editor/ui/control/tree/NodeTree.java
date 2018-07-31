@@ -121,7 +121,15 @@ public class NodeTree<C extends ChangeConsumer> extends VBox {
             return;
         }
 
-        throw new UnsupportedOperationException();
+        var items = treeItem.getChildren();
+        var children = element.getChildren(this);
+        children.forEach(child -> {
+            element.notifyChildPreAdd(child);
+            items.add(new TreeItem<>(child));
+            element.notifyChildAdded(child);
+        });
+
+        items.forEach(item -> fill(item, expanded, level == -1 ? -1 : level + 1));
     }
 
     /**

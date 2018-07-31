@@ -7,7 +7,9 @@ import javafx.scene.layout.StackPane;
 import mini.editor.annotation.FxThread;
 import mini.editor.plugin.api.editor.part3d.Advanced3DEditorPart;
 import mini.editor.ui.component.editor.state.impl.Editor3DWithEditorToolEditorState;
+import mini.editor.ui.component.splt.pane.EditorToolSplitPane;
 import mini.editor.ui.css.CssClasses;
+import mini.editor.util.EditorUtil;
 
 public abstract class Advanced3DFileEditorWithRightTool<T extends Advanced3DEditorPart,
         S extends Editor3DWithEditorToolEditorState>
@@ -24,6 +26,8 @@ public abstract class Advanced3DFileEditorWithRightTool<T extends Advanced3DEdit
     @Override
     protected void createContent(StackPane root) {
         createEditorAreaPane();
+
+        mainSplitContainer = new EditorToolSplitPane(EditorUtil.getFXScene(), root);
 
         // TODO: missing UI for splitcontainer, editor tool components...
     }

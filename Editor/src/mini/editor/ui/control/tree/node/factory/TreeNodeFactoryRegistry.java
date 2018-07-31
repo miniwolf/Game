@@ -3,7 +3,11 @@ package mini.editor.ui.control.tree.node.factory;
 import com.ss.rlib.common.util.ClassUtils;
 import com.ss.rlib.common.util.array.Array;
 import com.ss.rlib.common.util.array.ArrayFactory;
+import mini.editor.annotation.FxThread;
 import mini.editor.ui.control.tree.TreeNode;
+import mini.editor.ui.control.tree.node.factory.impl.ControlTreeNodeFactory;
+import mini.editor.ui.control.tree.node.factory.impl.DefaultTreeNodeFactory;
+import mini.editor.ui.control.tree.node.factory.impl.LightTreeNodeFactory;
 
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -16,6 +20,18 @@ public class TreeNodeFactoryRegistry {
     public TreeNodeFactoryRegistry() {
         factories = ArrayFactory.newArray(TreeNodeFactory.class);
 
+        register(new DefaultTreeNodeFactory());
+        register(new LightTreeNodeFactory());
+        register(new ControlTreeNodeFactory());
+    }
+
+    /**
+     * Register a new tree node factory.
+     */
+    @FxThread
+    public void register(final TreeNodeFactory factory) {
+        factories.add(factory);
+        factories.sort(TreeNodeFactory::compareTo);
     }
 
     public static TreeNodeFactoryRegistry getInstance() {

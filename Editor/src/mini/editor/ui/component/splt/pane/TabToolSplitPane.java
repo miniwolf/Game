@@ -9,7 +9,7 @@ import mini.editor.ui.component.tab.TabToolComponent;
 import java.util.Objects;
 
 public class TabToolSplitPane<T> extends SplitPane {
-    private final Scene scene;
+    protected final Scene scene;
     private final T config;
     protected TabToolComponent toolComponent;
 
@@ -116,7 +116,7 @@ public class TabToolSplitPane<T> extends SplitPane {
         return 0;
     }
 
-    private double getSceneSize() {
+    protected double getSceneSize() {
         return scene.getWidth();
     }
 

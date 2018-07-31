@@ -92,6 +92,7 @@ public class MiniEditor extends MiniToJavaFXApplication {
         assetManager.registerLocator(FolderAssetLocator.class, "");
         assetManager.registerLocator(FileSystemAssetLocator.class, "");
         assetManager.registerLocator(ClasspathLocator.class, "");
+        assetManager.addAssetEventListener(EditorConfig.getInstance());
 
         viewPort.setBackgroundColor(new ColorRGBA(50 / 255F, 50 / 255F, 50 / 255F, 1));
         cam.setFrustumPerspective(55, (float) cam.getWidth() / cam.getHeight(), 1f,

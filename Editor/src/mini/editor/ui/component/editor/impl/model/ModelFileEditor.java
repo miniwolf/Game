@@ -8,6 +8,7 @@ import mini.editor.Messages;
 import mini.editor.part3d.editor.impl.model.ModelEditor3DPart;
 import mini.editor.ui.component.editor.EditorDescription;
 import mini.editor.ui.component.editor.impl.scene.AbstractSceneFileEditor;
+import mini.editor.ui.component.editor.state.EditorState;
 import mini.editor.ui.component.editor.state.impl.EditorModelEditorState;
 import mini.editor.util.EditorUtil;
 import mini.editor.util.NodeUtils;
@@ -16,6 +17,7 @@ import mini.scene.Geometry;
 import mini.scene.Spatial;
 
 import java.nio.file.Path;
+import java.util.function.Supplier;
 
 public class ModelFileEditor
         extends AbstractSceneFileEditor<Spatial, ModelEditor3DPart, EditorModelEditorState> {
@@ -32,6 +34,11 @@ public class ModelFileEditor
     @Override
     protected ModelEditor3DPart create3DEditorPart() {
         return new ModelEditor3DPart();
+    }
+
+    @Override
+    protected Supplier<EditorState> getEditorStateFactory() {
+        return EditorModelEditorState::new;
     }
 
     @Override

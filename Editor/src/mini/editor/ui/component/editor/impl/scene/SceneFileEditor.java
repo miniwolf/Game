@@ -6,8 +6,10 @@ import mini.editor.Messages;
 import mini.editor.model.undo.EditorOperation;
 import mini.editor.part3d.editor.impl.AbstractEditor3DPart;
 import mini.editor.ui.component.editor.EditorDescription;
+import mini.editor.ui.component.editor.state.EditorState;
 
 import java.nio.file.Path;
+import java.util.function.Supplier;
 
 public class SceneFileEditor extends AbstractSceneFileEditor {
 
@@ -37,6 +39,11 @@ public class SceneFileEditor extends AbstractSceneFileEditor {
 
     @Override
     public void execute(EditorOperation operation) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected Supplier<EditorState> getEditorStateFactory() {
         throw new UnsupportedOperationException();
     }
 

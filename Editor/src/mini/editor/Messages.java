@@ -10,7 +10,6 @@ public class Messages {
     public static final String EDITOR_TOOL_ASSET;
     public static final String LOG_VIEW_TITLE;
     public static final String SCENE_FILE_EDITOR_NAME;
-    public static final String MODEL_FILE_EDITOR_NAME;
     public static final String EDITOR_AREA_SAVE_FILE_QUESTION;
 
     public static final String EDITOR_MENU_FILE;
@@ -19,6 +18,9 @@ public class Messages {
     public static final String EDITOR_MENU_FILE_EXIT;
     public static final String EDITOR_MENU_OTHER;
     public static final String EDITOR_MENU_HELP;
+
+    public static final String MODEL_FILE_EDITOR_NAME;
+    public static final String MODEL_FILE_EDITOR_NODE_DIRECTION_LIGHT;
 
     public static final String SIMPLE_DIALOG_BUTTON_OK;
     public static final String SIMPLE_DIALOG_BUTTON_CLOSE;
@@ -39,6 +41,8 @@ public class Messages {
             SCENE_FILE_EDITOR_NAME = bundle.getString("SceneFileEditorName");
 
             MODEL_FILE_EDITOR_NAME = bundle.getString("ModelFileEditorName");
+            MODEL_FILE_EDITOR_NODE_DIRECTION_LIGHT = bundle
+                    .getString("ModelFileEditorNodeDirectionLight");
             MODEL_NODE_TREE_ACTION_REMOVE = bundle.getString("ModelNodeTreeActionRemove");
 
             EDITOR_MENU_FILE = bundle.getString("EditorMenuFile");

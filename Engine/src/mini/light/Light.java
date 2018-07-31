@@ -6,7 +6,9 @@ import mini.scene.Spatial;
 import mini.utils.TempVars;
 
 /**
- * Created by miniwolf on 06-05-2017.
+ * Abstract class for representing a light source.
+ * <p>
+ * All light source types have a color.
  */
 public abstract class Light implements Cloneable {
     /**
@@ -56,8 +58,6 @@ public abstract class Light implements Cloneable {
         }
 
         /**
-         * Returns an index for the light type
-         *
          * @return an index for the light type
          */
         public int getId() {
@@ -100,19 +100,21 @@ public abstract class Light implements Cloneable {
     }
 
     /**
-     * Returns the color of the light.
-     *
      * @return The color of the light.
      */
     public ColorRGBA getColor() {
         return color;
     }
 
+    /**
+     * @return the light name
+     */
+    public String getName() {
+        return name;
+    }
 
     /**
-     * Returns true if this light is enabled.
-     *
-     * @return true if enabled, otherwise false.
+     * @return whether this light is enabled.
      */
     public boolean isEnabled() {
         return enabled;
@@ -124,8 +126,6 @@ public abstract class Light implements Cloneable {
     protected abstract void computeLastDistance(Spatial owner);
 
     /**
-     * Returns the light type
-     *
      * @return the light type
      * @see Type
      */

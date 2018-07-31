@@ -180,6 +180,24 @@ public class AssetManager {
     }
 
     /**
+     * Add an {@link AssetEventListener} to receive events from this <code>AssetManager</code>.
+     *
+     * @param listener The asset event listener to add
+     */
+    public void addAssetEventListener(AssetEventListener listener) {
+        eventListeners.add(listener);
+    }
+
+    /**
+     * Remove an {@link AssetEventListener} from receiving events from this <code>AssetManager</code>.
+     *
+     * @param listener The asset event listener to remove
+     */
+    public void removeAssetEventListener(AssetEventListener listener) {
+        eventListeners.remove(listener);
+    }
+
+    /**
      * Register an {@link AssetLoader} by using a class object.
      *
      * @param loaderClass The loader class to register.
