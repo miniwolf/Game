@@ -1,10 +1,13 @@
 package mini.editor.ui.component.editor;
 
+import com.ss.rlib.common.util.array.Array;
 import javafx.beans.property.BooleanProperty;
 import javafx.event.Event;
 import javafx.scene.Parent;
 import javafx.scene.layout.BorderPane;
 import mini.editor.annotation.FxThread;
+import mini.editor.part3d.editor.Editor3DPart;
+import mini.editor.ui.component.editor.state.EditorState;
 
 import java.nio.file.Path;
 import java.util.function.Consumer;
@@ -72,4 +75,14 @@ public interface FileEditor {
      * @return if the point is inside the editing area.
      */
     boolean isInside(double sceneX, double sceneY, Class<? extends Event> eventType);
+
+    /**
+     * Call when the editor is being showed.
+     */
+    void notifyShowed();
+
+    /**
+     * @return the 3D parts of this editor.
+     */
+    Array<Editor3DPart> get3DStates();
 }

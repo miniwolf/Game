@@ -1,12 +1,14 @@
 package mini.editor.ui.component.editor.impl.scene;
 
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import mini.editor.FileExtensions;
 import mini.editor.Messages;
 import mini.editor.model.undo.EditorOperation;
 import mini.editor.part3d.editor.impl.AbstractEditor3DPart;
 import mini.editor.ui.component.editor.EditorDescription;
 import mini.editor.ui.component.editor.state.EditorState;
+import mini.editor.ui.component.tab.ScrollableEditorToolComponent;
 
 import java.nio.file.Path;
 import java.util.function.Supplier;
@@ -49,6 +51,26 @@ public class SceneFileEditor extends AbstractSceneFileEditor {
 
     @Override
     public void incrementChange() {
+        throw new UnsupportedOperationException();
+    }
 
+    @Override
+    protected void processChangeTool(Number oldValue, Number newValue) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected void createToolComponents(ScrollableEditorToolComponent container, StackPane root) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public EditorDescription getDescription() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void notifyShowed() {
+        throw new UnsupportedOperationException();
     }
 }

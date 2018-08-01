@@ -8,8 +8,10 @@ import mini.editor.annotation.FxThread;
 import mini.editor.plugin.api.editor.part3d.Advanced3DEditorPart;
 import mini.editor.ui.component.editor.state.impl.Editor3DWithEditorToolEditorState;
 import mini.editor.ui.component.splt.pane.EditorToolSplitPane;
+import mini.editor.ui.component.tab.ScrollableEditorToolComponent;
 import mini.editor.ui.css.CssClasses;
 import mini.editor.util.EditorUtil;
+import mini.editor.util.FXUtils;
 
 public abstract class Advanced3DFileEditorWithRightTool<T extends Advanced3DEditorPart,
         S extends Editor3DWithEditorToolEditorState>
@@ -22,6 +24,8 @@ public abstract class Advanced3DFileEditorWithRightTool<T extends Advanced3DEdit
      * The pane of the 3D editor area.
      */
     private BorderPane editor3DArea;
+    private EditorToolSplitPane mainSplitContainer;
+    private ScrollableEditorToolComponent editorToolComponent;
 
     @Override
     protected void createContent(StackPane root) {
@@ -29,8 +33,37 @@ public abstract class Advanced3DFileEditorWithRightTool<T extends Advanced3DEdit
 
         mainSplitContainer = new EditorToolSplitPane(EditorUtil.getFXScene(), root);
 
+        editorToolComponent = new ScrollableEditorToolComponent(mainSplitContainer);
+        editorToolComponent.prefHeightProperty().bind(root.heightProperty());
+
+        createToolComponents(editorToolComponent, root);
+
+        editorToolComponent.addChangeListener((observable, oldValue, newValue) -> processChangeTool(oldValue, newValue));
+        editorToolComponent.getSelectionModel().selectedIndexProperty().addListener((observable, oldValue, newValue) -> {
+            final S editorState = getEditorState();
+            if (editorState != null) {
+                editorState.setOpenedTool(newValue.intValue());
+            }
+        });
+
+        mainSplitContainer.initFor(editorToolComponent, getEditorAreaPane());
+
+        root.getChildren().add(mainSplitContainer);
+        mainSplitContainer.getStyleClass().add(CssClasses.File_EDITOR_MAIN_SPLIT_PANE);
         // TODO: missing UI for splitcontainer, editor tool components...
     }
+
+    /**
+     * Called when tool is changed.
+     */
+    protected abstract void processChangeTool(final Number oldValue, final Number newValue);
+
+    /**
+     * Create tools and add the to the container.
+     *
+     * @param container tool container
+     */
+    protected abstract void createToolComponents(final ScrollableEditorToolComponent container, final StackPane root);
 
     private void createEditorAreaPane() {
         editorAreaPane = new StackPane();

@@ -87,7 +87,7 @@ public class TabToolSplitPane<T> extends SplitPane {
         }));
     }
 
-    private void handleSceneChanged(Number newSize) {
+    protected void handleSceneChanged(Number newSize) {
         if (config == null) {
             return;
         }

@@ -2,14 +2,17 @@ package mini.editor.ui.component.editor.impl.model;
 
 import com.ss.rlib.common.util.array.Array;
 import com.ss.rlib.common.util.array.ArrayFactory;
+import javafx.scene.layout.StackPane;
 import mini.asset.ModelKey;
 import mini.editor.FileExtensions;
 import mini.editor.Messages;
+import mini.editor.annotation.FromAnyThread;
 import mini.editor.part3d.editor.impl.model.ModelEditor3DPart;
 import mini.editor.ui.component.editor.EditorDescription;
 import mini.editor.ui.component.editor.impl.scene.AbstractSceneFileEditor;
 import mini.editor.ui.component.editor.state.EditorState;
 import mini.editor.ui.component.editor.state.impl.EditorModelEditorState;
+import mini.editor.ui.component.tab.ScrollableEditorToolComponent;
 import mini.editor.util.EditorUtil;
 import mini.editor.util.NodeUtils;
 import mini.editor.util.ObjectsUtil;
@@ -31,9 +34,12 @@ public class ModelFileEditor
         DESCRIPTION.addExtension(FileExtensions.MODEL_FBX);
     }
 
+    private ModelFileEditor() {
+    }
+
     @Override
     protected ModelEditor3DPart create3DEditorPart() {
-        return new ModelEditor3DPart();
+        return new ModelEditor3DPart(this);
     }
 
     @Override
@@ -69,5 +75,25 @@ public class ModelFileEditor
         final Array<Geometry> geometries = ArrayFactory.newArray(Geometry.class);
 
         NodeUtils.addGeometry(model, geometries);
+
+        if (!geometries.isEmpty()) {
+            geometries.forEach(geometry -> {
+                // TODO: sky needs to be added.
+            });
+        }
+    }
+
+    @Override
+    protected void processChangeTool(Number oldValue, Number newValue) {
+    }
+
+    @Override
+    protected void createToolComponents(ScrollableEditorToolComponent container, StackPane root) {
+    }
+
+    @Override
+    @FromAnyThread
+    public EditorDescription getDescription() {
+        return DESCRIPTION;
     }
 }

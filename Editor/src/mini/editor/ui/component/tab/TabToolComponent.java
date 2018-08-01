@@ -2,6 +2,7 @@ package mini.editor.ui.component.tab;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.BooleanPropertyBase;
+import javafx.beans.value.ChangeListener;
 import javafx.css.PseudoClass;
 import javafx.event.EventTarget;
 import javafx.scene.Node;
@@ -143,6 +144,13 @@ public class TabToolComponent extends TabPane {
      */
     protected void bindCollapsedProperty() {
         this.collapsed.bind(widthProperty().lessThanOrEqualTo(minWidthProperty()));
+    }
+
+    /**
+     * Add a change tab index listener.
+     */
+    public void addChangeListener(final ChangeListener<? super Number> listener) {
+        getSelectionModel().selectedIndexProperty().addListener(listener);
     }
 
     public boolean isChangingTab() {

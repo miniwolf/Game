@@ -3,6 +3,7 @@ package mini.editor.util;
 import com.ss.rlib.common.util.ClassUtils;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import mini.app.state.ApplicationStateManager;
 import mini.asset.AssetManager;
 import mini.editor.JavaFXApplication;
 import mini.editor.MiniEditor;
@@ -138,5 +139,9 @@ public class EditorUtil {
         }
 
         return bout.toByteArray();
+    }
+
+    public static ApplicationStateManager getStateManager() {
+        return miniEditor.getStateManager();
     }
 }

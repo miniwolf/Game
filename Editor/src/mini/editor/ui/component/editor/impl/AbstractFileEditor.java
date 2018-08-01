@@ -26,6 +26,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.time.LocalTime;
 import java.util.function.Consumer;
 
 public abstract class AbstractFileEditor<R extends Pane> implements FileEditor {
@@ -47,6 +48,10 @@ public abstract class AbstractFileEditor<R extends Pane> implements FileEditor {
      * The root element of this editor
      */
     private R root;
+    /**
+     * The time when this editor was shown
+     */
+    private volatile LocalTime showedTime;
 
     public AbstractFileEditor() {
         fileChangedEvent = this::processChangedFile;
@@ -64,7 +69,7 @@ public abstract class AbstractFileEditor<R extends Pane> implements FileEditor {
 
         createContent(root);
 
-        root.getChildren().add(container);
+        container.getChildren().add(root);
 
         // TODO: Tool bar
         root.prefHeightProperty().bind(container.heightProperty());
@@ -207,6 +212,12 @@ public abstract class AbstractFileEditor<R extends Pane> implements FileEditor {
         this.dirtyProperty.setValue(dirty);
     }
 
+    @Override
+    @FxThread
+    public Array<Editor3DPart> get3DStates() {
+        return editor3DParts;
+    }
+
     /**
      * @return whether a file is being saved
      */
@@ -233,5 +244,10 @@ public abstract class AbstractFileEditor<R extends Pane> implements FileEditor {
             saveCallback.accept(this);
             saveCallback = null;
         }
+    }
+
+    @Override
+    public void notifyShowed() {
+        showedTime = LocalTime.now();
     }
 }

@@ -78,6 +78,14 @@ public class MaterialDebugApplicationState extends AbstractApplicationState {
         super.initialize(stateManager, app);
     }
 
+    @Override
+    public void stateAttached(ApplicationStateManager stateManager) {
+    }
+
+    @Override
+    public void stateDetached(ApplicationStateManager stateManager) {
+    }
+
     /**
      * Will reload the spatial's materials whenever the trigger is fired
      *
@@ -194,7 +202,6 @@ public class MaterialDebugApplicationState extends AbstractApplicationState {
 
     @Override
     public void update(float tpf) {
-        super.update(tpf); //To change body of generated methods, choose Tools | Templates.
         for (Trigger trigger : fileTriggers.keySet()) {
             if (trigger instanceof FileChangedTrigger) {
                 FileChangedTrigger t = (FileChangedTrigger) trigger;
@@ -206,6 +213,14 @@ public class MaterialDebugApplicationState extends AbstractApplicationState {
                 }
             }
         }
+    }
+
+    @Override
+    public void render(RenderManager renderManager) {
+    }
+
+    @Override
+    public void postRender() {
     }
 
     private interface Binding {

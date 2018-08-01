@@ -1,18 +1,22 @@
 package mini.editor.part3d.editor.impl;
 
+import mini.app.state.ApplicationStateManager;
 import mini.editor.annotation.MiniThread;
 import mini.editor.model.EditorCamera;
 import mini.editor.ui.component.editor.FileEditor;
+import mini.editor.ui.component.editor.impl.model.ModelFileEditor;
 import mini.editor.util.EditorUtil;
 import mini.math.Vector3f;
 import mini.renderer.Camera;
+import mini.renderer.RenderManager;
 import mini.scene.Node;
 
-public class AdvancedAbstractEditor3DPart<T extends FileEditor> extends AbstractEditor3DPart<T> {
+public abstract class AdvancedAbstractEditor3DPart<T extends FileEditor> extends AbstractEditor3DPart<T> {
 
     private final EditorCamera editorCamera;
 
-    public AdvancedAbstractEditor3DPart() {
+    public AdvancedAbstractEditor3DPart(T fileEditor) {
+        super(fileEditor);
         editorCamera = needEditorCamera() ? createEditorCamera() : null;
     }
 
@@ -73,4 +77,31 @@ public class AdvancedAbstractEditor3DPart<T extends FileEditor> extends Abstract
     protected EditorCamera getEditorCamera() {
         return editorCamera;
     }
+
+    @Override
+    @MiniThread
+    public void update(float tpf) {
+        preCameraUpdate();
+        cameraUpdate(tpf);
+        postCameraUpdate();
+    }
+
+    @MiniThread
+    protected void postCameraUpdate() {
+        // TODO: Lighting for camera
+    }
+
+    @MiniThread
+    private void cameraUpdate(float tpf) {
+        final EditorCamera editorCamera = getEditorCamera();
+        if (editorCamera == null) {
+            return;
+        }
+
+        editorCamera.update(tpf);
+        // TODO: Update camera controls
+    }
+
+    @MiniThread
+    protected abstract void preCameraUpdate();
 }

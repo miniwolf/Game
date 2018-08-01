@@ -77,7 +77,7 @@ public class EditorFXScene extends Scene {
     }
 
     @FxThread
-    private void hideCanvas() {
+    public void hideCanvas() {
         var children = hideLayer.getChildren();
         if (children.contains(canvas)) {
             return;

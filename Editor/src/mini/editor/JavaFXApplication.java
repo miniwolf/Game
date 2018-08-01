@@ -258,4 +258,8 @@ public class JavaFXApplication extends Application {
     public Window getLastWindow() {
         return ObjectsUtil.notNull(ArrayUtils.getInReadLock(openedWindows, Array::last));
     }
+
+    public FrameTransferSceneProcessor getSceneProcessor() {
+        return sceneProcessor;
+    }
 }

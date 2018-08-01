@@ -30,6 +30,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.function.Consumer;
 
+import static com.ss.rlib.common.util.ObjectUtils.notNull;
+
 public abstract class AbstractSceneFileEditor<M extends Spatial, MA extends AbstractSceneEditor3DPart, ES extends BaseEditorSceneEditorState>
         extends Advanced3DFileEditorWithSplitRightTool<MA, ES>
         implements ModelChangeConsumer, Editor3DProvider {
@@ -50,6 +52,10 @@ public abstract class AbstractSceneFileEditor<M extends Spatial, MA extends Abst
     private PaintingComponentContainer paintingComponentContainer;
     private boolean ingoreCameraMove;
     private Consumer<Array<Object>> selectionNodeHandler;
+
+    public AbstractSceneFileEditor() {
+        processChangeTool(-1, 0);
+    }
 
     @Override
     protected void createContent(StackPane root) {
@@ -85,11 +91,6 @@ public abstract class AbstractSceneFileEditor<M extends Spatial, MA extends Abst
     @Override
     protected void doSave(Path toStore) throws IOException {
         throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public EditorDescription getDescription() {
-        return null;
     }
 
     public void selectNodesFromTree(final Array<?> objects) {

@@ -15,4 +15,5 @@ public interface CssClasses {
 
     String OPEN_EXTERNAL_FOLDER_EDITOR_DIALOG = "open-external-folder-editor-dialog";
     String ABSTRACT_NODE_TREE_CELL = "abstract-node-tree-cell";
+    String File_EDITOR_MAIN_SPLIT_PANE = "file-editor-main-split-pane";
 }

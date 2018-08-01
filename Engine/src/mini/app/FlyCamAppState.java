@@ -3,6 +3,7 @@ package mini.app;
 import mini.app.state.AbstractApplicationState;
 import mini.app.state.ApplicationStateManager;
 import mini.input.FlyByCamera;
+import mini.renderer.RenderManager;
 
 /**
  * Manages a FlyByCamera
@@ -44,6 +45,26 @@ public class FlyCamAppState extends AbstractApplicationState {
         super.setEnabled(enabled);
 
         flyCam.setEnabled(enabled);
+    }
+
+    @Override
+    public void stateAttached(ApplicationStateManager stateManager) {
+    }
+
+    @Override
+    public void stateDetached(ApplicationStateManager stateManager) {
+    }
+
+    @Override
+    public void update(float tpf) {
+    }
+
+    @Override
+    public void render(RenderManager renderManager) {
+    }
+
+    @Override
+    public void postRender() {
     }
 
     @Override

@@ -5,6 +5,7 @@ import com.ss.rlib.common.util.array.ArrayFactory;
 import com.ss.rlib.common.util.array.ArrayIterator;
 import com.ss.rlib.common.util.dictionary.DictionaryFactory;
 import com.ss.rlib.common.util.dictionary.ObjectDictionary;
+import mini.app.state.ApplicationStateManager;
 import mini.asset.AssetManager;
 import mini.bounding.BoundingBox;
 import mini.bounding.BoundingSphere;
@@ -16,6 +17,7 @@ import mini.editor.model.EditorCamera;
 import mini.editor.model.scene.VisibleOnlyWhenSelected;
 import mini.editor.model.undo.editor.ModelChangeConsumer;
 import mini.editor.plugin.api.editor.part3d.Advanced3DEditorPart;
+import mini.editor.ui.component.editor.impl.model.ModelFileEditor;
 import mini.editor.util.EditorUtil;
 import mini.editor.util.LocalObjects;
 import mini.editor.util.NodeUtils;
@@ -31,7 +33,7 @@ import mini.scene.Node;
 import mini.scene.Spatial;
 import mini.scene.debug.WireBox;
 
-public class AbstractSceneEditor3DPart<T extends AbstractSceneFileEditor & ModelChangeConsumer, M extends Spatial>
+public abstract class AbstractSceneEditor3DPart<T extends AbstractSceneFileEditor & ModelChangeConsumer, M extends Spatial>
         extends Advanced3DEditorPart<T> implements EditorTransformSupport {
     public static final String KEY_SHAPE_CENTER = "mini.sceneEditor.shapeCenter";
     public static final String KEY_SHAPE_INIT_SCALE = "mini.sceneEditor.shapeInitScale";
@@ -57,12 +59,19 @@ public class AbstractSceneEditor3DPart<T extends AbstractSceneFileEditor & Model
     private final Node modelNode;
     private M currentModel;
 
-    public AbstractSceneEditor3DPart() {
+    public AbstractSceneEditor3DPart(T fileEditor) {
+        super(fileEditor);
+
         selected = ArrayFactory.newArray(Spatial.class);
         selectionShape = DictionaryFactory.newObjectDictionary();
 
-        this.modelNode = new Node("TreeNode");
-        this.modelNode.setUserData(KEY_MODEL_NODE, true);
+        modelNode = new Node("TreeNode");
+        modelNode.setUserData(KEY_MODEL_NODE, true);
+    }
+
+    @Override
+    protected void preCameraUpdate() {
+        // TODO: Move, Rotate, and Scale Tool.
     }
 
     public void select(final Array<Spatial> objects) {

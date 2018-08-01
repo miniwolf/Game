@@ -1,5 +1,6 @@
 package mini.editor.ui.component.editor.area;
 
+import com.ss.rlib.common.concurrent.util.ThreadUtils;
 import com.ss.rlib.common.util.ArrayUtils;
 import com.ss.rlib.common.util.array.Array;
 import com.ss.rlib.common.util.array.ArrayFactory;
@@ -8,15 +9,23 @@ import com.ss.rlib.common.util.dictionary.ConcurrentObjectDictionary;
 import com.ss.rlib.common.util.dictionary.DictionaryFactory;
 import com.ss.rlib.common.util.dictionary.DictionaryUtils;
 import com.ss.rlib.common.util.dictionary.ObjectDictionary;
+import javafx.beans.Observable;
+import javafx.collections.ObservableMap;
 import javafx.event.Event;
+import javafx.scene.Scene;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.scene.layout.BorderPane;
+import mini.app.state.ApplicationStateManager;
+import mini.editor.JavaFXApplication;
 import mini.editor.Messages;
 import mini.editor.MiniEditor;
 import mini.editor.annotation.BackgroundThread;
 import mini.editor.annotation.FxThread;
+import mini.editor.injfx.processor.FrameTransferSceneProcessor;
 import mini.editor.manager.ExecutorManager;
 import mini.editor.manager.WorkspaceManager;
+import mini.editor.model.workspace.Workspace;
 import mini.editor.ui.component.ScreenComponent;
 import mini.editor.ui.component.editor.EditorRegistry;
 import mini.editor.ui.component.editor.FileEditor;
@@ -24,6 +33,7 @@ import mini.editor.ui.dialog.ConfirmDialog;
 import mini.editor.ui.event.FXEventManager;
 import mini.editor.ui.event.RequestedOpenFileEvent;
 import mini.editor.ui.event.impl.ChangedCurrentAssetFolderEvent;
+import mini.editor.ui.scene.EditorFXScene;
 import mini.editor.util.EditorUtil;
 import mini.editor.util.UIUtils;
 
@@ -50,11 +60,87 @@ public class EditorAreaComponent extends TabPane implements ScreenComponent {
         openedEditors = DictionaryFactory.newConcurrentAtomicObjectDictionary();
         openingFiles = ArrayFactory.newConcurrentStampedLockArray(Path.class);
 
+        getSelectionModel().selectedItemProperty()
+                .addListener(this::switchEditor);
+
         FX_EVENT_MANAGER.addEventHandler(ChangedCurrentAssetFolderEvent.EVENT_TYPE,
                                          event -> processEvent(
                                                  (ChangedCurrentAssetFolderEvent) event));
         FX_EVENT_MANAGER.addEventHandler(RequestedOpenFileEvent.EVENT_TYPE,
                                          event -> processOpenFile((RequestedOpenFileEvent) event));
+    }
+
+    private void switchEditor(Observable observable, Tab oldValue, Tab newValue) {
+
+        BorderPane new3DArea = null;
+        BorderPane current3DArea = null;
+
+        Path newCurrentFile = null;
+
+        if (newValue != null) {
+            var properties = newValue.getProperties();
+            var fileEditor = (FileEditor) properties.get(KEY_EDITOR);
+            fileEditor.notifyShowed();
+
+            newCurrentFile = fileEditor.getEditFile();
+            new3DArea = fileEditor.get3DArea();
+        }
+
+        if (oldValue != null) {
+            var properties = oldValue.getProperties();
+            var fileEditor = (FileEditor) properties.get(KEY_EDITOR);
+            fileEditor.notifyShowed();
+
+            current3DArea = fileEditor.get3DArea();
+        }
+
+        var scene = (EditorFXScene) getScene();
+        var canvas = scene.getCanvas();
+
+        if (new3DArea != null) {
+            new3DArea.setCenter(canvas);
+        } else if (current3DArea != null) {
+            current3DArea.setCenter(null);
+            scene.hideCanvas();
+        }
+
+        var currentWorkspace = WORKSPACE_MANAGER.getCurrentWorkspace();
+        currentWorkspace.updateCurrentEditedFile(newCurrentFile);
+
+        EXECUTOR_MANAGER.addEditorTask(() -> processShowEditor(oldValue, newValue));
+    }
+
+    /**
+     * Handle a change of the active file editor.
+     */
+    private void processShowEditor(Tab previousTab, Tab newTab) {
+        var stateManager = EditorUtil.getStateManager();
+        var canvas = EditorUtil.getFXScene().getCanvas();
+        var sceneProcessor = JavaFXApplication.getInstance().getSceneProcessor();
+        boolean enabled = false;
+
+        if (previousTab != null) {
+            var fileEditor = (FileEditor) previousTab.getProperties().get(KEY_EDITOR);
+            var states = fileEditor.get3DStates();
+            states.forEach(stateManager::detach);
+        }
+
+        if (newTab != null) {
+            var fileEditor = (FileEditor) newTab.getProperties().get(KEY_EDITOR);
+            var states = fileEditor.get3DStates();
+            states.forEach(stateManager::attach);
+
+            enabled = states.size() > 0;
+        }
+
+        if (sceneProcessor.isEnabled() != enabled) {
+            var result = enabled;
+            EXECUTOR_MANAGER.addFXTask(() -> {
+                ThreadUtils.sleep(100);
+                canvas.setOpacity(result ? 1D : 0D);
+                sceneProcessor.setEnabled(result);
+            });
+        }
     }
 
     private void processEvent(ChangedCurrentAssetFolderEvent event) {
