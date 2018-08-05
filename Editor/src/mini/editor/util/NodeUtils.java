@@ -1,5 +1,6 @@
 package mini.editor.util;
 
+import com.ss.rlib.common.util.StringUtils;
 import com.ss.rlib.common.util.array.Array;
 import com.ss.rlib.common.util.array.ArrayFactory;
 import mini.editor.annotation.FromAnyThread;
@@ -91,6 +92,37 @@ public class NodeUtils {
 
         for (var child : node.getChildren()) {
             addGeometry(child, geometries);
+        }
+    }
+
+    public static void addGeometryWithMaterial(
+            Spatial spatial,
+            Array<Geometry> geometries,
+            String assetPath) {
+        if (assetPath == null || assetPath.isEmpty()) {
+            return;
+        }
+
+        if (spatial instanceof Geometry) {
+            var geometry = (Geometry) spatial;
+            var material = geometry.getMaterial();
+            var assetName = material == null ? null : material.getAssetName();
+
+            if (StringUtils.equals(assetName, assetPath)) {
+                geometries.add(geometry);
+            }
+
+            return;
+        }
+
+        if (!(spatial instanceof Node)) {
+            return;
+        }
+
+        var node = (Node) spatial;
+
+        for (Spatial child : node.getChildren()) {
+            addGeometryWithMaterial(child, geometries, assetPath);
         }
     }
 }

@@ -10,22 +10,17 @@ import com.ss.rlib.common.util.dictionary.DictionaryFactory;
 import com.ss.rlib.common.util.dictionary.DictionaryUtils;
 import com.ss.rlib.common.util.dictionary.ObjectDictionary;
 import javafx.beans.Observable;
-import javafx.collections.ObservableMap;
 import javafx.event.Event;
-import javafx.scene.Scene;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.layout.BorderPane;
-import mini.app.state.ApplicationStateManager;
 import mini.editor.JavaFXApplication;
 import mini.editor.Messages;
 import mini.editor.MiniEditor;
 import mini.editor.annotation.BackgroundThread;
 import mini.editor.annotation.FxThread;
-import mini.editor.injfx.processor.FrameTransferSceneProcessor;
 import mini.editor.manager.ExecutorManager;
 import mini.editor.manager.WorkspaceManager;
-import mini.editor.model.workspace.Workspace;
 import mini.editor.ui.component.ScreenComponent;
 import mini.editor.ui.component.editor.EditorRegistry;
 import mini.editor.ui.component.editor.FileEditor;
@@ -181,7 +176,7 @@ public class EditorAreaComponent extends TabPane implements ScreenComponent {
 
             var event = new RequestedOpenFileEvent(file);
             event.setDescription(description);
-            event.setNeedShow(editFile.equals(assetPath));
+            event.setNeedShow(assetPath.equals(editFile));
 
             processOpenFile(event);
         });

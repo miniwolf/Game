@@ -36,4 +36,12 @@ public interface PaintingComponent {
      * Start painting process for the object.
      */
     void startPainting(Object object);
+
+    /**
+     * Checks that an object can be processed using this component.
+     *
+     * @param element the object to check
+     * @return whether this object can be processed.
+     */
+    boolean isSupported(Object element);
 }

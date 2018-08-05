@@ -108,7 +108,7 @@ public class EditorRegistry {
         try {
             return constructor.call();
         } catch (Exception e) {
-            throw new RuntimeException();
+            throw new RuntimeException(e);
         }
     }
 }

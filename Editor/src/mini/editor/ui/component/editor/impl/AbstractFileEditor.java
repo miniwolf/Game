@@ -7,6 +7,7 @@ import com.ss.rlib.common.util.array.ArrayFactory;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.event.EventHandler;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -16,6 +17,7 @@ import mini.editor.manager.ExecutorManager;
 import mini.editor.part3d.editor.Editor3DPart;
 import mini.editor.ui.component.editor.EditorDescription;
 import mini.editor.ui.component.editor.FileEditor;
+import mini.editor.ui.css.CssClasses;
 import mini.editor.ui.event.FXEventManager;
 import mini.editor.ui.event.impl.FileChangedEvent;
 import mini.editor.util.ObjectsUtil;
@@ -65,16 +67,28 @@ public abstract class AbstractFileEditor<R extends Pane> implements FileEditor {
         final StackPane page = new StackPane(container);
         page.setPickOnBounds(true);
 
+        HBox toolbar = new HBox();
+        toolbar.prefWidthProperty().bind(container.widthProperty());
         root = createRoot();
 
-        createContent(root);
+        if (createToolbar(toolbar)) {
+            toolbar.getStyleClass().add(CssClasses.FILE_EDITOR_TOOLBAR);
+            container.getChildren().add(toolbar);
+            root.prefHeightProperty()
+                .bind(container.heightProperty().subtract(toolbar.heightProperty()));
+        } else {
+            root.prefHeightProperty().bind(container.heightProperty());
+        }
 
+        createContent(root);
         container.getChildren().add(root);
 
-        // TODO: Tool bar
-        root.prefHeightProperty().bind(container.heightProperty());
-
         root.prefWidthProperty().bind(container.widthProperty());
+    }
+
+    @FxThread
+    protected boolean createToolbar(HBox toolbar) {
+        return false;
     }
 
     protected abstract void createContent(R root);

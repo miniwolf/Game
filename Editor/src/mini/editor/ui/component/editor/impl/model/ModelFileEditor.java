@@ -1,21 +1,24 @@
 package mini.editor.ui.component.editor.impl.model;
 
+import com.ss.rlib.common.util.ObjectUtils;
 import com.ss.rlib.common.util.array.Array;
 import com.ss.rlib.common.util.array.ArrayFactory;
-import javafx.scene.layout.StackPane;
+import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
 import mini.asset.ModelKey;
 import mini.editor.FileExtensions;
 import mini.editor.Messages;
 import mini.editor.annotation.FromAnyThread;
+import mini.editor.annotation.FxThread;
 import mini.editor.part3d.editor.impl.model.ModelEditor3DPart;
 import mini.editor.ui.component.editor.EditorDescription;
 import mini.editor.ui.component.editor.impl.scene.AbstractSceneFileEditor;
 import mini.editor.ui.component.editor.state.EditorState;
 import mini.editor.ui.component.editor.state.impl.EditorModelEditorState;
-import mini.editor.ui.component.tab.ScrollableEditorToolComponent;
 import mini.editor.util.EditorUtil;
 import mini.editor.util.NodeUtils;
 import mini.editor.util.ObjectsUtil;
+import mini.renderer.queue.RenderQueue;
 import mini.scene.Geometry;
 import mini.scene.Spatial;
 
@@ -68,6 +71,14 @@ public class ModelFileEditor
     }
 
     @Override
+    protected void loadState() {
+        super.loadState();
+
+        final EditorModelEditorState editorState = ObjectUtils.notNull(getEditorState());
+
+    }
+
+    @Override
     protected void handleAddedObject(final Spatial model) {
         super.handleAddedObject(model);
 
@@ -84,11 +95,31 @@ public class ModelFileEditor
     }
 
     @Override
-    protected void processChangeTool(Number oldValue, Number newValue) {
+    public void notifyJavaFXRemovedChild(Object parent, Object removed) {
+        super.notifyJavaFXRemovedChild(parent, removed);
+
+        final ModelEditor3DPart editor3DPart = getEditor3DPart();
+
+        if (removed instanceof Spatial) {
+            final Spatial spatial = (Spatial) removed;
+            final boolean isSky = spatial.getQueueBucket() == RenderQueue.Bucket.Sky;
+
+            if (isSky) {
+
+            }
+        }
+
+        // TODO: Notify child processes
     }
 
     @Override
-    protected void createToolComponents(ScrollableEditorToolComponent container, StackPane root) {
+    @FxThread
+    protected boolean createToolbar(HBox toolbar) {
+        final Label fastSkyLabel = new Label(Messages.MODEL_FILE_EDITOR_FAST_SKY + ":");
+
+        // TODO: Create combo box for sky
+        toolbar.getChildren().add(fastSkyLabel);
+        return true;
     }
 
     @Override

@@ -2,6 +2,7 @@ package mini.editor.ui.control.tree.action.impl.spatial;
 
 import com.ss.rlib.common.util.array.Array;
 import com.ss.rlib.common.util.array.ArrayFactory;
+import mini.editor.annotation.FromAnyThread;
 import mini.editor.annotation.FxThread;
 import mini.editor.ui.control.tree.NodeTree;
 import mini.editor.ui.control.tree.TreeNode;
@@ -30,5 +31,12 @@ public class SpatialTreeNode<T extends Spatial> extends TreeNode<T> {
         }
 
         return result;
+    }
+
+    @Override
+    @FromAnyThread
+    public String getName() {
+        final String name = getElement().getName();
+        return name == null ? "name is null" : name;
     }
 }

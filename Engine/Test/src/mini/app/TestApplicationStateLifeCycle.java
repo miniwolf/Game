@@ -1,23 +1,10 @@
 package mini.app;
 
-import mini.app.state.AbstractApplicationState;
-import mini.app.state.ApplicationStateManager;
-import mini.material.Material;
-import mini.renderer.RenderManager;
-import mini.scene.Geometry;
-import mini.scene.shape.Box;
-import org.mockito.InOrder;
-import org.mockito.Mockito;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.inOrder;
-import static org.mockito.Mockito.when;
-
 /**
  * Test the application state lifecycles.
  */
-public class TestApplicationStateLifeCycle extends SimpleApplication {
-    private TestState mock;
+public class TestApplicationStateLifeCycle { //extends SimpleApplication {
+    /*private TestState mock;
     private InOrder inOrder;
 
     public static void main(String[] args) {
@@ -59,8 +46,8 @@ public class TestApplicationStateLifeCycle extends SimpleApplication {
             stateManager.detach(stateManager.getState(TestState.class));
             System.out.println("Done");
         }
-    }
-
+    }*/
+/*
     public class TestState extends AbstractApplicationState {
         @Override
         public void initialize(ApplicationStateManager manager, Application app) {
@@ -103,4 +90,5 @@ public class TestApplicationStateLifeCycle extends SimpleApplication {
             super.stateDetached(stateManager);
         }
     }
+    */
 }

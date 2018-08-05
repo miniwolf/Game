@@ -300,4 +300,20 @@ public class AssetManager {
     public void clearCache() {
         handler.clearCache();
     }
+
+    /**
+     * Delete an asset from the asset cache.
+     *
+     * @param key The asset key to remove from cache
+     * @param <T> The object type of the AssetKey instance.
+     * @return Whether the asset key was found in the cache and was removed successfully.
+     */
+    public <T> boolean deleteFromCache(AssetKey<T> key) {
+        AssetCache cache = handler.getCache(key.getCacheType());
+        if (cache != null) {
+            return cache.deleteFromCache(key);
+        } else {
+            throw new IllegalArgumentException(key + ": specifies no cache.");
+        }
+    }
 }

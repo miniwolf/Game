@@ -11,7 +11,6 @@ import mini.editor.ui.component.splt.pane.EditorToolSplitPane;
 import mini.editor.ui.component.tab.ScrollableEditorToolComponent;
 import mini.editor.ui.css.CssClasses;
 import mini.editor.util.EditorUtil;
-import mini.editor.util.FXUtils;
 
 public abstract class Advanced3DFileEditorWithRightTool<T extends Advanced3DEditorPart,
         S extends Editor3DWithEditorToolEditorState>
@@ -49,8 +48,7 @@ public abstract class Advanced3DFileEditorWithRightTool<T extends Advanced3DEdit
         mainSplitContainer.initFor(editorToolComponent, getEditorAreaPane());
 
         root.getChildren().add(mainSplitContainer);
-        mainSplitContainer.getStyleClass().add(CssClasses.File_EDITOR_MAIN_SPLIT_PANE);
-        // TODO: missing UI for splitcontainer, editor tool components...
+        mainSplitContainer.getStyleClass().add(CssClasses.FILE_EDITOR_MAIN_SPLIT_PANE);
     }
 
     /**

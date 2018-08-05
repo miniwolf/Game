@@ -8,8 +8,11 @@ import mini.asset.AssetManager;
 import mini.editor.JavaFXApplication;
 import mini.editor.MiniEditor;
 import mini.editor.annotation.FromAnyThread;
+import mini.editor.annotation.MiniThread;
 import mini.editor.config.EditorConfig;
 import mini.editor.ui.scene.EditorFXScene;
+import mini.environment.generation.JobProgressAdapter;
+import mini.light.LightProbe;
 import mini.renderer.Camera;
 import mini.renderer.RenderManager;
 
@@ -143,5 +146,17 @@ public class EditorUtil {
 
     public static ApplicationStateManager getStateManager() {
         return miniEditor.getStateManager();
+    }
+
+    @MiniThread
+    public static void updateGlobalLightProbe(JobProgressAdapter<LightProbe> progressAdapter) {
+        miniEditor.updateLightProbe(progressAdapter);
+    }
+
+    /**
+     * @return the formatted float number.
+     */
+    public static float clipNumber(float value, float mod) {
+        return (int) (value * mod) / mod;
     }
 }

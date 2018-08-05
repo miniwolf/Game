@@ -1,6 +1,7 @@
 package mini.scene;
 
 import mini.bounding.BoundingSphere;
+import mini.bounding.BoundingVolume;
 import mini.collision.Collidable;
 import mini.collision.CollisionResults;
 import mini.material.Material;
@@ -438,5 +439,12 @@ public class Geometry extends Spatial {
         this.worldBound = modelBound;
         mesh.setBound(modelBound);
         setBoundRefresh();
+    }
+
+    /**
+     * @return The bounding volume of the mesh, in model space.
+     */
+    public BoundingVolume getModelBound() {
+        return mesh.getBound();
     }
 }

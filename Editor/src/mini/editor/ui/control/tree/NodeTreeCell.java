@@ -114,6 +114,17 @@ public class NodeTreeCell<C extends ChangeConsumer, M extends NodeTree<C>>
             return;
         }
 
+        if (item == null) {
+            final TreeItem<TreeNode<?>> treeItem = getTreeItem();
+            if (treeItem != null) {
+                treeItem.setGraphic(null);
+            }
+
+            setText("");
+            setEditable(false);
+            return;
+        }
+
         final TreeItem<TreeNode<?>> treeItem = getTreeItem();
         if (treeItem != null) {
             treeItem.setGraphic(content);

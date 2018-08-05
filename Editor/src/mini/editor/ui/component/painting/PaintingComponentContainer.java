@@ -15,6 +15,8 @@ import mini.editor.ui.FxConstants;
 import mini.editor.ui.control.property.PropertyControl;
 import mini.editor.util.FXUtils;
 
+import java.util.function.Consumer;
+
 public class PaintingComponentContainer extends ScrollPane {
     private static final double LABEL_PERCENTAGE = 1D - PropertyControl.CONTROL_WIDTH_PERCENTAGE_2;
     private static final double FIELD_PERCENTAGE = PropertyControl.CONTROL_WIDTH_PERCENTAGE_2;
@@ -106,7 +108,18 @@ public class PaintingComponentContainer extends ScrollPane {
     public void prepareFor(Object element) {
         setPaintedObject(element);
 
-        throw new UnsupportedOperationException();
+        var componentBox = getComponentBox();
+        var items = componentBox.getItems();
+        items.clear();
+
+        if (element != null) {
+            getComponents().forEach(toCheck -> toCheck.isSupported(element),
+                                    (Consumer<PaintingComponent>) items::add);
+        }
+
+        if (!items.isEmpty()) {
+            componentBox.getSelectionModel().select(0);
+        }
     }
 
     public Object getPaintedObject() {
@@ -138,5 +151,31 @@ public class PaintingComponentContainer extends ScrollPane {
     @FxThread
     private void setCurrentComponent(PaintingComponent currentComponent) {
         this.currentComponent = currentComponent;
+    }
+
+    @FxThread
+    public void notifyShowed() {
+        setShowed(true);
+        var currentComponent = getCurrentComponent();
+        if (currentComponent != null) {
+            currentComponent.notifyShowed();
+        }
+    }
+
+    @FxThread
+    public void notifyHiding() {
+        setShowed(false);
+        var currentComponent = getCurrentComponent();
+        if (currentComponent != null) {
+            currentComponent.notifyHiding();
+        }
+    }
+
+    public ComboBox<PaintingComponent> getComponentBox() {
+        return componentBox;
+    }
+
+    public Array<PaintingComponent> getComponents() {
+        return components;
     }
 }

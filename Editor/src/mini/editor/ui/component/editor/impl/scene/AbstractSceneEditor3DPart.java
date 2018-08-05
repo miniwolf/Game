@@ -5,7 +5,6 @@ import com.ss.rlib.common.util.array.ArrayFactory;
 import com.ss.rlib.common.util.array.ArrayIterator;
 import com.ss.rlib.common.util.dictionary.DictionaryFactory;
 import com.ss.rlib.common.util.dictionary.ObjectDictionary;
-import mini.app.state.ApplicationStateManager;
 import mini.asset.AssetManager;
 import mini.bounding.BoundingBox;
 import mini.bounding.BoundingSphere;
@@ -17,7 +16,6 @@ import mini.editor.model.EditorCamera;
 import mini.editor.model.scene.VisibleOnlyWhenSelected;
 import mini.editor.model.undo.editor.ModelChangeConsumer;
 import mini.editor.plugin.api.editor.part3d.Advanced3DEditorPart;
-import mini.editor.ui.component.editor.impl.model.ModelFileEditor;
 import mini.editor.util.EditorUtil;
 import mini.editor.util.LocalObjects;
 import mini.editor.util.NodeUtils;
@@ -58,6 +56,7 @@ public abstract class AbstractSceneEditor3DPart<T extends AbstractSceneFileEdito
 
     private final Node modelNode;
     private M currentModel;
+    private boolean paintingMode;
 
     public AbstractSceneEditor3DPart(T fileEditor) {
         super(fileEditor);
@@ -346,5 +345,25 @@ public abstract class AbstractSceneEditor3DPart<T extends AbstractSceneFileEdito
 
     public void setCurrentModel(M currentModel) {
         this.currentModel = currentModel;
+    }
+
+    @FromAnyThread
+    public void changePaintingMode(final boolean paintingMode) {
+        EXECUTOR_MANAGER.addEditorTask(() -> changePaintingModeImpl(paintingMode));
+    }
+
+    @MiniThread
+    private void changePaintingModeImpl(final boolean paintingMode) {
+        setPaintingMode(paintingMode);
+
+        // TODO: Attach cursor, markers and transform tool nodes to the tool node
+    }
+
+    public boolean isPaintingMode() {
+        return paintingMode;
+    }
+
+    public void setPaintingMode(boolean paintingMode) {
+        this.paintingMode = paintingMode;
     }
 }

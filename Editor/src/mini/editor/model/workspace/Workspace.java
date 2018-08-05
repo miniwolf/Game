@@ -124,7 +124,7 @@ public class Workspace implements Serializable {
 
         final Map<String, EditorState> editorStateMap = getEditorStateMap();
 
-        if (editorStateMap.containsKey(assetPath)) {
+        if (!editorStateMap.containsKey(assetPath)) {
             final EditorState editorState = stateFactory.get();
             editorState.setChangeHandler(this::incrementChanges);
             editorStateMap.put(assetPath, editorState);

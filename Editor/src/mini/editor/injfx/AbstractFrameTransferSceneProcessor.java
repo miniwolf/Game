@@ -189,7 +189,6 @@ public abstract class AbstractFrameTransferSceneProcessor<T extends Node>
         }
 
         return frameTransfer;
-
     }
 
     protected void reshapeCurrentViewPort(int width, int height) {

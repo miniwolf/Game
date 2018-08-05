@@ -11,6 +11,8 @@ import mini.editor.executor.impl.EditorThreadExecutor;
 import mini.editor.injfx.MiniToJavaFXApplication;
 import mini.editor.manager.WorkspaceManager;
 import mini.editor.util.EditorUtil;
+import mini.environment.generation.JobProgressAdapter;
+import mini.light.LightProbe;
 import mini.material.TechniqueDef;
 import mini.math.ColorRGBA;
 import mini.scene.Node;
@@ -131,5 +133,10 @@ public class MiniEditor extends MiniToJavaFXApplication {
     @FromAnyThread
     public void asyncUnlock(long stamp) {
         lock.unlockRead(stamp);
+    }
+
+    @MiniThread
+    public void updateLightProbe(JobProgressAdapter<LightProbe> progressAdapter) {
+        progressAdapter.done(null);
     }
 }

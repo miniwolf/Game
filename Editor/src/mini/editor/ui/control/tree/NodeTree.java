@@ -2,6 +2,7 @@ package mini.editor.ui.control.tree;
 
 import com.ss.rlib.common.function.TripleConsumer;
 import com.ss.rlib.common.util.array.Array;
+import com.ss.rlib.common.util.array.ArrayCollectors;
 import com.ss.rlib.common.util.array.ArrayFactory;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
@@ -143,6 +144,19 @@ public class NodeTree<C extends ChangeConsumer> extends VBox {
     @FxThread
     public C getChangeConsumer() {
         return changeConsumer;
+    }
+
+    /**
+     * @return the selected nodes from the treeview
+     */
+    @FxThread
+    public Array<TreeNode<?>> getSelectedItems() {
+        final TreeView<TreeNode<?>> treeView = getTreeView();
+        return treeView.getSelectionModel()
+                       .getSelectedItems()
+                       .stream()
+                       .map(TreeItem::getValue)
+                       .collect(ArrayCollectors.toArray(TreeNode.class));
     }
 
     public void notifyRemoved(final Object parent, final Object child) {
