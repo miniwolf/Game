@@ -27,6 +27,10 @@ import mini.editor.manager.PluginManager;
 import mini.editor.manager.ResourceManager;
 import mini.editor.manager.WorkspaceManager;
 import mini.editor.ui.builder.EditorFXSceneBuilder;
+import mini.editor.ui.component.asset.tree.AssetTreeContextMenuFillerRegistry;
+import mini.editor.ui.component.editor.EditorRegistry;
+import mini.editor.ui.control.property.builder.PropertyBuilderRegistry;
+import mini.editor.ui.control.tree.node.factory.TreeNodeFactoryRegistry;
 import mini.editor.ui.css.CssRegistry;
 import mini.editor.ui.scene.EditorFXScene;
 import mini.editor.util.EditorUtil;
@@ -176,19 +180,24 @@ public class JavaFXApplication extends Application {
 
         var pluginManager = PluginManager.getInstance();
         pluginManager.handlePlugins(editorPlugin -> {
+            editorPlugin.register(EditorRegistry.getInstance());
             editorPlugin.register(FileConverterRegistry.getInstance());
+            editorPlugin.register(AssetTreeContextMenuFillerRegistry.getInstance());
+            editorPlugin.register(TreeNodeFactoryRegistry.getInstance());
+            editorPlugin.register(PropertyBuilderRegistry.getInstance());
         });
 
         var miniEditor = MiniEditor.getInstance();
-        createSceneProcessor(scene, miniEditor);
+        var executor = EditorThreadExecutor.getInstance();
+        executor.addToExecute(() -> createSceneProcessor(scene, miniEditor));
     }
 
     private void createSceneProcessor(EditorFXScene scene, MiniEditor miniEditor) {
-        var sceneProcessor = MiniToJfxIntegrator
-                .bind(miniEditor,
-                      scene.getCanvas(),
-                      miniEditor.getViewPort());
-        sceneProcessor.setEnabled(true);
+        var sceneProcessor = MiniToJfxIntegrator.bind(
+                miniEditor,
+                scene.getCanvas(),
+                miniEditor.getViewPort());
+        sceneProcessor.setEnabled(false);
         sceneProcessor.setTransferMode(FrameTransferSceneProcessor.TransferMode.ON_CHANGES);
 
         this.sceneProcessor = sceneProcessor;
@@ -260,6 +269,6 @@ public class JavaFXApplication extends Application {
     }
 
     public FrameTransferSceneProcessor getSceneProcessor() {
-        return sceneProcessor;
+        return ObjectsUtil.notNull(sceneProcessor, "Scene processor cannot be null");
     }
 }

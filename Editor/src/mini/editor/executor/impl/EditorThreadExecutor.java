@@ -5,7 +5,7 @@ import com.ss.rlib.common.util.array.Array;
 import com.ss.rlib.common.util.array.ArrayFactory;
 import com.ss.rlib.common.util.array.ConcurrentArray;
 import mini.editor.annotation.FromAnyThread;
-import mini.editor.annotation.MiniThread;
+import mini.editor.annotation.EditorThread;
 
 public class EditorThreadExecutor {
     private static final EditorThreadExecutor INSTANCE = new EditorThreadExecutor();
@@ -28,7 +28,7 @@ public class EditorThreadExecutor {
         ArrayUtils.runInWriteLock(waitTasks, task, (tasks, toAdd) -> tasks.add(task));
     }
 
-    @MiniThread
+    @EditorThread
     private static void execute(final Runnable runnable) {
         try {
             runnable.run();
@@ -37,7 +37,7 @@ public class EditorThreadExecutor {
         }
     }
 
-    @MiniThread
+    @EditorThread
     public void execute() {
         if (waitTasks.isEmpty()) {
             return;

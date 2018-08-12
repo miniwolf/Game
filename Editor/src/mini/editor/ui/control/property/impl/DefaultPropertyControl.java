@@ -9,7 +9,7 @@ import mini.editor.ui.control.property.PropertyControl;
 
 import java.util.function.Function;
 
-public class DefaultPropertyControl<C extends ChangeConsumer, T> extends PropertyControl {
+public class DefaultPropertyControl<C extends ChangeConsumer, D, T> extends PropertyControl<C, D, T> {
     private Function<T, String> toStringFunction;
     private Label propertyValueLabel;
 
@@ -17,19 +17,27 @@ public class DefaultPropertyControl<C extends ChangeConsumer, T> extends Propert
             T propertyValue,
             String name,
             C changeConsumer) {
+        super(propertyValue, name, changeConsumer);
     }
 
     @Override
     @FxThread
     protected void createComponents(HBox container) {
         propertyValueLabel = new Label();
-        propertyValueLabel.prefWidthProperty().bind(container);
+        propertyValueLabel.prefWidthProperty().bind(container.widthProperty());
     }
 
     @Override
     public void reload() {
         var function = getToStringFunction();
-        getPropertyValueLabel();
+        var propertyValueLabel = getPropertyValueLabel();
+        propertyValueLabel.setText(function == null
+                ? String.valueOf(getPropertyValue())
+                : function.apply(getPropertyValue()));
+    }
+
+    @Override
+    protected void apply() {
     }
 
     public Function<T, String> getToStringFunction() {

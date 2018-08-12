@@ -4,29 +4,34 @@ import com.ss.rlib.common.util.ClassUtils;
 import com.ss.rlib.common.util.FileUtils;
 import com.ss.rlib.common.util.array.Array;
 import com.ss.rlib.common.util.array.ArrayFactory;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.BooleanPropertyBase;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
+import javafx.css.PseudoClass;
+import javafx.event.EventTarget;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.control.Labeled;
-import javafx.scene.control.TreeItem;
-import javafx.scene.control.TreeView;
-import javafx.scene.input.DataFormat;
-import javafx.scene.input.DragEvent;
-import javafx.scene.input.Dragboard;
-import javafx.scene.input.TransferMode;
+import javafx.scene.control.*;
+import javafx.scene.input.*;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import mini.editor.annotation.FxThread;
 import mini.editor.ui.component.editor.state.impl.BaseEditorSceneEditorState;
 import org.reactfx.util.TriConsumer;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
 public abstract class UIUtils {
+
+    private static final PseudoClass FOCUSED_PSEUDO_CLASS = PseudoClass.getPseudoClass("focused");
+
     @FxThread
     public static void incrementLoading() {
         EditorUtil.getFXScene().incrementLoading();
@@ -156,6 +161,59 @@ public abstract class UIUtils {
             final HBox hBox = (HBox) graphic;
             hBox.setAlignment(Pos.CENTER_LEFT);
             hBox.setMinHeight(cell.getMinHeight());
+        }
+    }
+
+    public static BooleanProperty addFocusBinding(Pane pane, Control... controls) {
+        var focused = new BooleanPropertyBase(true) {
+            @Override
+            protected void invalidated() {
+                pane.pseudoClassStateChanged(FOCUSED_PSEUDO_CLASS, get());
+            }
+
+            @Override
+            public Object getBean() {
+                return pane;
+            }
+
+            @Override
+            public String getName() {
+                return "focused";
+            }
+        };
+
+        ChangeListener<Boolean> listener = (observable, oldValue, newValue) ->
+                focused.setValue(newValue || Arrays.stream(controls).anyMatch(Node::isFocused));
+
+        for (var control : controls) {
+            control.focusedProperty().addListener(listener);
+            control.addEventHandler(MouseEvent.MOUSE_RELEASED, event -> control.requestFocus());
+        }
+
+        focused.setValue(Arrays.stream(controls).anyMatch(Node::isFocused));
+
+        return focused;
+    }
+
+    public static boolean isNotHotKey(final KeyEvent event) {
+        if (event == null) {
+            return false;
+        }
+
+        final String text = event.getText();
+        if (text.isEmpty()) return false;
+
+        final KeyCode code = event.getCode();
+        final EventTarget target = event.getTarget();
+
+        if (code == KeyCode.TAB && !(target instanceof TextInputControl)) {
+            return false;
+        }
+
+        if (event.isControlDown()) {
+            return false;
+        } else {
+            return !event.isShiftDown();
         }
     }
 }

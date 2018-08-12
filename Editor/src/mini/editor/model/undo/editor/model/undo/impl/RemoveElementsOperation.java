@@ -1,7 +1,7 @@
 package mini.editor.model.undo.editor.model.undo.impl;
 
 import com.ss.rlib.common.util.array.Array;
-import mini.editor.annotation.MiniThread;
+import mini.editor.annotation.EditorThread;
 import mini.editor.manager.ExecutorManager;
 import mini.editor.model.undo.editor.ModelChangeConsumer;
 import mini.light.Light;
@@ -42,14 +42,14 @@ public class RemoveElementsOperation extends AbstractEditorOperation<ModelChange
         parent.removeControl(toRemove);
     }
 
-    @MiniThread
+    @EditorThread
     private void removeLight(final Element element,
                              final Light toRemove) {
         final Spatial parent = (Spatial) element.getParent();
         parent.removeLight(toRemove);
     }
 
-    @MiniThread
+    @EditorThread
     private void removeSpatial(final Element element,
                                final Spatial toRemove) {
         final Node parent = (Node) element.getParent();

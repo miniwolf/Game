@@ -2,12 +2,13 @@ package mini.editor;
 
 import mini.asset.plugins.ClasspathLocator;
 import mini.editor.annotation.FromAnyThread;
-import mini.editor.annotation.MiniThread;
+import mini.editor.annotation.EditorThread;
 import mini.editor.asset.locator.FileSystemAssetLocator;
 import mini.editor.asset.locator.FolderAssetLocator;
 import mini.editor.config.Config;
 import mini.editor.config.EditorConfig;
 import mini.editor.executor.impl.EditorThreadExecutor;
+import mini.editor.extension.loader.SceneLoader;
 import mini.editor.injfx.MiniToJavaFXApplication;
 import mini.editor.manager.WorkspaceManager;
 import mini.editor.util.EditorUtil;
@@ -15,6 +16,8 @@ import mini.environment.generation.JobProgressAdapter;
 import mini.light.LightProbe;
 import mini.material.TechniqueDef;
 import mini.math.ColorRGBA;
+import mini.renderer.Camera;
+import mini.renderer.ViewPort;
 import mini.scene.Node;
 
 import java.util.concurrent.locks.StampedLock;
@@ -24,6 +27,8 @@ public class MiniEditor extends MiniToJavaFXApplication {
     private final StampedLock lock;
     private final Node previewNode;
     private boolean paused;
+    private Camera previewCamera;
+    private ViewPort previewViewPort;
 
     private MiniEditor() {
         EditorUtil.setMiniEditor(this);
@@ -43,14 +48,15 @@ public class MiniEditor extends MiniToJavaFXApplication {
         return MINI_EDITOR;
     }
 
-    @MiniThread
+    @EditorThread
     public void setPaused(boolean paused) {
         this.paused = paused;
     }
 
     @Override
-    @MiniThread
+    @EditorThread
     public void update() {
+        super.update();
         var stamp = syncLock();
 
         try {
@@ -100,12 +106,22 @@ public class MiniEditor extends MiniToJavaFXApplication {
         cam.setFrustumPerspective(55, (float) cam.getWidth() / cam.getHeight(), 1f,
                                   Integer.MAX_VALUE);
 
+        // create preview view port
+        previewCamera = cam.clone();
+
+//        previewViewPort = renderManager.createPostView("Preview viewport", previewCamera);
+//        previewViewPort.setClearFlags(true, true, true);
+//        previewViewPort.attachScene(previewNode);
+//        previewViewPort.setBackgroundColor(viewPort.getBackgroundColor());
+
         guiNode.detachAllChildren();
 
         flyCam.setDragToRotate(true);
         flyCam.setEnabled(false);
 
-        new EditorThread(new ThreadGroup("JavaFX"), JavaFXApplication::start, "Java Launch")
+        //SceneLoader.install(this, postProcessor);
+
+        new mini.editor.EditorThread(new ThreadGroup("JavaFX"), JavaFXApplication::start, "Java Launch")
                 .start();
     }
 
@@ -135,7 +151,7 @@ public class MiniEditor extends MiniToJavaFXApplication {
         lock.unlockRead(stamp);
     }
 
-    @MiniThread
+    @EditorThread
     public void updateLightProbe(JobProgressAdapter<LightProbe> progressAdapter) {
         progressAdapter.done(null);
     }

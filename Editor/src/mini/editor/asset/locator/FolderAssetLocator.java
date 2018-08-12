@@ -4,7 +4,7 @@ import mini.asset.AssetInfo;
 import mini.asset.AssetKey;
 import mini.asset.AssetLocator;
 import mini.asset.AssetManager;
-import mini.editor.annotation.MiniThread;
+import mini.editor.annotation.EditorThread;
 import mini.editor.config.EditorConfig;
 
 import java.io.IOException;
@@ -54,7 +54,7 @@ public class FolderAssetLocator implements AssetLocator {
         }
 
         @Override
-        @MiniThread
+        @EditorThread
         public InputStream openStream() {
             try {
                 return Files.newInputStream(path, StandardOpenOption.READ);

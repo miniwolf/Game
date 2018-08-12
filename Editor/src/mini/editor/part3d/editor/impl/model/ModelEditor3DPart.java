@@ -4,7 +4,7 @@ import com.ss.rlib.common.util.array.Array;
 import com.ss.rlib.common.util.array.ArrayFactory;
 import mini.app.Application;
 import mini.app.state.ApplicationStateManager;
-import mini.editor.annotation.MiniThread;
+import mini.editor.annotation.EditorThread;
 import mini.editor.ui.component.editor.impl.model.ModelFileEditor;
 import mini.editor.ui.component.editor.impl.scene.AbstractSceneEditor3DPart;
 import mini.editor.util.EditorUtil;
@@ -57,19 +57,20 @@ public class ModelEditor3DPart extends AbstractSceneEditor3DPart<ModelFileEditor
     }
 
     @Override
-    @MiniThread
+    @EditorThread
     public void initialize(ApplicationStateManager manager, Application app) {
         super.initialize(manager, app);
         frame = 0;
     }
 
     @Override
-    @MiniThread
+    @EditorThread
     public void cleanup() {
         super.cleanup();
 
         final Node stateNode = getStateNode();
         stateNode.detachChild(getModelNode());
+        stateNode.detachChild(getToolNode());
     }
 
     @Override
@@ -81,20 +82,22 @@ public class ModelEditor3DPart extends AbstractSceneEditor3DPart<ModelFileEditor
     }
 
     @Override
-    @MiniThread
+    @EditorThread
     public void update(float tpf) {
         super.update(tpf);
 
         if (frame == 2) {
             EditorUtil.updateGlobalLightProbe(probeHandler);
         }
+
+        frame++;
     }
 
-    @MiniThread
+    @EditorThread
     private void notifyProbeCompleted() {
         final Node stateNode = getStateNode();
         stateNode.attachChild(getModelNode());
-        // TODO: Attach tool node
+        stateNode.attachChild(getToolNode());
 
         final Node customSkyNode = getCustomSkyNode();
         customSkyNode.detachAllChildren();

@@ -549,6 +549,15 @@ public class Node extends Spatial {
     }
 
     @Override
+    public void updateModelBound() {
+        if (children != null) {
+            for (Spatial child : children) {
+                child.updateModelBound();
+            }
+        }
+    }
+
+    @Override
     public void depthFirstTraversal(SceneGraphVisitor visitor, DFSMode mode) {
         if (mode == DFSMode.POST_ORDER) {
             for (Spatial child : children) {

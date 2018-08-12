@@ -65,7 +65,29 @@ public class MaterialPropertyBuilder extends EditableObjectPropertyBuilder {
             return null;
         }
 
-        return new SimpleProperty<>(propertyType, param.getName(), material);
+        return new SimpleProperty<>(
+                propertyType,
+                param.getName(),
+                0.1F,
+                material,
+                object -> getParamValue(param, object),
+                (object, newValue) -> applyParam(param, object, newValue));
+    }
+
+    private void applyParam(
+            MatParam param,
+            Material material,
+            Object newValue) {
+        if (newValue == null) {
+            material.clearParam(param.getName());
+        } else {
+            material.setParam(param.getName(), param.getVarType(), newValue);
+        }
+    }
+
+    private Object getParamValue(MatParam param, Material material) {
+        var currentParam = material.getParam(param.getName());
+        return currentParam == null ? null : currentParam.getValue();
     }
 
     private EditablePropertyType convert(VarType varType) {

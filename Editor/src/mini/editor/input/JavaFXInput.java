@@ -62,7 +62,7 @@ public abstract class JavaFXInput implements Input {
         this.scene = ObjectsUtil.notNull(node.getScene());
     }
 
-    private void unbind() {
+    public void unbind() {
         this.node = null;
         this.scene = null;
     }

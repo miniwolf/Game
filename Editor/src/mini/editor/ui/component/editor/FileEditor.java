@@ -85,4 +85,9 @@ public interface FileEditor {
      * @return the 3D parts of this editor.
      */
     Array<Editor3DPart> get3DStates();
+
+    /**
+     * Call when the editor was closed.
+     */
+    void notifyClosed();
 }

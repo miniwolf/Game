@@ -15,4 +15,5 @@ public interface CssIds {
     String EDITOR_LOADING_LAYER = "EditorLoadingLayer";
     String EDITOR_LOADING_PROGRESS = "EditorLoadingProgress";
     String EDITOR_MENU_BAR_COMPONENT = "EditorMenuBarComponent";
+    String EDITOR_AREA_COMPONENT = "EditorAreaComponent";
 }

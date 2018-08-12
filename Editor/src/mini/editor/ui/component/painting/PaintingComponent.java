@@ -1,6 +1,8 @@
 package mini.editor.ui.component.painting;
 
 import javafx.scene.image.Image;
+import mini.editor.annotation.FxThread;
+import mini.editor.ui.component.editor.state.EditorState;
 
 public interface PaintingComponent {
     /**
@@ -44,4 +46,11 @@ public interface PaintingComponent {
      * @return whether this object can be processed.
      */
     boolean isSupported(Object element);
+
+    /**
+     * Load the state of this component from the editor state.
+     * @param editorState
+     */
+    @FxThread
+    void loadState(EditorState editorState);
 }

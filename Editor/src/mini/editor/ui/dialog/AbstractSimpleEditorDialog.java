@@ -7,6 +7,7 @@ import mini.editor.Messages;
 import mini.editor.annotation.FromAnyThread;
 import mini.editor.annotation.FxThread;
 import mini.editor.ui.css.CssClasses;
+import mini.editor.util.ObjectsUtil;
 
 public abstract class AbstractSimpleEditorDialog extends EditorDialog {
     private Button okButton;
@@ -55,7 +56,7 @@ public abstract class AbstractSimpleEditorDialog extends EditorDialog {
 
     @FxThread
     protected Button getOKButton() {
-        return okButton;
+        return ObjectsUtil.notNull(okButton);
     }
 
     @FxThread

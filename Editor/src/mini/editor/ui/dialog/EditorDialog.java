@@ -7,6 +7,7 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -64,18 +65,33 @@ public abstract class EditorDialog {
     }
 
     private void createControls(VBox root) {
-        var container = new VBox();
-        container.getStyleClass().addAll(CssClasses.DEF_VBOX, CssClasses.DIALOG_CONTENT_ROOT);
-        createContent(container);
-        root.getChildren().add(container);
-
         var actionsContainer = new VBox();
+
+        if (isGridStructure()) {
+            var container = new GridPane();
+            container.getStyleClass().addAll(
+                    CssClasses.DEF_GRID_PANE,
+                    CssClasses.DIALOG_CONTENT_ROOT);
+            createContent(container);
+            root.getChildren().add(container);
+        } else {
+            var container = new VBox();
+            container.getStyleClass().addAll(CssClasses.DEF_VBOX, CssClasses.DIALOG_CONTENT_ROOT);
+            createContent(container);
+            root.getChildren().add(container);
+        }
+
         createActions(actionsContainer);
         actionsContainer.getStyleClass().add(CssClasses.DIALOG_ACTIONS_ROOT);
         root.getStyleClass().add(CssClasses.DIALOG_ROOT);
 
         root.getChildren().add(actionsContainer);
         root.addEventHandler(KeyEvent.KEY_RELEASED, this::processKey);
+    }
+
+    @FromAnyThread
+    protected boolean isGridStructure() {
+        return false;
     }
 
     private void processKey(KeyEvent event) {
@@ -88,6 +104,8 @@ public abstract class EditorDialog {
     protected abstract void createActions(VBox root);
 
     protected abstract void createContent(VBox root);
+
+    protected abstract void createContent(GridPane container);
 
     /**
      * Configure size of the root container
@@ -117,6 +135,11 @@ public abstract class EditorDialog {
             dialog.setMinHeight(height);
             dialog.setMaxHeight(height);
         }
+    }
+
+    @FxThread
+    public void show(Node owner) {
+        show(owner.getScene().getWindow());
     }
 
     @FxThread

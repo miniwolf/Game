@@ -284,9 +284,12 @@ public class AssetManager {
      * @param name Asset name of the model to load
      * @return The model that was loaded
      */
-    public <T extends Spatial> T loadModel(
-            String name) { // TODO: Can we generify this to avoid the unchecked cast?
+    public <T extends Spatial> T loadModel(String name) { // TODO: Can we generify this to avoid the unchecked cast?
         return (T) (loadAsset(new ModelKey(name)));
+    }
+
+    public Spatial loadModel(ModelKey key) {
+        return loadAsset(key);
     }
 
     public AssetInfo locateAsset(AssetKey<?> key) {

@@ -184,4 +184,15 @@ public class Workspace implements Serializable {
             e.printStackTrace();
         }
     }
+
+    @FromAnyThread
+    public synchronized void removeOpenedFile(final Path file) {
+        final Path assetFile = getAssetFile(getAssetFolder(), file);
+        final String assetPath = EditorUtil.toAssetPath(assetFile);
+
+        final Map<String, String> openedFiles = getOpenedFiles();
+        openedFiles.remove(assetPath);
+
+        incrementChanges();
+    }
 }

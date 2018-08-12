@@ -12,9 +12,11 @@ import mini.editor.annotation.FromAnyThread;
 import mini.editor.annotation.FxThread;
 import mini.editor.part3d.editor.impl.model.ModelEditor3DPart;
 import mini.editor.ui.component.editor.EditorDescription;
+import mini.editor.ui.component.editor.FileEditor;
 import mini.editor.ui.component.editor.impl.scene.AbstractSceneFileEditor;
 import mini.editor.ui.component.editor.state.EditorState;
 import mini.editor.ui.component.editor.state.impl.EditorModelEditorState;
+import mini.editor.ui.control.tree.action.impl.spatial.SpatialTreeNode;
 import mini.editor.util.EditorUtil;
 import mini.editor.util.NodeUtils;
 import mini.editor.util.ObjectsUtil;
@@ -34,6 +36,7 @@ public class ModelFileEditor
         DESCRIPTION.setConstructor(ModelFileEditor::new);
         DESCRIPTION.setEditorId(ModelFileEditor.class.getSimpleName());
         DESCRIPTION.addExtension(FileExtensions.MINI_OBJECT);
+        DESCRIPTION.addExtension(FileExtensions.OBJ);
         DESCRIPTION.addExtension(FileExtensions.MODEL_FBX);
     }
 
@@ -113,12 +116,28 @@ public class ModelFileEditor
     }
 
     @Override
+    public void notifyJavaFXChangedProperty(Object object, String propertyName) {
+    }
+
+    @Override
+    public void notifyJavaFXAddedChild(Object parent, Object added, int index, boolean needSelect) {
+        final ModelEditor3DPart editor3DPart = getEditor3DPart();
+
+        if (added instanceof Spatial) {
+            final Spatial spatial = (Spatial) added;
+
+            // TODO: check for sky
+        }
+    }
+
+    @Override
     @FxThread
-    protected boolean createToolbar(HBox toolbar) {
+    protected boolean createToolbar(HBox container) {
+        super.createToolbar(container);
         final Label fastSkyLabel = new Label(Messages.MODEL_FILE_EDITOR_FAST_SKY + ":");
 
         // TODO: Create combo box for sky
-        toolbar.getChildren().add(fastSkyLabel);
+        container.getChildren().add(fastSkyLabel);
         return true;
     }
 
@@ -126,5 +145,9 @@ public class ModelFileEditor
     @FromAnyThread
     public EditorDescription getDescription() {
         return DESCRIPTION;
+    }
+
+    @Override
+    public void notifyClosed() {
     }
 }

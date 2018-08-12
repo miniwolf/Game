@@ -11,6 +11,7 @@ import mini.editor.ui.component.splt.pane.EditorToolSplitPane;
 import mini.editor.ui.component.tab.ScrollableEditorToolComponent;
 import mini.editor.ui.css.CssClasses;
 import mini.editor.util.EditorUtil;
+import mini.editor.util.ObjectsUtil;
 
 public abstract class Advanced3DFileEditorWithRightTool<T extends Advanced3DEditorPart,
         S extends Editor3DWithEditorToolEditorState>
@@ -87,7 +88,10 @@ public abstract class Advanced3DFileEditorWithRightTool<T extends Advanced3DEdit
             return;
         }
 
-        // TODO: missing UI for splitcontainer, editor tool components...
+        getEditorToolComponent()
+                .getSelectionModel()
+                .select(editorState.getOpenedTool());
+        getMainSplitContainer().updateFor(editorState);
     }
 
     @Override
@@ -100,8 +104,8 @@ public abstract class Advanced3DFileEditorWithRightTool<T extends Advanced3DEdit
      * @return the pane of the editor area.
      */
     @FxThread
-    public StackPane getEditorAreaPane() {
-        return editorAreaPane;
+    protected StackPane getEditorAreaPane() {
+        return ObjectsUtil.notNull(editorAreaPane);
     }
 
     /**
@@ -115,4 +119,14 @@ public abstract class Advanced3DFileEditorWithRightTool<T extends Advanced3DEdit
      */
     @FxThread
     protected abstract void handleDragDroppedEvent(DragEvent dragEvent);
+
+    @FxThread
+    private ScrollableEditorToolComponent getEditorToolComponent() {
+        return ObjectsUtil.notNull(editorToolComponent);
+    }
+
+    @FxThread
+    private EditorToolSplitPane getMainSplitContainer() {
+        return ObjectsUtil.notNull(mainSplitContainer);
+    }
 }

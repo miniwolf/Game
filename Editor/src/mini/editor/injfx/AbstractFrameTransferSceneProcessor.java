@@ -2,6 +2,7 @@ package mini.editor.injfx;
 
 import com.ss.rlib.common.util.ObjectUtils;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
 import javafx.scene.Node;
 import mini.editor.injfx.processor.FrameTransferSceneProcessor;
 import mini.editor.injfx.transfer.FrameTransfer;
@@ -41,19 +42,40 @@ public abstract class AbstractFrameTransferSceneProcessor<T extends Node>
     private boolean askFixAspect;
     private TransferMode transferMode;
 
+    protected final ChangeListener<? super Number> widthListener;
+    protected final ChangeListener<? super Number> heightListener;
+    protected final ChangeListener<? super Boolean> rationListener;
+
     public AbstractFrameTransferSceneProcessor() {
         transferMode = TransferMode.ALWAYS;
         reshapeNeeded = new AtomicInteger(2);
         askWidth = 1;
         askHeight = 1;
         main = true;
+
+        widthListener = (view, oldValue, newValue) -> notifyChangedWidth(newValue);
+        heightListener = (view, oldValue, newValue) -> notifyChangedHeight(newValue);
+        rationListener = (view, oldValue, newValue) -> notifyChangedRatio(newValue);
     }
+
+    private void notifyChangedRatio(boolean newValue) {
+        notifyComponentResized(getDestinationWidth(), getDestinationHeight(), newValue);
+    }
+
+    private void notifyChangedHeight(Number newValue) {
+        notifyComponentResized(getDestinationWidth(), newValue.intValue(), isPreserveRatio());
+    }
+
+    private void notifyChangedWidth(Number newValue) {
+        notifyComponentResized(newValue.intValue(), getDestinationHeight(), isPreserveRatio());
+    }
+
+    protected abstract boolean isPreserveRatio();
 
     public void bind(
             T destination,
             MiniToJavaFXApplication application,
-            ViewPort viewPort
-                    ) {
+            ViewPort viewPort) {
         bind(destination, application, destination, viewPort, true);
     }
 
@@ -62,8 +84,7 @@ public abstract class AbstractFrameTransferSceneProcessor<T extends Node>
             MiniToJavaFXApplication application,
             Node inputNode,
             ViewPort viewPort,
-            boolean main
-                    ) {
+            boolean main) {
         if (hasApplication()) {
             throw new IllegalStateException("This process is already bound.");
         }
@@ -73,7 +94,7 @@ public abstract class AbstractFrameTransferSceneProcessor<T extends Node>
 
         this.main = main;
         this.viewPort = viewPort;
-        viewPort.addProcessor(this);
+        this.viewPort.addProcessor(this);
 
         JavaFXPlatform.runInFXThread(() -> bindDestination(application, destination, inputNode));
     }
@@ -96,11 +117,52 @@ public abstract class AbstractFrameTransferSceneProcessor<T extends Node>
         }
 
         setDestination(destination);
-        //bindListeners(); TODO
+        bindListeners();
 
         destination.setPickOnBounds(true);
 
-        notifyComponentResized(getDestinationWidth(), getDestinationHeight(), isRatioPreserved());
+        notifyComponentResized(getDestinationWidth(), getDestinationHeight(), this.isPreserveRatio());
+    }
+
+    protected abstract void bindListeners();
+
+    /**
+     * Unbind this processor from its current destination.
+     */
+    public void unbind() {
+
+        if (viewPort != null) {
+            viewPort.removeProcessor(this);
+            viewPort = null;
+        }
+
+        JavaFXPlatform.runInFXThread(this::unbindDestination);
+    }
+
+    /**
+     * Unbind this processor from destination.
+     */
+    protected void unbindDestination() {
+
+        if (!Platform.isFxApplicationThread()) {
+            throw new RuntimeException("this call is not from JavaFX thread.");
+        }
+
+        if (hasApplication() && isMain()) {
+            var context = (MiniOffscreenSurfaceContext) getApplication().getContext();
+            context.getMouseInput().unbind();
+            context.getKeyInput().unbind();
+        }
+
+        setApplication(null);
+
+        if (hasDestination()) {
+            unbindListeners();
+            setDestination(null);
+        }
+    }
+
+    private void unbindListeners() {
     }
 
     private void notifyComponentResized(int newWidth,
@@ -119,8 +181,6 @@ public abstract class AbstractFrameTransferSceneProcessor<T extends Node>
         reshapeNeeded.set(2);
     }
 
-    protected abstract boolean isRatioPreserved();
-
     protected abstract int getDestinationHeight();
 
     protected abstract int getDestinationWidth();
@@ -136,6 +196,10 @@ public abstract class AbstractFrameTransferSceneProcessor<T extends Node>
     @Override
     public boolean isInitialized() {
         return frameTransfer != null;
+    }
+
+    public void reshape() {
+        reshapeNeeded.set(2);
     }
 
     @Override
@@ -241,14 +305,17 @@ public abstract class AbstractFrameTransferSceneProcessor<T extends Node>
         return application != null;
     }
 
+    @Override
     public boolean isEnabled() {
         return enabled;
     }
 
+    @Override
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }
 
+    @Override
     public boolean isMain() {
         return main;
     }

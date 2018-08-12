@@ -29,10 +29,21 @@ public abstract class BaseFileEditor<S extends EditorState>
      * The state of this editor
      */
     private S editorState;
+    private boolean ignoreListeners;
 
     protected BaseFileEditor() {
         operationControl = new EditorOperationControl(this);
         changeCounter = new AtomicInteger();
+    }
+
+    @FromAnyThread
+    protected void setIgnoreListeners(final boolean ignoreListeners) {
+        this.ignoreListeners = ignoreListeners;
+    }
+
+    @FromAnyThread
+    protected boolean isIgnoreListeners() {
+        return ignoreListeners;
     }
 
     @Override

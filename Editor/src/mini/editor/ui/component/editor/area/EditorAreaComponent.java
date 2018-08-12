@@ -10,6 +10,8 @@ import com.ss.rlib.common.util.dictionary.DictionaryFactory;
 import com.ss.rlib.common.util.dictionary.DictionaryUtils;
 import com.ss.rlib.common.util.dictionary.ObjectDictionary;
 import javafx.beans.Observable;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableMap;
 import javafx.event.Event;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -21,9 +23,11 @@ import mini.editor.annotation.BackgroundThread;
 import mini.editor.annotation.FxThread;
 import mini.editor.manager.ExecutorManager;
 import mini.editor.manager.WorkspaceManager;
+import mini.editor.model.workspace.Workspace;
 import mini.editor.ui.component.ScreenComponent;
 import mini.editor.ui.component.editor.EditorRegistry;
 import mini.editor.ui.component.editor.FileEditor;
+import mini.editor.ui.css.CssIds;
 import mini.editor.ui.dialog.ConfirmDialog;
 import mini.editor.ui.event.FXEventManager;
 import mini.editor.ui.event.RequestedOpenFileEvent;
@@ -34,6 +38,7 @@ import mini.editor.util.UIUtils;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 /**
  * The component for containing editors.
@@ -55,6 +60,9 @@ public class EditorAreaComponent extends TabPane implements ScreenComponent {
         openedEditors = DictionaryFactory.newConcurrentAtomicObjectDictionary();
         openingFiles = ArrayFactory.newConcurrentStampedLockArray(Path.class);
 
+        setPickOnBounds(true);
+        setId(CssIds.EDITOR_AREA_COMPONENT);
+        getTabs().addListener(this::processChangeTabs);
         getSelectionModel().selectedItemProperty()
                 .addListener(this::switchEditor);
 
@@ -65,8 +73,41 @@ public class EditorAreaComponent extends TabPane implements ScreenComponent {
                                          event -> processOpenFile((RequestedOpenFileEvent) event));
     }
 
-    private void switchEditor(Observable observable, Tab oldValue, Tab newValue) {
+    @FxThread
+    private void processChangeTabs(ListChangeListener.Change<? extends Tab> change) {
+        if (!change.next()) {
+            return;
+        }
 
+        var removed = change.getRemoved();
+        if (removed == null || removed.isEmpty()) {
+            return;
+        }
+
+        removed.forEach(tab -> {
+            var properties = tab.getProperties();
+            var fileEditor = (FileEditor) properties.get(KEY_EDITOR);
+            var editFile = fileEditor.getEditFile();
+
+            DictionaryUtils.runInWriteLock(getOpenedEditors(), editFile, ObjectDictionary::remove);
+
+            fileEditor.notifyClosed();
+
+            if (isIgnoredOpenedFiles()) {
+                return;
+            }
+
+            var workspace = WORKSPACE_MANAGER.getCurrentWorkspace();
+            if (workspace != null) {
+                workspace.removeOpenedFile(editFile);
+            }
+        });
+    }
+
+    private void switchEditor(
+            Observable observable,
+            Tab oldValue,
+            Tab newValue) {
         BorderPane new3DArea = null;
         BorderPane current3DArea = null;
 
@@ -305,5 +346,15 @@ public class EditorAreaComponent extends TabPane implements ScreenComponent {
 
     public void setIgnoredOpenedFiles(boolean ignoredOpenedFiles) {
         this.ignoredOpenedFiles = ignoredOpenedFiles;
+    }
+
+    @FxThread
+    public FileEditor getCurrentEditor() {
+        var selectedTab = getSelectionModel().getSelectedItem();
+        if (selectedTab == null) {
+            return null;
+        }
+
+        return (FileEditor) selectedTab.getProperties().get(KEY_EDITOR);
     }
 }

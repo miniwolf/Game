@@ -34,10 +34,10 @@ public class NodeTree<C extends ChangeConsumer> extends VBox {
     private final Consumer<Array<Object>> selectionHandler;
     private TreeView<TreeNode<?>> treeView;
 
-    public NodeTree(final Consumer<Array<Object>> selectionHandler, final C consumer) {
+    public NodeTree(final Consumer<Array<Object>> selectionHandler, final C consumer, SelectionMode selectionMode) {
         this.selectionHandler = selectionHandler;
         this.changeConsumer = consumer;
-        this.selectionMode = SelectionMode.SINGLE;
+        this.selectionMode = selectionMode;
         createComponents();
     }
 
@@ -193,5 +193,84 @@ public class NodeTree<C extends ChangeConsumer> extends VBox {
             treeItem = UIUtils.findItemForValue(treeView, child);
         }
         return treeItem;
+    }
+
+    @FxThread
+    public Object getSelectedObject() {
+        final TreeView<TreeNode<?>> treeView = getTreeView();
+        final MultipleSelectionModel<TreeItem<TreeNode<?>>> selectionModel = treeView.getSelectionModel();
+        final TreeItem<TreeNode<?>> selectedItem = selectionModel.getSelectedItem();
+        if (selectedItem == null) {
+            return null;
+        }
+
+        final TreeNode<?> treeNode = selectedItem.getValue();
+        return treeNode.getElement();
+    }
+
+    @FxThread
+    public int getSelectedCount() {
+        final TreeView<TreeNode<?>> treeView = getTreeView();
+        return treeView.getSelectionModel()
+                .getSelectedItems().size();
+    }
+
+    @FxThread
+    public void selectSingle(final Object object) {
+        final TreeView<TreeNode<?>> treeView = getTreeView();
+        final MultipleSelectionModel<TreeItem<TreeNode<?>>> selectionModel = treeView.getSelectionModel();
+
+        if (object == null) {
+            selectionModel.clearSelection();
+            return;
+        }
+
+        final TreeNode<Object> treeNode = FACTORY_REGISTRY.createFor(object);
+        final TreeItem<TreeNode<?>> treeItem = UIUtils.findItemForValue(treeView, treeNode);
+        if (treeItem == null) {
+            selectionModel.clearSelection();
+            return;
+        }
+
+        selectionModel.clearSelection();
+        selectionModel.select(treeItem);
+    }
+
+    @FxThread
+    public void notifyAdded(
+            final Object parent,
+            final Object child,
+            final int index) {
+        if (child == null || parent == null) {
+            return;
+        }
+
+        final TreeView<TreeNode<?>> treeView = getTreeView();
+        final TreeItem<TreeNode<?>> parentItem = UIUtils.findItemForValue(treeView, parent);
+        if (parentItem == null || UIUtils.findItemForValue(parentItem, child) != null) {
+            return;
+        }
+
+        final TreeNode<?> childNode = FACTORY_REGISTRY.createFor(child);
+        if (childNode == null) {
+            return;
+        }
+
+        final TreeNode<?> parentNode = parentItem.getValue();
+        parentNode.notifyChildPreAdd(childNode);
+
+        final TreeItem<TreeNode<?>> childItem = new TreeItem<>(childNode);
+        final ObservableList<TreeItem<TreeNode<?>>> children = parentItem.getChildren();
+
+        if (index == -1) {
+            children.add(childItem);
+        } else {
+            children.add(index, childItem);
+        }
+
+        parentItem.setExpanded(true);
+        parentNode.notifyChildAdded(childNode);
+
+        fill(childItem, false, -1);
     }
 }

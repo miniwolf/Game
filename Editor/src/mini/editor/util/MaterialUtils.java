@@ -8,7 +8,7 @@ import mini.asset.MaterialKey;
 import mini.asset.TextureKey;
 import mini.editor.FileExtensions;
 import mini.editor.annotation.FromAnyThread;
-import mini.editor.annotation.MiniThread;
+import mini.editor.annotation.EditorThread;
 import mini.material.Material;
 import mini.material.MaterialDef;
 import mini.material.TechniqueDef;
@@ -34,7 +34,7 @@ public class MaterialUtils {
                || FileExtensions.IMAGE_TGA.equals(extension);
     }
 
-    @MiniThread
+    @EditorThread
     public static Material updateMaterialIdNeed(
             Path file,
             Material material) {
@@ -80,7 +80,7 @@ public class MaterialUtils {
         return newMaterial;
     }
 
-    @MiniThread
+    @EditorThread
     private static void migrateTo(
             Material target,
             Material source) {
@@ -101,7 +101,7 @@ public class MaterialUtils {
         target.setKey(source.getKey());
     }
 
-    @MiniThread
+    @EditorThread
     private static void refreshTextures(
             Material material,
             String textureKey) {

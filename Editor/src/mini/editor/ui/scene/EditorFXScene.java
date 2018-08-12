@@ -16,6 +16,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import mini.editor.annotation.FxThread;
+import mini.editor.input.JavaFXMouseInput;
 import mini.editor.manager.ExecutorManager;
 import mini.editor.ui.component.ScreenComponent;
 import mini.editor.ui.css.CssIds;
@@ -90,11 +91,11 @@ public class EditorFXScene extends Scene {
         var components = getComponents();
         fillComponents(components, getContainer());
         components.forEach(ScreenComponent::notifyFinishBuild);
-
     }
 
-    private void fillComponents(final Array<ScreenComponent> container,
-                                final Node node) {
+    private void fillComponents(
+            final Array<ScreenComponent> container,
+            final Node node) {
         if (node instanceof ScreenComponent) {
             container.add((ScreenComponent) node);
         }

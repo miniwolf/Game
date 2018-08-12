@@ -1,9 +1,11 @@
 package mini.editor.model;
 
 import mini.input.CameraInput;
+import mini.input.InputManager;
 import mini.input.controls.ActionListener;
 import mini.input.controls.AnalogListener;
 import mini.math.FastMath;
+import mini.math.Vector3f;
 import mini.renderer.Camera;
 import mini.renderer.RenderManager;
 import mini.renderer.ViewPort;
@@ -25,10 +27,13 @@ public class EditorCamera implements ActionListener, AnalogListener, Control {
                                                   + CameraInput.CHASECAM_ZOOMIN;
     private static final String CHASECAM_ZOOMOUT = EditorCamera.class.getSimpleName() + "_"
                                                    + CameraInput.CHASECAM_ZOOMOUT;
+
+    private final Vector3f position;
+    private final Camera camera;
+
     private boolean enabled = true;
     private boolean dragToRotate = true;
     private boolean canRotate;
-    private Camera camera;
 
     private float rotation = 0;
     private float verticalRotation = FastMath.PI / 6;
@@ -39,6 +44,8 @@ public class EditorCamera implements ActionListener, AnalogListener, Control {
     private float targetRotation = rotation;
     private float targetVRotation = verticalRotation;
     private float targetDistance = distance;
+    private Spatial target;
+    private Vector3f prevPos;
 
     /**
      * @param camera the application camera
@@ -52,6 +59,7 @@ public class EditorCamera implements ActionListener, AnalogListener, Control {
 
     private EditorCamera(final Camera camera) {
         this.camera = camera;
+        this.position = new Vector3f();
     }
 
     @Override
@@ -77,23 +85,28 @@ public class EditorCamera implements ActionListener, AnalogListener, Control {
     }
 
     @Override
-    public void update(float tpf) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public Spatial getSpatial() {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public void setSpatial(Spatial spatial) {
-        throw new UnsupportedOperationException();
+        target = spatial;
+
+        if (spatial == null) {
+            return;
+        }
+
+        prevPos = new Vector3f(target.getWorldTranslation());
+        camera.setLocation(position);
+    }
+
+    @Override
+    public void update(float tpf) {
     }
 
     @Override
     public void render(RenderManager renderManager, ViewPort vp) {
-        throw new UnsupportedOperationException();
     }
 
     public void setTargetRotation(final float targetRotation) {
@@ -106,5 +119,20 @@ public class EditorCamera implements ActionListener, AnalogListener, Control {
 
     public void setTargetDistance(float targetDistance) {
         this.targetDistance = Math.max(Math.min(targetDistance, maxDistance), minDistance);
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+        if (!enabled) {
+            canRotate = false;
+        }
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void registerInput(InputManager inputManager) {
+        // TODO: Implement chasecam
     }
 }

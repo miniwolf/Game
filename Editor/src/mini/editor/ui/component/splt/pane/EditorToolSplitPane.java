@@ -19,9 +19,8 @@ public class EditorToolSplitPane extends TabToolSplitPane<EditorToolConfig> {
     @FxThread
     public void initFor(TabToolComponent toolComponent, Node another) {
         super.initFor(toolComponent, another);
-        root.widthProperty().addListener(((observable, oldValue, newValue) -> {
-            handleSceneChanged(getSceneSize());
-        }));
+        root.widthProperty().addListener(((observable, oldValue, newValue) ->
+                handleSceneChanged(getSceneSize())));
     }
 
     @Override
@@ -29,5 +28,19 @@ public class EditorToolSplitPane extends TabToolSplitPane<EditorToolConfig> {
     protected double getSceneSize() {
         var width = root.getWidth();
         return Double.compare(width, 0D) == 0 ? scene.getWidth() : width;
+    }
+
+    @Override
+    protected void bindToScene() {
+    }
+
+    @Override
+    protected void addElements(TabToolComponent toolComponent, Node other) {
+    }
+
+    @Override
+    protected void handleSceneChanged(Number newSize) {
+        super.handleSceneChanged(newSize);
+        EXECUTOR_MANAGER.addFXTask(this::requestLayout);
     }
 }

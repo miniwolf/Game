@@ -1,11 +1,12 @@
 package mini.editor.ui.control.property.builder;
 
+import com.ss.rlib.common.util.ClassUtils;
 import com.ss.rlib.common.util.array.Array;
 import com.ss.rlib.common.util.array.ArrayFactory;
 import javafx.scene.layout.VBox;
+import mini.editor.extension.property.EditableProperty;
 import mini.editor.model.undo.editor.ChangeConsumer;
-import mini.editor.ui.control.property.builder.impl.GeometryPropertyBuilder;
-import mini.editor.ui.control.property.builder.impl.MaterialPropertyBuilder;
+import mini.editor.ui.control.property.builder.impl.*;
 
 public class PropertyBuilderRegistry {
     private static PropertyBuilderRegistry INSTANCE = new PropertyBuilderRegistry();
@@ -13,8 +14,15 @@ public class PropertyBuilderRegistry {
 
     private PropertyBuilderRegistry() {
         builders = ArrayFactory.newArray(PropertyBuilder.class);
+        register(PrimitivePropertyBuilder.getInstance());
         register(MaterialPropertyBuilder.getInstance());
         register(GeometryPropertyBuilder.getInstance());
+        register(SpatialPropertyBuilder.getInstance());
+        register(DefaultControlPropertyBuilder.getInstance());
+        register(EditableControlPropertyBuilder.getInstance());
+        register(CollisionShapePropertyBuilder.getInstance());
+        register(MeshPropertyBuilder.getInstance());
+        register(MaterialSettingsPropertyBuilder.getInstance());
     }
 
     public static PropertyBuilderRegistry getInstance() {
@@ -26,8 +34,11 @@ public class PropertyBuilderRegistry {
         builders.sort(PropertyBuilder::compareTo);
     }
 
-    public void buildFor(Object object, Object parent, VBox container,
-                         ChangeConsumer changeConsumer) {
+    public void buildFor(
+            Object object,
+            Object parent,
+            VBox container,
+            ChangeConsumer changeConsumer) {
         for (var builder : builders) {
             builder.buildFor(object, parent, container, changeConsumer);
         }

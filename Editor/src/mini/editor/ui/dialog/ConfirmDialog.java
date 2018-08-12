@@ -2,6 +2,7 @@ package mini.editor.ui.dialog;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import mini.editor.Messages;
@@ -42,12 +43,19 @@ public class ConfirmDialog extends AbstractSimpleEditorDialog {
     }
 
     @Override
-    protected void createBeforeActions(HBox container) {
+    protected void createContent(VBox root) {
+        questionLabel = new Label();
+        questionLabel.minWidthProperty().bind(widthProperty().multiply(0.9));
 
+        root.getChildren().add(questionLabel);
+        root.getStyleClass().add(CssClasses.CONFIRM_DIALOG);
     }
 
     @Override
-    protected void createContent(VBox root) {
+    protected void createBeforeActions(HBox container) {
+    }
 
+    @Override
+    protected void createContent(GridPane container) {
     }
 }

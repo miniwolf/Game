@@ -1,20 +1,34 @@
 package mini.editor.util;
 
 import com.ss.rlib.common.util.ClassUtils;
+import javafx.scene.input.DataFormat;
+import javafx.scene.input.Dragboard;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import mini.app.state.ApplicationStateManager;
+import mini.asset.AssetKey;
 import mini.asset.AssetManager;
 import mini.editor.JavaFXApplication;
 import mini.editor.MiniEditor;
 import mini.editor.annotation.FromAnyThread;
-import mini.editor.annotation.MiniThread;
+import mini.editor.annotation.EditorThread;
 import mini.editor.config.EditorConfig;
+import mini.editor.extension.scene.SceneLayer;
+import mini.editor.model.undo.editor.ChangeConsumer;
+import mini.editor.model.undo.editor.SceneChangeConsumer;
+import mini.editor.ui.component.editor.impl.scene.AbstractSceneEditor3DPart;
+import mini.editor.ui.component.editor.impl.scene.AbstractSceneFileEditor;
+import mini.editor.ui.component.editor.state.impl.BaseEditorSceneEditorState;
+import mini.editor.ui.event.FXEventManager;
+import mini.editor.ui.event.RequestedOpenFileEvent;
 import mini.editor.ui.scene.EditorFXScene;
 import mini.environment.generation.JobProgressAdapter;
+import mini.input.InputManager;
 import mini.light.LightProbe;
 import mini.renderer.Camera;
 import mini.renderer.RenderManager;
+import mini.scene.Node;
+import mini.scene.Spatial;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -22,7 +36,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.List;
 
 public class EditorUtil {
     private static MiniEditor miniEditor;
@@ -148,7 +166,7 @@ public class EditorUtil {
         return miniEditor.getStateManager();
     }
 
-    @MiniThread
+    @EditorThread
     public static void updateGlobalLightProbe(JobProgressAdapter<LightProbe> progressAdapter) {
         miniEditor.updateLightProbe(progressAdapter);
     }
@@ -158,5 +176,65 @@ public class EditorUtil {
      */
     public static float clipNumber(float value, float mod) {
         return (int) (value * mod) / mod;
+    }
+
+    public static List<File> getFiles(Dragboard dragboard) {
+        List<File> files = ClassUtils.unsafeCast(dragboard.getContent(DataFormat.FILES));
+        return files == null ? Collections.emptyList() : files;
+    }
+
+    public static void openInEditor(AssetKey<?> assetKey) {
+        if (assetKey == null) {
+            return;
+        }
+
+        var assetPath = assetKey.getName();
+        if (assetPath == null || assetPath.isEmpty()) {
+            return;
+        }
+
+        var assetFile = Paths.get(assetPath);
+        var realFile = ObjectsUtil.notNull(getRealFile(assetFile));
+        if (!Files.exists(realFile)) {
+            return;
+        }
+
+        FXEventManager.getInstance().notify(new RequestedOpenFileEvent(realFile));
+    }
+
+    private static Path getRealFile(Path assetFile) {
+        var editorConfig = EditorConfig.getInstance();
+        var currentAsset = editorConfig.getCurrentAsset();
+        if (currentAsset == null) {
+            return null;
+        }
+
+        return currentAsset.resolve(assetFile);
+    }
+
+    public static <E extends Enum<?>> E[] getAvailableValues(E value) {
+        var valueClass = value.getClass();
+        if (!valueClass.isEnum()) {
+            throw new RuntimeException("The class " + valueClass + "isn't an enum");
+        }
+
+        var enumConstant = valueClass.getEnumConstants();
+        return ClassUtils.unsafeCast(enumConstant);
+    }
+
+    public static InputManager getInputManager() {
+        return miniEditor.getInputManager();
+    }
+
+    public static Node getGlobalRootNode() {
+        return miniEditor.getRootNode();
+    }
+
+    public static SceneLayer getDefaultLayer(ChangeConsumer consumer) {
+        if (!(consumer instanceof SceneChangeConsumer)) {
+            return null;
+        }
+
+        throw new UnsupportedOperationException();
     }
 }

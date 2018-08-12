@@ -16,6 +16,7 @@ import mini.editor.ui.component.tab.GlobalBottomToolComponent;
 import mini.editor.ui.component.tab.GlobalLeftToolComponent;
 import mini.editor.ui.css.CssClasses;
 import mini.editor.ui.css.CssRegistry;
+import mini.editor.ui.event.EventRedirector;
 import mini.editor.ui.scene.EditorFXScene;
 
 import static javafx.scene.paint.Color.TRANSPARENT;
@@ -23,10 +24,12 @@ import static javafx.scene.paint.Color.TRANSPARENT;
 public class EditorFXSceneBuilder {
 
     public static final String CSS_FILE_CUSTOM_CLASSES = "ui/css/custom_classes.css";
+    public static final String CSS_FILE_CUSTOM_IDS = "ui/css/custom_ids.css";
     private static final CssRegistry CSS_REGISTRY = CssRegistry.getInstance();
 
     static {
         CSS_REGISTRY.register(CSS_FILE_CUSTOM_CLASSES, EditorFXSceneBuilder.class.getClassLoader());
+        CSS_REGISTRY.register(CSS_FILE_CUSTOM_IDS, EditorFXSceneBuilder.class.getClassLoader());
     }
 
     public static EditorFXScene build(Stage stage) {
@@ -54,6 +57,8 @@ public class EditorFXSceneBuilder {
         var barComponent = new EditorMenuBarComponent();
         var editorAreaComponent = new EditorAreaComponent();
 
+        new EventRedirector(editorAreaComponent, canvas, stage);
+
         var leftSplitContainer = new GlobalLeftToolSplitPane(scene);
         leftSplitContainer.prefHeightProperty()
                           .bind(container.heightProperty());
@@ -61,11 +66,14 @@ public class EditorFXSceneBuilder {
         var bottomSplitContainer = new GlobalBottomToolSplitPane(scene);
 
         var globalLeftToolComponent = new GlobalLeftToolComponent(leftSplitContainer);
-        globalLeftToolComponent.addComponent(new AssetComponent(), Messages.EDITOR_TOOL_ASSET);
+        globalLeftToolComponent.addComponent(
+                new AssetComponent(),
+                Messages.EDITOR_TOOL_ASSET);
 
-        var globalBottomToolComponent = new GlobalBottomToolComponent(
-                bottomSplitContainer);
-        globalBottomToolComponent.addComponent(LogView.getInstance(), Messages.LOG_VIEW_TITLE);
+        var globalBottomToolComponent = new GlobalBottomToolComponent(bottomSplitContainer);
+        globalBottomToolComponent.addComponent(
+                LogView.getInstance(),
+                Messages.LOG_VIEW_TITLE);
 
         leftSplitContainer.initFor(globalLeftToolComponent, bottomSplitContainer);
         bottomSplitContainer.initFor(globalBottomToolComponent, editorAreaComponent);

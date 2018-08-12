@@ -16,4 +16,5 @@ public interface FrameTransferSceneProcessor extends SceneProcessor {
 
     void setEnabled(boolean enabled);
     boolean isEnabled();
+    boolean isMain();
 }

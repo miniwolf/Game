@@ -7,6 +7,7 @@ import com.ss.rlib.common.util.array.ArrayFactory;
 import com.ss.rlib.common.util.dictionary.DictionaryFactory;
 import com.ss.rlib.common.util.dictionary.ObjectDictionary;
 import mini.editor.ui.component.editor.impl.model.ModelFileEditor;
+import mini.editor.ui.component.editor.impl.scene.SceneFileEditor;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,7 +31,7 @@ public class EditorRegistry {
     }
 
     private void loadDescriptions() {
-        //register(SceneFileEditor.DESCRIPTION);
+        register(SceneFileEditor.DESCRIPTION);
         register(ModelFileEditor.DESCRIPTION);
     }
 

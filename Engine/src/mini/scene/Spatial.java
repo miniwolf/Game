@@ -1283,6 +1283,11 @@ public abstract class Spatial implements Cloneable, CloneableSmartAsset, MiniClo
     }
 
     /**
+     * <code>updateModelBound</code> recalculates the bounding object for this Spatial.
+     */
+    public abstract void updateModelBound();
+
+    /**
      * @return The sum of all vertices under this Spatial.
      */
     public abstract int getVertexCount();

@@ -1,5 +1,6 @@
 package mini.editor.util;
 
+import com.ss.rlib.common.util.ClassUtils;
 import com.ss.rlib.common.util.StringUtils;
 import com.ss.rlib.common.util.array.Array;
 import com.ss.rlib.common.util.array.ArrayFactory;
@@ -25,7 +26,7 @@ public class NodeUtils {
     /**
      * Create stream of the spatial's children including itself.
      */
-    private static Stream<Spatial> children(Spatial spatial) {
+    public static Stream<Spatial> children(Spatial spatial) {
         var result = ArrayFactory.<Spatial>newArray(Spatial.class);
 
         visitSpatial(spatial, sp -> {
@@ -124,5 +125,19 @@ public class NodeUtils {
         for (Spatial child : node.getChildren()) {
             addGeometryWithMaterial(child, geometries, assetPath);
         }
+    }
+
+    @FromAnyThread
+    public static <T> T findParent(Spatial spatial, Predicate<Spatial> condition) {
+        if (condition.test(spatial)) {
+            return ClassUtils.unsafeCast(spatial);
+        }
+
+        var parent = spatial.getParent();
+        if (parent == null) {
+            return null;
+        }
+
+        return findParent(parent, condition);
     }
 }

@@ -21,6 +21,7 @@ public class SceneFileEditor extends AbstractSceneFileEditor {
         DESCRIPTION.setEditorName(Messages.SCENE_FILE_EDITOR_NAME);
         DESCRIPTION.setConstructor(SceneFileEditor::new);
         DESCRIPTION.setEditorId(SceneFileEditor.class.getSimpleName());
+        //DESCRIPTION.addExtension(FileExtensions.MODEL_FBX);
         DESCRIPTION.addExtension(FileExtensions.MINI_SCENE);
     }
 
@@ -41,6 +42,21 @@ public class SceneFileEditor extends AbstractSceneFileEditor {
 
     @Override
     public void execute(EditorOperation operation) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void notifyEditorPreChangedProperty(Object object, String propertyName) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void notifyEditorChangedProperty(Object object, String propertyName) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void notifyJavaFXChangedProperty(Object object, String propertyName) {
         throw new UnsupportedOperationException();
     }
 
@@ -72,5 +88,9 @@ public class SceneFileEditor extends AbstractSceneFileEditor {
     @Override
     public void notifyShowed() {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void notifyClosed() {
     }
 }

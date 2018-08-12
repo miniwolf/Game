@@ -215,6 +215,13 @@ public class Geometry extends Spatial {
         return material;
     }
 
+    @Override
+    //TODO: Documentation
+    public void updateModelBound() {
+        mesh.updateBound();
+        setBoundRefresh();
+    }
+
     /**
      * <code>updateWorldBound</code> updates the bounding volume that contains
      * this geometry. The location of the geometry is based on the location of
@@ -435,7 +442,7 @@ public class Geometry extends Spatial {
     /**
      * @param modelBound
      */
-    public void setModelBound(BoundingSphere modelBound) {
+    public void setModelBound(BoundingVolume modelBound) {
         this.worldBound = modelBound;
         mesh.setBound(modelBound);
         setBoundRefresh();

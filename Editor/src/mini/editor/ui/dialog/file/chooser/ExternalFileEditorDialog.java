@@ -4,6 +4,7 @@ import com.ss.rlib.common.util.array.Array;
 import com.ss.rlib.common.util.array.ArrayFactory;
 import javafx.scene.control.Button;
 import javafx.scene.control.TreeItem;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Window;
@@ -52,6 +53,10 @@ public class ExternalFileEditorDialog extends AbstractSimpleEditorDialog {
 
         root.getChildren().add(resourceTree);
         root.getStyleClass().add(CssClasses.OPEN_EXTERNAL_FOLDER_EDITOR_DIALOG);
+    }
+
+    @Override
+    protected void createContent(GridPane container) {
     }
 
     @Override

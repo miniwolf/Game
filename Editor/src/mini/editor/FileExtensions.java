@@ -17,4 +17,5 @@ public interface FileExtensions {
     String IMAGE_TGA = "tga";
     String IMAGE_HDR = "hdr";
 
+    String OBJ = "obj";
 }

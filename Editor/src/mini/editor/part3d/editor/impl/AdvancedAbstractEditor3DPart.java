@@ -1,29 +1,66 @@
 package mini.editor.part3d.editor.impl;
 
+import mini.app.Application;
 import mini.app.state.ApplicationStateManager;
-import mini.editor.annotation.MiniThread;
+import mini.editor.annotation.EditorThread;
 import mini.editor.model.EditorCamera;
 import mini.editor.ui.component.editor.FileEditor;
-import mini.editor.ui.component.editor.impl.model.ModelFileEditor;
 import mini.editor.util.EditorUtil;
+import mini.input.InputManager;
+import mini.input.controls.ActionListener;
+import mini.input.controls.InputListener;
 import mini.math.Vector3f;
 import mini.renderer.Camera;
-import mini.renderer.RenderManager;
 import mini.scene.Node;
 
 public abstract class AdvancedAbstractEditor3DPart<T extends FileEditor> extends AbstractEditor3DPart<T> {
+    private static final String MOUSE_RIGHT_CLICK = "MiniEditor.editorState.mouseRightClick";
+    private static final String MOUSE_LEFT_CLICK = "MiniEditor.editorState.mouseLeftClick";
+    private static final String MOUSE_MIDDLE_CLICK = "MiniEditor.editorState.mouseMiddleClick";
 
     private final EditorCamera editorCamera;
+    private ActionListener actionListener;
 
     public AdvancedAbstractEditor3DPart(T fileEditor) {
         super(fileEditor);
         editorCamera = needEditorCamera() ? createEditorCamera() : null;
+
+        actionListener = this::onActionImpl;
+    }
+
+    private void onActionImpl(
+            final String name,
+            final boolean isPressed,
+            final float tpf) {
+
+    }
+
+    @Override
+    public void initialize(ApplicationStateManager manager, Application app) {
+        super.initialize(manager, app);
+
+        final Node rootNode = EditorUtil.getGlobalRootNode();
+        rootNode.attachChild(getStateNode());
+
+        final EditorCamera editorCamera = getEditorCamera();
+        final InputManager inputManager = EditorUtil.getInputManager();
+
+        registerActionListener(inputManager);
+        if (editorCamera != null) {
+            editorCamera.setEnabled(true);
+            editorCamera.registerInput(inputManager);
+        }
+    }
+
+    @EditorThread
+    private void registerActionListener(final InputManager inputManager) {
+        inputManager.addListener(actionListener, MOUSE_RIGHT_CLICK, MOUSE_LEFT_CLICK, MOUSE_MIDDLE_CLICK);
     }
 
     /**
      * @return the created editor camera
      */
-    @MiniThread
+    @EditorThread
     protected EditorCamera createEditorCamera() {
         final Camera camera = EditorUtil.getGlobalCamera();
 
@@ -35,7 +72,7 @@ public abstract class AdvancedAbstractEditor3DPart<T extends FileEditor> extends
     /**
      * @return the node for the camera
      */
-    @MiniThread
+    @EditorThread
     protected Node getNodeForCamera() {
         return getStateNode();
     }
@@ -73,25 +110,25 @@ public abstract class AdvancedAbstractEditor3DPart<T extends FileEditor> extends
     /**
      * @return the editor camera
      */
-    @MiniThread
+    @EditorThread
     protected EditorCamera getEditorCamera() {
         return editorCamera;
     }
 
     @Override
-    @MiniThread
+    @EditorThread
     public void update(float tpf) {
         preCameraUpdate();
         cameraUpdate(tpf);
         postCameraUpdate();
     }
 
-    @MiniThread
+    @EditorThread
     protected void postCameraUpdate() {
         // TODO: Lighting for camera
     }
 
-    @MiniThread
+    @EditorThread
     private void cameraUpdate(float tpf) {
         final EditorCamera editorCamera = getEditorCamera();
         if (editorCamera == null) {
@@ -102,6 +139,6 @@ public abstract class AdvancedAbstractEditor3DPart<T extends FileEditor> extends
         // TODO: Update camera controls
     }
 
-    @MiniThread
+    @EditorThread
     protected abstract void preCameraUpdate();
 }

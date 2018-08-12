@@ -4,15 +4,19 @@ import com.ss.rlib.common.util.ObjectUtils;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.SplitPane;
+import mini.editor.annotation.FxThread;
+import mini.editor.manager.ExecutorManager;
+import mini.editor.ui.component.editor.state.impl.Editor3DWithEditorToolEditorState;
 import mini.editor.ui.component.tab.TabToolComponent;
 
 import java.util.Objects;
 
 public class TabToolSplitPane<T> extends SplitPane {
+    protected static final ExecutorManager EXECUTOR_MANAGER = ExecutorManager.getInstance();
     protected final Scene scene;
-    private final T config;
     protected TabToolComponent toolComponent;
 
+    private T config;
     private int size;
     private boolean collapsed;
 
@@ -128,5 +132,13 @@ public class TabToolSplitPane<T> extends SplitPane {
      */
     protected void addElements(TabToolComponent toolComponent, Node other) {
         getItems().addAll(toolComponent, other);
+    }
+
+    @FxThread
+    public void updateFor(T config) {
+        this.config = config;
+        this.size = loadSize();
+        this.collapsed = loadCollapsed();
+        update();
     }
 }
